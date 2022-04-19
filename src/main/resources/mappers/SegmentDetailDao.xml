@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.SegmentDetailDao">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.SegmentDetailDo">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="segment_id" jdbcType="VARCHAR" property="segmentId" />
+    <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+    <result column="service_id" jdbcType="VARCHAR" property="serviceId" />
+    <result column="service_instance_id" jdbcType="VARCHAR" property="serviceInstanceId" />
+    <result column="endpoint_id" jdbcType="VARCHAR" property="endpointId" />
+    <result column="start_time" jdbcType="BIGINT" property="startTime" />
+    <result column="latency" jdbcType="INTEGER" property="latency" />
+    <result column="is_error" jdbcType="INTEGER" property="isError" />
+    <result column="tags" jdbcType="VARCHAR" property="tags" />
+    <result column="token" jdbcType="VARCHAR" property="token" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="time_bucket" jdbcType="BIGINT" property="timeBucket" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.SegmentDetailDo">
+    <result column="data_binary" jdbcType="LONGVARCHAR" property="dataBinary" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, segment_id, trace_id, service_id, service_instance_id, endpoint_id, start_time,
+    latency, is_error, tags, token, user_name, time_bucket
+  </sql>
+  <sql id="Blob_Column_List">
+    data_binary
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from segment_detail
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+<!--  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">-->
+<!--    delete from segment_detail-->
+<!--    where id = #{id,jdbcType=VARCHAR}-->
+<!--  </delete>-->
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.SegmentDetailDo">
+    insert into segment_detail
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="segmentId != null">
+        segment_id,
+      </if>
+      <if test="traceId != null">
+        trace_id,
+      </if>
+      <if test="serviceId != null">
+        service_id,
+      </if>
+      <if test="serviceInstanceId != null">
+        service_instance_id,
+      </if>
+      <if test="endpointId != null">
+        endpoint_id,
+      </if>
+      <if test="startTime != null">
+        start_time,
+      </if>
+      <if test="latency != null">
+        latency,
+      </if>
+      <if test="isError != null">
+        is_error,
+      </if>
+      <if test="tags != null">
+        tags,
+      </if>
+      <if test="token != null">
+        token,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="timeBucket != null">
+        time_bucket,
+      </if>
+      <if test="dataBinary != null">
+        data_binary,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentId != null">
+        #{segmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="traceId != null">
+        #{traceId,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceId != null">
+        #{serviceId,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceInstanceId != null">
+        #{serviceInstanceId,jdbcType=VARCHAR},
+      </if>
+      <if test="endpointId != null">
+        #{endpointId,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        #{startTime,jdbcType=BIGINT},
+      </if>
+      <if test="latency != null">
+        #{latency,jdbcType=INTEGER},
+      </if>
+      <if test="isError != null">
+        #{isError,jdbcType=INTEGER},
+      </if>
+      <if test="tags != null">
+        #{tags,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null">
+        #{token,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="timeBucket != null">
+        #{timeBucket,jdbcType=BIGINT},
+      </if>
+      <if test="dataBinary != null">
+        #{dataBinary,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.SegmentDetailDo">
+    update segment_detail
+    <set>
+      <if test="segmentId != null">
+        segment_id = #{segmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="traceId != null">
+        trace_id = #{traceId,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceId != null">
+        service_id = #{serviceId,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceInstanceId != null">
+        service_instance_id = #{serviceInstanceId,jdbcType=VARCHAR},
+      </if>
+      <if test="endpointId != null">
+        endpoint_id = #{endpointId,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        start_time = #{startTime,jdbcType=BIGINT},
+      </if>
+      <if test="latency != null">
+        latency = #{latency,jdbcType=INTEGER},
+      </if>
+      <if test="isError != null">
+        is_error = #{isError,jdbcType=INTEGER},
+      </if>
+      <if test="tags != null">
+        tags = #{tags,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null">
+        token = #{token,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="timeBucket != null">
+        time_bucket = #{timeBucket,jdbcType=BIGINT},
+      </if>
+      <if test="dataBinary != null">
+        data_binary = #{dataBinary,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>
