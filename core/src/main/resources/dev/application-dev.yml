@@ -1,0 +1,126 @@
+spring:
+  servlet:
+    multipart:
+      # 上传文件总的最大值
+      max-request-size: 1000MB
+      # 单个文件的最大值
+      max-file-size: 1000MB
+  application:
+    name: firewall-rule-analysis-management-system
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: Aiit@123
+    url: jdbc:mysql://10.0.107.46:3306/mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+  jpa:
+    show-sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
+  profiles:
+    active: dev
+  redis:
+    timeout: 10000
+    database: 0
+    password: Aiit@123
+    jedis:
+      #连接池中最大连接数，默认为 8。
+      maxTotal: 10000
+      # 连接池中最大的空闲连接数，默认为 8。
+      maxIdle: 100
+      # 连接池中最少空闲连接数，默认为 0。
+      minIdle: 8
+      # 当连接池资源用尽后，调用者的最大等待时间（单位为毫秒），一般不建议使用默认值，该默认值为-1，表示永远不超时，一直等待。
+      maxWaitMillis: 5000
+      # 向连接池借用连接时是否做连接有效性检测（ping），无效连接会被移除，每次借用多执行一次 ping 命令，默认值为 false。
+      testOnBorrow: false
+      #最大连接数据库连接数,设 0 为没有限制
+      max-active: 0
+      #最大等待连接中的数量,设 0 为没有限制
+      max-idle: 0
+      #最大建立连接等待时间。如果超过此时间将接到异常。设为-1表示无限制。
+      max-wait: -1ms
+      #最小等待连接中的数量,设 0 为没有限制
+      min-idle: 0
+    ##连接池最大连接数（使用负值表示没有限制） 默认8
+    lettuce:
+      pool:
+        # 最大活跃连接数，负数为不限制
+        max-active: -1
+        ## 连接池中的最大空闲连接 默认8
+        max-idle: 5000
+        ## 连接池中的最小空闲连接 默认0
+        min-idle: 50
+        ## 连接池最大阻塞等待时间（使用负值表示没有限制） 默认 -1
+        max-wait: -1
+    sentinel:
+      master: mymaster
+      nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
+  kafka:
+    bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+    rule-parsing-success-topic: rule_parsing_success_topic
+    producer:
+      # 发生错误后，消息重发的次数。
+      retries: 5
+      #当有多个消息需要被发送到同一个分区时，生产者会把它们放在同一个批次里。该参数指定了一个批次可以使用的内存大小，按照字节数计算。4194304B = 4MB。
+      batch-size: 4194304
+      # 设置生产者内存缓冲区的大小。67108864B = 64MB。
+      buffer-memory: 67108864
+      # 键的序列化方式
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 值的序列化方式
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # acks=0 ： 生产者在成功写入消息之前不会等待任何来自服务器的响应。
+      # acks=1 ： 只要集群的首领节点收到消息，生产者就会收到一个来自服务器成功响应。
+      # acks=all ：只有当所有参与复制的节点全部收到消息时，生产者才会收到一个来自服务器的成功响应。
+      acks: all
+      # 当spring.kafka.producer.xxx没有直接配置项的时候，spring在集成kafka时，放置了一个map的配置属性，就是说，把哪些没有直接配置项的配置放到这个map--properties中进行配置；
+      # 当spring.kafka.consumer.xxx没有直接配置项的时候，spring在集成kafka时，放置了一个map的配置属性，就是说，把哪些没有直接配置项的配置放到这个map--properties中进行配置；
+      # 当springboot项目启动的时候，springboot会加载这些配置项，并与没有设置的配置项做一个合并放到内存中。当KafkaProducer发送消息或者使用KafkaConsumer消费消息时，直接使用已加载好配置项即可；
+      properties:
+        # 最大可以发送一条4MB的消息到Broker端；4194304B = 4MB。
+        max.request.size: 4194304
+        # 发送一条消息出去，100毫秒内还没有凑成一个batch，则必须立即发送出去；
+        linger.ms: 100
+        # 每次重试间隔500毫秒；
+        retry.backoff.ms: 500
+    consumer:
+      # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
+      auto-commit-interval: 1S
+      # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：
+      # latest（默认值）在偏移量无效的情况下，消费者将从最新的记录开始读取数据（在消费者启动之后生成的记录）
+      # earliest ：在偏移量无效的情况下，消费者将从起始位置读取分区的记录
+      auto-offset-reset: earliest
+      # 是否自动提交偏移量，默认值是true,为了避免出现重复数据和数据丢失，可以把它设置为false,然后手动提交偏移量
+      enable-auto-commit: false
+      # 键的反序列化方式
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 值的反序列化方式
+      value-deserializer: org.apache.kafka.common.serialization.BytesDeserializer
+      group-id: flows_match_group
+#      max-poll-records: 32
+#      fetch-max-wait: 100
+#      fetch-min-size: 1
+      properties:
+        max.poll.interval.ms: 1200000
+        max.poll.records: 5
+    listener:
+      # 在侦听器容器中运行的线程数。
+      concurrency: 5
+      #listner负责ack，每调用一次，就立即commit
+      ack-mode: manual_immediate
+      missing-topics-fatal: false
+
+mybatis:
+  type-aliases-package: com.zhejiang.mobile.core.dao
+  configuration:
+#    输出SQL语句；2021-12-02 18:40:52
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 3000
+  mapper-locations: classpath:mappers/*xml
+
+logging:
+  config: classpath:logback-spring.xml
+
+server:
+  port: 9090

@@ -11,7 +11,7 @@
 FROM registry.cn-hangzhou.aliyuncs.com/mscc2020/base_openjdk1.8-mobile-management-system:latest
 WORKDIR /home/apps/
 
-COPY target/ROOT.jar .
+COPY core/target/ROOT.jar .
 
 ENV JAVA_OPTS=""
 
