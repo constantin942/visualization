@@ -72,6 +72,8 @@ message SegmentObject {
   // The agent/SDK could optimize or ignore some tracked spans for better performance.
   // In this case, the value should be flagged as TRUE.
   bool isSizeLimited = 6;
+
+  string ref = 7;
 }
 
 // Segment reference represents the link between two existing segment.

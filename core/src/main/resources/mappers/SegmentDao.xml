@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.SegmentDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.Segment">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.SegmentDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -10,29 +10,38 @@
     <result column="token" jdbcType="VARCHAR" property="token" />
     <result column="operation_name" jdbcType="VARCHAR" property="operationName" />
     <result column="request_start_time" jdbcType="VARCHAR" property="requestStartTime" />
-    <result column="spans" jdbcType="VARCHAR" property="spans" />
-    <result column="reorganizing_spans" jdbcType="VARCHAR" property="reorganizingSpans" />
+    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
+    <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId" />
+    <result column="parent_segment_id" jdbcType="VARCHAR" property="parentSegmentId" />
+    <result column="spans" jdbcType="LONGVARCHAR" property="spans" />
+    <result column="reorganizing_spans" jdbcType="LONGVARCHAR" property="reorganizingSpans" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, token, operation_name, request_start_time, spans, reorganizing_spans
+    id, is_delete, gmt_create, gmt_modified, user_name, token, operation_name, request_start_time,
+    global_trace_id, current_segment_id, parent_segment_id, spans, reorganizing_spans
   </sql>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from segment
+  </select>
+  <select id="selectByGlobalTraceId" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+      id, user_name, operation_name, request_start_time, reorganizing_spans
+    from segment
+    where global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
     from segment
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <select id="selectAll" resultMap="BaseResultMap">
-    select
-      id, operation_name, user_name, request_start_time, reorganizing_spans
-    from segment
-    where is_delete = 0
-  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from segment
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.Segment">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.SegmentDo">
     insert into segment
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -58,6 +67,15 @@
       </if>
       <if test="requestStartTime != null">
         request_start_time,
+      </if>
+      <if test="globalTraceId != null">
+        global_trace_id,
+      </if>
+      <if test="currentSegmentId != null">
+        current_segment_id,
+      </if>
+      <if test="parentSegmentId != null">
+        parent_segment_id,
       </if>
       <if test="spans != null">
         spans,
@@ -91,15 +109,24 @@
       <if test="requestStartTime != null">
         #{requestStartTime,jdbcType=VARCHAR},
       </if>
+      <if test="globalTraceId != null">
+        #{globalTraceId,jdbcType=VARCHAR},
+      </if>
+      <if test="currentSegmentId != null">
+        #{currentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="parentSegmentId != null">
+        #{parentSegmentId,jdbcType=VARCHAR},
+      </if>
       <if test="spans != null">
-        #{spans,jdbcType=VARCHAR},
+        #{spans,jdbcType=LONGVARCHAR},
       </if>
       <if test="reorganizingSpans != null">
-        #{reorganizingSpans,jdbcType=VARCHAR},
+        #{reorganizingSpans,jdbcType=LONGVARCHAR},
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.Segment">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.SegmentDo">
     update segment
     <set>
       <if test="isDelete != null">
@@ -123,11 +150,20 @@
       <if test="requestStartTime != null">
         request_start_time = #{requestStartTime,jdbcType=VARCHAR},
       </if>
+      <if test="globalTraceId != null">
+        global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
+      </if>
+      <if test="currentSegmentId != null">
+        current_segment_id = #{currentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="parentSegmentId != null">
+        parent_segment_id = #{parentSegmentId,jdbcType=VARCHAR},
+      </if>
       <if test="spans != null">
-        spans = #{spans,jdbcType=VARCHAR},
+        spans = #{spans,jdbcType=LONGVARCHAR},
       </if>
       <if test="reorganizingSpans != null">
-        reorganizing_spans = #{reorganizingSpans,jdbcType=VARCHAR},
+        reorganizing_spans = #{reorganizingSpans,jdbcType=LONGVARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

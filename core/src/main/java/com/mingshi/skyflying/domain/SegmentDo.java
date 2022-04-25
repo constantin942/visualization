@@ -1,10 +1,10 @@
 package com.mingshi.skyflying.domain;
 
 import lombok.Data;
-import java.util.Date;
 
+import java.util.Date;
 @Data
-public class Segment {
+public class SegmentDo {
     private Integer id;
 
     private Byte isDelete;
@@ -20,6 +20,12 @@ public class Segment {
     private String operationName;
 
     private String requestStartTime;
+
+    private String globalTraceId;
+
+    private String currentSegmentId;
+
+    private String parentSegmentId;
 
     private String spans;
 

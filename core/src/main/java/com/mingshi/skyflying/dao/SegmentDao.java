@@ -1,17 +1,18 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.Segment;
+import com.mingshi.skyflying.domain.SegmentDo;
 
 import java.util.List;
 
 public interface SegmentDao {
     int deleteByPrimaryKey(Integer id);
+    int insertSelective(SegmentDo record);
 
-    int insertSelective(Segment record);
+    SegmentDo selectByPrimaryKey(Integer id);
 
-    Segment selectByPrimaryKey(Integer id);
+    List<SegmentDo> selectByGlobalTraceId(String globalTraceId);
 
-    List<Segment> selectAll();
+    int updateByPrimaryKeySelective(SegmentDo record);
 
-    int updateByPrimaryKeySelective(Segment record);
+    List<SegmentDo> selectAll();
 }

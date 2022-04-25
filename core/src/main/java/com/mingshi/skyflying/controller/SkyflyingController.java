@@ -36,6 +36,7 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
   public ServerResponse<String> getAllSegments() {
-    return segmentDetailService.getAllSegments();
+    return segmentDetailService.getAllSegmentsBySegmentRelation();
+    // return segmentDetailService.getAllSegments();
   }
 }
