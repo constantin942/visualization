@@ -15,52 +15,6 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
   profiles:
     active: config-docker
-  redis:
-    database: 0
-    password: ${Redis_Password}
-#    cluster:
-#      max-redirects: 3
-#      nodes:
-#        - ${Redis_Cluster_Host0_Port}
-#        - ${Redis_Cluster_Host1_Port}
-#        - ${Redis_Cluster_Host2_Port}
-#        - ${Redis_Cluster_Host3_Port}
-#        - ${Redis_Cluster_Host4_Port}
-#        - ${Redis_Cluster_Host5_Port}
-    jedis:
-      #连接池中最大连接数，默认为 8。
-      maxTotal: 10000
-      # 连接池中最大的空闲连接数，默认为 8。
-      maxIdle: 100
-      # 连接池中最少空闲连接数，默认为 0。
-      minIdle: 8
-      # 当连接池资源用尽后，调用者的最大等待时间（单位为毫秒），一般不建议使用默认值，该默认值为-1，表示永远不超时，一直等待。
-      maxWaitMillis: 5000
-      # 向连接池借用连接时是否做连接有效性检测（ping），无效连接会被移除，每次借用多执行一次 ping 命令，默认值为 false。
-      testOnBorrow: false
-      #最大连接数据库连接数,设 0 为没有限制
-      max-active: 0
-      #最大等待连接中的数量,设 0 为没有限制
-      max-idle: 0
-      #最大建立连接等待时间。如果超过此时间将接到异常。设为-1表示无限制。
-      max-wait: -1ms
-      #最小等待连接中的数量,设 0 为没有限制
-      min-idle: 0
-    ##连接池最大连接数（使用负值表示没有限制） 默认8
-    lettuce:
-      pool:
-        # 最大活跃连接数，负数为不限制
-        max-active: -1
-        ## 连接池中的最大空闲连接 默认8
-        max-idle: 5000
-        ## 连接池中的最小空闲连接 默认0
-        min-idle: 50
-        ## 连接池最大阻塞等待时间（使用负值表示没有限制） 默认 -1
-        max-wait: -1
-    timeout: 10000
-    sentinel:
-      master: mymaster
-      nodes: ${Redis_Sentinel_Master_Nodes}
 
   kafka:
     bootstrap-servers: ${Kafka_Bootstrap_Servers}
@@ -127,33 +81,3 @@ mybatis:
 
 logging:
   config: classpath:logback-spring.xml
-
-RocketMQ:
-  producer:
-    rocketMQRuleParsingProducerGroupName: ${rocketMQRuleParsingProducerGroupName}
-  consumer:
-    rocketMQRuleParsingConsumerGroupName: ${rocketMQRuleParsingConsumerGroupName}
-    rocketMQLocalStatisticsConsumerGroupName: rocketmq_local_statistics_group_name
-  rocketMQRuleParsingBeginTopic: ${RocketMQ_Rule_Parsing_Begin_Topic}
-  rocketMQRuleParsingEndTopic: ${RocketMQ_Rule_Parsing_End_Topic}
-  rocketMQLocalStatisticsTopic: local-statistics-topic
-  instanceName: management-system-consumer-instance
-  nameSrv:
-    address: ${RocketMQ_Adress}
-
-# 防火墙规则文件上传的路径；2021-04-15 17:28:40
-FirewallRulesFileUploadPath: ${FirewallRulesFileUploadPath}
-# 告知Python那边，应该去哪里获取防火墙规则文件并解析；2021-04-20 17:35:41，这个路径是宿主机映射到容器中的路径（FirewallRulesFileUploadPath）；
-PythonFirewallRulesFileSavePath: ${PythonFirewallRulesFileSavePath}
-
-#hbase:
-#  master: ${Hbase_Master}
-#  zookeeper:
-#    znode:
-#      paren: ${Hbase_Zookeeper_Znode_Paren}
-#    quorum: ${Hbase_Zookeeper_Quorum}
-#    property:
-#      clientPort: ${Hbase_Zookeeper_ClientPort}
-
-# 本地统计时间；2022-01-25 13:38:27
-LocalStatisticsTime: ${Local_Statistics_Time}
