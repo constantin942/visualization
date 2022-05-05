@@ -150,7 +150,7 @@ public class AiitKafkaConsumer {
 
   private void reorganizingSpans(SegmentDo segment, List<Span> spanList) {
     if (StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+      // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
 
@@ -165,16 +165,6 @@ public class AiitKafkaConsumer {
         getData(span, linkedList);
         findChildrenDetail(spanList, span, childrenSpan, linkedList);
       }
-      // if (CollectionUtils.isNotEmpty(rootSpans)) {
-      //   rootSpans.forEach(span -> {
-      //     List<Span> childrenSpan = new ArrayList<>();
-      //     childrenSpan.add(span);
-      //
-      //     // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-      //     getData(span, linkedList);
-      //     findChildrenDetail(spanList, span, childrenSpan, linkedList);
-      //   });
-      // }
     }
 
     String toString = linkedList.toString();
@@ -352,14 +342,14 @@ public class AiitKafkaConsumer {
   private void insertSegment(SegmentDo segment) {
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
     if (StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+      // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     } else if (StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名为空，但token不为空，此时要把这个token对应的用户名补全；2022-04-21 08:45:30
       boolean flag = setUserNameByToken(segment);
       if (false == flag) {
         // 如果根据token没有获取到对应的用户名，那么这条访问信息就不存入数据库中。因为没有意义，前端获取数据时，是根据用户名来获取数据的。2022-04-21 09:06:45
-        // return;
+        return;
       }
     } else if (!StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名和token都不为空，那么就把用户名和token插入到表中；2022-04-21 08:46:07
@@ -367,6 +357,7 @@ public class AiitKafkaConsumer {
     } else if (!StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
       // 这种情况不应该出现；2022-04-21 08:47:17
       log.error("开始执行 AiitKafkaConsumer # insertSegment()方法--将用户的调用链条信息【{}】插入到表中。但出现了异常情况，用户名不为空，但token为空。", JsonUtil.obj2String(segment));
+      return;
     }
 
     int insertResult = segmentDao.insertSelective(segment);

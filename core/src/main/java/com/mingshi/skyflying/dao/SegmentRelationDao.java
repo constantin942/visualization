@@ -3,6 +3,7 @@ package com.mingshi.skyflying.dao;
 import com.mingshi.skyflying.domain.SegmentRelationDo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SegmentRelationDao {
     int deleteByPrimaryKey(Integer id);
@@ -11,7 +12,7 @@ public interface SegmentRelationDao {
 
     SegmentRelationDo selectByPrimaryKey(Integer id);
 
-    List<String> selectAllGlobalTraceId();
+    List<Map<String,String>> selectAllGlobalTraceId();
 
     SegmentRelationDo selectByGlobalTraceId(String globalTraceId);
 

@@ -12,6 +12,8 @@ public interface SegmentDao {
 
     List<SegmentDo> selectByGlobalTraceId(String globalTraceId);
 
+    SegmentDo selectBySegmentId(String segmentId);
+
     int updateByPrimaryKeySelective(SegmentDo record);
 
     List<SegmentDo> selectAll();

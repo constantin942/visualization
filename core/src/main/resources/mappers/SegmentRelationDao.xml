@@ -18,10 +18,10 @@
     from segment_relation
     where global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
   </select>
-  <select id="selectAllGlobalTraceId" resultType="java.lang.String">
+  <select id="selectAllGlobalTraceId" resultType="java.util.Map">
     select
-      global_trace_id
-    from segment_relation
+      global_trace_id as globalTraceId,segment_ids as segmentIds
+    from segment_relation order by id asc
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
