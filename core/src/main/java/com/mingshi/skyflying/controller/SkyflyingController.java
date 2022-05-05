@@ -19,7 +19,7 @@ import javax.annotation.Resource;
  **/
 @Controller
 @Slf4j
-@RequestMapping("/skyflying")
+@RequestMapping("/api/skyflying")
 public class SkyflyingController {
 
   @Resource
