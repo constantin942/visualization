@@ -83,6 +83,14 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.12</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.github.jsqlparser</groupId>
+      <artifactId>jsqlparser</artifactId>
+      <version>4.4</version>
+<!--      <type>bundle</type>-->
+    </dependency>
+
   </dependencies>
 
 
@@ -102,6 +110,12 @@
         <curr.spring-boot.env>config-docker</curr.spring-boot.env>
       </properties>
     </profile>
+    <profile>
+      <id>lanjing</id>
+      <properties>
+        <curr.spring-boot.env>lanjing</curr.spring-boot.env>
+      </properties>
+    </profile>
   </profiles>
 
 
@@ -112,8 +126,9 @@
         <directory>src/main/resources/</directory>
         <filtering>true</filtering>
         <excludes>
-          <exclude>config-docker/*</exclude>
           <exclude>dev/*</exclude>
+          <exclude>config-docker/*</exclude>
+          <exclude>lanjing/*</exclude>
         </excludes>
       </resource>
       <resource>

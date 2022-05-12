@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface SegmentDao {
     int deleteByPrimaryKey(Integer id);
+
     int insertSelective(SegmentDo record);
 
     SegmentDo selectByPrimaryKey(Integer id);

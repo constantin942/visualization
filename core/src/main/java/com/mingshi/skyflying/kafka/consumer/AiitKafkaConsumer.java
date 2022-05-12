@@ -13,10 +13,7 @@ import com.mingshi.skyflying.type.KeyValue;
 import com.mingshi.skyflying.type.LogEntity;
 import com.mingshi.skyflying.type.NodeType;
 import com.mingshi.skyflying.type.RefType;
-import com.mingshi.skyflying.utils.CollectionUtils;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
@@ -64,10 +61,10 @@ public class AiitKafkaConsumer {
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       String parentSegmentId = getRef(segmentObject, segment);
 
-      // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
-      saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId);
+      // // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
+      // saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId);
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
-      insertSegment(segment);
+      insertSegment(segment, segmentObject, parentSegmentId);
     } catch (InvalidProtocolBufferException e) {
       e.printStackTrace();
     }
@@ -217,120 +214,21 @@ public class AiitKafkaConsumer {
       String peer = span.getPeer();
       JSONObject jsonObject = new JSONObject();
       String component = span.getComponent();
+      String endpointName = span.getEndpointName();
+      // if (StringUtil.isNotBlank(component) && (component.equals("Lettuce") || component.contains("Lettuce"))) {
+      //   System.out.println("");
+      // }
       if (StringUtil.isEmpty(component)) {
         return;
       }
       if (component.equals("SpringMVC")) {
-        String userName = span.getUserName();
-        String token = span.getToken();
-        if (null != userName && "" != userName) {
-          jsonObject.put("userName", userName + "," + token);
-        }
-        if (null != token && "" != token) {
-          jsonObject.put("userName", token);
-        }
-
-        List<KeyValue> tagsList = span.getTags();
-        for (KeyValue keyValue : tagsList) {
-          if (keyValue.getKey().equals("url")) {
-            String url = keyValue.getValue();
-            jsonObject.put("url", url);
-            linkedList.add(jsonObject.toJSONString());
-          }
-        }
-      } else
-      if (component.equals(ComponentsDefine.MYSQL_JDBC_DRIVER.getName())) {
-        jsonObject.put("ip", peer);
-        List<KeyValue> tagsList = span.getTags();
-        for (KeyValue keyValue : tagsList) {
-          String key = keyValue.getKey();
-          if (key.equals("db.instance")) {
-            String dataBaseName = keyValue.getValue();
-            jsonObject.put("databaseName", dataBaseName);
-            jsonObject.put("dbType", "mysql");
-          } else if (key.equals("db.statement")) {
-            String sql = keyValue.getValue();
-            jsonObject.put("sqlDetail", sql);
-            String table = null;
-            String sqlType = null;
-            if (sql.contains("select")) {
-              sqlType = "select";
-              try {
-                table = sql.split("from")[1].split("where")[0].split("order")[0].replace(" ", "").replace("\n", "");
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            } else if (sql.contains("insert")) {
-              sqlType = "insert";
-              try {
-                table = sql.split("insert")[1].split("into")[1].split("\\(")[0].replace(" ", "").replace("\n", "");
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            } else if (sql.contains("update")) {
-              sqlType = "update";
-              try {
-                table = sql.split("SET")[0].replace(" ", "").replace("\n", "");
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            } else if (sql.contains("delete")) {
-              sqlType = "delete";
-            }
-            jsonObject.put("actionType", sqlType);
-            jsonObject.put("tableName", table);
-          }
-        }
-        if (0 < jsonObject.size() && !linkedList.contains(jsonObject.toJSONString())) {
-          linkedList.add(jsonObject.toJSONString());
-        }
-      } else if (component.equals("Lettuce/SETEX")) {
-        List<KeyValue> tagsList = span.getTags();
-        String dbType = null;
-        String ip = span.getPeer();
-        jsonObject.put("ip", ip);
-        for (KeyValue keyValue : tagsList) {
-          if (keyValue.getKey().equals("db.type")) {
-            dbType = keyValue.getValue();
-            jsonObject.put("dbType", dbType);
-          } else if (keyValue.getKey().equals("db.statement")) {
-            String value = keyValue.getValue();
-            try {
-              jsonObject.put("order", value);
-              if (0 < jsonObject.size()) {
-                linkedList.add(jsonObject.toJSONString());
-              }
-            } catch (Exception e) {
-              e.printStackTrace();
-            }
-          }
-        }
+        getSpringMVCInfo(span, jsonObject, linkedList);
+      } else if (component.equals(ComponentsDefine.MYSQL_JDBC_DRIVER.getName())) {
+        getDbInfo(peer, span, jsonObject, linkedList);
+      } else if (component.equals("Lettuce/SETEX") || endpointName.equals("Lettuce/SETEX")) {
+        getRedisInfo(span, jsonObject, linkedList);
       } else if (component.equals("HttpClient")) {
-        List<KeyValue> tagsList = span.getTags();
-        String dbType = null;
-        String ip = span.getPeer();
-        jsonObject.put("ip", ip);
-        if (ip.contains("dingtalk")) {
-          jsonObject.put("dbType", "钉钉");
-          linkedList.add(jsonObject.toJSONString());
-        } else {
-          for (KeyValue keyValue : tagsList) {
-            if (keyValue.getKey().equals("db.type")) {
-              dbType = keyValue.getValue();
-              jsonObject.put("dbType", dbType);
-            } else if (keyValue.getKey().equals("db.statement")) {
-              String value = keyValue.getValue();
-              try {
-                jsonObject.put("order", value);
-                if (0 < jsonObject.size()) {
-                  linkedList.add(jsonObject.toJSONString());
-                }
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            }
-          }
-        }
+        getHttpClientInfo(span, jsonObject, linkedList);
       } else {
         log.info("{}", component);
       }
@@ -339,7 +237,193 @@ public class AiitKafkaConsumer {
     }
   }
 
-  private void insertSegment(SegmentDo segment) {
+  /**
+   * <B>方法名称：getDbInfo</B>
+   * <B>概要说明：获取数据库的访问信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月12日 16:05:49
+   * @Param [peer, span, jsonObject, linkedList]
+   **/
+  private void getDbInfo(String peer, Span span, JSONObject jsonObject, List<String> linkedList) {
+    jsonObject.put("ip", peer);
+    List<KeyValue> tagsList = span.getTags();
+    for (KeyValue keyValue : tagsList) {
+      String key = keyValue.getKey();
+      if (key.equals("db.instance")) {
+        String dataBaseName = keyValue.getValue();
+        jsonObject.put("databaseName", dataBaseName);
+        jsonObject.put("dbType", "mysql");
+      } else if (key.equals("db.statement")) {
+        getSqlInfo(keyValue, jsonObject);
+      }
+    }
+    if (0 < jsonObject.size() && !linkedList.contains(jsonObject.toJSONString())) {
+      linkedList.add(jsonObject.toJSONString());
+    }
+  }
+
+  /**
+   * <B>方法名称：getSpringMVCInfo</B>
+   * <B>概要说明：获取SpringMVC信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月12日 16:05:24
+   * @Param [span, jsonObject, linkedList]
+   **/
+  private void getSpringMVCInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
+    String userName = span.getUserName();
+    String token = span.getToken();
+    if (null != userName && "" != userName) {
+      jsonObject.put("userName", userName + "," + token);
+    }
+    if (null != token && "" != token) {
+      jsonObject.put("userName", token);
+    }
+
+    List<KeyValue> tagsList = span.getTags();
+    for (KeyValue keyValue : tagsList) {
+      if (keyValue.getKey().equals("url")) {
+        String url = keyValue.getValue();
+        jsonObject.put("url", url);
+        linkedList.add(jsonObject.toJSONString());
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：getHttpClientInfo</B>
+   * <B>概要说明：获取HttpClient信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月12日 16:05:08
+   * @Param [span, jsonObject, linkedList]
+   **/
+  private void getHttpClientInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
+    List<KeyValue> tagsList = span.getTags();
+    String dbType = null;
+    String ip = span.getPeer();
+    jsonObject.put("ip", ip);
+    if (ip.contains("dingtalk")) {
+      jsonObject.put("dbType", "钉钉");
+      linkedList.add(jsonObject.toJSONString());
+    } else {
+      for (KeyValue keyValue : tagsList) {
+        if (keyValue.getKey().equals("db.type")) {
+          dbType = keyValue.getValue();
+          jsonObject.put("dbType", dbType);
+        } else if (keyValue.getKey().equals("db.statement")) {
+          String value = keyValue.getValue();
+          try {
+            jsonObject.put("order", value);
+            if (0 < jsonObject.size()) {
+              linkedList.add(jsonObject.toJSONString());
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+  }
+
+  private void getRedisInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
+    List<KeyValue> tagsList = span.getTags();
+    String dbType = null;
+    String ip = span.getPeer();
+    jsonObject.put("ip", ip);
+    for (KeyValue keyValue : tagsList) {
+      if (keyValue.getKey().equals("db.type")) {
+        dbType = keyValue.getValue();
+        jsonObject.put("dbType", dbType);
+      } else if (keyValue.getKey().equals("db.statement")) {
+        String value = keyValue.getValue();
+        try {
+          jsonObject.put("actionType", value);
+          if (0 < jsonObject.size()) {
+            linkedList.add(jsonObject.toJSONString());
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：getSqlInfo</B>
+   * <B>概要说明：获取sql信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月12日 16:05:15
+   * @Param [keyValue, jsonObject]
+   **/
+  private void getSqlInfo(KeyValue keyValue, JSONObject jsonObject){
+    String sql = keyValue.getValue();
+    List<String> tableList = new ArrayList<>();
+    jsonObject.put("sqlDetail", sql);
+    if (sql.contains("?")) {
+      sql = sql.replace("\"?\"", "*");
+    }
+
+    String table = null;
+    String sqlType = null;
+    if (sql.contains("select") || sql.contains("SELECT")) {
+      sqlType = "select";
+      // table = getTable(sql, sqlType);
+      tableList = SqlParserUtils.selectTable(sql);
+    } else if (sql.contains("insert") || sql.contains("INSERT")) {
+      sqlType = "insert";
+      // table = getTable(sql, sqlType);
+      tableList = SqlParserUtils.insertTable(sql);
+    } else if (sql.contains("update") || sql.contains("UPDATE")) {
+      sqlType = "update";
+      // table = getTable(sql, sqlType);
+      tableList = SqlParserUtils.updateTable(sql);
+    } else if (sql.contains("delete") || sql.contains("DELETE")) {
+      sqlType = "delete";
+      // table = getTable(sql, sqlType);
+      tableList = SqlParserUtils.deleteTable(sql);
+    }
+    jsonObject.put("actionType", sqlType);
+    jsonObject.put("tableName", JsonUtil.obj2String(tableList));
+    // jsonObject.put("tableName", table);
+  }
+
+  /**
+   * <B>方法名称：getTable</B>
+   * <B>概要说明：获取表名</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年05月12日 16:05:13
+   * @Param [sql]
+   **/
+  private String getTable(String sql, String sqlType) {
+    List<String> tableList = null;
+    try {
+      if (sql.contains("?")) {
+        sql = sql.replace("\"?\"", "*");
+      }
+
+      tableList = SqlParserUtils.selectTable(sql);
+      if (0 < tableList.size()) {
+        return JsonUtil.obj2String(tableList);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
+    if (segment.getOperationName().equals("Redisson/PING")) {
+      return;
+    }
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
     if (StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
       // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
@@ -354,15 +438,19 @@ public class AiitKafkaConsumer {
     } else if (!StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名和token都不为空，那么就把用户名和token插入到表中；2022-04-21 08:46:07
       insertUserNameAndToken(segment);
-    } else if (!StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
-      // 这种情况不应该出现；2022-04-21 08:47:17
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法--将用户的调用链条信息【{}】插入到表中。但出现了异常情况，用户名不为空，但token为空。", JsonUtil.obj2String(segment));
-      return;
     }
-
+    // else if (!StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
+    //   // 这种情况不应该出现；2022-04-21 08:47:17
+    //   log.error("开始执行 AiitKafkaConsumer # insertSegment()方法--将用户的调用链条信息【{}】插入到表中。但出现了异常情况，用户名不为空，但token为空。", JsonUtil.obj2String(segment));
+    //   return;
+    // }
+    // bin/kafka-topics.sh --zookeeper 114.55.211.161:2181 --alter --topic skywalking-segments --partitions 16
     int insertResult = segmentDao.insertSelective(segment);
     if (1 != insertResult) {
       log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
+    } else {
+      // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
+      saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId);
     }
   }
 

@@ -11,12 +11,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Aiit@123
-    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://114.55.211.161:3306/mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   jpa:
     show-sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
   profiles:
-    active: dev
+    active: lanjing
   redis:
     timeout: 10000
     database: 0
@@ -55,7 +55,7 @@ spring:
       master: mymaster
       nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
   kafka:
-    bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+    bootstrap-servers: 114.55.211.161:9092
     rule-parsing-success-topic: rule_parsing_success_topic
     producer:
       # 发生错误后，消息重发的次数。

@@ -29,7 +29,7 @@
     select
       id, user_name, operation_name, request_start_time, reorganizing_spans
     from segment
-    where current_segment_id = #{segmentId,jdbcType=VARCHAR}
+    where current_segment_id = #{segmentId,jdbcType=VARCHAR} order by id desc limit 1
   </select>
   <select id="selectByGlobalTraceId" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
