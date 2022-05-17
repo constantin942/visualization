@@ -215,13 +215,10 @@ public class AiitKafkaConsumer {
       JSONObject jsonObject = new JSONObject();
       String component = span.getComponent();
       String endpointName = span.getEndpointName();
-      // if (StringUtil.isNotBlank(component) && (component.equals("Lettuce") || component.contains("Lettuce"))) {
-      //   System.out.println("");
-      // }
       if (StringUtil.isEmpty(component)) {
         return;
       }
-      if (component.equals("SpringMVC")) {
+      if (component.equals("SpringMVC") || component.equals("SpringRestTemplate")) {
         getSpringMVCInfo(span, jsonObject, linkedList);
       } else if (component.equals(ComponentsDefine.MYSQL_JDBC_DRIVER.getName())) {
         getDbInfo(peer, span, jsonObject, linkedList);
@@ -362,7 +359,7 @@ public class AiitKafkaConsumer {
    * @Date 2022年05月12日 16:05:15
    * @Param [keyValue, jsonObject]
    **/
-  private void getSqlInfo(KeyValue keyValue, JSONObject jsonObject){
+  private void getSqlInfo(KeyValue keyValue, JSONObject jsonObject) {
     String sql = keyValue.getValue();
     List<String> tableList = new ArrayList<>();
     jsonObject.put("sqlDetail", sql);
@@ -431,20 +428,28 @@ public class AiitKafkaConsumer {
     } else if (StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名为空，但token不为空，此时要把这个token对应的用户名补全；2022-04-21 08:45:30
       boolean flag = setUserNameByToken(segment);
-      if (false == flag) {
-        // 如果根据token没有获取到对应的用户名，那么这条访问信息就不存入数据库中。因为没有意义，前端获取数据时，是根据用户名来获取数据的。2022-04-21 09:06:45
-        return;
-      }
+      // if (false == flag) {
+      //   // 如果根据token没有获取到对应的用户名，那么这条访问信息就不存入数据库中。因为没有意义，前端获取数据时，是根据用户名来获取数据的。2022-04-21 09:06:45
+      //   return;
+      // }
     } else if (!StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名和token都不为空，那么就把用户名和token插入到表中；2022-04-21 08:46:07
       insertUserNameAndToken(segment);
     }
-    // else if (!StringUtil.isEmpty(segment.getUserName()) && StringUtil.isEmpty(segment.getToken())) {
-    //   // 这种情况不应该出现；2022-04-21 08:47:17
-    //   log.error("开始执行 AiitKafkaConsumer # insertSegment()方法--将用户的调用链条信息【{}】插入到表中。但出现了异常情况，用户名不为空，但token为空。", JsonUtil.obj2String(segment));
-    //   return;
-    // }
-    // bin/kafka-topics.sh --zookeeper 114.55.211.161:2181 --alter --topic skywalking-segments --partitions 16
+
+    // 将segment中缺少用户名的记录，补全用户名。之所以有这一步骤，是因为在分布式调用链中，每一部分都是独立上报信息的。如果后面的先上报，那么用户名和token很可能不会传递到后面。
+    // 此时该条记录先插入到segment表中，用户名字段先置为null。当后面用户名不为空的记录到来时，再通过global_trace_id进行关联并补全上面缺失的用户名。
+    if (StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getGlobalTraceId())) {
+      List<SegmentDo> segmentDoList = segmentDao.selectByGlobalTraceIdAndUserNameIsNull(segment.getGlobalTraceId());
+      for (SegmentDo segmentDo : segmentDoList) {
+        segmentDo.setUserName(segment.getUserName());
+        int updateResult = segmentDao.updateByPrimaryKeySelective(segmentDo);
+        if (1 != updateResult) {
+          log.error("更新用户名 = [{}]失败。", segmentDo);
+        }
+      }
+    }
+
     int insertResult = segmentDao.insertSelective(segment);
     if (1 != insertResult) {
       log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
@@ -466,7 +471,24 @@ public class AiitKafkaConsumer {
   private boolean setUserNameByToken(SegmentDo segment) {
     UserTokenDo userTokenDo = userTokenDao.selectByToken(segment.getToken());
     if (null == userTokenDo) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，根据token = 【{}】从用户名和token表中没有获取到数据，这是异常情况。", segment.getToken());
+      String globalTraceId = segment.getGlobalTraceId();
+      if (StringUtil.isNotBlank(globalTraceId)) {
+        List<SegmentDo> segmentDoList = segmentDao.selectByGlobalTraceId(globalTraceId);
+        if (null != segmentDoList && 0 < segmentDoList.size()) {
+          for (SegmentDo segmentDo : segmentDoList) {
+            if (StringUtil.isNotBlank(segmentDo.getUserName())) {
+              try {
+                segment.setUserName(segmentDo.getUserName());
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+              break;
+            }
+          }
+          return true;
+        }
+      }
+      // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，根据token = 【{}】从用户名和token表中没有获取到数据，这是异常情况。", segment.getToken());
       return false;
     } else {
       segment.setUserName(userTokenDo.getUserName());

@@ -13,6 +13,8 @@ public interface SegmentDao {
 
     List<SegmentDo> selectByGlobalTraceId(String globalTraceId);
 
+    List<SegmentDo> selectByGlobalTraceIdAndUserNameIsNull(String globalTraceId);
+
     SegmentDo selectBySegmentId(String segmentId);
 
     int updateByPrimaryKeySelective(SegmentDo record);
