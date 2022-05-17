@@ -159,7 +159,8 @@ public class AiitKafkaConsumer {
         childrenSpan.add(span);
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        getData(span, linkedList);
+        // getData(span, linkedList);
+        getData2(span, linkedList);
         findChildrenDetail(spanList, span, childrenSpan, linkedList);
       }
     }
@@ -202,7 +203,8 @@ public class AiitKafkaConsumer {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
-        getData(span, linkedList);
+        // getData(span, linkedList);
+        getData2(span, linkedList);
         findChildrenDetail(spans, span, childrenSpan, linkedList);
       }
     });
@@ -231,6 +233,42 @@ public class AiitKafkaConsumer {
       }
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  /**
+   * <B>方法名称：getData2</B>
+   * <B>概要说明：只要span中的tags字段不为空，那么就把这个span放入到链表中。这样做的目的是：不再区分是哪个插件拦截到的信息，像skywalking的服务端一样，使用统一的展示方式在前端展示数据。</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月17日 10:05:41
+   * @Param [span, linkedList]
+   **/
+  private void getData2(Span span, List<String> linkedList) {
+    try {
+      JSONObject jsonObject = new JSONObject();
+      int spanId = span.getSpanId();
+      if (0 == spanId) {
+        getSpringMVCInfo(span, jsonObject, linkedList);
+      } else if (0 < span.getTags().size()) {
+        jsonObject.put("spanId", spanId);
+        jsonObject.put("parentSpanId", span.getParentSpanId());
+        jsonObject.put("serviceCode", span.getServiceCode());
+        jsonObject.put("serviceInstanceName", span.getServiceInstanceName());
+        jsonObject.put("startTime", span.getStartTime());
+        jsonObject.put("endTime", span.getEndTime());
+        jsonObject.put("endpointName", span.getEndpointName());
+        jsonObject.put("peer", span.getPeer());
+        jsonObject.put("component", span.getComponent());
+        jsonObject.put("tags", span.getTags());
+        // jsonObject.put("userName", span.getUserName());
+        // jsonObject.put("token", span.getToken());
+        linkedList.add(jsonObject.toJSONString());
+        // linkedList.add(JsonUtil.obj2String(span));
+      }
+    } catch (Exception e) {
+      log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span));
     }
   }
 
@@ -273,12 +311,12 @@ public class AiitKafkaConsumer {
   private void getSpringMVCInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
     String userName = span.getUserName();
     String token = span.getToken();
-    if (null != userName && "" != userName) {
-      jsonObject.put("userName", userName + "," + token);
-    }
-    if (null != token && "" != token) {
-      jsonObject.put("userName", token);
-    }
+    // if (null != userName && "" != userName) {
+    //   jsonObject.put("userName", userName + "," + token);
+    // }
+    // if (null != token && "" != token) {
+    //   jsonObject.put("userName", token);
+    // }
 
     List<KeyValue> tagsList = span.getTags();
     for (KeyValue keyValue : tagsList) {
@@ -427,11 +465,7 @@ public class AiitKafkaConsumer {
       return;
     } else if (StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名为空，但token不为空，此时要把这个token对应的用户名补全；2022-04-21 08:45:30
-      boolean flag = setUserNameByToken(segment);
-      // if (false == flag) {
-      //   // 如果根据token没有获取到对应的用户名，那么这条访问信息就不存入数据库中。因为没有意义，前端获取数据时，是根据用户名来获取数据的。2022-04-21 09:06:45
-      //   return;
-      // }
+      setUserNameByToken(segment);
     } else if (!StringUtil.isEmpty(segment.getUserName()) && !StringUtil.isEmpty(segment.getToken())) {
       // 如果用户名和token都不为空，那么就把用户名和token插入到表中；2022-04-21 08:46:07
       insertUserNameAndToken(segment);
@@ -482,6 +516,7 @@ public class AiitKafkaConsumer {
               } catch (Exception e) {
                 e.printStackTrace();
               }
+              insertUserNameAndToken(segment);
               break;
             }
           }
@@ -507,14 +542,19 @@ public class AiitKafkaConsumer {
    **/
   private void insertUserNameAndToken(SegmentDo segment) {
     UserTokenDo userTokenDo = new UserTokenDo();
-    userTokenDo.setUserName(segment.getUserName());
-    userTokenDo.setToken(segment.getToken());
-    UserTokenDo userTokenDo1 = userTokenDao.selectByUserNameAndToken(userTokenDo);
-    if (null == userTokenDo1) {
-      int insertResult = userTokenDao.insertSelective(userTokenDo);
-      if (1 != insertResult) {
-        log.error("开始执行 AiitKafkaConsumer # insertUserNameAndToken()方法，将用户名和token信息【{}】插入到表中失败。", JsonUtil.obj2String(userTokenDo));
+    try {
+      userTokenDo.setUserName(segment.getUserName());
+      userTokenDo.setToken(segment.getToken());
+      userTokenDo.setGlobalTraceId(segment.getGlobalTraceId());
+      UserTokenDo userTokenDo1 = userTokenDao.selectByUserNameAndToken(userTokenDo);
+      if (null == userTokenDo1) {
+        int insertResult = userTokenDao.insertSelective(userTokenDo);
+        if (1 != insertResult) {
+          log.error("开始执行 AiitKafkaConsumer # insertUserNameAndToken()方法，将用户名和token信息【{}】插入到表中失败。", JsonUtil.obj2String(userTokenDo));
+        }
       }
+    } catch (Exception e) {
+      log.error("将用户的信息  = 【{}】插入到表中出现了异常。", JsonUtil.obj2String(userTokenDo));
     }
   }
 

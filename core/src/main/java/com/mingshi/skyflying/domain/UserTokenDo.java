@@ -17,4 +17,6 @@ public class UserTokenDo {
     private String userName;
 
     private String token;
+
+    private String globalTraceId;
 }

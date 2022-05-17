@@ -8,9 +8,10 @@
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
     <result column="token" jdbcType="VARCHAR" property="token" />
+    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, token
+    id, is_delete, gmt_create, gmt_modified, user_name, token, global_trace_id
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -55,6 +56,9 @@
       <if test="token != null">
         token,
       </if>
+      <if test="globalTraceId != null">
+        global_trace_id,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -75,6 +79,9 @@
       <if test="token != null">
         #{token,jdbcType=VARCHAR},
       </if>
+      <if test="globalTraceId != null">
+        #{globalTraceId,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserTokenDo">
@@ -94,6 +101,9 @@
       </if>
       <if test="token != null">
         token = #{token,jdbcType=VARCHAR},
+      </if>
+      <if test="globalTraceId != null">
+        global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
