@@ -28,15 +28,15 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getAllSegments</B>
    * <B>概要说明：获取所有的访问链条信息</B>
+   *
+   * @return ServerResponse<SysOperator>
    * @Author zm
    * @Date 2022年04月19日 17:04:19
    * @Param [request, userName, password]
-   * @return ServerResponse<SysOperator>
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
-  public ServerResponse<String> getAllSegments() {
-    return segmentDetailService.getAllSegmentsBySegmentRelation();
-    // return segmentDetailService.getAllSegments();
+  public ServerResponse<String> getAllSegments(String userName, Integer pageNo, Integer pageSize) {
+    return segmentDetailService.getAllSegmentsBySegmentRelation(userName, pageNo, pageSize);
   }
 }

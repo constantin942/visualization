@@ -12,9 +12,9 @@ public interface SegmentRelationDao {
 
     SegmentRelationDo selectByPrimaryKey(Integer id);
 
-    List<Map<String,String>> selectAllGlobalTraceId();
+    List<Map<String,String>> selectAllGlobalTraceId(Map<String, Object> map);
 
-    SegmentRelationDo selectByGlobalTraceId(String globalTraceId);
+    SegmentRelationDo selectByGlobalTraceId(Map<String, Object> map);
 
     int updateByPrimaryKeySelective(SegmentRelationDo record);
 }

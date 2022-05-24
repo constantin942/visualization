@@ -167,11 +167,6 @@ public class DateTimeUtil {
    */
   public static final String DATEFORMAT_STR_023 = "MM月dd日 hh:mm";
 
-  public static void main(String[] args) {
-    String time1 = "2021-01-14 13:50:51.375819";
-    String time2 = "2021-01-14 13:50:51.000000";
-    System.out.println(timeDifference(time1, time2));
-  }
 
   /**
    * <B>方法名称：longToDate</B>

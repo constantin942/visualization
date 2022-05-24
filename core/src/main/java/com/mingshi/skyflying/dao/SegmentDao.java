@@ -9,6 +9,8 @@ public interface SegmentDao {
 
     int insertSelective(SegmentDo record);
 
+    void insertSelectiveBatch(List<SegmentDo> record);
+
     SegmentDo selectByPrimaryKey(Integer id);
 
     List<SegmentDo> selectByGlobalTraceId(String globalTraceId);

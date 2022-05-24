@@ -2,37 +2,113 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.UserTokenDao">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.UserTokenDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
-    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
-    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
-    <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="token" jdbcType="VARCHAR" property="token" />
-    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+    <result column="token" jdbcType="VARCHAR" property="token"/>
+    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, token, global_trace_id
+    id
+    , is_delete, gmt_create, gmt_modified, user_name, token, global_trace_id
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
-    <include refid="Base_Column_List" />
+    <include refid="Base_Column_List"/>
     from user_token
     where id = #{id,jdbcType=INTEGER}
   </select>
   <select id="selectByToken" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select
-      user_name
+    select user_name
     from user_token
-    where is_delete = 0 and token = #{token,jdbcType=VARCHAR}
+    where is_delete = 0
+      and token = #{token,jdbcType=VARCHAR}
+    order by id asc limit 1
   </select>
-  <select id="selectByUserNameAndToken" parameterType="com.mingshi.skyflying.domain.UserTokenDo" resultMap="BaseResultMap">
-    select
-      user_name, token
+  <select id="selectByGlobalTraceIdUserNameIsNotNull" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select user_name
     from user_token
-    where  is_delete = 0 and user_name = #{userName,jdbcType=VARCHAR} and token = #{token,jdbcType=VARCHAR}
+    where is_delete = 0
+      and global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
+      and user_name is not null
+    order by id asc limit 1
+  </select>
+  <select id="selectByGlobalTraceIdUserNameIsNull" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select id,
+           user_name
+    from user_token
+    where is_delete = 0
+      and global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
+      and user_name is null
+  </select>
+  <select id="selectByTokenUserNameIsNull" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select id,
+           user_name
+    from user_token
+    where is_delete = 0
+      and token = #{token,jdbcType=VARCHAR}
+      and user_name is null
+  </select>
+  <select id="selectByGlobalTraceId" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select user_name
+    from user_token
+    where is_delete = 0
+      and global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
+    order by id asc limit 1
+  </select>
+  <select id="selectByUserNameAndToken" parameterType="com.mingshi.skyflying.domain.UserTokenDo"
+          resultMap="BaseResultMap">
+    select user_name,
+           token
+    from user_token
+    where is_delete = 0
+      and user_name = #{userName,jdbcType=VARCHAR}
+      and token = #{token,jdbcType=VARCHAR}
+    order by id desc limit 1
+  </select>
+  <select id="selectByUserNameAndTokenAndGlobalTraceId" parameterType="com.mingshi.skyflying.domain.UserTokenDo"
+          resultMap="BaseResultMap">
+    select user_name,
+           token,
+           global_trace_id
+    from user_token
+    where is_delete = 0
+      and user_name = #{userName,jdbcType=VARCHAR}
+      and token = #{token,jdbcType=VARCHAR}
+      and global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
+    order by id desc limit 1
+  </select>
+  <insert id="insertSelectiveBatch" parameterType="java.util.List">
+    insert into user_token
+    ( user_name, token, global_trace_id)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.userName,jdbcType=INTEGER},
+      #{item.token,jdbcType=VARCHAR},
+      #{item.globalTraceId,jdbcType=VARCHAR}
+      )
+    </foreach>
+    on duplicate key update
+    user_name = values(user_name) ,
+    token = values(token) ,
+    global_trace_id = values(global_trace_id)
+  </insert>
+  <select id="selectByUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    user_name, token, global_trace_id
+    from user_token
+    where is_delete = 0 and user_name = #{userName,jdbcType=VARCHAR} order by id desc
+    <if test="pageNo != null and pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from user_token
+    delete
+    from user_token
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.UserTokenDo">

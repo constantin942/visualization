@@ -81,3 +81,9 @@ mybatis:
 
 logging:
   config: classpath:logback-spring.xml
+
+reactor:
+  processor:
+    enable: false
+    thread:
+      count: 4
