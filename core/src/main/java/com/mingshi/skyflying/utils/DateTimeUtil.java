@@ -85,10 +85,6 @@ public class DateTimeUtil {
    */
   public static final String FULL_PATTERN = "yyyyMMddHHmmss";
 
-  /**
-   * yyyyMMdd HH:mm:ss
-   */
-  public static final String FULL_STANDARD_PATTERN = "yyyyMMdd HH:mm:ss";
 
   /**
    * MM.dd HH:mm
@@ -1079,7 +1075,7 @@ public class DateTimeUtil {
    * @param date
    * @return
    */
-  public static long getTime(Date date) {
+  public static long getTimestamp(Date date) {
     return date.getTime() / 1000;
   }
 
@@ -1092,6 +1088,10 @@ public class DateTimeUtil {
    */
   public static Date valueOf(String str) {
     return valueOf(str, DATEFORMAT_STR_001);
+  }
+
+  public static long getTimestamp(String str) {
+    return valueOf(str, DATEFORMAT_STR_001).getTime();
   }
 
   /**
@@ -2113,6 +2113,14 @@ public class DateTimeUtil {
     }
     DateTime dateTime = new DateTime(date);
     return dateTime.toString(STANDARD_FORMAT_HHMM);
+  }
+
+  public static String dateToStrformat(Date date) {
+    if (date == null) {
+      return StringUtils.EMPTY;
+    }
+    DateTime dateTime = new DateTime(date);
+    return dateTime.toString(STANDARD_FORMAT);
   }
 
 }

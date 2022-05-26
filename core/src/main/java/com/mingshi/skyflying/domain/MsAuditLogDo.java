@@ -44,4 +44,6 @@ public class MsAuditLogDo {
 
     private String sqlSource;
 
+    private String hash;
+
 }

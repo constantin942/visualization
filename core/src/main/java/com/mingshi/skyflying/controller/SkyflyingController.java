@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
@@ -44,6 +45,19 @@ public class SkyflyingController {
   @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
   public ServerResponse<String> getAllSegments(String userName, Integer pageNo, Integer pageSize) {
     return segmentDetailService.getAllSegmentsBySegmentRelation(userName, pageNo, pageSize);
+  }
+  /**
+   * <B>方法名称：</B>
+   * <B>概要说明：</B>
+   * @Author zm
+   * @Date 2022年05月26日 16:05:50
+   * @Param [startTime, endTime]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/autoFetchAuditlogByDMS", method = RequestMethod.GET)
+  public ServerResponse<String> autoFetchAuditlogByDMS(@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
+    return auditLogService.autoFetchAuditlogByDMS(startTime, endTime);
   }
 
   @ResponseBody
@@ -510,8 +524,6 @@ public class SkyflyingController {
     ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogList sqlExecAuditLogList = body.getSQLExecAuditLogList();
     List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSQLExecAuditLogList = sqlExecAuditLogList.SQLExecAuditLog;
     auditLogService.process(listSQLExecAuditLogList);
-
-
     return null;
   }
 

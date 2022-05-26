@@ -15,6 +15,12 @@
       <artifactId>joda-time</artifactId>
       <version>2.10.5</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
+    <dependency>
+      <groupId>com.aliyun</groupId>
+      <artifactId>aliyun-java-sdk-core</artifactId>
+      <version>4.6.0</version>
+    </dependency>
   </dependencies>
   <parent>
     <groupId>com.mingshi</groupId>

@@ -21,12 +21,13 @@
     <result column="remark" jdbcType="VARCHAR" property="remark"/>
     <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql"/>
     <result column="sql_source" jdbcType="LONGVARCHAR" property="sqlSource"/>
+    <result column="hash" jdbcType="VARCHAR" property="hash"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
     , is_delete, gmt_create, gmt_modified, op_time, user_name, user_id, instance_name,
     instance_id, ms_schema_name, db_id, logic, sql_type, exec_state, affect_rows, elapsed_time,
-    remark,ms_sql, sqlSource
+    remark,ms_sql, sqlSource, hash
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -37,7 +38,7 @@
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_audit_log
     ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
-    affect_rows, elapsed_time, remark, ms_sql, sql_source)
+    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -55,10 +56,11 @@
       #{item.elapsedTime,jdbcType=VARCHAR},
       #{item.remark,jdbcType=VARCHAR},
       #{item.msSql,jdbcType=VARCHAR},
-      #{item.sqlSource,jdbcType=VARCHAR}
+      #{item.sqlSource,jdbcType=VARCHAR},
+      #{item.hash,jdbcType=VARCHAR}
       )
     </foreach>
-    on duplicate key update user_name = values(user_name)
+    on duplicate key update hash = values(hash)
   </insert>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete
@@ -125,6 +127,9 @@
       <if test="sqlSource != null">
         sql_source,
       </if>
+      <if test="hash != null">
+        hash,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -184,6 +189,9 @@
       <if test="sqlSource != null">
         #{sqlSource,jdbcType=VARCHAR},
       </if>
+      <if test="hash != null">
+        #{hash,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAuditLogDo">
@@ -242,6 +250,9 @@
       </if>
       <if test="sqlSource != null">
         sql_source = #{sqlSource,jdbcType=VARCHAR},
+      </if>
+      <if test="hash != null">
+        hash = #{hash,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

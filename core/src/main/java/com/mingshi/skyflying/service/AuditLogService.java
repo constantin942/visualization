@@ -8,4 +8,23 @@ import java.util.List;
 
 public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
   ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSQLExecAuditLogList);
+  /**
+   * <B>方法名称：manualFetchAuditlog</B>
+   * <B>概要说明：手动全量拉取宝拉（polar）数据库的审计日志</B>
+   * @Author zm
+   * @Date 2022年05月26日 15:05:40
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  ServerResponse<String> manualFetchAuditlog();
+
+  /**
+   * <B>方法名称：autoFetchAuditlogByDMS</B>
+   * <B>概要说明：通过定时任务，自动拉取MDS中的数据库审计日志</B>
+   * @Author zm
+   * @Date 2022年05月26日 15:05:40
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  ServerResponse<String> autoFetchAuditlogByDMS(String startTime,String endTime);
 }
