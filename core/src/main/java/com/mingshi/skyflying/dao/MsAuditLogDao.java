@@ -14,5 +14,4 @@ public interface MsAuditLogDao {
     void insertSelectiveBatch(List<MsAuditLogDo> list);
 
     int updateByPrimaryKeySelective(MsAuditLogDo record);
-
 }

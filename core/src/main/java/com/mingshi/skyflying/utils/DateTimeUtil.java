@@ -124,6 +124,8 @@ public class DateTimeUtil {
    * 格式 ：yyyy-MM-dd HH:mm:ss
    */
   public static final String DATEFORMAT_STR_001 = "yyyy-MM-dd HH:mm:ss";
+
+  public static final String DATEFORMAT_STR_006 = "yyyy/MM/dd HH:mm:ss";
   /**
    * 格式 ：yyyy-MM-dd
    */
@@ -987,6 +989,10 @@ public class DateTimeUtil {
     return dateStr(date, DATEFORMAT_STR_021);
   }
 
+  public static String dateStr9(Date date) {
+    return dateStr(date, DATEFORMAT_STR_006);
+  }
+
   /**
    * yyyyMMddHHmmss
    *
@@ -1088,6 +1094,16 @@ public class DateTimeUtil {
    */
   public static Date valueOf(String str) {
     return valueOf(str, DATEFORMAT_STR_001);
+  }
+
+  public static void main(String[] args) {
+    String str = "2022/5/26 22:44 1.65358E+15";
+    String s = valueOf9(str);
+    System.out.println("");
+  }
+  public static String valueOf9(String str) {
+    Date date = valueOf(str, DATEFORMAT_STR_006);
+    return dateStr9(date);
   }
 
   public static long getTimestamp(String str) {

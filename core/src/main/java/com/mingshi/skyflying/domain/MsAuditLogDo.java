@@ -46,4 +46,8 @@ public class MsAuditLogDo {
 
     private String hash;
 
+    private String sqlInsightDbUserName;
+
+    private String sqlInsightUserIp;
+
 }

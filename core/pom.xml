@@ -21,6 +21,12 @@
       <artifactId>aliyun-java-sdk-core</artifactId>
       <version>4.6.0</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>easyexcel</artifactId>
+      <version>3.1.0</version>
+    </dependency>
   </dependencies>
   <parent>
     <groupId>com.mingshi</groupId>

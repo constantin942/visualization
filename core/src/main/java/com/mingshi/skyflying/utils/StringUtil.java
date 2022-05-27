@@ -44,6 +44,19 @@ public final class StringUtil {
     }
   }
 
+  /**
+   * <B>方法名称：recombination</B>
+   * <B>概要说明：大写统一转换成消息、去掉多余的空格</B>
+   * @Author zm
+   * @Date 2022年05月27日 15:05:42
+   * @Param [msSql, opTime, msSchemaName, sqlType]
+   * @return java.lang.String
+   **/
+  public static String recombination(String msSql, String opTime, String msSchemaName, String sqlType) {
+    String strData = (msSql + opTime + msSchemaName + sqlType).toLowerCase().trim();
+    return strData;
+  }
+
   public static String MD5(String key) {
     char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     try {

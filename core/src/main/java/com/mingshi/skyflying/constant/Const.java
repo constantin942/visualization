@@ -28,6 +28,7 @@ public class Const {
   public static final String RETCH_AUDIT_LOG_BY_DMS_FAILURE_RESULT = "failure";
 
   public static final String SQL_SOURCE_DMS = "dms";
+  public static final String SQL_SOURCE_INSIGHT = "sql_insight";
 
   public static final String SERVICE_ID_CONNECTOR = ".";
   public static final String SERVICE_ID_PARSER_SPLIT = "\\.";

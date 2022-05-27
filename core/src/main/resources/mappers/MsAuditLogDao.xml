@@ -22,12 +22,14 @@
     <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql"/>
     <result column="sql_source" jdbcType="LONGVARCHAR" property="sqlSource"/>
     <result column="hash" jdbcType="VARCHAR" property="hash"/>
+    <result column="sql_insight_db_user_name" jdbcType="VARCHAR" property="sqlInsightDbUserName"/>
+    <result column="sql_insight_user_ip" jdbcType="VARCHAR" property="sqlInsightUserIp"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
     , is_delete, gmt_create, gmt_modified, op_time, user_name, user_id, instance_name,
     instance_id, ms_schema_name, db_id, logic, sql_type, exec_state, affect_rows, elapsed_time,
-    remark,ms_sql, sqlSource, hash
+    remark,ms_sql, sqlSource, hash, sql_insight_db_user_name, sql_insight_user_ip
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -38,7 +40,7 @@
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_audit_log
     ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
-    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash)
+    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash, sql_insight_db_user_name)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -57,10 +59,11 @@
       #{item.remark,jdbcType=VARCHAR},
       #{item.msSql,jdbcType=VARCHAR},
       #{item.sqlSource,jdbcType=VARCHAR},
-      #{item.hash,jdbcType=VARCHAR}
+      #{item.hash,jdbcType=VARCHAR},
+      #{item.sqlInsightDbUserName,jdbcType=VARCHAR}
       )
     </foreach>
-    on duplicate key update hash = values(hash)
+    on duplicate key update sql_insight_db_user_name = values(sql_insight_db_user_name)
   </insert>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete
@@ -130,6 +133,12 @@
       <if test="hash != null">
         hash,
       </if>
+      <if test="sqlInsightDbUserName != null">
+        sql_insight_db_user_name,
+      </if>
+      <if test="sqlInsightUserIp != null">
+        sql_insight_user_ip,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -192,6 +201,12 @@
       <if test="hash != null">
         #{hash,jdbcType=VARCHAR},
       </if>
+      <if test="sqlInsightDbUserName != null">
+        #{sqlInsightDbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlInsightUserIp != null">
+        #{sqlInsightUserIp,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAuditLogDo">
@@ -253,6 +268,12 @@
       </if>
       <if test="hash != null">
         hash = #{hash,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlInsightDbUserName != null">
+        sql_insight_db_user_name = #{sqlInsightDbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlInsightUserIp != null">
+        sql_insight_user_ip = #{sqlInsightUserIp,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
