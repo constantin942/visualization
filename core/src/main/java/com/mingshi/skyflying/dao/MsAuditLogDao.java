@@ -11,7 +11,11 @@ public interface MsAuditLogDao {
 
     MsAuditLogDo selectByPrimaryKey(Integer id);
 
+    MsAuditLogDo selectByHash(String hash);
+
     void insertSelectiveBatch(List<MsAuditLogDo> list);
+
+    void insertSelectiveBatchNoSqlInsightDbUserName(List<MsAuditLogDo> list);
 
     int updateByPrimaryKeySelective(MsAuditLogDo record);
 }

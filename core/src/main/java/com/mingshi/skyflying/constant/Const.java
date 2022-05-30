@@ -29,6 +29,7 @@ public class Const {
 
   public static final String SQL_SOURCE_DMS = "dms";
   public static final String SQL_SOURCE_INSIGHT = "sql_insight";
+  public static final String SQL_SOURCE_SKYWALKING_AGENT = "skywalking_agent";
 
   public static final String SERVICE_ID_CONNECTOR = ".";
   public static final String SERVICE_ID_PARSER_SPLIT = "\\.";
@@ -37,4 +38,31 @@ public class Const {
   public static final String RELATION_ID_CONNECTOR = "-";
   public static final String RELATION_ID_PARSER_SPLIT = "\\-";
   public static final String SEGMENT_SPAN_SPLIT = "S";
+
+  // 判断skywalking Java探针发出的SQL语句的SQL类型；2022-05-28 12:56:57
+  public static final String SQL_TYPE_SELECT = "SELECT";
+  public static final String SQL_TYPE_INSERT = "INSERT";
+  public static final String SQL_TYPE_UPDATE = "UPDATE";
+  public static final String SQL_TYPE_DELETE = "DELETE";
+  public static final String SQL_TYPE_LOGIN = "LOGIN";
+  public static final String SQL_TYPE_LOGOUT = "LOGOUT";
+  public static final String SQL_TYPE_MERGE = "MERGE";
+  public static final String SQL_TYPE_ALTER = "ALTER";
+  public static final String SQL_TYPE_CREATEINDEX = "CREATEINDEX";
+  public static final String SQL_TYPE_DROPINDEX = "DROPINDEX";
+  public static final String SQL_TYPE_CREATE = "CREATE";
+  public static final String SQL_TYPE_DROP = "DROP";
+  public static final String SQL_TYPE_SET = "SET";
+  public static final String SQL_TYPE_DESC = "DESC";
+  public static final String SQL_TYPE_REPLACE = "REPLACE";
+  public static final String SQL_TYPE_CALL = "CALL";
+  public static final String SQL_TYPE_BEGIN = "BEGIN";
+  public static final String SQL_TYPE_DESCRIBE = "DESCRIBE";
+  public static final String SQL_TYPE_ROLLBACK = "ROLLBACK";
+  public static final String SQL_TYPE_FLUSH = "FLUSH";
+  public static final String SQL_TYPE_USE = "USE";
+  public static final String SQL_TYPE_SHOW = "SHOW";
+  public static final String SQL_TYPE_START = "START";
+  public static final String SQL_TYPE_COMMIT = "COMMIT";
+  public static final String SQL_TYPE_RENAME = "RENAME";
 }

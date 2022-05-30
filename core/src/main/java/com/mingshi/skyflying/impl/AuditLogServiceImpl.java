@@ -209,24 +209,31 @@ public class AuditLogServiceImpl implements AuditLogService {
         else {
           Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
           MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+          String hash = null;
+          String sqlType = data.getSQL_TYPE();
+          String msSchemaName = data.getDB();
+          String opTime = DateTimeUtil.longToDate(origin_time);
+          msAuditLogDo.setOpTime(opTime);
           String msSql = data.getLOG();
           if (msSql.contains("DMS")) {
             msSql = data.getLOG().split("/*/")[2];
             msAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
+            String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
+            hash = StringUtil.MD5(strData);
           } else {
             msAuditLogDo.setSqlSource(Const.SQL_SOURCE_INSIGHT);
+            String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
+            hash = StringUtil.MD5(strData);
           }
           msAuditLogDo.setMsSql(msSql);
-          String opTime = DateTimeUtil.longToDate(origin_time);
-          msAuditLogDo.setOpTime(opTime);
-          String msSchemaName = data.getDB();
+
+
           msAuditLogDo.setMsSchemaName(msSchemaName);
           msAuditLogDo.setSqlInsightDbUserName(data.getUSER());
           msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
-          String sqlType = data.getSQL_TYPE();
+
           msAuditLogDo.setSqlType(sqlType);
-          String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
-          String hash = StringUtil.MD5(strData);
+
           msAuditLogDo.setHash(hash);
 
           cachedDataList.add(msAuditLogDo);
@@ -259,6 +266,18 @@ public class AuditLogServiceImpl implements AuditLogService {
         Instant now = Instant.now();
         // log.info("{}条数据，开始存储数据库！", cachedDataList.size());
         try {
+          // for (MsAuditLogDo msAuditLogDo : cachedDataList) {
+          //   MsAuditLogDo msAuditLogDo1 = msAuditLogDao.selectByHash(msAuditLogDo.getHash());
+          //   if(null != msAuditLogDo1){
+          //     System.out.println("当前数据库中存在一样的记录，记录id = " + msAuditLogDo1.getId());
+          //   }else{
+          //     try {
+          //       msAuditLogDao.insertSelective(msAuditLogDo);
+          //     } catch (Exception e) {
+          //       e.printStackTrace();
+          //     }
+          //   }
+          // }
           msAuditLogDao.insertSelectiveBatch(cachedDataList);
         } catch (Exception e) {
           log.error("# # 将SQL洞察中的审计日志批量插入到数据库中，出现了异常。", e);
@@ -280,7 +299,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    **/
   private ServerResponse<String> getDMSAuditLog(IAcsClient client, String startTime, String endTime) {
     ServerResponse<String> byErrorMessage = ServerResponse.createBySuccess();
-    int pageSize = 1;
+    int pageSize = 100;
     int pageNumber = 0;
 
     int increment = 0;
@@ -381,7 +400,17 @@ public class AuditLogServiceImpl implements AuditLogService {
       }
       size = list.size();
       if (0 < list.size()) {
-        msAuditLogDao.insertSelectiveBatch(list);
+        for (MsAuditLogDo msAuditLogDo : list) {
+          MsAuditLogDo msAuditLogDo1 = msAuditLogDao.selectByHash(msAuditLogDo.getHash());
+          LinkedList<MsAuditLogDo> ll = new LinkedList<>();
+          ll.add(msAuditLogDo);
+          if(null != msAuditLogDo1){
+            msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(ll);
+          }else{
+            msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(ll);
+          }
+        }
+        // msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(list);
       }
     } catch (Exception e) {
       log.error("将阿里云提供的DMS数据库审计日志插入到表中出现了异常。", e);

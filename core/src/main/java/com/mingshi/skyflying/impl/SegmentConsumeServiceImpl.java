@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.dao.MsAuditLogDao;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
@@ -24,6 +25,7 @@ import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -39,6 +41,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 @Service("SegmentConsumerService")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
+  @Resource
+  private MsAuditLogDao msAuditLogDao;
   @Resource
   private SegmentDao segmentDao;
   @Resource
@@ -74,14 +78,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         operationName.equals("null:null") ||
         operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
         operationName.equals("HikariCP/Connection/close") ||
-
         operationName.equals("POST:/users/menusAuths") ||
         operationName.equals("GET:/zlb/getRuralCommercialBank/info") ||
         operationName.equals("Mysql/JDBI/Connection/commit") ||
         operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
         operationName.equals("HikariCP/Connection/close") ||
         operationName.equals("Mysql/JDBI/PreparedStatement/executeQuery") ||
-
         operationName.startsWith("SpringScheduled") ||
         operationName.equals("POST:/devices/heartbeat")) {
         return null;
@@ -231,6 +233,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       return;
     }
 
+    // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
+    LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent = new LinkedList<>();
+
     List<String> linkedList = new LinkedList<>();
     if (CollectionUtils.isNotEmpty(spanList)) {
       List<Span> rootSpans = findRoot(spanList);
@@ -240,8 +245,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
         // getData(span, linkedList);
-        getData2(span, linkedList);
-        findChildrenDetail(spanList, span, childrenSpan, linkedList);
+        getData2(span, linkedList, auditLogFromSkywalkingAgent);
+        findChildrenDetail(spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+      }
+    }
+
+    if (0 < auditLogFromSkywalkingAgent.size()) {
+      try {
+        Instant now = Instant.now();
+        msAuditLogDao.insertSelectiveBatch(auditLogFromSkywalkingAgent);
+        log.info("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的【{}】条SQL语句插入到表中耗时【{}】毫秒。", auditLogFromSkywalkingAgent.size(), DateTimeUtil.getTimeMillis(now));
+      } catch (Exception e) {
+        log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
       }
     }
 
@@ -279,13 +294,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return rootSpans;
   }
 
-  private void findChildrenDetail(List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList) {
+  private void findChildrenDetail(List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
         // getData(span, linkedList);
-        getData2(span, linkedList);
-        findChildrenDetail(spans, span, childrenSpan, linkedList);
+        getData2(span, linkedList, auditLogFromSkywalkingAgent);
+        findChildrenDetail(spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
       }
     });
   }
@@ -325,7 +340,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月17日 10:05:41
    * @Param [span, linkedList]
    **/
-  private void getData2(Span span, List<String> linkedList) {
+  private void getData2(Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     try {
       JSONObject jsonObject = new JSONObject();
       int spanId = span.getSpanId();
@@ -341,15 +356,150 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         jsonObject.put("endpointName", span.getEndpointName());
         jsonObject.put("peer", span.getPeer());
         jsonObject.put("component", span.getComponent());
-        jsonObject.put("tags", span.getTags());
-        // jsonObject.put("userName", span.getUserName());
-        // jsonObject.put("token", span.getToken());
-        linkedList.add(jsonObject.toJSONString());
-        // linkedList.add(JsonUtil.obj2String(span));
+        List<KeyValue> tags = span.getTags();
+        if (0 < tags.size()) {
+          Boolean flag = false;
+          Boolean isSQL = false;
+          String dbUserName = null;
+          String msSql = null;
+          String msSchemaName = null;
+          for (KeyValue tag : tags) {
+            String key = tag.getKey();
+            if (tag.getValue().equals("Redis")) {
+              break;
+            }
+            if (key.equals("http.method")) {
+              // 不再存储单纯的GET请求；2022-05-27 18:14:25
+              flag = true;
+              break;
+            } else if (key.equals("db.instance")) {
+              msSchemaName = tag.getValue();
+            } else if (key.equals("db_user_name")) {
+              dbUserName = tag.getValue();
+            } else if (key.equals("db.statement")) {
+              // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
+              // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
+              msSql = tag.getValue();
+              isSQL = true;
+            }
+          }
+          if (true == isSQL) {
+            // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
+            getMsAuditLogDo(msSql, span.getStartTime(), msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
+          }
+
+          if (false == flag) {
+            jsonObject.put("tags", tags);
+            linkedList.add(jsonObject.toJSONString());
+          }
+        }
       }
     } catch (Exception e) {
       log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
     }
+  }
+
+  /**
+   * <B>方法名称：getMsAuditLogDo</B>
+   * <B>概要说明：组装MsAuditLogDo实例，用于将其插入到审计日志表中（ms_audit_log）</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年05月28日 13:05:03
+   * @Param [msSql, startTime, msSchemaName, dbUserName, auditLogFromSkywalkingAgent]
+   **/
+  private void getMsAuditLogDo(String msSql, long startTime, String msSchemaName, String dbUserName, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+    MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+    try {
+      msAuditLogDo.setSqlSource(Const.SQL_SOURCE_SKYWALKING_AGENT);
+      // sql语句；
+      msAuditLogDo.setMsSql(msSql);
+      // // 执行时间；
+      String opTime = DateTimeUtil.longToDate(startTime);
+      msAuditLogDo.setOpTime(opTime);
+      // 数据库名称；
+      msAuditLogDo.setMsSchemaName(msSchemaName);
+      // 执行语句的数据库用户名；
+      msAuditLogDo.setSqlInsightDbUserName(dbUserName);
+      // 发送请求的客户端IP；
+      // msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
+      // sql类型；
+      String sqlType = getSqlType(msSql);
+
+      msAuditLogDo.setSqlType(sqlType);
+      // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
+      String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
+      String hash = StringUtil.MD5(strData);
+      msAuditLogDo.setHash(hash);
+      auditLogFromSkywalkingAgent.add(msAuditLogDo);
+    } catch (Exception e) {
+      log.error("#SegmentConsumeServiceImpl.getMsAuditLogDo()# 组装MsAuditLogDo实例时，出现了异常。", JsonUtil.obj2String(msAuditLogDo));
+    }
+  }
+
+  /**
+   * <B>方法名称：getSqlType</B>
+   * <B>概要说明：获取SQL语句的类型</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年05月28日 12:05:33
+   * @Param [msSql]
+   **/
+  private String getSqlType(String msSql) {
+    if (msSql.startsWith(Const.SQL_TYPE_SELECT) || msSql.startsWith(Const.SQL_TYPE_SELECT.toLowerCase())) {
+      return Const.SQL_TYPE_SELECT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_INSERT) || msSql.startsWith(Const.SQL_TYPE_INSERT.toLowerCase())) {
+      return Const.SQL_TYPE_INSERT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_UPDATE) || msSql.startsWith(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+      return Const.SQL_TYPE_UPDATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DELETE) || msSql.startsWith(Const.SQL_TYPE_DELETE.toLowerCase())) {
+      return Const.SQL_TYPE_DELETE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGIN) || msSql.startsWith(Const.SQL_TYPE_LOGIN.toLowerCase())) {
+      return Const.SQL_TYPE_LOGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGOUT) || msSql.startsWith(Const.SQL_TYPE_LOGOUT.toLowerCase())) {
+      return Const.SQL_TYPE_LOGOUT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_MERGE) || msSql.startsWith(Const.SQL_TYPE_MERGE.toLowerCase())) {
+      return Const.SQL_TYPE_MERGE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ALTER) || msSql.startsWith(Const.SQL_TYPE_ALTER.toLowerCase())) {
+      return Const.SQL_TYPE_ALTER.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATEINDEX) || msSql.startsWith(Const.SQL_TYPE_CREATEINDEX.toLowerCase())) {
+      return Const.SQL_TYPE_CREATEINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROPINDEX) || msSql.startsWith(Const.SQL_TYPE_DROPINDEX.toLowerCase())) {
+      return Const.SQL_TYPE_DROPINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATE) || msSql.startsWith(Const.SQL_TYPE_CREATE.toLowerCase())) {
+      return Const.SQL_TYPE_CREATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROP) || msSql.startsWith(Const.SQL_TYPE_DROP.toLowerCase())) {
+      return Const.SQL_TYPE_DROP.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SET) || msSql.startsWith(Const.SQL_TYPE_SET.toLowerCase())) {
+      return Const.SQL_TYPE_SET.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESC) || msSql.startsWith(Const.SQL_TYPE_DESC.toLowerCase())) {
+      return Const.SQL_TYPE_DESC.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_REPLACE) || msSql.startsWith(Const.SQL_TYPE_REPLACE.toLowerCase())) {
+      return Const.SQL_TYPE_REPLACE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CALL) || msSql.startsWith(Const.SQL_TYPE_CALL.toLowerCase())) {
+      return Const.SQL_TYPE_CALL.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_BEGIN) || msSql.startsWith(Const.SQL_TYPE_BEGIN.toLowerCase())) {
+      return Const.SQL_TYPE_BEGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESCRIBE) || msSql.startsWith(Const.SQL_TYPE_DESCRIBE.toLowerCase())) {
+      return Const.SQL_TYPE_DESCRIBE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ROLLBACK) || msSql.startsWith(Const.SQL_TYPE_ROLLBACK.toLowerCase())) {
+      return Const.SQL_TYPE_ROLLBACK.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_FLUSH) || msSql.startsWith(Const.SQL_TYPE_FLUSH.toLowerCase())) {
+      return Const.SQL_TYPE_FLUSH.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_USE) || msSql.startsWith(Const.SQL_TYPE_USE.toLowerCase())) {
+      return Const.SQL_TYPE_USE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SHOW) || msSql.startsWith(Const.SQL_TYPE_SHOW.toLowerCase())) {
+      return Const.SQL_TYPE_SHOW.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_START) || msSql.startsWith(Const.SQL_TYPE_START.toLowerCase())) {
+      return Const.SQL_TYPE_START.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_COMMIT) || msSql.startsWith(Const.SQL_TYPE_COMMIT.toLowerCase())) {
+      return Const.SQL_TYPE_COMMIT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase())) {
+      return Const.SQL_TYPE_RENAME.toLowerCase();
+    }
+    log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
+    return null;
   }
 
   /**

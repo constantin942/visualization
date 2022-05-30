@@ -53,7 +53,13 @@ public final class StringUtil {
    * @return java.lang.String
    **/
   public static String recombination(String msSql, String opTime, String msSchemaName, String sqlType) {
-    String strData = (msSql + opTime + msSchemaName + sqlType).toLowerCase().trim();
+    String strData = null;
+    if(StringUtil.isBlank(opTime)){
+      strData = (msSql + msSchemaName + sqlType).toLowerCase().trim();
+    }else{
+      strData = (msSql + opTime + msSchemaName + sqlType).toLowerCase().trim();
+    }
+
     return strData;
   }
 

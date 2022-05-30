@@ -159,6 +159,10 @@
         #{globalTraceId,jdbcType=VARCHAR},
       </if>
     </trim>
+    on duplicate key update
+    user_name = values(user_name) ,
+    token = values(token) ,
+    global_trace_id = values(global_trace_id)
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserTokenDo">
     update user_token

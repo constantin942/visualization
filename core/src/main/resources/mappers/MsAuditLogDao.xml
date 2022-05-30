@@ -29,13 +29,19 @@
     id
     , is_delete, gmt_create, gmt_modified, op_time, user_name, user_id, instance_name,
     instance_id, ms_schema_name, db_id, logic, sql_type, exec_state, affect_rows, elapsed_time,
-    remark,ms_sql, sqlSource, hash, sql_insight_db_user_name, sql_insight_user_ip
+    remark,ms_sql, sql_source, hash, sql_insight_db_user_name, sql_insight_user_ip
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
     from ms_audit_log
     where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByHash" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_audit_log
+    where hash = #{hash,jdbcType=VARCHAR}
   </select>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_audit_log
@@ -63,7 +69,34 @@
       #{item.sqlInsightDbUserName,jdbcType=VARCHAR}
       )
     </foreach>
-    on duplicate key update sql_insight_db_user_name = values(sql_insight_db_user_name)
+    on duplicate key update sql_insight_db_user_name = values(sql_insight_db_user_name),sql_source = values(sql_source)
+  </insert>
+  <insert id="insertSelectiveBatchNoSqlInsightDbUserName" parameterType="java.util.List">
+    insert into ms_audit_log
+    ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
+    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.opTime,jdbcType=VARCHAR},
+      #{item.userName,jdbcType=VARCHAR},
+      #{item.userId,jdbcType=INTEGER},
+      #{item.instanceName,jdbcType=VARCHAR},
+      #{item.instanceId,jdbcType=INTEGER},
+      #{item.msSchemaName,jdbcType=LONGVARCHAR},
+      #{item.dbId,jdbcType=INTEGER},
+      #{item.logic,jdbcType=VARCHAR},
+      #{item.sqlType,jdbcType=VARCHAR},
+      #{item.execState,jdbcType=VARCHAR},
+      #{item.affectRows,jdbcType=INTEGER},
+      #{item.elapsedTime,jdbcType=VARCHAR},
+      #{item.remark,jdbcType=VARCHAR},
+      #{item.msSql,jdbcType=VARCHAR},
+      #{item.sqlSource,jdbcType=VARCHAR},
+      #{item.hash,jdbcType=VARCHAR}
+      )
+    </foreach>
+    on duplicate key update hash = values(hash)
   </insert>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete
@@ -193,7 +226,7 @@
         #{remark,jdbcType=VARCHAR},
       </if>
       <if test="msSql != null">
-        #{sql,jdbcType=LONGVARCHAR},
+        #{msSql,jdbcType=LONGVARCHAR},
       </if>
       <if test="sqlSource != null">
         #{sqlSource,jdbcType=VARCHAR},

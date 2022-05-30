@@ -128,6 +128,6 @@ server:
 
 reactor:
   processor:
-    enable: false
+    enable: true
     thread:
       count: 1

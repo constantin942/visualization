@@ -49,7 +49,7 @@ public class ScheduledTask {
     MsScheduledTaskDo msScheduledTaskDo = msScheduledTaskDao.selectLastSuccessRecord(Const.RETCH_AUDIT_LOG_BY_DMS_SUCCESS_RESULT);
     if (null == msScheduledTaskDo || StringUtil.isBlank(msScheduledTaskDo.getStartTime())) {
       // 如果定时任务表里不存在操作记录，那么就设置一个默认值；2022-05-26 17:37:27
-      // startTime = "2022-05-26 00:00:00";
+      // startTime = "2022-05-29 10:50:00";
       startTime = "1990-01-01 00:00:00";
     } else {
       // 获取上一次成功执行完毕的操作事件；2022-05-26 17:37:56
