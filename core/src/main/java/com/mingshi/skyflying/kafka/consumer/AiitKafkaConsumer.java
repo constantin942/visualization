@@ -8,8 +8,6 @@ import org.apache.kafka.common.utils.Bytes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,7 +24,7 @@ public class AiitKafkaConsumer {
   private SegmentConsumerService segmentConsumerService;
 
   @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
-  public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+  public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());
     if (message.isPresent()) {
       if(true == reactorProcessorEnable){
