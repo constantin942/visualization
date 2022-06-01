@@ -136,11 +136,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, segmentDao, mingshiServerUtil);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("segment", JsonUtil.obj2String(segmentDo));
+      jsonObject.put(Const.SEGMENT, JsonUtil.obj2String(segmentDo));
       if (0 < auditLogFromSkywalkingAgentList.size()) {
-        jsonObject.put("auditLogFromSkywalkingAgentList", JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
+        jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
       }
       linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {

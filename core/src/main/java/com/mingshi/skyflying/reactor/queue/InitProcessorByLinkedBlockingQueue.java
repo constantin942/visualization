@@ -38,6 +38,11 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     return createProcessorsFinishedFlag;
   }
 
+  private static Boolean shutdown = false;
+  public static Boolean getShutdown(){
+    return shutdown;
+  }
+
   @Override
   public void run(ApplicationArguments args) throws Exception {
     if(true == reactorProcessorEnable){
@@ -52,6 +57,15 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
       createProcessors();
       createProcessorsFinishedFlag = true;
     }
+
+    // 当jvm进程退出时，优雅关闭processor线程；2022-06-01 10:03:12
+    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+      @Override
+      public void run() {
+        log.error("# InitProcessorByLinkedBlockingQueue.run() # jvm进程要退出了，将关闭的标志位设置为true。这样processor线程就可以正常的退出了。");
+        shutdown = true;
+      }
+    }));
   }
 
   /**

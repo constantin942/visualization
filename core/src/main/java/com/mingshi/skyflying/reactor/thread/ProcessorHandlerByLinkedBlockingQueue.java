@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.reactor.thread;
 
+import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.utils.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +52,8 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
 
   @Override
   public void run() {
-    // todo：这里最好设置一个标志位，当jvm关闭时，将标志位设置为false，那么线程就可以正常退出了；2022-06-01 09:40:44
-    while (!Thread.interrupted()) {
+    // 优雅关闭processor线程：只有jvm进程退出，并且当前队列中没有了元素时，processor线程才退出循环。2022-06-01 10:06:19
+    while (false == InitProcessorByLinkedBlockingQueue.getShutdown() && 0 != getQueueSize()) {
       try {
         ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();
         if (null == record) {
@@ -69,5 +70,8 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
         log.error("线程【{}】在清洗调用链信息时，出现了异常。", e);
       }
     }
+    log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程要退出了。此时jvm关闭的标志位 = 【{}】，该线程对应的队列中元素的个数 = 【{}】。",
+      InitProcessorByLinkedBlockingQueue.getShutdown(),
+      getQueueSize());
   }
 }
