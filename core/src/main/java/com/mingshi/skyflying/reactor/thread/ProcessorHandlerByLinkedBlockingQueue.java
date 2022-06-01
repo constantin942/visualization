@@ -34,7 +34,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
       }
       return linkedBlockingQueue.offer(record);
     } catch (Exception e) {
-      log.error("将调用链信息放入到LinkedBlockingQueue中出现了异常。", e);
+      log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
       return false;
     }
   }
@@ -46,6 +46,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
 
   @Override
   public void run() {
+    // todo：这里最好设置一个标志位，当jvm关闭时，将标志位设置为false，那么线程就可以正常退出了；2022-06-01 09:40:44
     while (!Thread.interrupted()) {
       try {
         ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();

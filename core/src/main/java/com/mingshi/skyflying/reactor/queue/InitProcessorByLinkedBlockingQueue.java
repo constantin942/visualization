@@ -17,20 +17,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
-  @Value("${reactor.processor.thread.count}")
-  private Integer reactorProcessorThreadCount = 4;
 
+  // 在开启reactor模式的情况下，创建processor线程的数量；2022-06-01 09:28:57
+  @Value("${reactor.processor.thread.count}")
+  private Integer reactorProcessorThreadCount;
+
+  // 是否开启reactor模式的开关；2022-06-01 09:28:28
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
 
   @Resource
   private SegmentConsumerService segmentConsumerService;
 
+  private static Integer processorSize;
+  private static AtomicInteger indexAtomicInteger = null;
   private static volatile Boolean createProcessorsFinishedFlag = false;
-  private static Integer processorSize = 1;
-  private static List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = new ArrayList<>(processorSize);
-
-  private static AtomicInteger indexAtomicInteger = new AtomicInteger(0);
+  private static List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = null;
 
   public static Boolean getCreateProcessorsFinishedFlag() {
     return createProcessorsFinishedFlag;
@@ -39,18 +41,28 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
     if(true == reactorProcessorEnable){
+      if(null == reactorProcessorThreadCount || 0 > reactorProcessorThreadCount){
+        // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
+        reactorProcessorThreadCount = 4;
+      }
+      processorSize = reactorProcessorThreadCount;
+      indexAtomicInteger = new AtomicInteger(0);
+      processorHandlerByLinkedBlockingQueueList = new ArrayList<>(reactorProcessorThreadCount);
       // 项目启动成功后，创建指定数量的processor线程；
       createProcessors();
       createProcessorsFinishedFlag = true;
     }
   }
 
-  // 项目启动成功后，创建指定数量的processor线程；
+  /**
+   * <B>方法名称：createProcessors</B>
+   * <B>概要说明：项目启动成功后，创建指定数量的processor线程；</B>
+   * @Author zm
+   * @Date 2022年06月01日 09:06:24
+   * @Param []
+   * @return void
+   **/
   private void createProcessors() {
-    if(null == reactorProcessorThreadCount || 0 > reactorProcessorThreadCount){
-      reactorProcessorThreadCount = 8;
-    }
-    processorSize = reactorProcessorThreadCount;
     for (int i = 0; i < processorSize; i++) {
       log.info("项目启动，开始创建第【{}】个processor线程，processor线程总数【{}】个。", (1 + i), processorSize);
       ProcessorHandlerByLinkedBlockingQueue processorHandlerByLinkedBlockingQueue = new ProcessorHandlerByLinkedBlockingQueue(segmentConsumerService);
@@ -61,7 +73,14 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     }
   }
 
-  // 获取processor线程；
+  /**
+   * <B>方法名称：getProcessor</B>
+   * <B>概要说明：获取processor线程</B>
+   * @Author zm
+   * @Date 2022年06月01日 09:06:45
+   * @Param []
+   * @return com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue
+   **/
   public static ProcessorHandlerByLinkedBlockingQueue getProcessor() {
     // 当自增的原子类实例自增到processor线程数量时，就重置为0；2021-10-20 14:26:25
     if (indexAtomicInteger.get() == processorSize) {
@@ -69,7 +88,6 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     }
 
     int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);
-    // log.info("本次获取到processor线程的索引值 = 【{}】，当前processor线程中队列中元素的个数【{}】。", index, processorList.get(index).getQueueSize());
     return processorHandlerByLinkedBlockingQueueList.get(index);
   }
 
