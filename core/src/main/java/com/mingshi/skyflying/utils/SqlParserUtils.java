@@ -18,7 +18,6 @@ import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.StringReader;
@@ -35,7 +34,6 @@ import java.util.Map;
  * @create: 2020-12-25 15:02
  */
 @Slf4j
-@Component
 public class SqlParserUtils {
   /**
    * @Description: 查询sql字段
@@ -106,7 +104,7 @@ public class SqlParserUtils {
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(updateStatement);
     } catch (Exception e) {
-      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql);
+      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
     }
     return tableList;
   }
