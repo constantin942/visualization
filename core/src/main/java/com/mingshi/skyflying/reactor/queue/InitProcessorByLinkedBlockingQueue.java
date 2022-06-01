@@ -59,13 +59,13 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     }
 
     // 当jvm进程退出时，优雅关闭processor线程；2022-06-01 10:03:12
-    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-      @Override
-      public void run() {
-        log.error("# InitProcessorByLinkedBlockingQueue.run() # jvm进程要退出了，将关闭的标志位设置为true。这样processor线程就可以正常的退出了。");
-        shutdown = true;
-      }
-    }));
+    // Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+    //   @Override
+    //   public void run() {
+    //     log.error("# InitProcessorByLinkedBlockingQueue.run() # jvm进程要退出了，将关闭的标志位设置为true。这样processor线程就可以正常的退出了。");
+    //     shutdown = true;
+    //   }
+    // }));
   }
 
   /**

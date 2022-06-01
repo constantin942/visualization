@@ -29,7 +29,7 @@ public class IoThread extends Thread {
   // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
   private LinkedBlockingQueue<JSONObject> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
-  private Integer flushToRocketMQInterval = 1;
+  private Integer flushToRocketMQInterval = 3;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private MingshiServerUtil mingshiServerUtil;
@@ -41,7 +41,7 @@ public class IoThread extends Thread {
     auditLogList = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
-      this.flushToRocketMQInterval = flushToRocketMQInterval;
+      this.flushToRocketMQInterval = 5;
     }
     this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
@@ -54,12 +54,12 @@ public class IoThread extends Thread {
   @Override
   public void run() {
     try {
-      while (false == InitProcessorByLinkedBlockingQueue.getShutdown() && 0 != linkedBlockingQueue.size()) {
+      while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         try {
           JSONObject jsonObject = linkedBlockingQueue.poll();
           if (null == jsonObject) {
             TimeUnit.MILLISECONDS.sleep(10);
-          }else{
+          } else {
             // 从json实例中获取审计日志的信息
             getAuditLogFromJSONObject(jsonObject);
 
@@ -85,15 +85,16 @@ public class IoThread extends Thread {
   /**
    * <B>方法名称：getAuditLogFromJSONObject</B>
    * <B>概要说明：从json实例中获取审计日志的信息</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月01日 10:06:21
    * @Param [jsonObject]
-   * @return void
    **/
   private void getAuditLogFromJSONObject(JSONObject jsonObject) {
     try {
       String listString = jsonObject.getString(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST);
-      if(StringUtil.isNotBlank(listString)){
+      if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = JsonUtil.string2Obj(listString, LinkedList.class, MsAuditLogDo.class);
         auditLogList.addAll(auditLogFromSkywalkingAgentList);
       }
@@ -105,10 +106,11 @@ public class IoThread extends Thread {
   /**
    * <B>方法名称：getSegmentFromJSONObject</B>
    * <B>概要说明：从json实例中获取segment的信息</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月01日 10:06:21
    * @Param [jsonObject]
-   * @return void
    **/
   private void getSegmentFromJSONObject(JSONObject jsonObject) {
     try {
@@ -141,7 +143,7 @@ public class IoThread extends Thread {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
         mingshiServerUtil.flushSegmentToDB(segmentList);
-        mingshiServerUtil.flushAuditLogToDB( auditLogList);
+        mingshiServerUtil.flushAuditLogToDB(auditLogList);
         mingshiServerUtil.flushSegmentIndexToDB();
         CURRENT_TIME = Instant.now();
       } else {

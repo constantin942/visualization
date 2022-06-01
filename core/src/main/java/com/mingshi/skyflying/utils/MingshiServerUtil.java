@@ -46,7 +46,6 @@ public class MingshiServerUtil {
    * @Param [now]
    **/
   public void flushSegmentIndexToDB() {
-    Instant now = Instant.now();
     Boolean atomicBoolean = SingletonLocalStatisticsMap.getAtomicBooleanIsChanged();
     if (false == atomicBoolean) {
       // 只有当索引有变动的时候，才把数据更新到数据库中；2022-05-24 17:15:55
@@ -65,6 +64,7 @@ public class MingshiServerUtil {
     Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
     Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
     List<UserTokenDo> userTokenDoList = new LinkedList<>();
+    List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
     while (iterator.hasNext()) {
       String globalTraceId = iterator.next();
       String userName = globalTraceIdAndUserNameMap.get(globalTraceId);
@@ -73,7 +73,7 @@ public class MingshiServerUtil {
         userName = tokenUserNameMap.get(token);
       }
       if (StringUtil.isBlank(userName)) {
-        // log.error("# IoThread.flushSegmentIndexToDB # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
+        log.error("# IoThread.flushSegmentIndexToDB # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
         continue;
       }
 
@@ -82,17 +82,60 @@ public class MingshiServerUtil {
       userTokenDo.setGlobalTraceId(globalTraceId);
       userTokenDo.setToken(token);
       userTokenDoList.add(userTokenDo);
+
+      MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+      msAuditLogDo.setGlobalTraceId(globalTraceId);
+      msAuditLogDo.setApplicationUserName(userName);
+      auditLogDoList.add(msAuditLogDo);
     }
+    // 批量插入用户名、token、global信息
+    batchInsertUserToken(userTokenDoList);
+
+    // 批量更新审计日志的用户名和globalTraceId信息；
+    batchUpdateMsAuditLog(auditLogDoList);
+
+    SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
+    SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
+  }
+
+  /**
+   * <B>方法名称：batchUpdateMsAuditLog</B>
+   * <B>概要说明：批量更新审计日志的用户名和globalTraceId信息；</B>
+   * @Author zm
+   * @Date 2022年06月01日 11:06:48
+   * @Param [auditLogDoList]
+   * @return void
+   **/
+  private void batchUpdateMsAuditLog(List<MsAuditLogDo> auditLogDoList) {
+    try {
+      if(0 < auditLogDoList.size()){
+        Instant now = Instant.now();
+        msAuditLogDao.updateBatch(auditLogDoList);
+        log.info("# IoThread.batchUpdateMsAuditLog # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", auditLogDoList.size(), DateTimeUtil.getTimeMillis(now));
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。",e);
+    }
+  }
+
+  /**
+   * <B>方法名称：batchInsertUserToken</B>
+   * <B>概要说明：批量插入用户名、token、global信息</B>
+   * @Author zm
+   * @Date 2022年06月01日 11:06:39
+   * @Param [userTokenDoList]
+   * @return void
+   **/
+  private void batchInsertUserToken(List<UserTokenDo> userTokenDoList) {
     try {
       if (0 < userTokenDoList.size()) {
+        Instant now = Instant.now();
         userTokenDao.insertSelectiveBatch(userTokenDoList);
         log.info("当前线程【{}】将segment数据对应的索引（{}条）插入到表中，耗时【{}】毫秒。", Thread.currentThread().getName(), userTokenDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("将索引存储到数据库中出现了异常。", e);
     }
-    SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
-    SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
   }
 
   /**

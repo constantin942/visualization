@@ -53,7 +53,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   @Override
   public void run() {
     // 优雅关闭processor线程：只有jvm进程退出，并且当前队列中没有了元素时，processor线程才退出循环。2022-06-01 10:06:19
-    while (false == InitProcessorByLinkedBlockingQueue.getShutdown() && 0 != getQueueSize()) {
+    while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
       try {
         ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();
         if (null == record) {

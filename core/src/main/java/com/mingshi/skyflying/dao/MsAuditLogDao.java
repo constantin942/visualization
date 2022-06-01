@@ -18,4 +18,6 @@ public interface MsAuditLogDao {
     void insertSelectiveBatchNoSqlInsightDbUserName(List<MsAuditLogDo> list);
 
     int updateByPrimaryKeySelective(MsAuditLogDo record);
+
+    int updateBatch(List<MsAuditLogDo> record);
 }

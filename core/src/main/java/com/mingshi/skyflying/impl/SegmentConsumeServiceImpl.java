@@ -452,6 +452,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
 
       // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
+      // 这里有也有一个问题：当来自探针的同一条SQL在不同的时间过来时，会根据hash值进行更新。为了解决这个问题，数据库中ms_audit_log中的hash字段就不能设置为唯一索引了。
+      // 当初设置这个hash字段为唯一索引时，是为了识别出来自SQL洞察中skywalking探针发出来的SQL语句。
+      // 由于SQL洞察中的数据量巨大，且处理出来还比较麻烦。所以李老师就不打算处理SQL洞察中的数据了。进而可以将数据库表ms_audit_log中的hash字段不再设置为唯一索引。
+      // 2022-06-01 15:43:56
       String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
       String hash = StringUtil.MD5(strData);
       msAuditLogDo.setHash(hash);

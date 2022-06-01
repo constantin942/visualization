@@ -109,7 +109,6 @@
       #{item.msSql,jdbcType=VARCHAR},
       #{item.sqlSource,jdbcType=VARCHAR},
       #{item.hash,jdbcType=VARCHAR},
-      #{item.sqlInsightDbUserName,jdbcType=VARCHAR},
       #{item.applicationUserName,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=VARCHAR},
       #{item.parentSegmentId,jdbcType=VARCHAR},
@@ -386,5 +385,22 @@
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateBatch" parameterType="java.util.List">
+    update ms_audit_log
+    <trim prefix="set" suffixOverrides=",">
+      <trim prefix="application_user_name = case" suffix="end,">
+        <foreach collection="list" item="item" index="index">
+          <if test="item.globalTraceId != null">
+            when global_trace_id=#{item.globalTraceId}  then #{item.applicationUserName}
+          </if>
+        </foreach>
+      </trim>
+    </trim>
+    where global_trace_id in
+    <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+      #{item.globalTraceId}
+    </foreach>
+    and application_user_name is null
   </update>
 </mapper>
