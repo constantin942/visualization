@@ -13,14 +13,8 @@ import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogRequest;
 import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogResponse;
 import com.aliyuncs.profile.DefaultProfile;
 import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.dao.AllAuditLogDao;
-import com.mingshi.skyflying.dao.MsAuditLogDao;
-import com.mingshi.skyflying.dao.MsConfigDao;
-import com.mingshi.skyflying.dao.MsScheduledTaskDao;
-import com.mingshi.skyflying.domain.AllAuditLogDo;
-import com.mingshi.skyflying.domain.MsAuditLogDo;
-import com.mingshi.skyflying.domain.MsConfigDo;
-import com.mingshi.skyflying.domain.MsScheduledTaskDo;
+import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.AuditLogService;
 import com.mingshi.skyflying.utils.DateTimeUtil;
@@ -50,6 +44,8 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Resource
   private MsAuditLogDao msAuditLogDao;
+  @Resource
+  private MsDmsAuditLogDao msDmsAuditLogDao;
   @Resource
   private MsScheduledTaskDao msScheduledTaskDao;
   @Resource
@@ -172,75 +168,49 @@ public class AuditLogServiceImpl implements AuditLogService {
        *临时存储
        */
       private List<MsAuditLogDo> cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+      private List<MsDmsAuditLogDo> cachedDmsAuditLogList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
 
       @Override
       public void onException(Exception e, AnalysisContext analysisContext) {
       }
 
       @Override
-      public void invoke(AllAuditLogDo data, AnalysisContext context) {
-        if (data.getLOG().contains("select 1")) {
+      public void invoke(AllAuditLogDo allAuditLogDo, AnalysisContext context) {
+        // todo：应该把这些忽略的URL放到MySQL数据库中，在项目启动的时候加载到本地内存里来。不应该这样写死。2022-05-30 16:47:43
+        if (allAuditLogDo.getLOG().contains("select 1")) {
           // System.out.println("出现 select 1 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SHOW")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SHOW")) {
           // System.out.println("出现 SHOW 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SET PROFILING = 1")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SET PROFILING = 1")) {
           // System.out.println("出现 SET PROFILING = 1 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SELECT QUERY_ID, SUM(DURATION)")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SELECT QUERY_ID, SUM(DURATION)")) {
           // System.out.println("出现 SELECT QUERY_ID, SUM(DURATION) 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SELECT STATE AS ")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SELECT STATE AS ")) {
           // System.out.println("出现 SELECT STATE AS  的SQL语句了。");
-        } else if (data.getLOG().startsWith("select table_name")) {
+        } else if (allAuditLogDo.getLOG().startsWith("select table_name")) {
           // System.out.println("出现 select table_name 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SELECT DISTINCT table_name, ")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SELECT DISTINCT table_name, ")) {
           // System.out.println("出现 SELECT DISTINCT table_name, 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SET") || data.getLOG().startsWith("set")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SET") || allAuditLogDo.getLOG().startsWith("set")) {
           // System.out.println("出现 SET或者set 的SQL语句了。");
-        } else if (data.getLOG().startsWith("COMMIT") || data.getLOG().startsWith("commit")) {
+        } else if (allAuditLogDo.getLOG().startsWith("COMMIT") || allAuditLogDo.getLOG().startsWith("commit")) {
           // System.out.println("出现 COMMIT或者commit 的SQL语句了。");
-        } else if (data.getLOG().startsWith("SELECT @@sessi")) {
+        } else if (allAuditLogDo.getLOG().startsWith("SELECT @@sessi")) {
           // System.out.println("出现 SELECT @@session.tx_read_only 的SQL语句了。");
-        } else if (data.getLOG().startsWith("logout")) {
+        } else if (allAuditLogDo.getLOG().startsWith("logout")) {
           // System.out.println("出现 logout 的SQL语句了。");
-        } else if (data.getLOG().startsWith("update hy_company")) {
+        } else if (allAuditLogDo.getLOG().startsWith("update hy_company")) {
           // System.out.println("出现 update hy_company 的SQL语句了。");
-        } else if (data.getLOG().startsWith("login")) {
+        } else if (allAuditLogDo.getLOG().startsWith("login")) {
           // System.out.println("出现 login 的SQL语句了。");
-        }
-        else {
-          Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
-          MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-          String hash = null;
-          String sqlType = data.getSQL_TYPE();
-          String msSchemaName = data.getDB();
-          String opTime = DateTimeUtil.longToDate(origin_time);
-          msAuditLogDo.setOpTime(opTime);
-          String msSql = data.getLOG();
+        } else {
+          String msSql = allAuditLogDo.getLOG();
           if (msSql.contains("DMS")) {
-            msSql = data.getLOG().split("/*/")[2];
-            msAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
-            String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
-            hash = StringUtil.MD5(strData);
+            // 将来自DMS的审计日志插入到表中；2022-05-30 16:49:18
+            batchInsertAuditLogFromDms(allAuditLogDo);
           } else {
-            msAuditLogDo.setSqlSource(Const.SQL_SOURCE_INSIGHT);
-            String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
-            hash = StringUtil.MD5(strData);
-          }
-          msAuditLogDo.setMsSql(msSql);
-
-
-          msAuditLogDo.setMsSchemaName(msSchemaName);
-          msAuditLogDo.setSqlInsightDbUserName(data.getUSER());
-          msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
-
-          msAuditLogDo.setSqlType(sqlType);
-
-          msAuditLogDo.setHash(hash);
-
-          cachedDataList.add(msAuditLogDo);
-          if (cachedDataList.size() >= BATCH_COUNT) {
-            saveData();
-            // 存储完成清理 list
-            cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+            // 将来自SQL洞察中的审计日志插入到表中；2022-05-30 16:49:18
+            batchInsertAuditLogFromSqlInsight(msSql, allAuditLogDo);
           }
         }
       }
@@ -262,28 +232,97 @@ public class AuditLogServiceImpl implements AuditLogService {
       /**
        * 加上存储数据库
        */
-      private void saveData() {
+      private void saveDmsAuditLog() {
         Instant now = Instant.now();
         // log.info("{}条数据，开始存储数据库！", cachedDataList.size());
         try {
-          // for (MsAuditLogDo msAuditLogDo : cachedDataList) {
-          //   MsAuditLogDo msAuditLogDo1 = msAuditLogDao.selectByHash(msAuditLogDo.getHash());
-          //   if(null != msAuditLogDo1){
-          //     System.out.println("当前数据库中存在一样的记录，记录id = " + msAuditLogDo1.getId());
-          //   }else{
-          //     try {
-          //       msAuditLogDao.insertSelective(msAuditLogDo);
-          //     } catch (Exception e) {
-          //       e.printStackTrace();
-          //     }
-          //   }
-          // }
+          msDmsAuditLogDao.insertSelectiveBatch(cachedDmsAuditLogList);
+        } catch (Exception e) {
+          log.error("# # 将DMS审计日志批量插入到数据库中，出现了异常。", e);
+        }
+        log.info("存储【{}】条DMS审计日志成功！耗时【{}】毫秒。", cachedDataList.size(), DateTimeUtil.getTimeMillis(now));
+      }
+
+      private void saveData() {
+        Instant now = Instant.now();
+        try {
           msAuditLogDao.insertSelectiveBatch(cachedDataList);
         } catch (Exception e) {
           log.error("# # 将SQL洞察中的审计日志批量插入到数据库中，出现了异常。", e);
         }
-        log.info("存储【{}】条数据成功！耗时【{}】毫秒。",cachedDataList.size(),DateTimeUtil.getTimeMillis(now));
+        log.info("存储【{}】条数据成功！耗时【{}】毫秒。", cachedDataList.size(), DateTimeUtil.getTimeMillis(now));
       }
+
+      /**
+       * <B>方法名称：batchInsertAuditLogFromSqlInsight</B>
+       * <B>概要说明：将来自DMS中的审计日志插入到表中；</B>
+       * @Author zm
+       * @Date 2022年05月30日 16:05:56
+       * @Param [msSql, msSchemaName, sqlType, msAuditLogDo]
+       * @return void
+       **/
+      private void batchInsertAuditLogFromDms(AllAuditLogDo data) {
+        Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
+        String sqlType = data.getSQL_TYPE();
+        String msSchemaName = data.getDB();
+        String opTime = DateTimeUtil.longToDate(origin_time);
+        String dbUser = data.getUSER();
+        String userIp = data.getUSER_IP();
+        MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
+        String msSql = data.getLOG().split("/*/")[2];
+        msDmsAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
+        msDmsAuditLogDo.setMsSql(msSql);
+        msDmsAuditLogDo.setOpTime(opTime);
+        msDmsAuditLogDo.setMsSchemaName(msSchemaName);
+        msDmsAuditLogDo.setSqlInsightDbUserName(dbUser);
+        msDmsAuditLogDo.setSqlInsightUserIp(userIp);
+        msDmsAuditLogDo.setSqlType(sqlType);
+        String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
+        String hash = StringUtil.MD5(strData);
+        msDmsAuditLogDo.setHash(hash);
+        cachedDmsAuditLogList.add(msDmsAuditLogDo);
+        if (cachedDmsAuditLogList.size() >= BATCH_COUNT) {
+          saveDmsAuditLog();
+          // 存储完成清理 list
+          cachedDmsAuditLogList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+        }
+      }
+
+      /**
+       * <B>方法名称：batchInsertAuditLogFromSqlInsight</B>
+       * <B>概要说明：将来自SQL洞察中的审计日志插入到表中；</B>
+       * @Author zm
+       * @Date 2022年05月30日 16:05:56
+       * @Param [msSql, msSchemaName, sqlType, msAuditLogDo]
+       * @return void
+       **/
+      private void batchInsertAuditLogFromSqlInsight(String msSql, AllAuditLogDo data) {
+        Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
+        String sqlType = data.getSQL_TYPE();
+        String msSchemaName = data.getDB();
+        String opTime = DateTimeUtil.longToDate(origin_time);
+
+        String dbUser = data.getUSER();
+        String userIp = data.getUSER_IP();
+        MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+        msAuditLogDo.setMsSql(msSql);
+        msAuditLogDo.setOpTime(opTime);
+        msAuditLogDo.setMsSchemaName(msSchemaName);
+        msAuditLogDo.setSqlInsightDbUserName(dbUser);
+        msAuditLogDo.setSqlInsightUserIp(userIp);
+        msAuditLogDo.setSqlType(sqlType);
+        msAuditLogDo.setSqlSource(Const.SQL_SOURCE_INSIGHT);
+        String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
+        String hash = StringUtil.MD5(strData);
+        msAuditLogDo.setHash(hash);
+        cachedDataList.add(msAuditLogDo);
+        if (cachedDataList.size() >= BATCH_COUNT) {
+          saveData();
+          // 存储完成清理 list
+          cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+        }
+      }
+
     }).sheet().doRead();
     return ServerResponse.createBySuccess();
   }
@@ -349,7 +388,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     Instant now = Instant.now();
     log.info("开始执行# AuditLogServiceImpl.batchProcessDMSAuditLog() # 将阿里云提供的DMS数据库审计日志插入到数据库中。");
     try {
-      List<MsAuditLogDo> list = new LinkedList<>();
+      List<MsDmsAuditLogDo> list = new LinkedList<>();
       for (ListSQLExecAuditLogResponse.SQLExecAuditLog sqlExecAuditLog : listSQLExecAuditLogList) {
         String msSchemaName = sqlExecAuditLog.getSchemaName();
         if (msSchemaName.equals("mysql")) {
@@ -374,43 +413,33 @@ public class AuditLogServiceImpl implements AuditLogService {
         String remark = sqlExecAuditLog.getRemark();
 
         // 大写统一转换成消息、去掉多余的空格
-        String strData = StringUtil.recombination(msSql , opTime, msSchemaName , sqlType);
+        String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
         String hash = StringUtil.MD5(strData);
-        // String hash = StringUtil.MD5(opTime + userName + userId + instanceName + instanceId + dbId + logic + sqlType + execState + affectRows + elapsedTime + remark);
 
-        MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-        msAuditLogDo.setMsSql(msSql);
-        msAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
-        msAuditLogDo.setMsSchemaName(msSchemaName);
-        msAuditLogDo.setOpTime(opTime);
-        msAuditLogDo.setUserName(userName);
-        msAuditLogDo.setUserId(userId);
-        msAuditLogDo.setInstanceName(instanceName);
-        msAuditLogDo.setInstanceId(instanceId);
-        msAuditLogDo.setDbId(dbId);
-        msAuditLogDo.setLogic(logic);
-        msAuditLogDo.setSqlType(sqlType);
-        msAuditLogDo.setExecState(execState);
-        msAuditLogDo.setAffectRows(affectRows);
-        msAuditLogDo.setElapsedTime(elapsedTime);
-        msAuditLogDo.setRemark(remark);
-        msAuditLogDo.setHash(hash);
+        MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
+        msDmsAuditLogDo.setMsSql(msSql);
+        msDmsAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
+        msDmsAuditLogDo.setMsSchemaName(msSchemaName);
+        msDmsAuditLogDo.setOpTime(opTime);
+        msDmsAuditLogDo.setUserName(userName);
+        msDmsAuditLogDo.setUserId(userId);
+        msDmsAuditLogDo.setInstanceName(instanceName);
+        msDmsAuditLogDo.setInstanceId(instanceId);
+        msDmsAuditLogDo.setDbId(dbId);
+        msDmsAuditLogDo.setLogic(logic);
+        msDmsAuditLogDo.setSqlType(sqlType);
+        msDmsAuditLogDo.setExecState(execState);
+        msDmsAuditLogDo.setAffectRows(affectRows);
+        msDmsAuditLogDo.setElapsedTime(elapsedTime);
+        msDmsAuditLogDo.setRemark(remark);
+        msDmsAuditLogDo.setHash(hash);
 
-        list.add(msAuditLogDo);
+        list.add(msDmsAuditLogDo);
       }
       size = list.size();
       if (0 < list.size()) {
-        for (MsAuditLogDo msAuditLogDo : list) {
-          MsAuditLogDo msAuditLogDo1 = msAuditLogDao.selectByHash(msAuditLogDo.getHash());
-          LinkedList<MsAuditLogDo> ll = new LinkedList<>();
-          ll.add(msAuditLogDo);
-          if(null != msAuditLogDo1){
-            msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(ll);
-          }else{
-            msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(ll);
-          }
-        }
-        // msAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(list);
+        // 将来自DMS的SQL审计日志信息存储到专门存储DMS审计日志的表中；2022-05-30 16:36:22
+        msDmsAuditLogDao.insertSelectiveBatchNoSqlInsightDbUserName(list);
       }
     } catch (Exception e) {
       log.error("将阿里云提供的DMS数据库审计日志插入到表中出现了异常。", e);

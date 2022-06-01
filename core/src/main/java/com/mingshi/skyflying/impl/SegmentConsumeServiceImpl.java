@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.dao.MsAuditLogDao;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
@@ -25,7 +24,6 @@ import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -42,7 +40,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service("SegmentConsumerService")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Resource
-  private MsAuditLogDao msAuditLogDao;
+  private MingshiServerUtil mingshiServerUtil;
   @Resource
   private SegmentDao segmentDao;
   @Resource
@@ -59,56 +57,34 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 组装segment；2022-04-20 16:33:48
       SegmentDo segment = setUserNameAndToken(spanList);
       String operationName = segment.getOperationName();
-      if (operationName.equals("Redisson/PING") ||
-        operationName.equals("Lettuce/SENTINEL") ||
-        operationName.equals("Mysql/JDBI/Connection/close") ||
-        operationName.equals("GET:/devices/notification") ||
-        operationName.equals("GET:/manager/html") ||
-        operationName.equals("Balancer/user/checkToken") ||
-        operationName.equals("GET:") ||
-        operationName.equals("GET:/assets/fonts/Nunito-Bold.woff2") ||
-        operationName.equals("GET:/temp/null") ||
-        operationName.equals("GET:/assets/fonts/Nioicon.ttf") ||
-        operationName.equals("GET:/assets/fonts/Nunito-Regular.woff2") ||
-        operationName.equals("GET:/assets/fonts/Roboto-Regular.woff2") ||
-        operationName.equals("GET:/assets/fonts/Roboto-Medium.woff2") ||
-        operationName.equals("HikariCP/Connection/getConnection") ||
-        operationName.equals("GET:/") ||
-        operationName.equals("GET:/companies/companyHealth/list") ||
-        operationName.equals("null:null") ||
-        operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
-        operationName.equals("HikariCP/Connection/close") ||
-        operationName.equals("POST:/users/menusAuths") ||
-        operationName.equals("GET:/zlb/getRuralCommercialBank/info") ||
-        operationName.equals("Mysql/JDBI/Connection/commit") ||
-        operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
-        operationName.equals("HikariCP/Connection/close") ||
-        operationName.equals("Mysql/JDBI/PreparedStatement/executeQuery") ||
-        operationName.startsWith("SpringScheduled") ||
-        operationName.equals("POST:/devices/heartbeat")) {
+      Boolean flag = ignoreMethod(operationName);
+      if (true == flag) {
         return null;
       }
 
-      // 重组span数据，返回前端使用；2022-04-20 16:49:02
-      reorganizingSpans(segment, spanList);
-
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
-      // String parentSegmentId = getRef(segmentObject, segment);
 
       setSegmentIndex(segment);
 
-      // // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
-      // saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId);
+      // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
+      LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = new LinkedList<>();
+      // 重组span数据，返回前端使用；2022-04-20 16:49:02
+      reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
+
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
-        doEnableReactorModel(segment);
+        // 使用reactor模型；2022-05-30 21:04:05
+        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList);
       } else {
+        // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
-        insertSegmentBySingle(segment);
+        LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+        segmentDoLinkedList.add(segment);
+        mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
         // 插入segment对应的index数据；2022-05-23 10:15:38
-        insertIndex();
-        // insertSegment(segment, segmentObject, parentSegmentId);
+        mingshiServerUtil.flushSegmentIndexToDB();
+        mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
@@ -116,10 +92,57 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return null;
   }
 
-  private void doEnableReactorModel(SegmentDo segment) {
+  /**
+   * <B>方法名称：ignoreMethod</B>
+   * <B>概要说明：判断是否可以过滤掉</B>
+   *
+   * @return java.lang.Boolean
+   * @Author zm
+   * @Date 2022年05月30日 20:05:06
+   * @Param [operationName]
+   **/
+  private Boolean ignoreMethod(String operationName) {
+    if (operationName.equals("Redisson/PING") ||
+      operationName.equals("Lettuce/SENTINEL") ||
+      operationName.equals("Mysql/JDBI/Connection/close") ||
+      operationName.equals("GET:/devices/notification") ||
+      operationName.equals("GET:/manager/html") ||
+      operationName.equals("Balancer/user/checkToken") ||
+      operationName.equals("GET:") ||
+      operationName.equals("GET:/assets/fonts/Nunito-Bold.woff2") ||
+      operationName.equals("GET:/temp/null") ||
+      operationName.equals("GET:/assets/fonts/Nioicon.ttf") ||
+      operationName.equals("GET:/assets/fonts/Nunito-Regular.woff2") ||
+      operationName.equals("GET:/assets/fonts/Roboto-Regular.woff2") ||
+      operationName.equals("GET:/assets/fonts/Roboto-Medium.woff2") ||
+      operationName.equals("HikariCP/Connection/getConnection") ||
+      operationName.equals("GET:/") ||
+      operationName.equals("GET:/companies/companyHealth/list") ||
+      operationName.equals("null:null") ||
+      operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
+      operationName.equals("HikariCP/Connection/close") ||
+      operationName.equals("POST:/users/menusAuths") ||
+      operationName.equals("GET:/zlb/getRuralCommercialBank/info") ||
+      operationName.equals("Mysql/JDBI/Connection/commit") ||
+      operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
+      operationName.equals("HikariCP/Connection/close") ||
+      operationName.equals("Mysql/JDBI/PreparedStatement/executeQuery") ||
+      operationName.startsWith("SpringScheduled") ||
+      operationName.equals("POST:/devices/heartbeat")) {
+      return true;
+    }
+    return false;
+  }
+
+  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, segmentDao, userTokenDao);
-      linkedBlockingQueue.put(segment);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, segmentDao, mingshiServerUtil);
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("segment", JsonUtil.obj2String(segmentDo));
+      if (0 < auditLogFromSkywalkingAgentList.size()) {
+        jsonObject.put("auditLogFromSkywalkingAgentList", JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
+      }
+      linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {
       e.printStackTrace();
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
@@ -227,14 +250,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return null;
   }
 
-  private void reorganizingSpans(SegmentDo segment, List<Span> spanList) {
+  private void reorganizingSpans(SegmentDo segment, List<Span> spanList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
       // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
-
-    // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
-    LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent = new LinkedList<>();
 
     List<String> linkedList = new LinkedList<>();
     if (CollectionUtils.isNotEmpty(spanList)) {
@@ -245,18 +265,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
         // getData(span, linkedList);
-        getData2(span, linkedList, auditLogFromSkywalkingAgent);
-        findChildrenDetail(spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
-      }
-    }
-
-    if (0 < auditLogFromSkywalkingAgent.size()) {
-      try {
-        Instant now = Instant.now();
-        msAuditLogDao.insertSelectiveBatch(auditLogFromSkywalkingAgent);
-        log.info("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的【{}】条SQL语句插入到表中耗时【{}】毫秒。", auditLogFromSkywalkingAgent.size(), DateTimeUtil.getTimeMillis(now));
-      } catch (Exception e) {
-        log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
+        getData2(segment, span, linkedList, auditLogFromSkywalkingAgent);
+        findChildrenDetail(segment, spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
       }
     }
 
@@ -294,42 +304,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return rootSpans;
   }
 
-  private void findChildrenDetail(List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
         // getData(span, linkedList);
-        getData2(span, linkedList, auditLogFromSkywalkingAgent);
-        findChildrenDetail(spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+        getData2(segmentDo, span, linkedList, auditLogFromSkywalkingAgent);
+        findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
       }
     });
   }
-
-  // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-  // private void getData(Span span, List<String> linkedList) {
-  //   try {
-  //     String peer = span.getPeer();
-  //     JSONObject jsonObject = new JSONObject();
-  //     String component = span.getComponent();
-  //     String endpointName = span.getEndpointName();
-  //     if (StringUtil.isBlank(component)) {
-  //       return;
-  //     }
-  //     if (component.equals("SpringMVC") || component.equals("SpringRestTemplate")) {
-  //       getSpringMVCInfo(span, jsonObject, linkedList);
-  //     } else if (component.equals(ComponentsDefine.MYSQL_JDBC_DRIVER.getName())) {
-  //       getDbInfo(peer, span, jsonObject, linkedList);
-  //     } else if (component.equals("Lettuce/SETEX") || endpointName.equals("Lettuce/SETEX")) {
-  //       getRedisInfo(span, jsonObject, linkedList);
-  //     } else if (component.equals("HttpClient")) {
-  //       getHttpClientInfo(span, jsonObject, linkedList);
-  //     } else {
-  //       log.info("{}", component);
-  //     }
-  //   } catch (Exception e) {
-  //     e.printStackTrace();
-  //   }
-  // }
 
   /**
    * <B>方法名称：getData2</B>
@@ -340,7 +324,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月17日 10:05:41
    * @Param [span, linkedList]
    **/
-  private void getData2(Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     try {
       JSONObject jsonObject = new JSONObject();
       int spanId = span.getSpanId();
@@ -363,29 +347,34 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           String dbUserName = null;
           String msSql = null;
           String msSchemaName = null;
+          String key = null;
           for (KeyValue tag : tags) {
-            String key = tag.getKey();
+            key = tag.getKey();
+            if (segmentDo.getOperationName().equals("Jedis/sentinelGetMasterAddrByName")) {
+              flag = true;
+              break;
+            }
             if (tag.getValue().equals("Redis")) {
               break;
             }
             if (key.equals("http.method")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              flag = true;
-              break;
+              // flag = true;
+              // break;
             } else if (key.equals("db.instance")) {
               msSchemaName = tag.getValue();
             } else if (key.equals("db_user_name")) {
               dbUserName = tag.getValue();
-            } else if (key.equals("db.statement")) {
+            } else if (key.equals("db.statement") && !key.equals("Redis")) {
               // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
               // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
               msSql = tag.getValue();
               isSQL = true;
             }
           }
-          if (true == isSQL) {
+          if (true == isSQL && StringUtil.isNotBlank(msSql)) {
             // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
-            getMsAuditLogDo(msSql, span.getStartTime(), msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
+            getMsAuditLogDo(segmentDo, msSql, span, msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
           }
 
           if (false == flag) {
@@ -408,13 +397,23 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月28日 13:05:03
    * @Param [msSql, startTime, msSchemaName, dbUserName, auditLogFromSkywalkingAgent]
    **/
-  private void getMsAuditLogDo(String msSql, long startTime, String msSchemaName, String dbUserName, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void getMsAuditLogDo(SegmentDo segmentDo, String msSql, Span span, String msSchemaName, String dbUserName, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
     try {
+      msAuditLogDo.setApplicationUserName(segmentDo.getUserName());
+      msAuditLogDo.setOperationName(segmentDo.getOperationName());
+      msAuditLogDo.setCurrentSegmentId(span.getSegmentId());
+      msAuditLogDo.setParentSegmentId(segmentDo.getParentSegmentId());
+      // 设置全局追踪id；2022-05-30 18:55:00
+      String traceId = span.getTraceId();
+      msAuditLogDo.setGlobalTraceId(traceId);
+      // 设置登录应用系统的用户名；2022-05-30 18:55:12
+
       msAuditLogDo.setSqlSource(Const.SQL_SOURCE_SKYWALKING_AGENT);
       // sql语句；
       msAuditLogDo.setMsSql(msSql);
-      // // 执行时间；
+      // 执行时间；
+      long startTime = span.getStartTime();
       String opTime = DateTimeUtil.longToDate(startTime);
       msAuditLogDo.setOpTime(opTime);
       // 数据库名称；
@@ -425,8 +424,33 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
       // sql类型；
       String sqlType = getSqlType(msSql);
-
       msAuditLogDo.setSqlType(sqlType);
+
+      // 获取表名；2022-05-31 17:01:39
+      List<String> tableNameList = null;
+      if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
+        tableNameList = SqlParserUtils.selectTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
+        tableNameList = SqlParserUtils.insertTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+        tableNameList = SqlParserUtils.updateTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
+        tableNameList = SqlParserUtils.deleteTable(msSql);
+      } else {
+        log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+      }
+      if (0 < tableNameList.size()) {
+        String tableName = "";
+        for (String table : tableNameList) {
+          if(StringUtil.isBlank(tableName)){
+            tableName = table;
+          }else{
+            tableName = tableName + "," + table;
+          }
+        }
+        msAuditLogDo.setMsTableName(tableName);
+      }
+
       // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
       String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
       String hash = StringUtil.MD5(strData);
@@ -503,33 +527,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   /**
-   * <B>方法名称：getDbInfo</B>
-   * <B>概要说明：获取数据库的访问信息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月12日 16:05:49
-   * @Param [peer, span, jsonObject, linkedList]
-   **/
-  // private void getDbInfo(String peer, Span span, JSONObject jsonObject, List<String> linkedList) {
-  //   jsonObject.put("ip", peer);
-  //   List<KeyValue> tagsList = span.getTags();
-  //   for (KeyValue keyValue : tagsList) {
-  //     String key = keyValue.getKey();
-  //     if (key.equals("db.instance")) {
-  //       String dataBaseName = keyValue.getValue();
-  //       jsonObject.put("databaseName", dataBaseName);
-  //       jsonObject.put("dbType", "mysql");
-  //     } else if (key.equals("db.statement")) {
-  //       getSqlInfo(keyValue, jsonObject);
-  //     }
-  //   }
-  //   if (0 < jsonObject.size() && !linkedList.contains(jsonObject.toJSONString())) {
-  //     linkedList.add(jsonObject.toJSONString());
-  //   }
-  // }
-
-  /**
    * <B>方法名称：getSpringMVCInfo</B>
    * <B>概要说明：获取SpringMVC信息</B>
    *
@@ -539,15 +536,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [span, jsonObject, linkedList]
    **/
   private void getSpringMVCInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
-    String userName = span.getUserName();
-    String token = span.getToken();
-    // if (null != userName && "" != userName) {
-    //   jsonObject.put("userName", userName + "," + token);
-    // }
-    // if (null != token && "" != token) {
-    //   jsonObject.put("userName", token);
-    // }
-
     List<KeyValue> tagsList = span.getTags();
     for (KeyValue keyValue : tagsList) {
       if (keyValue.getKey().equals("url")) {
@@ -557,133 +545,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
     }
   }
-
-  /**
-   * <B>方法名称：getHttpClientInfo</B>
-   * <B>概要说明：获取HttpClient信息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月12日 16:05:08
-   * @Param [span, jsonObject, linkedList]
-   **/
-  // private void getHttpClientInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
-  //   List<KeyValue> tagsList = span.getTags();
-  //   String dbType = null;
-  //   String ip = span.getPeer();
-  //   jsonObject.put("ip", ip);
-  //   if (ip.contains("dingtalk")) {
-  //     jsonObject.put("dbType", "钉钉");
-  //     linkedList.add(jsonObject.toJSONString());
-  //   } else {
-  //     for (KeyValue keyValue : tagsList) {
-  //       if (keyValue.getKey().equals("db.type")) {
-  //         dbType = keyValue.getValue();
-  //         jsonObject.put("dbType", dbType);
-  //       } else if (keyValue.getKey().equals("db.statement")) {
-  //         String value = keyValue.getValue();
-  //         try {
-  //           jsonObject.put("order", value);
-  //           if (0 < jsonObject.size()) {
-  //             linkedList.add(jsonObject.toJSONString());
-  //           }
-  //         } catch (Exception e) {
-  //           e.printStackTrace();
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
-  // private void getRedisInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
-  //   List<KeyValue> tagsList = span.getTags();
-  //   String dbType = null;
-  //   String ip = span.getPeer();
-  //   jsonObject.put("ip", ip);
-  //   for (KeyValue keyValue : tagsList) {
-  //     if (keyValue.getKey().equals("db.type")) {
-  //       dbType = keyValue.getValue();
-  //       jsonObject.put("dbType", dbType);
-  //     } else if (keyValue.getKey().equals("db.statement")) {
-  //       String value = keyValue.getValue();
-  //       try {
-  //         jsonObject.put("actionType", value);
-  //         if (0 < jsonObject.size()) {
-  //           linkedList.add(jsonObject.toJSONString());
-  //         }
-  //       } catch (Exception e) {
-  //         e.printStackTrace();
-  //       }
-  //     }
-  //   }
-  // }
-
-  /**
-   * <B>方法名称：getSqlInfo</B>
-   * <B>概要说明：获取sql信息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月12日 16:05:15
-   * @Param [keyValue, jsonObject]
-   **/
-  // private void getSqlInfo(KeyValue keyValue, JSONObject jsonObject) {
-  //   String sql = keyValue.getValue();
-  //   List<String> tableList = new ArrayList<>();
-  //   jsonObject.put("sqlDetail", sql);
-  //   if (sql.contains("?")) {
-  //     sql = sql.replace("\"?\"", "*");
-  //   }
-  //
-  //   String table = null;
-  //   String sqlType = null;
-  //   if (sql.contains("select") || sql.contains("SELECT")) {
-  //     sqlType = "select";
-  //     // table = getTable(sql, sqlType);
-  //     tableList = SqlParserUtils.selectTable(sql);
-  //   } else if (sql.contains("insert") || sql.contains("INSERT")) {
-  //     sqlType = "insert";
-  //     // table = getTable(sql, sqlType);
-  //     tableList = SqlParserUtils.insertTable(sql);
-  //   } else if (sql.contains("update") || sql.contains("UPDATE")) {
-  //     sqlType = "update";
-  //     // table = getTable(sql, sqlType);
-  //     tableList = SqlParserUtils.updateTable(sql);
-  //   } else if (sql.contains("delete") || sql.contains("DELETE")) {
-  //     sqlType = "delete";
-  //     // table = getTable(sql, sqlType);
-  //     tableList = SqlParserUtils.deleteTable(sql);
-  //   }
-  //   jsonObject.put("actionType", sqlType);
-  //   jsonObject.put("tableName", JsonUtil.obj2String(tableList));
-  //   // jsonObject.put("tableName", table);
-  // }
-
-  /**
-   * <B>方法名称：getTable</B>
-   * <B>概要说明：获取表名</B>
-   *
-   * @return java.lang.String
-   * @Author zm
-   * @Date 2022年05月12日 16:05:13
-   * @Param [sql]
-   **/
-  // private String getTable(String sql, String sqlType) {
-  //   List<String> tableList = null;
-  //   try {
-  //     if (sql.contains("?")) {
-  //       sql = sql.replace("\"?\"", "*");
-  //     }
-  //
-  //     tableList = SqlParserUtils.selectTable(sql);
-  //     if (0 < tableList.size()) {
-  //       return JsonUtil.obj2String(tableList);
-  //     }
-  //   } catch (Exception e) {
-  //     e.printStackTrace();
-  //   }
-  //   return null;
-  // }
 
   /**
    * <B>方法名称：insertSegment2</B>
@@ -809,19 +670,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 更新用户名为空的记录；2022-05-17 16:10:34
       updateUserName(segment);
     }
-
-    // 将segment中缺少用户名的记录，补全用户名。之所以有这一步骤，是因为在分布式调用链中，每一部分都是独立上报信息的。如果后面的先上报，那么用户名和token很可能不会传递到后面。
-    // 此时该条记录先插入到segment表中，用户名字段先置为null。当后面用户名不为空的记录到来时，再通过global_trace_id进行关联并补全上面缺失的用户名。
-    // if (StringUtil.isBlank(segment.getUserName()) && !StringUtil.isBlank(segment.getGlobalTraceId())) {
-    //   List<SegmentDo> segmentDoList = segmentDao.selectByGlobalTraceIdAndUserNameIsNull(segment.getGlobalTraceId());
-    //   for (SegmentDo segmentDo : segmentDoList) {
-    //     segmentDo.setUserName(segment.getUserName());
-    //     int updateResult = segmentDao.updateByPrimaryKeySelective(segmentDo);
-    //     if (1 != updateResult) {
-    //       log.error("更新用户名 = [{}]失败。", segmentDo);
-    //     }
-    //   }
-    // }
 
     int insertResult = segmentDao.insertSelective(segment);
     if (1 != insertResult) {

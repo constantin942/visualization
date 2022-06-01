@@ -16,6 +16,16 @@ public class MsAuditLogDo {
 
     private String opTime;
 
+    private String operationName;
+
+    private String applicationUserName;
+
+    private String parentSegmentId;
+
+    private String currentSegmentId;
+
+    private String globalTraceId;
+
     private String userName;
 
     private Long userId;
@@ -49,5 +59,7 @@ public class MsAuditLogDo {
     private String sqlInsightDbUserName;
 
     private String sqlInsightUserIp;
+
+    private String msTableName;
 
 }
