@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.MsDmsAuditLogDao">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="sql_insight_db_user_name" jdbcType="VARCHAR" property="sqlInsightDbUserName" />
+    <result column="sql_source" jdbcType="VARCHAR" property="sqlSource" />
+    <result column="op_time" jdbcType="VARCHAR" property="opTime" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="instance_name" jdbcType="VARCHAR" property="instanceName" />
+    <result column="instance_id" jdbcType="INTEGER" property="instanceId" />
+    <result column="ms_schema_name" jdbcType="VARCHAR" property="msSchemaName" />
+    <result column="db_id" jdbcType="INTEGER" property="dbId" />
+    <result column="logic" jdbcType="VARCHAR" property="logic" />
+    <result column="sql_type" jdbcType="VARCHAR" property="sqlType" />
+    <result column="exec_state" jdbcType="VARCHAR" property="execState" />
+    <result column="affect_rows" jdbcType="INTEGER" property="affectRows" />
+    <result column="elapsed_time" jdbcType="INTEGER" property="elapsedTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="hash" jdbcType="VARCHAR" property="hash" />
+    <result column="sql_insight_user_ip" jdbcType="VARCHAR" property="sqlInsightUserIp" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+    <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, sql_insight_db_user_name, sql_source,
+    op_time, user_name, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type,
+    exec_state, affect_rows, elapsed_time, remark, user_id, gmt_create, gmt_modified,
+    is_delete, hash, sql_insight_user_ip
+  </sql>
+  <sql id="Blob_Column_List">
+    ms_sql
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from ms_dms_audit_log
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <insert id="insertSelectiveBatchNoSqlInsightDbUserName" parameterType="java.util.List">
+    insert into ms_dms_audit_log
+    ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
+    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.opTime,jdbcType=VARCHAR},
+      #{item.userName,jdbcType=VARCHAR},
+      #{item.userId,jdbcType=INTEGER},
+      #{item.instanceName,jdbcType=VARCHAR},
+      #{item.instanceId,jdbcType=INTEGER},
+      #{item.msSchemaName,jdbcType=LONGVARCHAR},
+      #{item.dbId,jdbcType=INTEGER},
+      #{item.logic,jdbcType=VARCHAR},
+      #{item.sqlType,jdbcType=VARCHAR},
+      #{item.execState,jdbcType=VARCHAR},
+      #{item.affectRows,jdbcType=INTEGER},
+      #{item.elapsedTime,jdbcType=VARCHAR},
+      #{item.remark,jdbcType=VARCHAR},
+      #{item.msSql,jdbcType=VARCHAR},
+      #{item.sqlSource,jdbcType=VARCHAR},
+      #{item.hash,jdbcType=VARCHAR}
+      )
+    </foreach>
+    on duplicate key update hash = values(hash)
+  </insert>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+    insert into ms_dms_audit_log
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="sqlInsightDbUserName != null">
+        sql_insight_db_user_name,
+      </if>
+      <if test="sqlSource != null">
+        sql_source,
+      </if>
+      <if test="opTime != null">
+        op_time,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="instanceName != null">
+        instance_name,
+      </if>
+      <if test="instanceId != null">
+        instance_id,
+      </if>
+      <if test="msSchemaName != null">
+        ms_schema_name,
+      </if>
+      <if test="dbId != null">
+        db_id,
+      </if>
+      <if test="logic != null">
+        logic,
+      </if>
+      <if test="sqlType != null">
+        sql_type,
+      </if>
+      <if test="execState != null">
+        exec_state,
+      </if>
+      <if test="affectRows != null">
+        affect_rows,
+      </if>
+      <if test="elapsedTime != null">
+        elapsed_time,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="hash != null">
+        hash,
+      </if>
+      <if test="sqlInsightUserIp != null">
+        sql_insight_user_ip,
+      </if>
+      <if test="msSql != null">
+        ms_sql,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="sqlInsightDbUserName != null">
+        #{sqlInsightDbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlSource != null">
+        #{sqlSource,jdbcType=VARCHAR},
+      </if>
+      <if test="opTime != null">
+        #{opTime,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="instanceName != null">
+        #{instanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="instanceId != null">
+        #{instanceId,jdbcType=INTEGER},
+      </if>
+      <if test="msSchemaName != null">
+        #{msSchemaName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbId != null">
+        #{dbId,jdbcType=INTEGER},
+      </if>
+      <if test="logic != null">
+        #{logic,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlType != null">
+        #{sqlType,jdbcType=VARCHAR},
+      </if>
+      <if test="execState != null">
+        #{execState,jdbcType=VARCHAR},
+      </if>
+      <if test="affectRows != null">
+        #{affectRows,jdbcType=INTEGER},
+      </if>
+      <if test="elapsedTime != null">
+        #{elapsedTime,jdbcType=INTEGER},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="hash != null">
+        #{hash,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlInsightUserIp != null">
+        #{sqlInsightUserIp,jdbcType=VARCHAR},
+      </if>
+      <if test="msSql != null">
+        #{msSql,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <insert id="insertSelectiveBatch" parameterType="java.util.List">
+    insert into ms_dms_audit_log
+    ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
+    affect_rows, elapsed_time, remark, ms_sql, sql_source, hash, sql_insight_db_user_name)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.opTime,jdbcType=VARCHAR},
+      #{item.userName,jdbcType=VARCHAR},
+      #{item.userId,jdbcType=INTEGER},
+      #{item.instanceName,jdbcType=VARCHAR},
+      #{item.instanceId,jdbcType=INTEGER},
+      #{item.msSchemaName,jdbcType=LONGVARCHAR},
+      #{item.dbId,jdbcType=INTEGER},
+      #{item.logic,jdbcType=VARCHAR},
+      #{item.sqlType,jdbcType=VARCHAR},
+      #{item.execState,jdbcType=VARCHAR},
+      #{item.affectRows,jdbcType=INTEGER},
+      #{item.elapsedTime,jdbcType=VARCHAR},
+      #{item.remark,jdbcType=VARCHAR},
+      #{item.msSql,jdbcType=VARCHAR},
+      #{item.sqlSource,jdbcType=VARCHAR},
+      #{item.hash,jdbcType=VARCHAR},
+      #{item.sqlInsightDbUserName,jdbcType=VARCHAR}
+      )
+    </foreach>
+    on duplicate key update sql_insight_db_user_name = values(sql_insight_db_user_name),sql_source = values(sql_source)
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+    update ms_dms_audit_log
+    <set>
+      <if test="sqlInsightDbUserName != null">
+        sql_insight_db_user_name = #{sqlInsightDbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlSource != null">
+        sql_source = #{sqlSource,jdbcType=VARCHAR},
+      </if>
+      <if test="opTime != null">
+        op_time = #{opTime,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="instanceName != null">
+        instance_name = #{instanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="instanceId != null">
+        instance_id = #{instanceId,jdbcType=INTEGER},
+      </if>
+      <if test="msSchemaName != null">
+        ms_schema_name = #{msSchemaName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbId != null">
+        db_id = #{dbId,jdbcType=INTEGER},
+      </if>
+      <if test="logic != null">
+        logic = #{logic,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlType != null">
+        sql_type = #{sqlType,jdbcType=VARCHAR},
+      </if>
+      <if test="execState != null">
+        exec_state = #{execState,jdbcType=VARCHAR},
+      </if>
+      <if test="affectRows != null">
+        affect_rows = #{affectRows,jdbcType=INTEGER},
+      </if>
+      <if test="elapsedTime != null">
+        elapsed_time = #{elapsedTime,jdbcType=INTEGER},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="hash != null">
+        hash = #{hash,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlInsightUserIp != null">
+        sql_insight_user_ip = #{sqlInsightUserIp,jdbcType=VARCHAR},
+      </if>
+      <if test="msSql != null">
+        ms_sql = #{msSql,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
