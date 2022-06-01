@@ -63,11 +63,7 @@ public class AiitKafkaConsumer {
    * @Param [record]
    **/
   private void useReactorModel(ConsumerRecord<String, Bytes> record) {
-    try {
-      ReactorUtil.useReactorModelByLinkedBlockingQueue(record);
-    } catch (Exception e) {
-      log.error("将调用链信息放入到 processor线程对应的队列中的时候，出现了异常。", e);
-    }
+    ReactorUtil.useReactorModelByLinkedBlockingQueue(record);
   }
 
 }
