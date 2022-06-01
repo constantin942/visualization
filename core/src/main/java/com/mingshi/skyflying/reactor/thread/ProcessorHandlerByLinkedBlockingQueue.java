@@ -9,29 +9,34 @@ import org.apache.kafka.common.utils.Bytes;
 import java.time.Instant;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
+
+  // 这里使用LinkedBlockingQueue的原因是：该阻塞队列有两把独占锁，分别是入队列的独占锁和出队列的独占锁。
+  // 当线程执行入队列操作时，不影响操作出队列的线程。也就是说，执行入队列的线程与执行出队列的线程互不影响。2022-06-01 09:47:30
   private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> linkedBlockingQueue;
+
+  // 队列里存放的消息的个数；2022-06-01 09:42:19
   private final Integer queueNoBatchSize = 256;
+
   private Instant now = Instant.now();
-  private Integer queueSize = 0;
   private SegmentConsumerService segmentConsumerService;
-  private AtomicInteger atomicInteger = new AtomicInteger(0);
+  private Integer count = 0;
 
   public ProcessorHandlerByLinkedBlockingQueue(SegmentConsumerService segmentConsumerService) {
     this.segmentConsumerService = segmentConsumerService;
     this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueNoBatchSize);
-    queueSize = queueNoBatchSize;
   }
 
   public boolean offer(ConsumerRecord<String, Bytes> record) {
     try {
-      if (0 == atomicInteger.incrementAndGet() % 200) {
+      if (0 == ++count % 200) {
         // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueSize);
+        log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueNoBatchSize);
       }
+
+      // 这里之所以使用阻塞队列的offer方法，是为了提升性能，提升性能的点：当队列满时，在不加锁的情况下，直接返回false。2022-06-01 09:44:53
       return linkedBlockingQueue.offer(record);
     } catch (Exception e) {
       log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
@@ -52,13 +57,12 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
         ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();
         if (null == record) {
           if (10 <= DateTimeUtil.getSecond(now)) {
-            log.info("当前 processor 线程【{}】对应的队列为空【{}】，休眠50毫秒。再尝试从队列里获取数据。", Thread.currentThread().getName(), linkedBlockingQueue.size());
+            // 提升性能：当队列为空的时候，每10秒打印一次日志。2022-06-01 09:50:19
+            log.info("当前 processor 线程【{}】对应的队列为空，休眠50毫秒。再尝试从队列里获取数据。", Thread.currentThread().getName());
             now = Instant.now();
           }
-          TimeUnit.MILLISECONDS.sleep(100);
+          TimeUnit.MILLISECONDS.sleep(50);
         } else {
-          // Instant startTime = Instant.now();
-          // 处理业务逻辑；2022-05-19 17:47:18
           segmentConsumerService.consume(record, true);
         }
       } catch (Throwable e) {
