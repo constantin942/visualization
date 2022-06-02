@@ -3,6 +3,7 @@ package com.mingshi.skyflying.reactor.thread;
 import com.alibaba.fastjson.JSONObject;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
+import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.SegmentDo;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.utils.DateTimeUtil;
@@ -32,6 +33,7 @@ public class IoThread extends Thread {
   private Integer flushToRocketMQInterval = 3;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
+  private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
   private MingshiServerUtil mingshiServerUtil;
 
   public IoThread(LinkedBlockingQueue<JSONObject> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
@@ -39,6 +41,7 @@ public class IoThread extends Thread {
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     segmentList = new LinkedList();
     auditLogList = new LinkedList();
+    segmentDetailDoList = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
       this.flushToRocketMQInterval = 5;
@@ -60,8 +63,11 @@ public class IoThread extends Thread {
           if (null == jsonObject) {
             TimeUnit.MILLISECONDS.sleep(10);
           } else {
+            // 从json实例中segmentDetail实例的信息
+            getSegmentDetailFromJSONObject(jsonObject);
+
             // 从json实例中获取审计日志的信息
-            getAuditLogFromJSONObject(jsonObject);
+            // getAuditLogFromJSONObject(jsonObject);
 
             // 从json实例中获取segment的信息
             getSegmentFromJSONObject(jsonObject);
@@ -79,6 +85,26 @@ public class IoThread extends Thread {
       log.error("# IoThread.run() # IoThread线程要退出了。此时jvm关闭的标志位 = 【{}】，该线程对应的队列中元素的个数 = 【{}】。",
         InitProcessorByLinkedBlockingQueue.getShutdown(),
         linkedBlockingQueue.size());
+    }
+  }
+
+  /**
+   * <B>方法名称：getSegmentDetailFromJSONObject</B>
+   * <B>概要说明：将segmentDetail实例信息放入到 segmentDetailList 中</B>
+   * @Author zm
+   * @Date 2022年06月02日 11:06:40
+   * @Param [jsonObject]
+   * @return void
+   **/
+  private void getSegmentDetailFromJSONObject(JSONObject jsonObject) {
+    try {
+      String listString = jsonObject.getString(Const.SEGMENT_DETAIL_DO_LIST);
+      if (StringUtil.isNotBlank(listString)) {
+        LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
+        segmentDetailDoList.addAll(segmentDetailList);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.run() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
     }
   }
 
@@ -145,6 +171,7 @@ public class IoThread extends Thread {
         mingshiServerUtil.flushSegmentToDB(segmentList);
         mingshiServerUtil.flushAuditLogToDB(auditLogList);
         mingshiServerUtil.flushSegmentIndexToDB();
+        mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
         CURRENT_TIME = Instant.now();
       } else {
         // 减少log日志输出；2021-10-20 15:49:59

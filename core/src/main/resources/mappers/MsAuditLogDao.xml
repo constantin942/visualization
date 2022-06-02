@@ -43,6 +43,21 @@
     from ms_audit_log
     where id = #{id,jdbcType=INTEGER}
   </select>
+  <select id="selectByUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_audit_log
+    where application_user_name = #{applicationUserName,jdbcType=VARCHAR} order by global_trace_id asc
+    <if test="pageNo != null and pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectCount" parameterType="java.util.Map" resultType="java.lang.Long">
+    select
+    count(id)
+    from ms_audit_log
+    where application_user_name = #{applicationUserName,jdbcType=VARCHAR}
+  </select>
   <select id="selectByHash" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>

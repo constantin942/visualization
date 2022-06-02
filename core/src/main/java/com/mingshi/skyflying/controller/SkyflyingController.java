@@ -33,8 +33,8 @@ public class SkyflyingController {
   private MsAuditLogDao msAuditLogDao;
 
   /**
-   * <B>方法名称：getAllSegments</B>
-   * <B>概要说明：获取所有的访问链条信息</B>
+   * <B>方法名称：getAllSegments1</B>
+   * <B>概要说明：获取所有的访问链条信息，版本1的实现</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author zm
@@ -42,9 +42,24 @@ public class SkyflyingController {
    * @Param [request, userName, password]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
-  public ServerResponse<String> getAllSegments(String userName, Integer pageNo, Integer pageSize) {
-    return segmentDetailService.getAllSegmentsBySegmentRelation(userName, pageNo, pageSize);
+  @RequestMapping(value = "/getAllSegments1", method = RequestMethod.GET)
+  public ServerResponse<String> getAllSegments1(String userName, @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo, @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return segmentDetailService.getAllSegmentsBySegmentRelation1(userName, pageNo, pageSize);
+  }
+
+  /**
+   * <B>方法名称：getAllSegments2</B>
+   * <B>概要说明：获取所有的访问链条信息，版本2的实现</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author zm
+   * @Date 2022年06月02日 17:15:19
+   * @Param [request, userName, password]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllSegments2", method = RequestMethod.GET)
+  public ServerResponse<String> getAllSegments2(String userName, @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo, @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return segmentDetailService.getAllSegmentsBySegmentRelation2(userName, pageNo, pageSize);
   }
 
   /**

@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.MsSegmentDetailDao">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
+    <result column="parent_segment_id" jdbcType="VARCHAR" property="parentSegmentId" />
+    <result column="operation_name" jdbcType="VARCHAR" property="operationName" />
+    <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="span_id" jdbcType="INTEGER" property="spanId" />
+    <result column="component" jdbcType="VARCHAR" property="component" />
+    <result column="service_code" jdbcType="VARCHAR" property="serviceCode" />
+    <result column="peer" jdbcType="VARCHAR" property="peer" />
+    <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName" />
+    <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+    <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName" />
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId" />
+    <result column="db_type" jdbcType="VARCHAR" property="dbType" />
+    <result column="db_instance" jdbcType="VARCHAR" property="dbInstance" />
+    <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+    <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
+    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
+    db_user_name
+  </sql>
+  <sql id="Blob_Column_List">
+    db_statement
+  </sql>
+  <select id="selectCount" parameterType="java.util.Map" resultType="java.lang.Long">
+    select
+      count(id)
+    from ms_segment_detail
+  </select>
+  <select id="selectAll" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select *
+    from ms_segment_detail
+    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail  group by global_trace_id order by global_trace_id asc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+        ) as t1 )
+    order by id asc;
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from ms_segment_detail
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <insert id="insertSelectiveBatch" parameterType="java.util.List">
+    insert into ms_segment_detail
+    (  user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+     span_id, component, service_code, peer, endpoint_name,
+    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
+    db_user_name, db_statement)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.userName,jdbcType=VARCHAR},
+      #{item.globalTraceId,jdbcType=VARCHAR},
+      #{item.parentSegmentId,jdbcType=INTEGER},
+      #{item.operationName,jdbcType=VARCHAR},
+      #{item.currentSegmentId,jdbcType=INTEGER},
+      #{item.spanId,jdbcType=INTEGER},
+      #{item.component,jdbcType=INTEGER},
+      #{item.serviceCode,jdbcType=VARCHAR},
+      #{item.peer,jdbcType=VARCHAR},
+      #{item.endpointName,jdbcType=VARCHAR},
+      #{item.startTime,jdbcType=TIMESTAMP},
+      #{item.serviceInstanceName,jdbcType=VARCHAR},
+      #{item.endTime,jdbcType=TIMESTAMP},
+      #{item.parentSpanId,jdbcType=INTEGER},
+      #{item.dbType,jdbcType=VARCHAR},
+      #{item.dbInstance,jdbcType=VARCHAR},
+      #{item.dbUserName,jdbcType=VARCHAR},
+      #{item.dbStatement,jdbcType=VARCHAR}
+      )
+    </foreach>
+  </insert>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+    insert into ms_segment_detail
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="globalTraceId != null">
+        global_trace_id,
+      </if>
+      <if test="parentSegmentId != null">
+        parent_segment_id,
+      </if>
+      <if test="operationName != null">
+        operation_name,
+      </if>
+      <if test="currentSegmentId != null">
+        current_segment_id,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="spanId != null">
+        span_id,
+      </if>
+      <if test="component != null">
+        component,
+      </if>
+      <if test="serviceCode != null">
+        service_code,
+      </if>
+      <if test="peer != null">
+        peer,
+      </if>
+      <if test="endpointName != null">
+        endpoint_name,
+      </if>
+      <if test="startTime != null">
+        start_time,
+      </if>
+      <if test="serviceInstanceName != null">
+        service_instance_name,
+      </if>
+      <if test="endTime != null">
+        end_time,
+      </if>
+      <if test="parentSpanId != null">
+        parent_span_id,
+      </if>
+      <if test="dbType != null">
+        db_type,
+      </if>
+      <if test="dbInstance != null">
+        db_instance,
+      </if>
+      <if test="dbUserName != null">
+        db_user_name,
+      </if>
+      <if test="dbStatement != null">
+        db_statement,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="globalTraceId != null">
+        #{globalTraceId,jdbcType=VARCHAR},
+      </if>
+      <if test="parentSegmentId != null">
+        #{parentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="operationName != null">
+        #{operationName,jdbcType=VARCHAR},
+      </if>
+      <if test="currentSegmentId != null">
+        #{currentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="spanId != null">
+        #{spanId,jdbcType=INTEGER},
+      </if>
+      <if test="component != null">
+        #{component,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceCode != null">
+        #{serviceCode,jdbcType=VARCHAR},
+      </if>
+      <if test="peer != null">
+        #{peer,jdbcType=VARCHAR},
+      </if>
+      <if test="endpointName != null">
+        #{endpointName,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="serviceInstanceName != null">
+        #{serviceInstanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="endTime != null">
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="parentSpanId != null">
+        #{parentSpanId,jdbcType=INTEGER},
+      </if>
+      <if test="dbType != null">
+        #{dbType,jdbcType=VARCHAR},
+      </if>
+      <if test="dbInstance != null">
+        #{dbInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="dbUserName != null">
+        #{dbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbStatement != null">
+        #{dbStatement,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateBatch" parameterType="java.util.List">
+    update ms_segment_detail
+    <trim prefix="set" suffixOverrides=",">
+      <trim prefix="user_name = case" suffix="end,">
+        <foreach collection="list" item="item" index="index">
+          <if test="item.globalTraceId != null">
+            when global_trace_id=#{item.globalTraceId}  then #{item.userName}
+          </if>
+        </foreach>
+      </trim>
+    </trim>
+    where global_trace_id in
+    <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+      #{item.globalTraceId}
+    </foreach>
+    and user_name is null
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+    update ms_segment_detail
+    <set>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="globalTraceId != null">
+        global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
+      </if>
+      <if test="parentSegmentId != null">
+        parent_segment_id = #{parentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="operationName != null">
+        operation_name = #{operationName,jdbcType=VARCHAR},
+      </if>
+      <if test="currentSegmentId != null">
+        current_segment_id = #{currentSegmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="spanId != null">
+        span_id = #{spanId,jdbcType=INTEGER},
+      </if>
+      <if test="component != null">
+        component = #{component,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceCode != null">
+        service_code = #{serviceCode,jdbcType=VARCHAR},
+      </if>
+      <if test="peer != null">
+        peer = #{peer,jdbcType=VARCHAR},
+      </if>
+      <if test="endpointName != null">
+        endpoint_name = #{endpointName,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        start_time = #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="serviceInstanceName != null">
+        service_instance_name = #{serviceInstanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="endTime != null">
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="parentSpanId != null">
+        parent_span_id = #{parentSpanId,jdbcType=INTEGER},
+      </if>
+      <if test="dbType != null">
+        db_type = #{dbType,jdbcType=VARCHAR},
+      </if>
+      <if test="dbInstance != null">
+        db_instance = #{dbInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="dbUserName != null">
+        db_user_name = #{dbUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbStatement != null">
+        db_statement = #{dbStatement,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

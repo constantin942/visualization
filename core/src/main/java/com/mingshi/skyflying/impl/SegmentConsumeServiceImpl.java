@@ -72,10 +72,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 重组span数据，返回前端使用；2022-04-20 16:49:02
       reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
 
+      LinkedList<MsSegmentDetailDo> segmentDetaiDolList = getSegmentDetaiDolList(segment);
+
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList);
+        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList);
       } else {
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
@@ -85,11 +87,79 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 插入segment对应的index数据；2022-05-23 10:15:38
         mingshiServerUtil.flushSegmentIndexToDB();
         mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
+        // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
+        mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
     return null;
+  }
+
+  private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment) {
+    LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+    try {
+      segmentDetaiDolList = new LinkedList<>();
+      String reorganizingSpans = segment.getReorganizingSpans();
+      List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
+      LinkedHashMap map1 = list.get(0);
+      Object url = map1.get("url");
+      MsSegmentDetailDo msSegmentDetailDo = null;
+      for (int i = 1; i < list.size(); i++) {
+        msSegmentDetailDo = new MsSegmentDetailDo();
+        LinkedHashMap map = list.get(i);
+        msSegmentDetailDo.setOperationName(String.valueOf(url));
+
+        Integer spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
+        String component = String.valueOf(map.get("component"));
+        String serviceCode = String.valueOf(map.get("serviceCode"));
+        String peer = String.valueOf(map.get("peer"));
+        String endpointName = String.valueOf(map.get("endpointName"));
+        Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
+        String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
+        Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
+        Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
+        String tags = String.valueOf(map.get("tags"));
+
+        List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
+        if (null != tagsList) {
+          for (KeyValue keyValue : tagsList) {
+            String key = keyValue.getKey();
+            String value = keyValue.getValue();
+            if (key.equals("db.type")) {
+              msSegmentDetailDo.setDbType(value);
+            } else if (key.equals("db.instance")) {
+              msSegmentDetailDo.setDbInstance(value);
+            } else if (key.equals("db_user_name")) {
+              msSegmentDetailDo.setDbUserName(value);
+            } else if (key.equals("db.statement")) {
+              msSegmentDetailDo.setDbStatement(value);
+            }else if(key.equals("url")){
+              msSegmentDetailDo.setDbType("url");
+              msSegmentDetailDo.setDbStatement(value);
+            }
+          }
+        }
+
+        msSegmentDetailDo.setComponent(component);
+        msSegmentDetailDo.setSpanId(spanId);
+        msSegmentDetailDo.setServiceCode(serviceCode);
+        msSegmentDetailDo.setPeer(peer);
+        msSegmentDetailDo.setEndpointName(endpointName);
+        msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
+        msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
+        msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
+        msSegmentDetailDo.setParentSpanId(parentSpanId);
+        msSegmentDetailDo.setUserName(segment.getUserName());
+        msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+        msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
+        msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+        segmentDetaiDolList.add(msSegmentDetailDo);
+      }
+    } catch (Exception e) {
+      log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
+    }
+    return segmentDetaiDolList;
   }
 
   /**
@@ -134,13 +204,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList) {
+  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList, LinkedList<MsSegmentDetailDo> segmentDetaiDolList) {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       JSONObject jsonObject = new JSONObject();
       jsonObject.put(Const.SEGMENT, JsonUtil.obj2String(segmentDo));
       if (0 < auditLogFromSkywalkingAgentList.size()) {
         jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
+      }
+      if (0 < segmentDetaiDolList.size()) {
+        jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
       linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {
@@ -378,7 +451,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           }
 
           if (false == flag) {
-            jsonObject.put("tags", tags);
+            jsonObject.put("tags", JsonUtil.obj2String(tags));
             linkedList.add(jsonObject.toJSONString());
           }
         }
@@ -442,9 +515,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (0 < tableNameList.size()) {
         String tableName = "";
         for (String table : tableNameList) {
-          if(StringUtil.isBlank(tableName)){
+          if (StringUtil.isBlank(tableName)) {
             tableName = table;
-          }else{
+          } else {
             tableName = tableName + "," + table;
           }
         }

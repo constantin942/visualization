@@ -2,9 +2,11 @@ package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.dao.MsAuditLogDao;
+import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
+import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.SegmentDo;
 import com.mingshi.skyflying.domain.UserTokenDo;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,8 @@ import java.util.Map;
 @Slf4j
 @Component
 public class MingshiServerUtil {
+  @Resource
+  private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsAuditLogDao msAuditLogDao;
   @Resource
@@ -64,7 +68,8 @@ public class MingshiServerUtil {
     Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
     Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
     List<UserTokenDo> userTokenDoList = new LinkedList<>();
-    List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
+    // List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
+    List<MsSegmentDetailDo> setmentDetailDoList = new LinkedList<>();
     while (iterator.hasNext()) {
       String globalTraceId = iterator.next();
       String userName = globalTraceIdAndUserNameMap.get(globalTraceId);
@@ -83,16 +88,24 @@ public class MingshiServerUtil {
       userTokenDo.setToken(token);
       userTokenDoList.add(userTokenDo);
 
-      MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-      msAuditLogDo.setGlobalTraceId(globalTraceId);
-      msAuditLogDo.setApplicationUserName(userName);
-      auditLogDoList.add(msAuditLogDo);
+      MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+      msSegmentDetailDo.setGlobalTraceId(globalTraceId);
+      msSegmentDetailDo.setUserName(userName);
+      setmentDetailDoList.add(msSegmentDetailDo);
+
+      // MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+      // msAuditLogDo.setGlobalTraceId(globalTraceId);
+      // msAuditLogDo.setApplicationUserName(userName);
+      // auditLogDoList.add(msAuditLogDo);
     }
     // 批量插入用户名、token、global信息
     batchInsertUserToken(userTokenDoList);
 
     // 批量更新审计日志的用户名和globalTraceId信息；
-    batchUpdateMsAuditLog(auditLogDoList);
+    // batchUpdateMsAuditLog(auditLogDoList);
+
+    // 批量更新segmentDetail信息的用户名和globalTraceId信息；
+    batchUpdateMsSegmentDetail(setmentDetailDoList);
 
     SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
     SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
@@ -101,30 +114,53 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：batchUpdateMsAuditLog</B>
    * <B>概要说明：批量更新审计日志的用户名和globalTraceId信息；</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月01日 11:06:48
    * @Param [auditLogDoList]
+   **/
+  private void batchUpdateMsSegmentDetail(List<MsSegmentDetailDo> setmentDetailDoList) {
+    try {
+      if (0 < setmentDetailDoList.size()) {
+        Instant now = Instant.now();
+        msSegmentDetailDao.updateBatch(setmentDetailDoList);
+        log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.batchUpdateMsSegmentDetail # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：batchUpdateMsAuditLog</B>
+   * <B>概要说明：批量更新审计日志的用户名和globalTraceId信息；</B>
+   *
    * @return void
+   * @Author zm
+   * @Date 2022年06月01日 11:06:48
+   * @Param [auditLogDoList]
    **/
   private void batchUpdateMsAuditLog(List<MsAuditLogDo> auditLogDoList) {
     try {
-      if(0 < auditLogDoList.size()){
+      if (0 < auditLogDoList.size()) {
         Instant now = Instant.now();
         msAuditLogDao.updateBatch(auditLogDoList);
         log.info("# IoThread.batchUpdateMsAuditLog # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", auditLogDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
-      log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。",e);
+      log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
     }
   }
 
   /**
    * <B>方法名称：batchInsertUserToken</B>
    * <B>概要说明：批量插入用户名、token、global信息</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月01日 11:06:39
    * @Param [userTokenDoList]
-   * @return void
    **/
   private void batchInsertUserToken(List<UserTokenDo> userTokenDoList) {
     try {
@@ -178,6 +214,27 @@ public class MingshiServerUtil {
         auditLogList.clear();
       } catch (Exception e) {
         log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushSegmentDetailToDB</B>
+   * <B>概要说明：将segmentDetail实例信息批量插入到MySQL中</B>
+   * @Author zm
+   * @Date 2022年06月02日 11:06:24
+   * @Param [segmentDetaiDolList]
+   * @return void
+   **/
+  public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
+    if (0 < segmentDetailDoList.size()) {
+      try {
+        Instant now = Instant.now();
+        msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        segmentDetailDoList.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
       }
     }
   }

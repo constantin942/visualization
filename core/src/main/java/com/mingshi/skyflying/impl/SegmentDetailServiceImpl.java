@@ -3,12 +3,8 @@ package com.mingshi.skyflying.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mingshi.skyflying.dao.SegmentDao;
-import com.mingshi.skyflying.dao.SegmentRelationDao;
-import com.mingshi.skyflying.dao.UserTokenDao;
-import com.mingshi.skyflying.domain.SegmentDo;
-import com.mingshi.skyflying.domain.SegmentRelationDo;
-import com.mingshi.skyflying.domain.UserTokenDo;
+import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.JsonUtil;
@@ -38,9 +34,13 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private UserTokenDao userTokenDao;
   @Resource
   private SegmentRelationDao segmentRelationDao;
+  @Resource
+  private MsAuditLogDao msAuditLogDao;
+  @Resource
+  private MsSegmentDetailDao msSegmentDetailDao;
 
   @Override
-  public ServerResponse<String> getAllSegmentsBySegmentRelation(String userName, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getAllSegmentsBySegmentRelation1(String userName, Integer pageNo, Integer pageSize) {
     List<Map<String, String>> globalTraceIdMapList = getGlobalTraceIdList(userName, pageNo, pageSize);
     log.info("开始执行 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
 
@@ -99,6 +99,133 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     return bySuccess;
   }
 
+  @Override
+  public ServerResponse<String> getAllSegmentsBySegmentRelation2(String userName, Integer pageNo, Integer pageSize) {
+    log.info("开始执行 # SegmentDetailServiceImpl.getAllSegmentsBySegmentRelation2() # 获取用户的调用链信息。");
+    Map<String, Object> map = new HashMap<>();
+    map.put("applicationUserName", userName);
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    map.put("pageNo", (pageNo - 1) * pageSize);
+    map.put("pageSize", pageSize);
+
+    // 从数据库中获取一次调用链中所涉及到的segment信息；2022-06-02 17:41:11
+    HashMap<String/* global_trace_id */, HashMap<String/* url */, List<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map);
+
+    // 组装每一条调用链信息；2022-06-02 17:41:16
+    List<String> returnList = getEveryCallChainInfo(hashMap);
+
+    Long count = msSegmentDetailDao.selectCount(map);
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(returnList));
+    context.put("total", count);
+    log.info("执行完毕 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", JsonUtil.obj2String(context));
+  }
+
+  /**
+   * <B>方法名称：getSegmentDetailsFromDb</B>
+   * <B>概要说明：从数据库中获取一次调用链中所涉及到的segment信息</B>
+   *
+   * @return java.util.HashMap<java.lang.String, java.util.HashMap < java.lang.String, java.util.List < com.mingshi.skyflying.domain.MsSegmentDetailDo>>>
+   * @Author zm
+   * @Date 2022年06月02日 17:06:01
+   * @Param [map]
+   **/
+  private HashMap<String, HashMap<String, List<MsSegmentDetailDo>>> getSegmentDetailsFromDb(Map<String, Object> map) {
+    HashMap<String/* global_trace_id */, HashMap<String/* url */, List<MsSegmentDetailDo>>> hashMap = new HashMap<>();
+    try {
+      List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAll(map);
+      if (null != msSegmentDetailDoList && 0 < msSegmentDetailDoList.size()) {
+        for (MsSegmentDetailDo msSegmentDetailDo : msSegmentDetailDoList) {
+          String globalTraceId = msSegmentDetailDo.getGlobalTraceId();
+          HashMap<String, List<MsSegmentDetailDo>> globalTraceIdHashMap = hashMap.get(globalTraceId);
+          if (null == globalTraceIdHashMap) {
+            globalTraceIdHashMap = new HashMap<>();
+            hashMap.put(globalTraceId, globalTraceIdHashMap);
+          }
+          String operationName = msSegmentDetailDo.getOperationName();
+          List<MsSegmentDetailDo> msSegmentDetailDosList = globalTraceIdHashMap.get(operationName);
+          if (null == msSegmentDetailDosList) {
+            msSegmentDetailDosList = new LinkedList<>();
+            globalTraceIdHashMap.put(operationName, msSegmentDetailDosList);
+          }
+          String parentSegmentId = msSegmentDetailDo.getParentSegmentId();
+          if(StringUtil.isBlank(parentSegmentId)){
+            // 把最顶级的segment放入list的第一个位置；2022-06-02 18:07:31
+            msSegmentDetailDosList.add(0,msSegmentDetailDo);
+          }else{
+            msSegmentDetailDosList.add(msSegmentDetailDo);
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("# SegmentDetailServiceImpl.getSegmentDetailsFromDb() # 从数据库中获取一次调用链中所涉及到的segment信息时，出现了异常。", e);
+    }
+    return hashMap;
+  }
+
+  /**
+   * <B>方法名称：getEveryCallChainInfo</B>
+   * <B>概要说明：组装每一条调用链信息</B>
+   *
+   * @return java.util.List<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月02日 17:06:31
+   * @Param [hashMap]
+   **/
+  private List<String> getEveryCallChainInfo(HashMap<String, HashMap<String, List<MsSegmentDetailDo>>> hashMap) {
+    List<String> returnList = new LinkedList<>();
+    try {
+      Iterator<String> iterator1 = hashMap.keySet().iterator();
+      while (iterator1.hasNext()) {
+        String globalTraceId = iterator1.next();
+        // 组装每一个调用链；2022-06-02 15:03:11
+        HashMap<String, List<MsSegmentDetailDo>> urlHhashMap = hashMap.get(globalTraceId);
+        Iterator<String> iterator2 = urlHhashMap.keySet().iterator();
+        while (iterator2.hasNext()) {
+          String url = iterator2.next();
+          List<MsSegmentDetailDo> segmentDetailDoList = urlHhashMap.get(url);
+          if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+            JSONObject jsonObject = new JSONObject();
+            for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
+              String header = jsonObject.getString("header");
+              if (StringUtil.isBlank(header)) {
+                JSONObject headerJson = new JSONObject();
+                headerJson.put("userName", msSegmentDetailDo.getUserName());
+                headerJson.put("url", msSegmentDetailDo.getOperationName());
+                headerJson.put("requestStartTime", msSegmentDetailDo.getStartTime());
+                jsonObject.put("header", headerJson);
+              }
+              JSONArray jsonArray = jsonObject.getJSONArray("body");
+              if (null == jsonArray) {
+                jsonArray = new JSONArray();
+                jsonObject.put("body", jsonArray);
+              }
+              JSONObject bodyJson = new JSONObject();
+              bodyJson.put("peer", msSegmentDetailDo.getPeer());
+              bodyJson.put("serviceInstanceName", msSegmentDetailDo.getServiceInstanceName());
+              bodyJson.put("serviceCode", msSegmentDetailDo.getServiceCode());
+              bodyJson.put("db_type", msSegmentDetailDo.getDbType());
+              bodyJson.put("db_instance", msSegmentDetailDo.getDbInstance());
+              bodyJson.put("db_user_name", msSegmentDetailDo.getDbUserName());
+              bodyJson.put("db_statement", msSegmentDetailDo.getDbStatement());
+              jsonArray.add(bodyJson);
+            }
+            returnList.add(jsonObject.toJSONString());
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("# SegmentDetailServiceImpl.getEveryCallChainInfo() # 组装每一条调用链信息时，出现了异常。", e);
+    }
+    return returnList;
+  }
+
   /**
    * <B>方法名称：getGlobalTraceIdList</B>
    * <B>概要说明：根据用户名，获取对应全局追踪id</B>
@@ -125,8 +252,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       if (null != listUserToken && 0 < listUserToken.size()) {
         for (UserTokenDo userTokenDo : listUserToken) {
           String globalTraceId = userTokenDo.getGlobalTraceId();
-          Map<String,Object> queryMap2 = new HashMap<>();
-          queryMap2.put("globalTraceId",globalTraceId);
+          Map<String, Object> queryMap2 = new HashMap<>();
+          queryMap2.put("globalTraceId", globalTraceId);
           SegmentRelationDo segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(queryMap2);
           Map<String, String> map = new HashMap<>();
           map.put("globalTraceId", segmentRelationDo.getGlobalTraceId());
@@ -140,3 +267,61 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     return globalTraceIdMapList;
   }
 }
+// todo: 清明节过后，需要将这个实现了。即返给前端时，应该将一条完整的调用链信息返回给前端。2022-06-02 18:13:30
+// [{
+//     "header": {
+//       "userName": "admin",
+//         "url": "http://localhost:8080/demo1/test",
+//         "requestStartTime": "2022-06-02 17:22:03"
+//     },
+//     "body": [{
+//       "url": "http://localhost:8080/demo1/test",
+//         "segments": [{
+//         "db_type": "sql",
+//           "serviceCode": "dem1",
+//           "db_user_name": "root",
+//           "peer": "10.0.107.46:3306",
+//           "db_statement": "select\n         \n    id,\n    date_format(gmt_create, '%Y-%m-%d %H:%i:%s') as gmt_create,\n    date_format(gmt_modified, '%Y-%m-%d %H:%i:%s') as gmt_modified,\n    user_name,\n    login_ip,\n    method_name,\n    request_url,\n    request_params,\n    response_params,\n    order_id\n   \n        from aiit_operate_log\n        where is_delete=0 and  order_id='abcd'",
+//           "db_instance": "zhejiang_mobile",
+//           "serviceInstanceName": "340674ad19ed46d8af365f8ca7b74332@192.168.1.103"
+//       }]
+//     },
+//     {
+//       "url": "http://localhost:7070/user/login",
+//       "segments": [{
+//       "db_type": "sql",
+//         "serviceCode": "demo-application-springboot",
+//         "db_user_name": "root",
+//         "peer": "10.0.107.46:3306",
+//         "db_statement": "select\n     \n    id, is_delete, gmt_create, gmt_modified, creator, modifier, status, user_name, password,\n    salt, phone, name, email\n   \n    from sys_operator\n    where user_name='admin'",
+//         "db_instance": "zhejiang_mobile",
+//         "serviceInstanceName": "112c8a0cf2664a97b9e70ab3c19b7013@192.168.1.103"
+//     },
+//       {
+//         "db_type": "sql",
+//         "serviceCode": "demo-application-springboot",
+//         "db_user_name": "root",
+//         "peer": "10.0.107.46:3306",
+//         "db_statement": "select\n         \n    id, is_delete, gmt_create, gmt_modified, user_name, password_error_count, description\n   \n        from aiit_user_login_statistics\n        where is_delete=0 AND user_name='admin'",
+//         "db_instance": "zhejiang_mobile",
+//         "serviceInstanceName": "112c8a0cf2664a97b9e70ab3c19b7013@192.168.1.103"
+//       },
+//       {
+//         "db_type": "Redis",
+//         "serviceCode": "demo-application-springboot",
+//         "peer": "10.0.107.21:6379",
+//         "db_statement": "SETEX",
+//         "serviceInstanceName": "112c8a0cf2664a97b9e70ab3c19b7013@192.168.1.103"
+//       },
+//       {
+//         "db_type": "url",
+//         "serviceCode": "demo-application-springboot",
+//         "peer": "localhost:8080",
+//         "db_statement": "http://localhost:8080/demo1/test",
+//         "serviceInstanceName": "112c8a0cf2664a97b9e70ab3c19b7013@192.168.1.103"
+//       }
+// 			]
+//     }
+// 	]
+//   }
+// ]

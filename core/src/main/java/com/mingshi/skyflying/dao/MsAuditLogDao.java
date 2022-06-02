@@ -3,6 +3,7 @@ package com.mingshi.skyflying.dao;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MsAuditLogDao {
     int deleteByPrimaryKey(Integer id);
@@ -10,6 +11,8 @@ public interface MsAuditLogDao {
     int insertSelective(MsAuditLogDo record);
 
     MsAuditLogDo selectByPrimaryKey(Integer id);
+
+    List<MsAuditLogDo> selectByUserName(Map<String, Object> map);
 
     MsAuditLogDo selectByHash(String hash);
 
@@ -20,4 +23,6 @@ public interface MsAuditLogDao {
     int updateByPrimaryKeySelective(MsAuditLogDo record);
 
     int updateBatch(List<MsAuditLogDo> record);
+
+    Long selectCount(Map<String, Object> map);
 }
