@@ -19,5 +19,5 @@ public interface MsSegmentDetailDao {
 
     void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 
-    Long selectCount(Map<String, Object> map);
+    Long selectCountAll(Map<String, Object> map);
 }

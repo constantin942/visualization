@@ -36,7 +36,7 @@
   <sql id="Blob_Column_List">
     db_statement
   </sql>
-  <select id="selectCount" parameterType="java.util.Map" resultType="java.lang.Long">
+  <select id="selectCountAll" parameterType="java.util.Map" resultType="java.lang.Long">
     select count(*)
     from (select global_trace_id
           from ms_segment_detail

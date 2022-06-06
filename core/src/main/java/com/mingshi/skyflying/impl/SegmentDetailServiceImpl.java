@@ -119,7 +119,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     // 组装每一条调用链信息；2022-06-02 17:41:16
     String traceInfo = getEveryCallChainInfo(hashMap);
 
-    Long count = msSegmentDetailDao.selectCount(map);
+    Long count = msSegmentDetailDao.selectCountAll(map);
     Map<String, Object> context = new HashMap<>();
     context.put("rows", JsonUtil.obj2String(traceInfo));
     context.put("total", count);
