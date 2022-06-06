@@ -37,9 +37,10 @@
     db_statement
   </sql>
   <select id="selectCount" parameterType="java.util.Map" resultType="java.lang.Long">
-    select
-      count(id)
-    from ms_segment_detail
+    select count(*)
+    from (select global_trace_id
+          from ms_segment_detail
+          group by global_trace_id ) as t1;
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
     select *
