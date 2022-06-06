@@ -37,6 +37,33 @@
     instance_id, ms_schema_name, db_id, logic, sql_type, exec_state, affect_rows, elapsed_time,
     remark,ms_sql, sql_source, hash, sql_insight_db_user_name, sql_insight_user_ip, parent_segment_id, current_segment_id, operation_name, application_user_name, ms_table_name
   </sql>
+
+  <select id="selectBehaviorByOptTime" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+          parameterType="java.util.Map">
+    select * from ms_audit_log where  is_delete = 0  and sql_type=#{sqlType}
+    and op_time between date_format(#{startTime},'%Y%m%d') and date_format(#{endTime},'%Y%m%d')
+
+
+    <!--      <if test="pageNo != null and pageSize != null   ">-->
+    <!--        LIMIT #{pageNo},#{pageSize}-->
+    <!--      </if>-->
+  </select>
+  <select id="selectBehaviorByUserName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+          parameterType="java.util.Map">
+    select *from ms_audit_log where  is_delete = 0  and application_user_name=#{applicationUserName} and sql_type=#{sqlType}
+  </select>
+  <select id="selectBehaviorByTableName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+          parameterType="java.util.Map">
+    select *from ms_audit_log where  is_delete = 0  and ms_table_name=#{msTableName}
+  </select>
+  <select id="selectAllUserName" resultType="java.lang.String">
+    SELECT DISTINCT application_user_name FROM `ms_audit_log`
+  </select>
+  <select id="selectAllMsTableName" resultType="java.lang.String">
+    SELECT DISTINCT ms_table_name FROM `ms_audit_log`
+  </select>
+
+
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>

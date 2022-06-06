@@ -25,4 +25,16 @@ public interface MsAuditLogDao {
     int updateBatch(List<MsAuditLogDo> record);
 
     Long selectCount(Map<String, Object> map);
+
+    List<MsAuditLogDo> selectBehaviorByUserName(Map<String, Object> map);
+
+    List<MsAuditLogDo> selectBehaviorByOptTime(Map<String, Object> map);
+
+    List<MsAuditLogDo> selectBehaviorByTableName(Map<String, Object> queryMap);
+
+    List<String> selectAllUserName();
+
+    List<String> selectAllMsTableName();
+
+
 }
