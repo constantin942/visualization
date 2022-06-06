@@ -31,6 +31,7 @@ public class SkyflyingController {
   private AuditLogService auditLogService;
   @Resource
   private MsAuditLogDao msAuditLogDao;
+
   /**
    * <B>方法名称：getBehaviorByUserName/B>
    * <B>概要说明：基于用户的访问行为</B>
@@ -43,8 +44,8 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByUserName", method = RequestMethod.GET)
-  public ServerResponse<String>getBehaviorByUserName(String applicationUserName,String sqlType,Integer pageNo, Integer pageSize){
-    return auditLogService.getBehaviorByUserName(applicationUserName,sqlType,pageNo,pageSize);
+  public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
+    return auditLogService.getBehaviorByUserName(applicationUserName, sqlType, pageNo, pageSize);
   }
 
 
@@ -60,8 +61,8 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByOptTime", method = RequestMethod.GET)
-  public ServerResponse<String>getBehaviorByOptTime(String sqlType,String startTime,String endTime,Integer pageNo, Integer pageSize){
-    return auditLogService.getBehaviorByOptTime(sqlType,startTime,endTime,pageNo,pageSize);
+  public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
+    return auditLogService.getBehaviorByOptTime(sqlType, startTime, endTime, pageNo, pageSize);
   }
 
   /**
@@ -76,8 +77,8 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByTableName", method = RequestMethod.GET)
-  public ServerResponse<String>getBehaviorByTableName(String msTableName,Integer pageNo, Integer pageSize){
-    return auditLogService.getBehaviorByTableName(msTableName,pageNo,pageSize);
+  public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
+    return auditLogService.getBehaviorByTableName(msTableName, pageNo, pageSize);
   }
 
 
@@ -93,7 +94,7 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getAllUserName", method = RequestMethod.GET)
-  public ServerResponse<String>getAllUserName(){
+  public ServerResponse<String> getAllUserName() {
     return auditLogService.getAllUserName();
   }
 
@@ -110,7 +111,7 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getAllMsTableName", method = RequestMethod.GET)
-  public ServerResponse<String>getAllMsTableName(){
+  public ServerResponse<String> getAllMsTableName() {
     return auditLogService.getAllMsTableName();
   }
 
@@ -126,8 +127,8 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getNumberOfTablesByOpTime", method = RequestMethod.GET)
-  public ServerResponse<String>getNumberOfTablesByOpTime(String msTableName,String startTime,String endTime,Integer pageNo, Integer pageSize){
-    return auditLogService.getNumberOfTablesByOpTime(msTableName,startTime,endTime,pageNo,pageSize);
+  public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
+    return auditLogService.getNumberOfTablesByOpTime(msTableName, startTime, endTime, pageNo, pageSize);
   }
 
   /**
