@@ -26,8 +26,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <B>方法名称：AuditLogServiceImpl</B>
@@ -447,4 +449,97 @@ public class AuditLogServiceImpl implements AuditLogService {
     log.info("执行完毕# AuditLogServiceImpl.batchProcessDMSAuditLog() # 将阿里云提供的DMS数据库审计日志【{}条】插入到数据库中。耗时【{}】毫秒。", size, DateTimeUtil.getTimeMillis(now));
     return null;
   }
+
+
+  @Override
+  public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
+    Map<String ,Object> queryMap=new HashMap<>();
+    if (null == pageNo) {
+      queryMap.put("pageNo", 1);
+    }else{
+      queryMap.put("pageNo",pageNo);
+    }
+    if (null == pageSize) {
+      queryMap.put("pageSize", 10);
+    }else{
+      queryMap.put("pageSize",pageSize);
+    }
+    queryMap.put("applicationUserName",applicationUserName);
+    queryMap.put("sqlType",sqlType);
+
+    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByUserName(queryMap);
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+  @Override
+  public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime,Integer pageNo, Integer pageSize) {
+    Map<String, Object> queryMap = new HashMap<>();
+    if (null == pageNo) {
+      queryMap.put("pageNo", 1);
+    }else{
+      queryMap.put("pageNo",pageNo);
+    }
+    if (null == pageSize) {
+      queryMap.put("pageSize", 10);
+    }else{
+      queryMap.put("pageSize",pageSize);
+    }
+    queryMap.put("sqlType",sqlType);
+    queryMap.put("startTime",startTime);
+    queryMap.put("endTime",endTime);
+
+
+    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByOptTime(queryMap);
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
+    Map<String, Object> queryMap = new HashMap<>();
+    if (null == pageNo) {
+      queryMap.put("pageNo", 1);
+    }else{
+      queryMap.put("pageNo",pageNo);
+    }
+    if (null == pageSize) {
+      queryMap.put("pageSize", 10);
+    }else{
+      queryMap.put("pageSize",pageSize);
+    }
+    queryMap.put("msTableName",msTableName);
+
+
+    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByTableName(queryMap);
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllUserName() {
+    List<String> listMsAuditLog=msAuditLogDao.selectAllUserName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllMsTableName() {
+    List<String> listMsAuditLog=msAuditLogDao.selectAllMsTableName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
+    List<String> listMsAuditLog=msAuditLogDao.selectAllMsTableName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
 }
