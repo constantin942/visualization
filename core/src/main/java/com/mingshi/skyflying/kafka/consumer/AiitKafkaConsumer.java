@@ -23,6 +23,7 @@ public class AiitKafkaConsumer {
   @Resource
   private SegmentConsumerService segmentConsumerService;
 
+  // todo：skywalking探针发送数据时，要确认是否可以批量发送？这样单条发送吞吐量上不来；2022-06-06 16:55:51
   @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
   public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());

@@ -83,10 +83,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 插入segment数据；2022-05-23 10:15:22
         LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
         segmentDoLinkedList.add(segment);
-        mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+        // mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
         // 插入segment对应的index数据；2022-05-23 10:15:38
         mingshiServerUtil.flushSegmentIndexToDB();
-        mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
+        // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
         // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
       }
@@ -101,7 +101,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     try {
       segmentDetaiDolList = new LinkedList<>();
       String reorganizingSpans = segment.getReorganizingSpans();
+      if(StringUtil.isBlank(reorganizingSpans)){
+        return segmentDetaiDolList;
+      }
       List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
+      if(null == list || 0 == list.size()){
+        return segmentDetaiDolList;
+      }
       LinkedHashMap map1 = list.get(0);
       Object url = map1.get("url");
       MsSegmentDetailDo msSegmentDetailDo = null;
@@ -123,18 +129,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
         if (null != tagsList) {
+          String isSql = null;
           for (KeyValue keyValue : tagsList) {
             String key = keyValue.getKey();
             String value = keyValue.getValue();
             if (key.equals("db.type")) {
-              msSegmentDetailDo.setDbType(value);
+              isSql = value;
+              msSegmentDetailDo.setOperationType(value);
             } else if (key.equals("db.instance")) {
               msSegmentDetailDo.setDbInstance(value);
             } else if (key.equals("db_user_name")) {
               msSegmentDetailDo.setDbUserName(value);
             } else if (key.equals("db.statement")) {
+              if (isSql.equals("sql")) {
+                // 获取表名；2022-06-06 14:16:59
+                setTableName(value, msSegmentDetailDo);
+              }
               msSegmentDetailDo.setDbStatement(value);
-            }else if(key.equals("url")){
+            } else if (key.equals("url")) {
               msSegmentDetailDo.setDbType("url");
               msSegmentDetailDo.setDbStatement(value);
             }
@@ -160,6 +172,27 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
     }
     return segmentDetaiDolList;
+  }
+
+  /**
+   * <B>方法名称：setTableName</B>
+   * <B>概要说明： 根据sql语句获取表名</B>
+   * @Author zm
+   * @Date 2022年06月06日 14:06:09
+   * @Param [value, msSegmentDetailDo]
+   * @return void
+   **/
+  private void setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+    try {
+      // sql类型；
+      String sqlType = getSqlType(value);
+      msSegmentDetailDo.setDbType(sqlType);
+      // 获取表名；2022-06-06 14:11:21
+      String tableName = getTableName(sqlType, value);
+      msSegmentDetailDo.setMsTableName(tableName);
+    } catch (Exception e) {
+      log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
+    }
   }
 
   /**
@@ -500,29 +533,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       msAuditLogDo.setSqlType(sqlType);
 
       // 获取表名；2022-05-31 17:01:39
-      List<String> tableNameList = null;
-      if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
-        tableNameList = SqlParserUtils.selectTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
-        tableNameList = SqlParserUtils.insertTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
-        tableNameList = SqlParserUtils.updateTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
-        tableNameList = SqlParserUtils.deleteTable(msSql);
-      } else {
-        log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
-      }
-      if (0 < tableNameList.size()) {
-        String tableName = "";
-        for (String table : tableNameList) {
-          if (StringUtil.isBlank(tableName)) {
-            tableName = table;
-          } else {
-            tableName = tableName + "," + table;
-          }
-        }
-        msAuditLogDo.setMsTableName(tableName);
-      }
+      String tableName = getTableName(sqlType, msSql);
+      msAuditLogDo.setMsTableName(tableName);
 
       // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
       // 这里有也有一个问题：当来自探针的同一条SQL在不同的时间过来时，会根据hash值进行更新。为了解决这个问题，数据库中ms_audit_log中的hash字段就不能设置为唯一索引了。
@@ -536,6 +548,44 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("#SegmentConsumeServiceImpl.getMsAuditLogDo()# 组装MsAuditLogDo实例时，出现了异常。", JsonUtil.obj2String(msAuditLogDo));
     }
+  }
+
+  /**
+   * <B>方法名称：getTableName</B>
+   * <B>概要说明：根据SQL类型和SQL语句，获取表名</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年06月06日 14:06:39
+   * @Param [sqlType, msSql]
+   **/
+  private String getTableName(String sqlType, String msSql) {
+    String tableName = null;
+    if(StringUtil.isBlank(sqlType)){
+      return tableName;
+    }
+    List<String> tableNameList = null;
+    if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
+      tableNameList = SqlParserUtils.selectTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
+      tableNameList = SqlParserUtils.insertTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+      tableNameList = SqlParserUtils.updateTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
+      tableNameList = SqlParserUtils.deleteTable(msSql);
+    } else {
+      log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+    }
+    if (0 < tableNameList.size()) {
+      for (String table : tableNameList) {
+        if (StringUtil.isBlank(tableName)) {
+          tableName = table;
+        } else {
+          tableName = tableName + "," + table;
+        }
+      }
+    }
+    return tableName;
   }
 
   /**

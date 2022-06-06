@@ -168,8 +168,8 @@ public class IoThread extends Thread {
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
-        mingshiServerUtil.flushSegmentToDB(segmentList);
-        mingshiServerUtil.flushAuditLogToDB(auditLogList);
+        // mingshiServerUtil.flushSegmentToDB(segmentList);
+        // mingshiServerUtil.flushAuditLogToDB(auditLogList);
         mingshiServerUtil.flushSegmentIndexToDB();
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
         CURRENT_TIME = Instant.now();

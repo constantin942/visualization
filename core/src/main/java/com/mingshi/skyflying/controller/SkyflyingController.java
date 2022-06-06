@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.controller;
 
-import com.mingshi.skyflying.dao.MsAuditLogDao;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.AuditLogService;
 import com.mingshi.skyflying.service.SegmentDetailService;
@@ -29,8 +28,6 @@ public class SkyflyingController {
   private SegmentDetailService segmentDetailService;
   @Resource
   private AuditLogService auditLogService;
-  @Resource
-  private MsAuditLogDao msAuditLogDao;
 
   /**
    * <B>方法名称：getBehaviorByUserName/B>
@@ -41,13 +38,11 @@ public class SkyflyingController {
    * @Date 2022年05月30日 14:30:19
    * @Param [sqlType, applicationUserName, pageNo,pageSize]
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByUserName", method = RequestMethod.GET)
   public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
     return auditLogService.getBehaviorByUserName(applicationUserName, sqlType, pageNo, pageSize);
   }
-
 
   /**
    * <B>方法名称：getBehaviorByOptTime/B>
@@ -58,7 +53,6 @@ public class SkyflyingController {
    * @Date 2022年06月1日 10:30:19
    * @Param [sqlInsightDbUserName, optTime, pageNo,pageSize]
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByOptTime", method = RequestMethod.GET)
   public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
@@ -74,13 +68,26 @@ public class SkyflyingController {
    * @Date 2022年06月1日 14:30:19
    * @Param [sqlInsightDbUserName, optTime, pageNo,pageSize]
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getBehaviorByTableName", method = RequestMethod.GET)
   public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
     return auditLogService.getBehaviorByTableName(msTableName, pageNo, pageSize);
   }
 
+  /**
+   * <B>方法名称：getNumberOfTablesByOpTime/B>
+   * <B>概要说明：基于时间段获取不同表的操作次数</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年06月1日 14:30:19
+   * @Param
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getNumberOfTablesByOpTime", method = RequestMethod.GET)
+  public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
+    return auditLogService.getNumberOfTablesByOpTime(msTableName, startTime, endTime, pageNo, pageSize);
+  }
 
   /**
    * <B>方法名称：getAllUserName/B>
@@ -91,11 +98,10 @@ public class SkyflyingController {
    * @Date 2022年06月1日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getAllUserName", method = RequestMethod.GET)
   public ServerResponse<String> getAllUserName() {
-    return auditLogService.getAllUserName();
+    return segmentDetailService.getAllUserName();
   }
 
 
@@ -108,42 +114,10 @@ public class SkyflyingController {
    * @Date 2022年06月1日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getAllMsTableName", method = RequestMethod.GET)
   public ServerResponse<String> getAllMsTableName() {
-    return auditLogService.getAllMsTableName();
-  }
-
-  /**
-   * <B>方法名称：getNumberOfTablesByOpTime/B>
-   * <B>概要说明：基于时间段获取不同表的操作次数</B>
-   *
-   * @return ServerResponse<SysOperator>
-   * @Author lhx
-   * @Date 2022年06月1日 14:30:19
-   * @Param
-   **/
-
-  @ResponseBody
-  @RequestMapping(value = "/getNumberOfTablesByOpTime", method = RequestMethod.GET)
-  public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
-    return auditLogService.getNumberOfTablesByOpTime(msTableName, startTime, endTime, pageNo, pageSize);
-  }
-
-  /**
-   * <B>方法名称：getAllSegments1</B>
-   * <B>概要说明：获取所有的访问链条信息，版本1的实现</B>
-   *
-   * @return ServerResponse<SysOperator>
-   * @Author zm
-   * @Date 2022年04月19日 17:04:19
-   * @Param [request, userName, password]
-   **/
-  @ResponseBody
-  @RequestMapping(value = "/getAllSegments1", method = RequestMethod.GET)
-  public ServerResponse<String> getAllSegments1(String userName, @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo, @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getAllSegmentsBySegmentRelation1(userName, pageNo, pageSize);
+    return segmentDetailService.getAllMsTableName();
   }
 
   /**
@@ -156,9 +130,16 @@ public class SkyflyingController {
    * @Param [request, userName, password]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllSegments2", method = RequestMethod.GET)
-  public ServerResponse<String> getAllSegments2(String userName, @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo, @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getAllSegmentsBySegmentRelation2(userName, pageNo, pageSize);
+  @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
+  public ServerResponse<String> getAllSegments(String applicationUserName, /* 登录系统的名称 */
+                                                String dbUserName, /* 访问数据库的用户名 */
+                                                String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                                String msTableName, /* 数据库表名 */
+                                                String startTime, /* 开始时间 */
+                                                String endTime, /* 结束时间 */
+                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return segmentDetailService.getAllSegmentsBySegmentRelation2(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
   }
 
   /**

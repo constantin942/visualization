@@ -20,4 +20,8 @@ public interface MsSegmentDetailDao {
     void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 
     Long selectCountAll(Map<String, Object> map);
+
+    List<String> selectAllUserName();
+
+    List<String> selectAllMsTableName();
 }

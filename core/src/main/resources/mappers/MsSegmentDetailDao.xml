@@ -2,70 +2,128 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsSegmentDetailDao">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
-    <result column="parent_segment_id" jdbcType="VARCHAR" property="parentSegmentId" />
-    <result column="operation_name" jdbcType="VARCHAR" property="operationName" />
-    <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId" />
-    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
-    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
-    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
-    <result column="span_id" jdbcType="INTEGER" property="spanId" />
-    <result column="component" jdbcType="VARCHAR" property="component" />
-    <result column="service_code" jdbcType="VARCHAR" property="serviceCode" />
-    <result column="peer" jdbcType="VARCHAR" property="peer" />
-    <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName" />
-    <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
-    <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName" />
-    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
-    <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId" />
-    <result column="db_type" jdbcType="VARCHAR" property="dbType" />
-    <result column="db_instance" jdbcType="VARCHAR" property="dbInstance" />
-    <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName" />
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+    <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId"/>
+    <result column="parent_segment_id" jdbcType="VARCHAR" property="parentSegmentId"/>
+    <result column="operation_name" jdbcType="VARCHAR" property="operationName"/>
+    <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="span_id" jdbcType="INTEGER" property="spanId"/>
+    <result column="component" jdbcType="VARCHAR" property="component"/>
+    <result column="service_code" jdbcType="VARCHAR" property="serviceCode"/>
+    <result column="peer" jdbcType="VARCHAR" property="peer"/>
+    <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName"/>
+    <result column="start_time" jdbcType="TIMESTAMP" property="startTime"/>
+    <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName"/>
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime"/>
+    <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId"/>
+    <result column="db_type" jdbcType="VARCHAR" property="dbType"/>
+    <result column="db_instance" jdbcType="VARCHAR" property="dbInstance"/>
+    <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName"/>
+    <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
+    <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
-    <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement" />
+    <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id, user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    id
+    , user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
-    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-    db_user_name
+    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,ms_table_name,db_user_name
   </sql>
   <sql id="Blob_Column_List">
     db_statement
   </sql>
+  <select id="selectAllUserName" resultType="java.lang.String">
+    SELECT DISTINCT user_name FROM `ms_segment_detail` where user_name is not null
+  </select>
+  <select id="selectAllMsTableName" resultType="java.lang.String">
+    SELECT DISTINCT ms_table_name FROM `ms_segment_detail`
+  </select>
   <select id="selectCountAll" parameterType="java.util.Map" resultType="java.lang.Long">
     select count(*)
     from (select global_trace_id
-          from ms_segment_detail
-          group by global_trace_id ) as t1;
+    from ms_segment_detail
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+      <if test="operationType != null and  operationType != null   ">
+        and operation_type = #{operationType}
+      </if>
+      <if test="dbType != null and  dbType != null   ">
+        and db_type = #{dbType}
+      </if>
+      <if test="startTime != null and  startTime != null   ">
+        and start_time <![CDATA[ >= ]]> #{startTime}
+      </if>
+      <if test="end_time != null and  endTime != null   ">
+        and end_time <![CDATA[ <= ]]> #{endTime}
+      </if>
+      <if test="msTableName != null and  msTableName != null   ">
+        and ms_table_name = #{msTableName}
+      </if>
+    </where>
+    group by global_trace_id) as t1;
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    <!--    select *-->
+    <!--    from ms_segment_detail-->
+    <!--    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail group by global_trace_id-->
+    <!--    order by global_trace_id asc-->
+    <!--    <if test="pageNo != null and  pageSize != null   ">-->
+    <!--      LIMIT #{pageNo},#{pageSize}-->
+    <!--    </if>-->
+    <!--    ) as t1 )-->
+    <!--    order by id asc;-->
     select *
     from ms_segment_detail
-    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail  group by global_trace_id order by global_trace_id asc
+    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+      <if test="operationType != null and  operationType != null   ">
+        and operation_type = #{operationType}
+      </if>
+      <if test="dbType != null and  dbType != null   ">
+        and db_type = #{dbType}
+      </if>
+      <if test="startTime != null and  startTime != null   ">
+        and start_time = #{startTime}
+      </if>
+      <if test="end_time != null and  endTime != null   ">
+        and end_time = #{endTime}
+      </if>
+      <if test="msTableName != null and  msTableName != null   ">
+        and ms_table_name = #{msTableName}
+      </if>
+    </where>
+    group by global_trace_id order by global_trace_id asc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>
-        ) as t1 )
+    ) as t1 )
     order by id asc;
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
     select
-    <include refid="Base_Column_List" />
+    <include refid="Base_Column_List"/>
     ,
-    <include refid="Blob_Column_List" />
+    <include refid="Blob_Column_List"/>
     from ms_segment_detail
     where id = #{id,jdbcType=INTEGER}
   </select>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail
-    (  user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
-     span_id, component, service_code, peer, endpoint_name,
+    ( user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-    db_user_name, db_statement)
+    db_user_name, db_statement, ms_table_name, operation_type)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -86,7 +144,9 @@
       #{item.dbType,jdbcType=VARCHAR},
       #{item.dbInstance,jdbcType=VARCHAR},
       #{item.dbUserName,jdbcType=VARCHAR},
-      #{item.dbStatement,jdbcType=VARCHAR}
+      #{item.dbStatement,jdbcType=VARCHAR},
+      #{item.msTableName,jdbcType=VARCHAR},
+      #{item.operationType,jdbcType=VARCHAR}
       )
     </foreach>
   </insert>
@@ -159,6 +219,12 @@
       <if test="dbStatement != null">
         db_statement,
       </if>
+      <if test="msTableName != null">
+        ms_table_name,
+      </if>
+      <if test="operationType != null">
+        operation_type,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -227,6 +293,12 @@
       <if test="dbStatement != null">
         #{dbStatement,jdbcType=LONGVARCHAR},
       </if>
+      <if test="msTableName != null">
+        #{msTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="operationType != null">
+        #{operationType,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateBatch" parameterType="java.util.List">
@@ -235,7 +307,7 @@
       <trim prefix="user_name = case" suffix="end,">
         <foreach collection="list" item="item" index="index">
           <if test="item.globalTraceId != null">
-            when global_trace_id=#{item.globalTraceId}  then #{item.userName}
+            when global_trace_id=#{item.globalTraceId} then #{item.userName}
           </if>
         </foreach>
       </trim>
@@ -311,6 +383,12 @@
       </if>
       <if test="dbStatement != null">
         db_statement = #{dbStatement,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="msTableName != null">
+        ms_table_name = #{msTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="operationType != null">
+        operation_type = #{operationType,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

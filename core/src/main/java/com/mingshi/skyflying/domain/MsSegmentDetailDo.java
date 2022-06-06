@@ -41,6 +41,10 @@ public class MsSegmentDetailDo {
 
     private Integer parentSpanId;
 
+    private String operationType;
+
+    private String msTableName;
+
     private String dbType;
 
     private String dbInstance;
