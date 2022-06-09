@@ -12,9 +12,6 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<String> getAllMsTableName();
 
-  // 2022-06-06 17:02:50
-  // 异常检测规则有：
-  // 1. 若某用户通常白天访问数据，则夜间为异常；
-  // 2. 某用户访问从未访问过的表；
-  // 3. 访问频率、访问量激增；
 }
+// 恢复kafak的某个topic下某个消费组的offset为最早；2022-06-07 10:25:58
+// bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group skyflying-consumer-group --reset-offsets --all-topics --to-earliest --execute

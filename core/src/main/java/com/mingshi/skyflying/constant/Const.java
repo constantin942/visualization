@@ -24,6 +24,7 @@ public class Const {
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
   public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
+  public static final String ABNORMAL = "abnormal";
   public static final String SEGMENT = "segment";
 
   // 配置表中的配置项
@@ -33,6 +34,7 @@ public class Const {
   public static final String RETCH_AUDIT_LOG_BY_DMS_SUCCESS_RESULT = "sucess";
   public static final String RETCH_AUDIT_LOG_BY_DMS_FAILURE_RESULT = "failure";
 
+  public static final String SQL = "sql";
   public static final String SQL_SOURCE_DMS = "dms";
   public static final String SQL_SOURCE_INSIGHT = "sql_insight";
   public static final String SQL_SOURCE_SKYWALKING_AGENT = "skywalking_agent";

@@ -13,15 +13,27 @@ public interface MsSegmentDetailDao {
 
     MsSegmentDetailDo selectByPrimaryKey(Integer id);
 
+    List<MsSegmentDetailDo> selectAllUserNameIsNotNull();
+
+    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndTableNameIsNotNull();
+
+    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTimeIsZero();
+
+    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTableIsZero();
+
     List<MsSegmentDetailDo> selectAll(Map<String,Object> map);
 
     int updateByPrimaryKeySelective(MsSegmentDetailDo record);
 
     void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 
+    void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
+
     Long selectCountAll(Map<String, Object> map);
 
     List<String> selectAllUserName();
 
     List<String> selectAllMsTableName();
+
+    List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
 }

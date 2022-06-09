@@ -9,6 +9,8 @@ public class MsSegmentDetailDo {
 
     private String userName;
 
+    private String token;
+
     private String globalTraceId;
 
     private String parentSegmentId;
@@ -52,4 +54,8 @@ public class MsSegmentDetailDo {
     private String dbUserName;
 
     private String dbStatement;
+
+    private Integer userPortraitFlagByVisitedTime;
+
+    private Integer userPortraitFlagByVisitedTable;
 }

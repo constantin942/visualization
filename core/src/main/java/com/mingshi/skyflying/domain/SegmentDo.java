@@ -30,4 +30,10 @@ public class SegmentDo {
     private String spans;
 
     private String reorganizingSpans;
+
+    // 基于访问时间维度的用户画像；
+    private Integer userPortraitFlagByVisitedTime;
+
+    // 基于访问过的表维度的用户画像；
+    private Integer userPortraitFlagByVisitedTable;
 }

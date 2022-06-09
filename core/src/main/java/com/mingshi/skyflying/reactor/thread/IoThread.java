@@ -2,6 +2,7 @@ package com.mingshi.skyflying.reactor.thread;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.SegmentDo;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -30,10 +32,11 @@ public class IoThread extends Thread {
   // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
   private LinkedBlockingQueue<JSONObject> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
-  private Integer flushToRocketMQInterval = 3;
+  private Integer flushToRocketMQInterval = 5;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
+  private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
 
   public IoThread(LinkedBlockingQueue<JSONObject> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
@@ -42,6 +45,7 @@ public class IoThread extends Thread {
     segmentList = new LinkedList();
     auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
+    msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
       this.flushToRocketMQInterval = 5;
@@ -66,11 +70,14 @@ public class IoThread extends Thread {
             // 从json实例中segmentDetail实例的信息
             getSegmentDetailFromJSONObject(jsonObject);
 
+            // 从json实例中获取异常信息
+            getAbnormalFromJSONObject(jsonObject);
+
             // 从json实例中获取审计日志的信息
             // getAuditLogFromJSONObject(jsonObject);
 
             // 从json实例中获取segment的信息
-            getSegmentFromJSONObject(jsonObject);
+            // getSegmentFromJSONObject(jsonObject);
           }
 
           // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
@@ -89,12 +96,34 @@ public class IoThread extends Thread {
   }
 
   /**
-   * <B>方法名称：getSegmentDetailFromJSONObject</B>
-   * <B>概要说明：将segmentDetail实例信息放入到 segmentDetailList 中</B>
+   * <B>方法名称：getAbnormalFromJSONObject</B>
+   * <B>概要说明：将异常信息信息放入到 msAlarmInformationDoLinkedListist 中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月02日 11:06:40
    * @Param [jsonObject]
+   **/
+  private void getAbnormalFromJSONObject(JSONObject jsonObject) {
+    try {
+      String listString = jsonObject.getString(Const.ABNORMAL);
+      if (StringUtil.isNotBlank(listString)) {
+        LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = JsonUtil.string2Obj(listString, LinkedList.class, MsAlarmInformationDo.class);
+        msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：getSegmentDetailFromJSONObject</B>
+   * <B>概要说明：将segmentDetail实例信息放入到 segmentDetailList 中</B>
+   *
    * @return void
+   * @Author zm
+   * @Date 2022年06月02日 11:06:40
+   * @Param [jsonObject]
    **/
   private void getSegmentDetailFromJSONObject(JSONObject jsonObject) {
     try {
@@ -170,8 +199,9 @@ public class IoThread extends Thread {
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
         // mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
-        mingshiServerUtil.flushSegmentIndexToDB();
+        mingshiServerUtil.updateUserNameByGlobalTraceId();
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
+        mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
         CURRENT_TIME = Instant.now();
       } else {
         // 减少log日志输出；2021-10-20 15:49:59

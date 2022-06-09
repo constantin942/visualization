@@ -3,6 +3,8 @@ package com.mingshi.skyflying.controller;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.AuditLogService;
 import com.mingshi.skyflying.service.SegmentDetailService;
+import com.mingshi.skyflying.service.UserPortraitByVisitedTableService;
+import com.mingshi.skyflying.service.UserPortraitByVisitedTimeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,38 @@ public class SkyflyingController {
   private SegmentDetailService segmentDetailService;
   @Resource
   private AuditLogService auditLogService;
+  @Resource
+  private UserPortraitByVisitedTimeService userPortraitByTimeService;
+  @Resource
+  private UserPortraitByVisitedTableService userPortraitByTableService;
+
+  /**
+   * <B>方法名称：userPortraitByVisitedTable</B>
+   * <B>概要说明：基于历史数据，统计用户访问的表，以此来生成用户的画像</B>
+   * @Author zm
+   * @Date 2022年06月08日 14:06:08
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/userPortraitByVisitedTable", method = RequestMethod.GET)
+  public ServerResponse<String> userPortraitByVisitedTable() {
+    return userPortraitByTableService.createUserPortraitByVisitedTable();
+  }
+
+  /**
+   * <B>方法名称：userPortraitByVisitedTime</B>
+   * <B>概要说明：基于历史数据，统计用户访问系统的时间，以此来生成用户的画像</B>
+   * @Author zm
+   * @Date 2022年06月07日 14:06:08
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/userPortraitByVisitedTime", method = RequestMethod.GET)
+  public ServerResponse<String> userPortraitByVisitedTime() {
+    return userPortraitByTimeService.createUserPortraitByVisitedTime();
+  }
 
   /**
    * <B>方法名称：getBehaviorByUserName/B>

@@ -1,5 +1,7 @@
 package com.mingshi.skyflying.utils;
 
+import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.enums.ConstantsCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -30,6 +32,7 @@ public class DateTimeUtil {
   public static final String STANDARD_FORMAT_yyyyMMddHHmmss = "yyyyMMddHHmmss";
   public static final String STANDARD_FORMAT_HHMMSS = "HH:mm:ss";
   public static final String STANDARD_FORMAT_HHMM = "HH:mm";
+  public static final String STANDARD_FORMAT_HH = "HH";
   /**
    * milliseconds in a second.
    */
@@ -421,6 +424,101 @@ public class DateTimeUtil {
     return calendar.getTime();
   }
 
+
+  public void LeaveSignIn() {
+    try {
+      SimpleDateFormat df = new SimpleDateFormat("HH:mm");//设置日期格式
+      Date nowTime =df.parse(df.format(new Date()));
+      // 规定白天时间为早上6点到晚上10点；2022-06-07 15:36:10
+      Date amBeginTime = df.parse("06:00");
+      Date pmEndTime = df.parse("22:00");
+      //调用判断方法是否在规定时间段内
+      boolean isTime = timeCalendar(nowTime, amBeginTime, pmEndTime);
+
+      if(isTime){
+        //处于规定的时间段内
+        System.out.println(isTime);
+      }else{
+        //不处于规定的时间段内
+        System.out.println(isTime);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * <B>方法名称：timeCalendar</B>
+   * <B>概要说明：判断是否在规定的时间内签到 nowTime 当前时间 beginTime规定开始时间 endTime规定结束时间</B>
+   * @Author zm
+   * @Date 2022年06月07日 15:06:15
+   * @Param [nowTime, amBeginTime, amEndTime, pmBeginTime, pmEndTime]
+   * @return boolean
+   **/
+  public static boolean timeCalendar(Date nowTime, Date amBeginTime, Date amEndTime) {
+    //设置当前时间
+    Calendar date = Calendar.getInstance();
+    date.setTime(nowTime);
+    //设置开始时间
+    Calendar amBegin = Calendar.getInstance();
+    amBegin.setTime(amBeginTime);//上午开始时间
+    //设置结束时间
+    Calendar amEnd = Calendar.getInstance();
+    amEnd.setTime(amEndTime);//上午结束时间
+    //处于开始时间之后，和结束时间之前的判断
+    if ((date.after(amBegin) && date.before(amEnd))) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * <B>方法名称：judgmentTime</B>
+   * <B>概要说明：判断时间是上午、中午、下午、凌晨、晚上</B>
+   * @Author zm
+   * @Date 2022年06月07日 15:06:18
+   * @Param []
+   * @return java.lang.String
+   **/
+  public static String judgmentTime(Date date) {
+    SimpleDateFormat df = new SimpleDateFormat(STANDARD_FORMAT_HH);
+    String str = df.format(date);
+    int a = Integer.parseInt(str);
+    if ((a >= 0 && a <= 6) || (a > 18 && a <= 24)) {
+      // System.out.println("晚上");
+      return ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn();
+    }
+    if (a > 6 && a <= 12) {
+      // System.out.println("上午");
+      return ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn();
+    }
+    if (a > 12 && a <= 18) {
+      // System.out.println("下午");
+      return ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn();
+    }
+    // if (a >= 0 && a <= 6) {
+    //   // System.out.println("凌晨");
+    //   return "beforeDawn";
+    // }
+    // if (a > 6 && a <= 12) {
+    //   // System.out.println("上午");
+    //   return "forenoon";
+    // }
+    // if (a > 12 && a <= 13) {
+    //   // System.out.println("中午");
+    //   return "noon";
+    // }
+    // if (a > 13 && a <= 18) {
+    //   // System.out.println("下午");
+    //   return "afternoon";
+    // }
+    // if (a > 18 && a <= 24) {
+    //   // System.out.println("晚上");
+    //   return "night";
+    // }
+    return null;
+  }
   /**
    * Get start of date.
    *
@@ -431,7 +529,7 @@ public class DateTimeUtil {
     Calendar cal = GregorianCalendar.getInstance();
     cal.setTime(date);
 
-    cal.set(Calendar.HOUR_OF_DAY, 0);
+    // cal.set(Calendar.HOUR_OF_DAY, 0);
     cal.set(Calendar.MINUTE, 0);
     cal.set(Calendar.SECOND, 0);
     cal.set(Calendar.MILLISECOND, 0);
@@ -1096,11 +1194,6 @@ public class DateTimeUtil {
     return valueOf(str, DATEFORMAT_STR_001);
   }
 
-  public static void main(String[] args) {
-    String str = "2022/5/26 22:44 1.65358E+15";
-    String s = valueOf9(str);
-    System.out.println("");
-  }
   public static String valueOf9(String str) {
     Date date = valueOf(str, DATEFORMAT_STR_006);
     return dateStr9(date);

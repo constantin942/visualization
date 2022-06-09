@@ -40,7 +40,7 @@
 
   <select id="selectBehaviorByOptTime" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
           parameterType="java.util.Map">
-    select * from ms_audit_log where  is_delete = 0  and sql_type=#{sqlType}
+    select * from ms_audit_log where is_delete = 0 and sql_type=#{sqlType}
     and op_time between date_format(#{startTime},'%Y%m%d') and date_format(#{endTime},'%Y%m%d')
 
 
@@ -50,17 +50,26 @@
   </select>
   <select id="selectBehaviorByUserName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
           parameterType="java.util.Map">
-    select *from ms_audit_log where  is_delete = 0  and application_user_name=#{applicationUserName} and sql_type=#{sqlType}
+    select *
+    from ms_audit_log
+    where is_delete = 0
+      and application_user_name = #{applicationUserName}
+      and sql_type = #{sqlType}
   </select>
   <select id="selectBehaviorByTableName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
           parameterType="java.util.Map">
-    select *from ms_audit_log where  is_delete = 0  and ms_table_name=#{msTableName}
+    select *
+    from ms_audit_log
+    where is_delete = 0
+      and ms_table_name = #{msTableName}
   </select>
   <select id="selectAllUserName" resultType="java.lang.String">
-    SELECT DISTINCT application_user_name FROM `ms_audit_log`
+    SELECT DISTINCT application_user_name
+    FROM `ms_audit_log`
   </select>
   <select id="selectAllMsTableName" resultType="java.lang.String">
-    SELECT DISTINCT ms_table_name FROM `ms_audit_log`
+    SELECT DISTINCT ms_table_name
+    FROM `ms_audit_log`
   </select>
 
 
@@ -80,8 +89,7 @@
     </if>
   </select>
   <select id="selectCount" parameterType="java.util.Map" resultType="java.lang.Long">
-    select
-    count(id)
+    select count(id)
     from ms_audit_log
     where application_user_name = #{applicationUserName,jdbcType=VARCHAR}
   </select>
@@ -429,20 +437,14 @@
     where id = #{id,jdbcType=INTEGER}
   </update>
   <update id="updateBatch" parameterType="java.util.List">
-    update ms_audit_log
-    <trim prefix="set" suffixOverrides=",">
-      <trim prefix="application_user_name = case" suffix="end,">
-        <foreach collection="list" item="item" index="index">
-          <if test="item.globalTraceId != null">
-            when global_trace_id=#{item.globalTraceId}  then #{item.applicationUserName}
-          </if>
-        </foreach>
-      </trim>
-    </trim>
-    where global_trace_id in
-    <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
-      #{item.globalTraceId}
+    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+      update ms_audit_log
+      <set>
+        <if test="item.applicationUserName != null and item.applicationUserName != ''">
+          application_user_name = #{item.applicationUserName},
+        </if>
+      </set>
+      where global_trace_id=#{item.globalTraceId} and application_user_name is null
     </foreach>
-    and application_user_name is null
   </update>
 </mapper>

@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -8,6 +9,7 @@ import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.*;
+import com.mingshi.skyflying.init.LoadUserPortraitFromDb;
 import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
 import com.mingshi.skyflying.reactor.queue.BatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -72,12 +74,19 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 重组span数据，返回前端使用；2022-04-20 16:49:02
       reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
 
+      // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
       LinkedList<MsSegmentDetailDo> segmentDetaiDolList = getSegmentDetaiDolList(segment);
+
+      // 判断是否是异常信息；2022-06-07 18:00:13
+      LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
+
+      AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+      AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList);
+        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList);
       } else {
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
@@ -85,10 +94,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         segmentDoLinkedList.add(segment);
         // mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
         // 插入segment对应的index数据；2022-05-23 10:15:38
-        mingshiServerUtil.flushSegmentIndexToDB();
+        mingshiServerUtil.updateUserNameByGlobalTraceId();
         // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
         // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
+        // 将异常信息插入到MySQL中；2022-06-07 18:16:44
+        LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
+        msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+        mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
@@ -101,11 +114,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     try {
       segmentDetaiDolList = new LinkedList<>();
       String reorganizingSpans = segment.getReorganizingSpans();
-      if(StringUtil.isBlank(reorganizingSpans)){
+      if (StringUtil.isBlank(reorganizingSpans)) {
         return segmentDetaiDolList;
       }
       List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
-      if(null == list || 0 == list.size()){
+      if (null == list || 0 == list.size()) {
         return segmentDetaiDolList;
       }
       LinkedHashMap map1 = list.get(0);
@@ -113,6 +126,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       MsSegmentDetailDo msSegmentDetailDo = null;
       for (int i = 1; i < list.size(); i++) {
         msSegmentDetailDo = new MsSegmentDetailDo();
+        msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
         LinkedHashMap map = list.get(i);
         msSegmentDetailDo.setOperationName(String.valueOf(url));
 
@@ -153,6 +167,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           }
         }
 
+        msSegmentDetailDo.setToken(segment.getToken());
         msSegmentDetailDo.setComponent(component);
         msSegmentDetailDo.setSpanId(spanId);
         msSegmentDetailDo.setServiceCode(serviceCode);
@@ -177,10 +192,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：setTableName</B>
    * <B>概要说明： 根据sql语句获取表名</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月06日 14:06:09
    * @Param [value, msSegmentDetailDo]
-   * @return void
    **/
   private void setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
     try {
@@ -237,7 +253,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList, LinkedList<MsSegmentDetailDo> segmentDetaiDolList) {
+  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       JSONObject jsonObject = new JSONObject();
@@ -247,6 +263,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
       if (0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
+      }
+      if (null != msAlarmInformationDoList) {
+        jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
       }
       linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {
@@ -561,7 +580,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private String getTableName(String sqlType, String msSql) {
     String tableName = null;
-    if(StringUtil.isBlank(sqlType)){
+    if (StringUtil.isBlank(sqlType)) {
       return tableName;
     }
     List<String> tableNameList = null;

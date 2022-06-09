@@ -25,24 +25,36 @@
     <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName"/>
     <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
     <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
-  </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+    <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT" property="userPortraitFlagByVisitedTime"/>
+    <result column="user_portrait_flag_by_visited_table" jdbcType="TINYINT" property="userPortraitFlagByVisitedTable"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
+    <result column="token" jdbcType="VARCHAR" property="token"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    , user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
-    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,ms_table_name,db_user_name
+    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
+    ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table
   </sql>
   <sql id="Blob_Column_List">
     db_statement
   </sql>
   <select id="selectAllUserName" resultType="java.lang.String">
-    SELECT DISTINCT user_name FROM `ms_segment_detail` where user_name is not null
+    SELECT DISTINCT user_name
+    FROM `ms_segment_detail`
+    where user_name is not null
   </select>
   <select id="selectAllMsTableName" resultType="java.lang.String">
-    SELECT DISTINCT ms_table_name FROM `ms_segment_detail`
+    SELECT DISTINCT ms_table_name
+    FROM `ms_segment_detail`
+  </select>
+  <select id="selectByTokenUserNameGlobalTraceIdIsNotNull" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select user_name, token, global_trace_id
+    from ms_segment_detail
+    where token is not null
+      and user_name is not null
+      and global_trace_id is not null
   </select>
   <select id="selectCountAll" parameterType="java.util.Map" resultType="java.lang.Long">
     select count(*)
@@ -70,16 +82,7 @@
     </where>
     group by global_trace_id) as t1;
   </select>
-  <select id="selectAll" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
-    <!--    select *-->
-    <!--    from ms_segment_detail-->
-    <!--    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail group by global_trace_id-->
-    <!--    order by global_trace_id asc-->
-    <!--    <if test="pageNo != null and  pageSize != null   ">-->
-    <!--      LIMIT #{pageNo},#{pageSize}-->
-    <!--    </if>-->
-    <!--    ) as t1 )-->
-    <!--    order by id asc;-->
+  <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select *
     from ms_segment_detail
     where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
@@ -94,10 +97,10 @@
         and db_type = #{dbType}
       </if>
       <if test="startTime != null and  startTime != null   ">
-        and start_time = #{startTime}
+        and start_time <![CDATA[ >= ]]> #{startTime}
       </if>
       <if test="end_time != null and  endTime != null   ">
-        and end_time = #{endTime}
+        and end_time <![CDATA[ <= ]]> #{endTime}
       </if>
       <if test="msTableName != null and  msTableName != null   ">
         and ms_table_name = #{msTableName}
@@ -108,9 +111,73 @@
       LIMIT #{pageNo},#{pageSize}
     </if>
     ) as t1 )
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="end_time != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
     order by id asc;
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+  <select id="selectAllUserNameIsNotNullAndVisitedTimeIsZero" parameterType="java.lang.Integer"
+          resultMap="BaseResultMap">
+    select id,
+           user_name,
+           start_time,
+           global_trace_id,
+           user_portrait_flag_by_visited_time
+    from ms_segment_detail
+    where user_name is not null
+      and (user_portrait_flag_by_visited_time = 0 or user_portrait_flag_by_visited_time is null)
+  </select>
+  <select id="selectAllUserNameIsNotNullAndVisitedTableIsZero" parameterType="java.lang.Integer"
+          resultMap="BaseResultMap">
+    select id,
+           user_name,
+           start_time,
+           global_trace_id,
+           user_portrait_flag_by_visited_table,
+           ms_table_name,
+           global_trace_id,
+           operation_type,
+           user_portrait_flag_by_visited_table,
+           user_portrait_flag_by_visited_time
+    from ms_segment_detail
+    where user_name is not null
+      and (user_portrait_flag_by_visited_table = 0 or user_portrait_flag_by_visited_table is null)
+      and operation_type = 'sql'
+      and ms_table_name is not null
+  </select>
+  <select id="selectAllUserNameIsNotNull" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id,
+           user_name,
+           start_time
+    from ms_segment_detail
+    where user_name is not null
+  </select>
+  <select id="selectAllUserNameIsNotNullAndTableNameIsNotNull" parameterType="java.lang.Integer"
+          resultMap="BaseResultMap">
+    select id,
+           user_name,
+           ms_table_name
+    from ms_segment_detail
+    where user_name is not null
+      and operation_type = 'sql'
+      and ms_table_name is not null
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
     ,
@@ -120,14 +187,16 @@
   </select>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail
-    ( user_name, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    ( user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-    db_user_name, db_statement, ms_table_name, operation_type)
+    db_user_name, db_statement, ms_table_name, operation_type, user_portrait_flag_by_visited_time,
+    user_portrait_flag_by_visited_table)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
       #{item.userName,jdbcType=VARCHAR},
+      #{item.token,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=VARCHAR},
       #{item.parentSegmentId,jdbcType=INTEGER},
       #{item.operationName,jdbcType=VARCHAR},
@@ -146,7 +215,9 @@
       #{item.dbUserName,jdbcType=VARCHAR},
       #{item.dbStatement,jdbcType=VARCHAR},
       #{item.msTableName,jdbcType=VARCHAR},
-      #{item.operationType,jdbcType=VARCHAR}
+      #{item.operationType,jdbcType=VARCHAR},
+      #{item.userPortraitFlagByVisitedTime,jdbcType=INTEGER},
+      #{item.userPortraitFlagByVisitedTable,jdbcType=INTEGER}
       )
     </foreach>
   </insert>
@@ -225,6 +296,15 @@
       <if test="operationType != null">
         operation_type,
       </if>
+      <if test="userPortraitFlagByVisitedTime != null">
+        user_portrait_flag_by_visited_time,
+      </if>
+      <if test="userPortraitFlagByVisitedTable != null">
+        user_portrait_flag_by_visited_table,
+      </if>
+      <if test="token != null">
+        token,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -299,30 +379,50 @@
       <if test="operationType != null">
         #{operationType,jdbcType=VARCHAR},
       </if>
+      <if test="userPortraitFlagByVisitedTime != null">
+        #{userPortraitFlagByVisitedTime,jdbcType=VARCHAR},
+      </if>
+      <if test="userPortraitFlagByVisitedTable != null">
+        #{userPortraitFlagByVisitedTable,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null">
+        #{token,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateBatch" parameterType="java.util.List">
-    update ms_segment_detail
-    <trim prefix="set" suffixOverrides=",">
-      <trim prefix="user_name = case" suffix="end,">
-        <foreach collection="list" item="item" index="index">
-          <if test="item.globalTraceId != null">
-            when global_trace_id=#{item.globalTraceId} then #{item.userName}
-          </if>
-        </foreach>
-      </trim>
-    </trim>
-    where global_trace_id in
-    <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
-      #{item.globalTraceId}
+    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+      update ms_segment_detail
+      <set>
+        <if test="item.userName != null and item.userName != ''">
+          user_name = #{item.userName},
+        </if>
+      </set>
+      where global_trace_id=#{item.globalTraceId} and user_name is null
     </foreach>
-    and user_name is null
+  </update>
+  <update id="updateBatchById" parameterType="java.util.List">
+    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+      update ms_segment_detail
+      <set>
+        <if test="item.userPortraitFlagByVisitedTime != null and item.userPortraitFlagByVisitedTime != ''">
+          user_portrait_flag_by_visited_time = #{item.userPortraitFlagByVisitedTime},
+        </if>
+        <if test="item.userPortraitFlagByVisitedTable != null and item.userPortraitFlagByVisitedTable != ''">
+          user_portrait_flag_by_visited_table = #{item.userPortraitFlagByVisitedTable},
+        </if>
+      </set>
+      where id=#{item.id}
+    </foreach>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
     update ms_segment_detail
     <set>
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null">
+        token = #{token,jdbcType=VARCHAR},
       </if>
       <if test="globalTraceId != null">
         global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
@@ -389,6 +489,12 @@
       </if>
       <if test="operationType != null">
         operation_type = #{operationType,jdbcType=VARCHAR},
+      </if>
+      <if test="userPortraitFlagByVisitedTime != null">
+        user_portrait_flag_by_visited_time = #{userPortraitFlagByVisitedTime,jdbcType=VARCHAR},
+      </if>
+      <if test="userPortraitFlagByVisitedTable != null">
+        user_portrait_flag_by_visited_table = #{userPortraitFlagByVisitedTable,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

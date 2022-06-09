@@ -58,9 +58,10 @@ spring:
       # 值的反序列化方式
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: flows_match_group
-    #      max-poll-records: 32
-    #      fetch-max-wait: 100
-    #      fetch-min-size: 1
+      #最多拉取1000条数据
+      max-poll-records: 1000
+      #最长1000毫秒
+      fetch-max-wait: 1000
       properties:
         max.poll.interval.ms: 1200000
         max.poll.records: 5

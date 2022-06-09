@@ -22,6 +22,8 @@ public interface UserTokenDao {
 
     List<UserTokenDo> selectByTokenUserNameIsNull(String globalTraceId);
 
+    List<UserTokenDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
+
     UserTokenDo selectByUserNameAndToken(UserTokenDo userTokenDo);
 
     UserTokenDo selectByUserNameAndTokenAndGlobalTraceId(UserTokenDo userTokenDo);

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.UserPortraitByVisitedTableMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
+    <result column="visited_table" jdbcType="VARCHAR" property="visitedTable" />
+    <result column="visited_count" jdbcType="VARCHAR" property="visitedCount" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count
+  </sql>
+  <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+      user_name, rule_name, visited_table, visited_count
+    from user_portrait_by_visited_table
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_portrait_by_visited_table
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <insert id="insertSelectiveBatch" parameterType="java.util.List">
+    insert into user_portrait_by_visited_table
+    (user_name, rule_name, visited_table, visited_count)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.userName,jdbcType=VARCHAR},
+      #{item.ruleName,jdbcType=VARCHAR},
+      #{item.visitedTable,jdbcType=VARCHAR},
+      #{item.visitedCount,jdbcType=INTEGER}
+      )
+    </foreach>
+  </insert>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo">
+    insert into user_portrait_by_visited_table
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="ruleName != null">
+        rule_name,
+      </if>
+      <if test="visitedTable != null">
+        visited_table,
+      </if>
+      <if test="visitedCount != null">
+        visited_count,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="ruleName != null">
+        #{ruleName,jdbcType=VARCHAR},
+      </if>
+      <if test="visitedTable != null">
+        #{visitedTable,jdbcType=VARCHAR},
+      </if>
+      <if test="visitedCount != null">
+        #{visitedCount,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo">
+    update user_portrait_by_visited_table
+    <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="ruleName != null">
+        rule_name = #{ruleName,jdbcType=VARCHAR},
+      </if>
+      <if test="visitedTable != null">
+        visited_table = #{visitedTable,jdbcType=VARCHAR},
+      </if>
+      <if test="visitedCount != null">
+        visited_count = #{visitedCount,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateBatch" parameterType="java.util.List">
+    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+      update user_portrait_by_visited_table
+      <set>
+        <if test="item.visitedCount != null and item.visitedCount != ''">
+          visited_count = #{item.visitedCount},
+        </if>
+      </set>
+      where user_name=#{item.userName} and visited_table=#{item.visitedTable}
+    </foreach>
+  </update>
+</mapper>

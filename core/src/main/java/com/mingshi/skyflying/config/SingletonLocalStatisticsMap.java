@@ -1,5 +1,16 @@
 package com.mingshi.skyflying.config;
 
+import com.mingshi.skyflying.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.utils.DateTimeUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,25 +23,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @Version 1.0
  **/
-public class SingletonLocalStatisticsMap {
+@Slf4j
+@Component
+public class SingletonLocalStatisticsMap implements ApplicationRunner {
+
+  @Resource
+  private MsSegmentDetailDao msSegmentDetailDao;
 
   private static AtomicBoolean atomicBooleanIsChanged = new AtomicBoolean(false);
 
   private static AtomicBoolean atomicBooleanIsUpdatingData = new AtomicBoolean(false);
 
-  public static Boolean getAtomicBooleanIsUpdatingData(){
+  public static Boolean getAtomicBooleanIsUpdatingData() {
     return atomicBooleanIsUpdatingData.get();
   }
 
-  public static void setAtomicBooleanIsUpdatingData(Boolean flag){
+  public static void setAtomicBooleanIsUpdatingData(Boolean flag) {
     atomicBooleanIsUpdatingData.set(flag);
   }
 
-  public static Boolean getAtomicBooleanIsChanged(){
+  public static Boolean getAtomicBooleanIsChanged() {
     return atomicBooleanIsChanged.get();
   }
 
-  public static void setAtomicBooleanIsChanged(Boolean flag){
+  public static void setAtomicBooleanIsChanged(Boolean flag) {
     atomicBooleanIsChanged.set(flag);
   }
 
@@ -51,19 +67,34 @@ public class SingletonLocalStatisticsMap {
   }
 
   /**
-   * <B>方法名称：</B>
-   * <B>概要说明：</B>
+   * <B>方法名称：run</B>
+   * <B>概要说明：项目启动，从数据库中加载用户名、token、globalTraceId</B>
+   * 这么做的意义在于：当系统在正常运行时，在本地内存会保存用户和token的关系。
+   * 当系统关闭后再重新启动时，本地内存中就不再保存原有的用户和token的关系，
+   * 此时再有请求进来且只带有token，那么这些记录将找不到所属用户。
+   * 为了解决这个问题，所以需要在项目启动时，就把用户、token、globalTraceId加载到本地内存中来。
    *
    * @return void
    * @Author zm
-   * @Date 2022年05月23日 15:05:10
-   * @Param []
+   * @Date 2022年06月08日 14:06:42
+   * @Param [args]
    **/
-  public static void clearMap() {
-    synchronized (SingletonLocalStatisticsMap.class) {
-      globalTraceIdAndTokenMap.clear();
-      globalTraceIdAndUserNameMap.clear();
+  @Override
+  public void run(ApplicationArguments args) throws Exception {
+    Instant now = Instant.now();
+    log.info("# SingletonLocalStatisticsMap.run() # 项目启动，从数据库中加载用户名、token、globalTraceId到本地内存中。");
+    List<MsSegmentDetailDo> list = msSegmentDetailDao.selectByTokenUserNameGlobalTraceIdIsNotNull();
+    if (null == list || 0 == list.size()) {
+      return;
     }
+    for (MsSegmentDetailDo msSegmentDetailDo : list) {
+      String userName = msSegmentDetailDo.getUserName();
+      String token = msSegmentDetailDo.getToken();
+      String globalTraceId = msSegmentDetailDo.getGlobalTraceId();
+      tokenAndUserNameMap.put(token, userName);
+      globalTraceIdAndUserNameMap.put(globalTraceId, userName);
+      globalTraceIdAndTokenMap.put(globalTraceId, token);
+    }
+    log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中【{}条】。耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
   }
-
 }

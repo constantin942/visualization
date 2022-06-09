@@ -51,6 +51,14 @@
       and token = #{token,jdbcType=VARCHAR}
       and user_name is null
   </select>
+  <select id="selectByTokenUserNameGlobalTraceIdIsNotNull" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select user_name, token, global_trace_id
+    from user_token
+    where is_delete = 0
+      and token is not null
+      and user_name is not null
+      and global_trace_id is not null
+  </select>
   <select id="selectByGlobalTraceId" parameterType="java.lang.String" resultMap="BaseResultMap">
     select user_name
     from user_token

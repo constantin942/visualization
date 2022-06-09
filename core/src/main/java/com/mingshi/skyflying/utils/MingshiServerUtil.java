@@ -1,14 +1,8 @@
 package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
-import com.mingshi.skyflying.dao.MsAuditLogDao;
-import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.dao.SegmentDao;
-import com.mingshi.skyflying.dao.UserTokenDao;
-import com.mingshi.skyflying.domain.MsAuditLogDo;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.SegmentDo;
-import com.mingshi.skyflying.domain.UserTokenDo;
+import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.domain.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +27,8 @@ public class MingshiServerUtil {
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
+  private MsAlarmInformationMapper msAlarmInformationMapper;
+  @Resource
   private MsAuditLogDao msAuditLogDao;
   @Resource
   private SegmentDao segmentDao;
@@ -41,15 +37,15 @@ public class MingshiServerUtil {
 
 
   /**
-   * <B>方法名称：flushSegmentIndexToDB</B>
-   * <B>概要说明：将索引保存到数据库中</B>
+   * <B>方法名称：updateUserNameByGlobalTraceId</B>
+   * <B>概要说明：根据全局追踪id更新用户名</B>
    *
    * @return void
    * @Author zm
    * @Date 2022年05月24日 11:05:07
    * @Param [now]
    **/
-  public void flushSegmentIndexToDB() {
+  public void updateUserNameByGlobalTraceId() {
     Boolean atomicBoolean = SingletonLocalStatisticsMap.getAtomicBooleanIsChanged();
     if (false == atomicBoolean) {
       // 只有当索引有变动的时候，才把数据更新到数据库中；2022-05-24 17:15:55
@@ -67,7 +63,7 @@ public class MingshiServerUtil {
     Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
     Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
     Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
-    List<UserTokenDo> userTokenDoList = new LinkedList<>();
+    // List<UserTokenDo> userTokenDoList = new LinkedList<>();
     // List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
     List<MsSegmentDetailDo> setmentDetailDoList = new LinkedList<>();
     while (iterator.hasNext()) {
@@ -78,15 +74,15 @@ public class MingshiServerUtil {
         userName = tokenUserNameMap.get(token);
       }
       if (StringUtil.isBlank(userName)) {
-        log.error("# IoThread.flushSegmentIndexToDB # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
+        log.error("# IoThread.updateUserNameByGlobalTraceId # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
         continue;
       }
 
-      UserTokenDo userTokenDo = new UserTokenDo();
-      userTokenDo.setUserName(userName);
-      userTokenDo.setGlobalTraceId(globalTraceId);
-      userTokenDo.setToken(token);
-      userTokenDoList.add(userTokenDo);
+      // UserTokenDo userTokenDo = new UserTokenDo();
+      // userTokenDo.setUserName(userName);
+      // userTokenDo.setGlobalTraceId(globalTraceId);
+      // userTokenDo.setToken(token);
+      // userTokenDoList.add(userTokenDo);
 
       MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
       msSegmentDetailDo.setGlobalTraceId(globalTraceId);
@@ -99,7 +95,7 @@ public class MingshiServerUtil {
       // auditLogDoList.add(msAuditLogDo);
     }
     // 批量插入用户名、token、global信息
-    batchInsertUserToken(userTokenDoList);
+    // batchInsertUserToken(userTokenDoList);
 
     // 批量更新审计日志的用户名和globalTraceId信息；
     // batchUpdateMsAuditLog(auditLogDoList);
@@ -214,6 +210,26 @@ public class MingshiServerUtil {
         auditLogList.clear();
       } catch (Exception e) {
         log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushAbnormalToDB</B>
+   * <B>概要说明：将异常信息批量插入到MySQL中</B>
+   * @Author zm
+   * @Date 2022年06月07日 18:06:24
+   * @Param [segmentDetaiDolList]
+   * @return void
+   **/
+  public void flushAbnormalToDB(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
+    if (0 < msAlarmInformationDoLinkedListist.size()) {
+      try {
+        Instant now = Instant.now();
+        msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
+        log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
       }
     }
   }

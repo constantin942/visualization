@@ -26,6 +26,12 @@
   <sql id="Blob_Column_List">
     data_binary
   </sql>
+  <select id="selectAll" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select
+      user_name,start_time
+    from segment_detail
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
     select
     <include refid="Base_Column_List" />
