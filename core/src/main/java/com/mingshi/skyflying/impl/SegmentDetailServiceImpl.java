@@ -30,75 +30,11 @@ import java.util.*;
 public class SegmentDetailServiceImpl implements SegmentDetailService {
 
   @Resource
-  private SegmentDao segmentDao;
-  @Resource
   private UserTokenDao userTokenDao;
   @Resource
   private SegmentRelationDao segmentRelationDao;
   @Resource
-  private MsAuditLogDao msAuditLogDao;
-  @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
-
-  // @Override
-  // public ServerResponse<String> getAllSegmentsBySegmentRelation1(String userName, Integer pageNo, Integer pageSize) {
-  //   List<Map<String, String>> globalTraceIdMapList = getGlobalTraceIdList(userName, pageNo, pageSize);
-  //   log.info("开始执行 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
-  //
-  //   LinkedList<JSONObject> allLinkedList = new LinkedList<>();
-  //   for (Map<String, String> globalTraceIdMap : globalTraceIdMapList) {
-  //     LinkedList<JSONObject> linkedList = new LinkedList<>();
-  //     JSONObject returnJson = new JSONObject();
-  //
-  //     String segmentIdList = globalTraceIdMap.get("segmentIds");
-  //     String globalTraceId = globalTraceIdMap.get("globalTraceId");
-  //     UserTokenDo userTokenDo = userTokenDao.selectByGlobalTraceId(globalTraceId);
-  //     if (null == userTokenDo) {
-  //       log.error("根据全局追踪id = 【{}】，在用户token表中没有找到数据。", globalTraceId);
-  //       continue;
-  //     }
-  //
-  //     JSONArray segmentIdArray = JSONObject.parseArray(segmentIdList);
-  //     for (Object segmentIds : segmentIdArray) {
-  //       String segmentIdStr = String.valueOf(segmentIds);
-  //       JSONObject jsonObject = JSONObject.parseObject(segmentIdStr);
-  //       String segmentId = jsonObject.getString("currentSegmentId");
-  //       String parentSegmentId = jsonObject.getString("parentSegmentId");
-  //       //  根据traceId从segment表中查询数据；2022-04-25 09:57:02
-  //       SegmentDo segmentDo = segmentDao.selectBySegmentId(segmentId);
-  //       if (null == segmentDo) {
-  //         continue;
-  //       }
-  //       JSONObject paramsJsonObject = new JSONObject();
-  //       if (parentSegmentId.equals("##")) {
-  //         JSONObject headSegmentJson = new JSONObject();
-  //         headSegmentJson.put("userName", userTokenDo.getUserName());
-  //         headSegmentJson.put("requestStartTime", segmentDo.getRequestStartTime());
-  //         String reorganizingSpans = segmentDo.getReorganizingSpans();
-  //         JSONArray jsonArray = JSONObject.parseArray(reorganizingSpans);
-  //         JSONObject parseObject = JSONObject.parseObject(String.valueOf(jsonArray.get(0)));
-  //         String url = parseObject.getString("url");
-  //         headSegmentJson.put("url", url);
-  //         returnJson.put("header", headSegmentJson);
-  //       }
-  //       paramsJsonObject.put("id", segmentDo.getId());
-  //       paramsJsonObject.put("operationName", segmentDo.getOperationName());
-  //       paramsJsonObject.put("requestStartTime", segmentDo.getRequestStartTime());
-  //       paramsJsonObject.put("reorganizingSpans", segmentDo.getReorganizingSpans());
-  //       linkedList.add(paramsJsonObject);
-  //     }
-  //     if (0 < linkedList.size()) {
-  //       returnJson.put("body", linkedList);
-  //     }
-  //     if (0 < returnJson.size()) {
-  //       allLinkedList.add(returnJson);
-  //     }
-  //   }
-  //   ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-  //   bySuccess.setData(JsonUtil.obj2String(allLinkedList));
-  //   log.info("执行完毕 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
-  //   return bySuccess;
-  // }
 
   @Override
   public ServerResponse<String> getAllSegmentsBySegmentRelation2(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {

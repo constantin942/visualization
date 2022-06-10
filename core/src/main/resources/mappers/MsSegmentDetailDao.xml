@@ -26,7 +26,7 @@
     <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
     <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
     <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT" property="userPortraitFlagByVisitedTime"/>
-    <result column="user_portrait_flag_by_visited_table" jdbcType="TINYINT" property="userPortraitFlagByVisitedTable"/>
+    <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT" property="userPortraitFlagByVisitedTableEveryday"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
     <result column="token" jdbcType="VARCHAR" property="token"/>
   </resultMap>
@@ -35,7 +35,7 @@
     , user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
-    ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table
+    ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table_everyday
   </sql>
   <sql id="Blob_Column_List">
     db_statement
@@ -147,16 +147,14 @@
     select id,
            user_name,
            start_time,
-           global_trace_id,
-           user_portrait_flag_by_visited_table,
            ms_table_name,
            global_trace_id,
            operation_type,
-           user_portrait_flag_by_visited_table,
+           user_portrait_flag_by_visited_table_everyday,
            user_portrait_flag_by_visited_time
     from ms_segment_detail
     where user_name is not null
-      and (user_portrait_flag_by_visited_table = 0 or user_portrait_flag_by_visited_table is null)
+      and (user_portrait_flag_by_visited_table_everyday = 0 or user_portrait_flag_by_visited_table_everyday is null)
       and operation_type = 'sql'
       and ms_table_name is not null
   </select>
@@ -171,6 +169,7 @@
           resultMap="BaseResultMap">
     select id,
            user_name,
+           start_time,
            ms_table_name
     from ms_segment_detail
     where user_name is not null
@@ -191,7 +190,7 @@
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
     db_user_name, db_statement, ms_table_name, operation_type, user_portrait_flag_by_visited_time,
-    user_portrait_flag_by_visited_table)
+    user_portrait_flag_by_visited_table_everyday)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -217,7 +216,7 @@
       #{item.msTableName,jdbcType=VARCHAR},
       #{item.operationType,jdbcType=VARCHAR},
       #{item.userPortraitFlagByVisitedTime,jdbcType=INTEGER},
-      #{item.userPortraitFlagByVisitedTable,jdbcType=INTEGER}
+      #{item.userPortraitFlagByVisitedTableEveryday,jdbcType=INTEGER}
       )
     </foreach>
   </insert>
@@ -299,8 +298,8 @@
       <if test="userPortraitFlagByVisitedTime != null">
         user_portrait_flag_by_visited_time,
       </if>
-      <if test="userPortraitFlagByVisitedTable != null">
-        user_portrait_flag_by_visited_table,
+      <if test="userPortraitFlagByVisitedTableEveryday != null">
+        user_portrait_flag_by_visited_table_everyday,
       </if>
       <if test="token != null">
         token,
@@ -382,8 +381,8 @@
       <if test="userPortraitFlagByVisitedTime != null">
         #{userPortraitFlagByVisitedTime,jdbcType=VARCHAR},
       </if>
-      <if test="userPortraitFlagByVisitedTable != null">
-        #{userPortraitFlagByVisitedTable,jdbcType=VARCHAR},
+      <if test="userPortraitFlagByVisitedTableEveryday != null">
+        #{userPortraitFlagByVisitedTableEveryday,jdbcType=VARCHAR},
       </if>
       <if test="token != null">
         #{token,jdbcType=VARCHAR},
@@ -403,16 +402,16 @@
   </update>
   <update id="updateBatchById" parameterType="java.util.List">
     <foreach collection="list" item="item" index="index" open="" close="" separator=";">
-      update ms_segment_detail
-      <set>
-        <if test="item.userPortraitFlagByVisitedTime != null and item.userPortraitFlagByVisitedTime != ''">
-          user_portrait_flag_by_visited_time = #{item.userPortraitFlagByVisitedTime},
-        </if>
-        <if test="item.userPortraitFlagByVisitedTable != null and item.userPortraitFlagByVisitedTable != ''">
-          user_portrait_flag_by_visited_table = #{item.userPortraitFlagByVisitedTable},
-        </if>
-      </set>
-      where id=#{item.id}
+        update ms_segment_detail
+        <set>
+          <if test="item.userPortraitFlagByVisitedTime != null and item.userPortraitFlagByVisitedTime != ''">
+            user_portrait_flag_by_visited_time = #{item.userPortraitFlagByVisitedTime},
+          </if>
+          <if test="item.userPortraitFlagByVisitedTableEveryday != null and item.userPortraitFlagByVisitedTableEveryday != ''">
+            user_portrait_flag_by_visited_table_everyday = #{item.userPortraitFlagByVisitedTableEveryday},
+          </if>
+        </set>
+        where id=#{item.id}
     </foreach>
   </update>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
@@ -493,8 +492,8 @@
       <if test="userPortraitFlagByVisitedTime != null">
         user_portrait_flag_by_visited_time = #{userPortraitFlagByVisitedTime,jdbcType=VARCHAR},
       </if>
-      <if test="userPortraitFlagByVisitedTable != null">
-        user_portrait_flag_by_visited_table = #{userPortraitFlagByVisitedTable,jdbcType=VARCHAR},
+      <if test="userPortraitFlagByVisitedTableEveryday != null">
+        user_portrait_flag_by_visited_table_everyday = #{userPortraitFlagByVisitedTableEveryday,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

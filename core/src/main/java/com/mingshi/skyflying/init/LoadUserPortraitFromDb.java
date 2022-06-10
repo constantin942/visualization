@@ -1,10 +1,11 @@
 package com.mingshi.skyflying.init;
 
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTable;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTableMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo;
+import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
 import com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.utils.DateTimeUtil;
@@ -15,9 +16,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -35,6 +38,8 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
   private UserPortraitByVisitedTimeMapper userPortraitByVisitedTimeMapper;
   @Resource
   private UserPortraitByVisitedTableMapper userPortraitByVisitedTableMapper;
+  @Resource
+  private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   private AtomicInteger atomicInteger = new AtomicInteger(0);
 
@@ -50,7 +55,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
     initUserPortraitByVisitedTimeMap();
-    initUserPortraitByVisitedTableMap();
+    initUserPortraitByVisitedTableEverydayMap();
   }
 
   /**
@@ -62,31 +67,40 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
    * @Date 2022年06月08日 17:06:14
    * @Param []
    **/
-  public Boolean initUserPortraitByVisitedTableMap() {
-    Map<String, Map<String, Integer>> userPortraitByVisitedTableMap = AnomylyDetectionSingletonByVisitedTable.getUserPortraitByVisitedTableMap();
+  public Boolean initUserPortraitByVisitedTableEverydayMap() {
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> userPortraitByVisitedTableEverydayMap =
+      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
     Instant now = Instant.now();
-    List<UserPortraitByVisitedTableDo> list = userPortraitByVisitedTableMapper.selectAll();
+    List<UserPortraitByVisitedTableEverydayDo> list = userPortraitByVisitedTableEverydayMapper.selectAll();
     if (null == list || 0 == list.size()) {
       if (0 == atomicInteger.incrementAndGet() % 500) {
         log.error("# LoadUserPortraitFromDb.initUserPortraitByVisitedTableMap() # 从数据库中没有查询到用户的访问过的表的画像信息。");
       }
       return false;
     }
-    for (UserPortraitByVisitedTableDo userPortraitByVisitedTableDo : list) {
-      String tableName = userPortraitByVisitedTableDo.getVisitedTable();
-      Integer visitedCount = userPortraitByVisitedTableDo.getVisitedCount();
+    for (UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo : list) {
+      String tableName = userPortraitByVisitedTableEverydayDo.getVisitedTable();
+      Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
+      String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
+      Date date = DateTimeUtil.strToDate(visitedDate, DateTimeUtil.DATEFORMAT_STR_001);
+      String strToDateToStr = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
-      String userName = userPortraitByVisitedTableDo.getUserName();
-      Map<String, Integer> map = userPortraitByVisitedTableMap.get(userName);
-      if (null == map) {
-        map = new HashMap<>();
-        userPortraitByVisitedTableMap.put(userName, map);
+      String userName = userPortraitByVisitedTableEverydayDo.getUserName();
+      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
+      if(null == visitedTableDateCountMap){
+        visitedTableDateCountMap = new ConcurrentHashMap<>();
+        userPortraitByVisitedTableEverydayMap.put(userName,visitedTableDateCountMap);
+      }
+      Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
+      if (null == dateCountMap) {
+        dateCountMap = new ConcurrentHashMap<>();
+        visitedTableDateCountMap.put(tableName, dateCountMap);
       }
       if (null != visitedCount) {
-        map.put(tableName, visitedCount);
+        dateCountMap.put(strToDateToStr, visitedCount);
       }
     }
-    log.info("# LoadUserPortraitFromDb.initUserPortraitByVisitedTableMap() # 项目启动完毕，从数据库中查询到用户访问过的表的画像信息【{}条】，用时【{}】毫秒。", userPortraitByVisitedTableMap.size(), DateTimeUtil.getTimeMillis(now));
+    log.info("# LoadUserPortraitFromDb.initUserPortraitByVisitedTableMap() # 项目启动完毕，从数据库中查询到用户访问过的表的画像信息【{}条】，用时【{}】毫秒。", userPortraitByVisitedTableEverydayMap.size(), DateTimeUtil.getTimeMillis(now));
     return true;
   }
 

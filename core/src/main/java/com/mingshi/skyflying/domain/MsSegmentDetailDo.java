@@ -57,5 +57,5 @@ public class MsSegmentDetailDo {
 
     private Integer userPortraitFlagByVisitedTime;
 
-    private Integer userPortraitFlagByVisitedTable;
+    private Integer userPortraitFlagByVisitedTableEveryday;
 }

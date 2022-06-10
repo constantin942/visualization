@@ -37,16 +37,16 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：userPortraitByVisitedTable</B>
-   * <B>概要说明：基于历史数据，统计用户访问的表，以此来生成用户的画像</B>
+   * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
    * @Author zm
    * @Date 2022年06月08日 14:06:08
    * @Param []
    * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
-  @RequestMapping(value = "/userPortraitByVisitedTable", method = RequestMethod.GET)
-  public ServerResponse<String> userPortraitByVisitedTable() {
-    return userPortraitByTableService.createUserPortraitByVisitedTable();
+  @RequestMapping(value = "/userPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  public ServerResponse<String> userPortraitByVisitedTableEveryday() {
+    return userPortraitByTableService.createUserPortraitByVisitedTableEveryday();
   }
 
   /**

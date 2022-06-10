@@ -5,6 +5,6 @@ import com.mingshi.skyflying.response.ServerResponse;
 
 public interface UserPortraitByVisitedTableService extends ParentService<UserPortraitByVisitedTableDo, Long> {
 
-  ServerResponse<String> createUserPortraitByVisitedTable();
+  ServerResponse<String> createUserPortraitByVisitedTableEveryday();
 
 }

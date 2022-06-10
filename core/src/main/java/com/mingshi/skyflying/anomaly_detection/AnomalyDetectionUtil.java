@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection;
 
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTable;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.domain.MsAlarmInformationDo;
@@ -100,8 +100,9 @@ public class AnomalyDetectionUtil {
    * @Param [segmentDo, list]
    **/
   public static void userVisitedTableIsAbnormal(LinkedList<MsAlarmInformationDo> list, List<MsSegmentDetailDo> segmentDetaiDolList) {
-    Map<String, Map<String, Integer>> userPortraitByVisitedTableMap = AnomylyDetectionSingletonByVisitedTable.getUserPortraitByVisitedTableMap();
-    if (null == userPortraitByVisitedTableMap || null == segmentDetaiDolList || 0 == segmentDetaiDolList.size()) {
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */>>>  userPortraitByVisitedTableEverydayMap =
+      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
+    if (null == userPortraitByVisitedTableEverydayMap || 0 == userPortraitByVisitedTableEverydayMap.size() || null == segmentDetaiDolList || 0 == segmentDetaiDolList.size()) {
       // 判断用户的访问过的表是否异常；2022-06-08 17:56:17
       return;
     }
@@ -110,31 +111,29 @@ public class AnomalyDetectionUtil {
       String tableName = msSegmentDetailDo.getMsTableName();
       String userName = msSegmentDetailDo.getUserName();
       String globalTraceId = msSegmentDetailDo.getGlobalTraceId();
+      String startTime = msSegmentDetailDo.getStartTime();
+      Date date = DateTimeUtil.strToDate(startTime, DateTimeUtil.DATEFORMAT_STR_001);
+      String strToDateToStr = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
+
       if (StringUtil.isNotBlank(operationType) && operationType.equals(Const.SQL) && StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(tableName) && StringUtil.isNotBlank(globalTraceId)) {
         // 标识该条记录已进行过基于访问过的表的异常检测；2022-06-08 09:02:37
-        msSegmentDetailDo.setUserPortraitFlagByVisitedTable(1);
-        Map<String, Integer> map = userPortraitByVisitedTableMap.get(userName);
+        msSegmentDetailDo.setUserPortraitFlagByVisitedTableEveryday(1);
+        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
         Integer count = null;
-        if (null == map) {
+        if (null == visitedTableDateCountMap || null == visitedTableDateCountMap.get(tableName)) {
           log.error("# LoadUserPortraitFromDb.userVisitedTableIsAbnormal() # 出现了一条告警信息。该用户从来没有出现过。", userName);
           msAlarmInformationDo.setUserName(userName);
           msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-          msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有出现过这个表 " + tableName + "。");
+          msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有访问过这个表 " + tableName + "。");
           list.add(msAlarmInformationDo);
         } else {
-          count = map.get(tableName);
-          map.put(tableName, null == count ? (null) : (1 + count));
+          Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
+          count = dateCountMap.get(strToDateToStr);
+          dateCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
 
-          if (null == count || 0 == count) {
-            msAlarmInformationDo.setUserName(userName);
-            msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-            msAlarmInformationDo.setAlarmContent("用户 " + userName + " 在之前从来没有访问过这个表 " + tableName + " 。");
-            list.add(msAlarmInformationDo);
-          } else {
-            // 设置变更标记；2022-06-08 10:53:05
-            AnomylyDetectionSingletonByVisitedTable.setUserPortraitByVisitedTableIsChanged(true);
-          }
+          // 设置变更标记；2022-06-08 10:53:05
+          AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableIsChanged(true);
         }
       }
     }

@@ -1,12 +1,12 @@
 package com.mingshi.skyflying.task;
 
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTable;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.dao.UserPortraitByVisitedTableMapper;
+import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.enums.ConstantsCode;
@@ -48,7 +48,7 @@ public class ScheduledTask {
   @Resource
   private UserPortraitByVisitedTimeMapper userPortraitByVisitedTimeMapper;
   @Resource
-  private UserPortraitByVisitedTableMapper userPortraitByVisitedTableMapper;
+  private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   /**
    * <B>方法名称：scheduledUpdateUserPortraitByVisitedTime</B>
@@ -83,48 +83,54 @@ public class ScheduledTask {
   private void updateUserPortraitByVisitedTable() {
     try {
       Instant start = Instant.now();
-      Boolean isChangedAtomicBoolean = AnomylyDetectionSingletonByVisitedTable.getUserPortraitByVisitedTableIsChanged();
+      Boolean isChangedAtomicBoolean = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableIsChanged();
       if (false == isChangedAtomicBoolean) {
         log.info("# scheduledGetDmsAuditLog.updateUserPortraitByVisitedTable() # 基于访问过的表的用户画像统计信息没有变更，此次定时任务就不更新到数据库中了。");
         return;
       }
 
       log.info("# scheduledGetDmsAuditLog.updateUserPortraitByVisitedTable() # 基于访问过的表的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
-      Map<String, Map<String, Integer>> oldMap = AnomylyDetectionSingletonByVisitedTable.getUserPortraitByVisitedTableMap();
-      if (null == oldMap || 0 == oldMap.size()) {
+      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> userVisitedTableDateCountMap =
+        AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
+      if (null == userVisitedTableDateCountMap || 0 == userVisitedTableDateCountMap.size()) {
         // 如果数据库中不存在该画像信息，那么每次都要去数据库中获取一次，会给数据库造成很大的压力。所以这里先注释掉。2022-06-09 08:29:33
         // loadUserPortraitFromDb.initUserPortraitByVisitedTableMap();
         return;
       }
 
-      List<UserPortraitByVisitedTableDo> list = new LinkedList<>();
+      List<UserPortraitByVisitedTableEverydayDo> list = new LinkedList<>();
 
-      ConcurrentHashMap<String, Map<String, Integer>> newMap = new ConcurrentHashMap<>();
-      newMap.putAll(oldMap);
+      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> newMap = new ConcurrentHashMap<>();
+      newMap.putAll(userVisitedTableDateCountMap);
       Iterator<String> iterator = newMap.keySet().iterator();
       while (iterator.hasNext()) {
         String userName = iterator.next();
-
-        Map<String, Integer> map = newMap.get(userName);
-        if (null != map) {
-          Iterator<String> iterator1 = map.keySet().iterator();
-          while(iterator1.hasNext()){
-            String tableName = iterator1.next();
-            Integer visitedCount = map.get(tableName);
-            UserPortraitByVisitedTableDo userPortraitByVisitedTableDo = new UserPortraitByVisitedTableDo();
-            userPortraitByVisitedTableDo.setUserName(userName);
-            userPortraitByVisitedTableDo.setVisitedTable(tableName);
-            userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
-            list.add(userPortraitByVisitedTableDo);
+        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>> visitedTableDateCountMap = newMap.get(userName);
+        Iterator<String> iterator2 = visitedTableDateCountMap.keySet().iterator();
+        while(iterator2.hasNext()){
+          String tableName = iterator2.next();
+          Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
+          if (null != dateCountMap) {
+            Iterator<String> iterator1 = dateCountMap.keySet().iterator();
+            while(iterator1.hasNext()){
+              String dateTime = iterator1.next();
+              Integer visitedCount = dateCountMap.get(dateTime);
+              UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableDo = new UserPortraitByVisitedTableEverydayDo();
+              userPortraitByVisitedTableDo.setVisitedDate(dateTime);
+              userPortraitByVisitedTableDo.setUserName(userName);
+              userPortraitByVisitedTableDo.setVisitedTable(tableName);
+              userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
+              list.add(userPortraitByVisitedTableDo);
+            }
           }
         }
       }
 
       if (0 < list.size()) {
         try {
-          userPortraitByVisitedTableMapper.updateBatch(list);
+          userPortraitByVisitedTableEverydayMapper.insertSelectiveBatch(list);
           log.info("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息【{}条】标识耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(start));
-          AnomylyDetectionSingletonByVisitedTable.setUserPortraitByVisitedTableIsChanged(false);
+          AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableIsChanged(false);
         } catch (Exception e) {
           log.error("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息时，出现了异常。", e);
         }
