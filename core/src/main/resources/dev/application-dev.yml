@@ -97,9 +97,10 @@ spring:
       # 值的反序列化方式
       value-deserializer: org.apache.kafka.common.serialization.BytesDeserializer
       group-id: flows_match_group
-#      max-poll-records: 32
-#      fetch-max-wait: 100
-#      fetch-min-size: 1
+      #最多拉取1000条数据
+      max-poll-records: 1000
+      #最长1000毫秒
+      fetch-max-wait: 1000
       properties:
         max.poll.interval.ms: 1200000
         max.poll.records: 5
@@ -113,8 +114,8 @@ spring:
 mybatis:
   type-aliases-package: com.zhejiang.mobile.core.dao
   configuration:
-#    输出SQL语句；2021-12-02 18:40:52
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    在控制台中输出SQL语句；2021-12-02 18:40:52
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
     default-fetch-size: 100
     default-statement-timeout: 3000
@@ -125,6 +126,9 @@ logging:
 
 server:
   port: 9090
+  address:
+  compression:
+    excluded-user-agents:
 
 reactor:
   processor:

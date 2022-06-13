@@ -22,4 +22,6 @@ public class UserPortraitByVisitedTableEverydayDo {
     private Integer visitedCount;
 
     private String visitedDate;
+
+    private String dbType;
 }

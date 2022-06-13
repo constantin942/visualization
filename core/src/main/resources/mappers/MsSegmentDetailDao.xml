@@ -171,7 +171,8 @@
     select id,
            user_name,
            start_time,
-           ms_table_name
+           ms_table_name,
+           db_type
     from ms_segment_detail
     where user_name is not null
       and operation_type = 'sql'

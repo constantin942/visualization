@@ -75,10 +75,11 @@ public class ScheduledTask {
   /**
    * <B>方法名称：updateUserPortraitByVisitedTable</B>
    * <B>概要说明：将基于用户访问过的表的画像信息更新到数据库中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月09日 09:06:18
    * @Param []
-   * @return void
    **/
   private void updateUserPortraitByVisitedTable() {
     try {
@@ -90,7 +91,7 @@ public class ScheduledTask {
       }
 
       log.info("# scheduledGetDmsAuditLog.updateUserPortraitByVisitedTable() # 基于访问过的表的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
-      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> userVisitedTableDateCountMap =
+      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userVisitedTableDateCountMap =
         AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
       if (null == userVisitedTableDateCountMap || 0 == userVisitedTableDateCountMap.size()) {
         // 如果数据库中不存在该画像信息，那么每次都要去数据库中获取一次，会给数据库造成很大的压力。所以这里先注释掉。2022-06-09 08:29:33
@@ -100,27 +101,32 @@ public class ScheduledTask {
 
       List<UserPortraitByVisitedTableEverydayDo> list = new LinkedList<>();
 
-      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> newMap = new ConcurrentHashMap<>();
+      Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> newMap = new ConcurrentHashMap<>();
       newMap.putAll(userVisitedTableDateCountMap);
       Iterator<String> iterator = newMap.keySet().iterator();
       while (iterator.hasNext()) {
         String userName = iterator.next();
-        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>> visitedTableDateCountMap = newMap.get(userName);
+        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = newMap.get(userName);
         Iterator<String> iterator2 = visitedTableDateCountMap.keySet().iterator();
-        while(iterator2.hasNext()){
+        while (iterator2.hasNext()) {
           String tableName = iterator2.next();
-          Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
-          if (null != dateCountMap) {
-            Iterator<String> iterator1 = dateCountMap.keySet().iterator();
-            while(iterator1.hasNext()){
+          Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
+          if (null != dateDbTypeCountMap) {
+            Iterator<String> iterator1 = dateDbTypeCountMap.keySet().iterator();
+            while (iterator1.hasNext()) {
               String dateTime = iterator1.next();
-              Integer visitedCount = dateCountMap.get(dateTime);
-              UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableDo = new UserPortraitByVisitedTableEverydayDo();
-              userPortraitByVisitedTableDo.setVisitedDate(dateTime);
-              userPortraitByVisitedTableDo.setUserName(userName);
-              userPortraitByVisitedTableDo.setVisitedTable(tableName);
-              userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
-              list.add(userPortraitByVisitedTableDo);
+              Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateDbTypeCountMap.get(dateTime);
+              Iterator<String> iterator3 = dbTypeCountMap.keySet().iterator();
+              while(iterator3.hasNext()){
+                String dbType = iterator3.next();
+                Integer visitedCount = dbTypeCountMap.get(dbType);
+                UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableDo = new UserPortraitByVisitedTableEverydayDo();
+                userPortraitByVisitedTableDo.setVisitedDate(dateTime);
+                userPortraitByVisitedTableDo.setUserName(userName);
+                userPortraitByVisitedTableDo.setVisitedTable(tableName);
+                userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
+                list.add(userPortraitByVisitedTableDo);
+              }
             }
           }
         }
@@ -137,17 +143,18 @@ public class ScheduledTask {
         return;
       }
     } catch (Exception e) {
-      log.error("# ScheduledTask.updateUserPortraitByVisitedTable() # 将基于用户访问过的表的画像信息更新到数据库中时，出现了异常。",e);
+      log.error("# ScheduledTask.updateUserPortraitByVisitedTable() # 将基于用户访问过的表的画像信息更新到数据库中时，出现了异常。", e);
     }
   }
 
   /**
    * <B>方法名称：updateUserPortraitByVisitedTime</B>
    * <B>概要说明：将基于用户访问时间的画像信息更新到数据库中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月09日 09:06:01
    * @Param []
-   * @return void
    **/
   private void updateUserPortraitByVisitedTime() {
     try {
@@ -208,7 +215,7 @@ public class ScheduledTask {
         return;
       }
     } catch (Exception e) {
-      log.error("# ScheduledTask.updateUserPortraitByVisitedTime() # 将基于用户访问时间的画像信息更新到数据库中时，出现了异常。",e);
+      log.error("# ScheduledTask.updateUserPortraitByVisitedTime() # 将基于用户访问时间的画像信息更新到数据库中时，出现了异常。", e);
     }
   }
 
@@ -240,7 +247,7 @@ public class ScheduledTask {
     log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord()# 定时将数据库中用户名不为空，且未进行过基于访问时间的异常检测记录查询出来，然后进行异常检测。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
 
     try {
-      if(0 < userNameIsNotNullAndVisitedTimeList.size()){
+      if (0 < userNameIsNotNullAndVisitedTimeList.size()) {
         Instant now = Instant.now();
         msSegmentDetailDao.updateBatchById(userNameIsNotNullAndVisitedTimeList);
         log.info("# scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord() # 定时任务批量更新基于访问时间的异常信息【{}条】标识耗时 = 【{}】毫秒。", userNameIsNotNullAndVisitedTimeList.size(), DateTimeUtil.getTimeMillis(now));

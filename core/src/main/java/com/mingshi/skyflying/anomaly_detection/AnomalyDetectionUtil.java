@@ -100,13 +100,14 @@ public class AnomalyDetectionUtil {
    * @Param [segmentDo, list]
    **/
   public static void userVisitedTableIsAbnormal(LinkedList<MsAlarmInformationDo> list, List<MsSegmentDetailDo> segmentDetaiDolList) {
-    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */>>>  userPortraitByVisitedTableEverydayMap =
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap =
       AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
     if (null == userPortraitByVisitedTableEverydayMap || 0 == userPortraitByVisitedTableEverydayMap.size() || null == segmentDetaiDolList || 0 == segmentDetaiDolList.size()) {
       // 判断用户的访问过的表是否异常；2022-06-08 17:56:17
       return;
     }
     for (MsSegmentDetailDo msSegmentDetailDo : segmentDetaiDolList) {
+      String dbType = msSegmentDetailDo.getDbType();
       String operationType = msSegmentDetailDo.getOperationType();
       String tableName = msSegmentDetailDo.getMsTableName();
       String userName = msSegmentDetailDo.getUserName();
@@ -118,7 +119,7 @@ public class AnomalyDetectionUtil {
       if (StringUtil.isNotBlank(operationType) && operationType.equals(Const.SQL) && StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(tableName) && StringUtil.isNotBlank(globalTraceId)) {
         // 标识该条记录已进行过基于访问过的表的异常检测；2022-06-08 09:02:37
         msSegmentDetailDo.setUserPortraitFlagByVisitedTableEveryday(1);
-        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
+        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
         Integer count = null;
         if (null == visitedTableDateCountMap || null == visitedTableDateCountMap.get(tableName)) {
@@ -128,9 +129,11 @@ public class AnomalyDetectionUtil {
           msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有访问过这个表 " + tableName + "。");
           list.add(msAlarmInformationDo);
         } else {
-          Map<String/* 访问日期，以天为单位 */,Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
-          count = dateCountMap.get(strToDateToStr);
-          dateCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
+          Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateCountMap = visitedTableDateCountMap.get(tableName);
+
+          Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateCountMap.get(strToDateToStr);
+          count = dbTypeCountMap.get(dbType);
+          dbTypeCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
 
           // 设置变更标记；2022-06-08 10:53:05
           AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableIsChanged(true);

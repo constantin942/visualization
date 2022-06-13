@@ -11,11 +11,12 @@
     <result column="visited_table" jdbcType="VARCHAR" property="visitedTable"/>
     <result column="visited_count" jdbcType="INTEGER" property="visitedCount"/>
     <result column="visited_date" jdbcType="TIMESTAMP" property="visitedDate"/>
+    <result column="db_type" jdbcType="TIMESTAMP" property="dbType"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
     , is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count,
-    visited_date
+    visited_date, db_type
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -85,7 +86,7 @@
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into user_portrait_by_visited_table_everyday
-    (user_name, rule_name, visited_table, visited_count, visited_date)
+    (user_name, rule_name, visited_table, visited_count, visited_date, db_type)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -93,7 +94,8 @@
       #{item.ruleName,jdbcType=VARCHAR},
       #{item.visitedTable,jdbcType=VARCHAR},
       #{item.visitedCount,jdbcType=INTEGER},
-      #{item.visitedDate,jdbcType=TIMESTAMP}
+      #{item.visitedDate,jdbcType=TIMESTAMP},
+      #{item.dbType,jdbcType=VARCHAR}
       )
     </foreach>
     ON DUPLICATE KEY UPDATE visited_count=values(visited_count)
@@ -128,6 +130,9 @@
       <if test="visitedDate != null">
         visited_date,
       </if>
+      <if test="dbType != null">
+        db_type,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -156,6 +161,9 @@
       </if>
       <if test="visitedDate != null">
         #{visitedDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="dbType != null">
+        #{dbType,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -197,6 +205,9 @@
       </if>
       <if test="visitedDate != null">
         visited_date = #{visitedDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="dbType != null">
+        db_type = #{dbType,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

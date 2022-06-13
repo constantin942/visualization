@@ -68,7 +68,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
    * @Param []
    **/
   public Boolean initUserPortraitByVisitedTableEverydayMap() {
-    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>>> userPortraitByVisitedTableEverydayMap =
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap =
       AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
     Instant now = Instant.now();
     List<UserPortraitByVisitedTableEverydayDo> list = userPortraitByVisitedTableEverydayMapper.selectAll();
@@ -80,24 +80,30 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
     }
     for (UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo : list) {
       String tableName = userPortraitByVisitedTableEverydayDo.getVisitedTable();
+      String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
       Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
       String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
       Date date = DateTimeUtil.strToDate(visitedDate, DateTimeUtil.DATEFORMAT_STR_001);
       String strToDateToStr = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
       String userName = userPortraitByVisitedTableEverydayDo.getUserName();
-      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
+      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
       if(null == visitedTableDateCountMap){
         visitedTableDateCountMap = new ConcurrentHashMap<>();
         userPortraitByVisitedTableEverydayMap.put(userName,visitedTableDateCountMap);
       }
-      Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
-      if (null == dateCountMap) {
-        dateCountMap = new ConcurrentHashMap<>();
-        visitedTableDateCountMap.put(tableName, dateCountMap);
+      Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
+      if (null == dateDbTypeCountMap) {
+        dateDbTypeCountMap = new ConcurrentHashMap<>();
+        visitedTableDateCountMap.put(tableName, dateDbTypeCountMap);
+      }
+      Map<String, Integer> dbTypeCountMap = dateDbTypeCountMap.get(strToDateToStr);
+      if(null == dbTypeCountMap){
+        dbTypeCountMap = new ConcurrentHashMap<>();
+        dateDbTypeCountMap.put(strToDateToStr,dbTypeCountMap);
       }
       if (null != visitedCount) {
-        dateCountMap.put(strToDateToStr, visitedCount);
+        dbTypeCountMap.put(dbType, visitedCount);
       }
     }
     log.info("# LoadUserPortraitFromDb.initUserPortraitByVisitedTableMap() # 项目启动完毕，从数据库中查询到用户访问过的表的画像信息【{}条】，用时【{}】毫秒。", userPortraitByVisitedTableEverydayMap.size(), DateTimeUtil.getTimeMillis(now));
