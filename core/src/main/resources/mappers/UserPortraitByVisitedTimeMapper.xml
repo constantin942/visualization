@@ -16,6 +16,35 @@
     id, is_delete, gmt_create, gmt_modified, user_name, rule_name, forenoon_count, night_count,
     afternoon_count
   </sql>
+  <select id="selectByUserNameCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select
+      count(*)
+    from user_portrait_by_visited_time
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+  </select>
+  <select id="selectByUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+      user_name, rule_name, forenoon_count, night_count, afternoon_count
+    from user_portrait_by_visited_time
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectAllUserName" resultType="java.lang.String">
+    select
+      user_name
+    from user_portrait_by_visited_time
+    where is_delete = 0 group by user_name
+  </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
       user_name, rule_name, forenoon_count, night_count, afternoon_count

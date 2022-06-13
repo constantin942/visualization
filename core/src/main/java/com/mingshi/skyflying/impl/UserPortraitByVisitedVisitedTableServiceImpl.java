@@ -7,6 +7,8 @@ import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.UserPortraitByVisitedTableService;
 import com.mingshi.skyflying.utils.DateTimeUtil;
+import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -72,6 +74,92 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
   }
 
   /**
+   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取用户基于每天访问过的数据库表次数的画像</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:52
+   * @Param [userName, visitedTable, visitedTime, pageNo, pageSize]
+   **/
+  @Override
+  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, String visitedTable, String visitedDate, Integer pageNo, Integer pageSize) {
+    Map<String, Object> queryMap = new HashMap<>();
+    if (StringUtil.isNotBlank(userName)) {
+      queryMap.put("userName", userName);
+    }
+    if (StringUtil.isNotBlank(visitedTable)) {
+      queryMap.put("visitedTable", visitedTable);
+    }
+    if (StringUtil.isNotBlank(visitedDate)) {
+      queryMap.put("visitedDate", visitedDate);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+    List<UserPortraitByVisitedTableEverydayDo> userPortraitByVisitedTableEverydayDos = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndVisitedTableAndVisitedDate(queryMap);
+
+
+    Integer count = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndVisitedTableAndVisitedDateCount(queryMap);
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(userPortraitByVisitedTableEverydayDos));
+    context.put("total", count);
+
+    log.info("# UserPortraitByVisitedVisitedTableServiceImpl.getUserPortraitByVisitedTableEveryday() # 根据条件【{}】在数据库中查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), userPortraitByVisitedTableEverydayDos.size());
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(context));
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取所有的访问过的表</B>
+   * @Author zm
+   * @Date 2022年06月13日 10:06:00
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @Override
+  public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
+    HashSet<String> hashSet = new HashSet<>();
+    List<String> visitedTableList = userPortraitByVisitedTableEverydayMapper.selectAllVisitedTable();
+    for (String table : visitedTableList) {
+      if(table.contains(",")){
+        String[] split = table.split(",");
+        for (String s : split) {
+          hashSet.add(s);
+        }
+      }else{
+        hashSet.add(table);
+      }
+    }
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(hashSet));
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取所有的用户名</B>
+   * @Author zm
+   * @Date 2022年06月13日 10:06:00
+   * @Param []
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @Override
+  public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
+    List<String> userNameList = userPortraitByVisitedTableEverydayMapper.selectAllUserName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(userNameList));
+    return bySuccess;
+  }
+
+  /**
    * <B>方法名称：statisticsEverydayVistedTableCount</B>
    * <B>概要说明：统计用户每天访问过的表的次数</B>
    *
@@ -103,7 +191,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
         Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
         if (null == dateCountMap) {
           dateCountMap = new ConcurrentHashMap<>();
-          visitedTableDateCountMap.put(tableName,dateCountMap);
+          visitedTableDateCountMap.put(tableName, dateCountMap);
         }
         Integer count = dateCountMap.get(strToDateToStr);
         dateCountMap.put(strToDateToStr, null == count ? 1 : count + 1);
@@ -143,7 +231,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
           String tableName = iterator2.next();
           Map<String/* 访问日期，以天为单位 */, Integer/* 访问次数 */> dateCountMap = visitedTableDateCountMap.get(tableName);
           Iterator<String> iterator3 = dateCountMap.keySet().iterator();
-          while(iterator3.hasNext()){
+          while (iterator3.hasNext()) {
             UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo = new UserPortraitByVisitedTableEverydayDo();
             userPortraitByVisitedTableEverydayDo.setUserName(userName);
 

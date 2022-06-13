@@ -19,6 +19,35 @@
     from ms_alarm_information
     where id = #{id,jdbcType=INTEGER}
   </select>
+  <select id="selectAllUserName" parameterType="java.lang.Integer" resultType="java.lang.String">
+    select
+      user_name
+    from ms_alarm_information
+    group by user_name
+  </select>
+  <select id="selectAllCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select
+    count(*)
+    from ms_alarm_information
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+  </select>
+  <select id="selectAll" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    user_name, alarm_content, global_trace_id
+    from ms_alarm_information
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
     insert into ms_alarm_information
     <trim prefix="(" suffix=")" suffixOverrides=",">

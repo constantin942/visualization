@@ -7,4 +7,9 @@ public interface UserPortraitByVisitedTableService extends ParentService<UserPor
 
   ServerResponse<String> createUserPortraitByVisitedTableEveryday();
 
+  ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, String visitedTable, String visitedDate, Integer pageNo, Integer pageSize);
+
+  ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday();
+
+  ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday();
 }

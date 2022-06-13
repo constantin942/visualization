@@ -8,6 +8,8 @@ import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.UserPortraitByVisitedTimeService;
 import com.mingshi.skyflying.utils.DateTimeUtil;
+import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +61,42 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
     batchInsertUserPortrait(statisticsMap);
 
     return ServerResponse.createBySuccess();
+  }
+
+  @Override
+  public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, Integer pageNo, Integer pageSize) {
+    Map<String, Object> queryMap = new HashMap<>();
+    if (StringUtil.isNotBlank(userName)) {
+      queryMap.put("userName", userName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+    List<UserPortraitByVisitedTimeDo> userPortraitByVisitedTimeDos = userPortraitByVisitedTimeMapper.selectByUserName(queryMap);
+
+    Integer count = userPortraitByVisitedTimeMapper.selectByUserNameCount(queryMap);
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(userPortraitByVisitedTimeDos));
+    context.put("total", count);
+
+    log.info("# UserPortraitByVisitedVisitedTimeServiceImpl.getAllUserPortraitByVisitedTime() # 根据条件【{}】在数据库中查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), userPortraitByVisitedTimeDos.size());
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(context));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllUserNamePortraitByVisitedTime() {
+    List<String> list = userPortraitByVisitedTimeMapper.selectAllUserName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(list));
+    return bySuccess;
   }
 
   /**

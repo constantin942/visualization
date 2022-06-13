@@ -137,9 +137,10 @@
            user_name,
            start_time,
            global_trace_id,
-           user_portrait_flag_by_visited_time
+           user_portrait_flag_by_visited_time,
+           user_portrait_flag_by_visited_table_everyday
     from ms_segment_detail
-    where user_name is not null
+    where is_delete = 0 and user_name is not null
       and (user_portrait_flag_by_visited_time = 0 or user_portrait_flag_by_visited_time is null)
   </select>
   <select id="selectAllUserNameIsNotNullAndVisitedTableIsZero" parameterType="java.lang.Integer"
@@ -153,7 +154,7 @@
            user_portrait_flag_by_visited_table_everyday,
            user_portrait_flag_by_visited_time
     from ms_segment_detail
-    where user_name is not null
+    where is_delete = 0 and user_name is not null
       and (user_portrait_flag_by_visited_table_everyday = 0 or user_portrait_flag_by_visited_table_everyday is null)
       and operation_type = 'sql'
       and ms_table_name is not null
@@ -404,6 +405,7 @@
     <foreach collection="list" item="item" index="index" open="" close="" separator=";">
         update ms_segment_detail
         <set>
+            is_delete = 0,
           <if test="item.userPortraitFlagByVisitedTime != null and item.userPortraitFlagByVisitedTime != ''">
             user_portrait_flag_by_visited_time = #{item.userPortraitFlagByVisitedTime},
           </if>

@@ -2,31 +2,87 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
-    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
-    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
-    <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
-    <result column="visited_table" jdbcType="VARCHAR" property="visitedTable" />
-    <result column="visited_count" jdbcType="INTEGER" property="visitedCount" />
-    <result column="visited_date" jdbcType="TIMESTAMP" property="visitedDate" />
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+    <result column="rule_name" jdbcType="VARCHAR" property="ruleName"/>
+    <result column="visited_table" jdbcType="VARCHAR" property="visitedTable"/>
+    <result column="visited_count" jdbcType="INTEGER" property="visitedCount"/>
+    <result column="visited_date" jdbcType="TIMESTAMP" property="visitedDate"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count,
+    id
+    , is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count,
     visited_date
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
-    <include refid="Base_Column_List" />
+    <include refid="Base_Column_List"/>
     from user_portrait_by_visited_table_everyday
     where id = #{id,jdbcType=INTEGER}
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-      user_name, rule_name, visited_table, visited_count, visited_date
+    select user_name,
+           rule_name,
+           visited_table,
+           visited_count,
+           visited_date
     from user_portrait_by_visited_table_everyday
   </select>
+  <select id="selectAllUserName" resultType="java.lang.String">
+    select user_name
+    from user_portrait_by_visited_table_everyday group by user_name
+  </select>
+  <select id="selectAllVisitedTable" resultType="java.lang.String">
+    select visited_table
+    from user_portrait_by_visited_table_everyday group by visited_table
+  </select>
+  <select id="selectByUserNameAndVisitedTableAndVisitedDateCount" parameterType="java.util.Map"
+          resultType="java.lang.Integer">
+    select count(id)
+    from user_portrait_by_visited_table_everyday
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+      <if test="visitedTable != null and  visitedTable != null   ">
+        and visited_table like concat('%',#{visitedTable},'%')
+      </if>
+      <if test="visitedDate != null and  visitedDate != null   ">
+        and visited_date <![CDATA[ >= ]]> #{visitedDate}
+      </if>
+      <if test="visitedDate != null and  visitedDate != null   ">
+        and visited_date <![CDATA[ <= ]]> #{visitedDate}
+      </if>
+    </where>
+  </select>
+  <select id="selectByUserNameAndVisitedTableAndVisitedDate" parameterType="java.util.Map"
+          resultMap="BaseResultMap">
+    select
+    id, user_name, rule_name, visited_table, visited_count, visited_date
+    from user_portrait_by_visited_table_everyday
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+      <if test="visitedTable != null and  visitedTable != null   ">
+        and visited_table like concat('%',#{visitedTable},'%')
+      </if>
+      <if test="visitedDate != null and  visitedDate != null   ">
+        and visited_date <![CDATA[ >= ]]> #{visitedDate}
+      </if>
+      <if test="visitedDate != null and  visitedDate != null   ">
+        and visited_date <![CDATA[ <= ]]> #{visitedDate}
+      </if>
+    </where>
+    order by visited_date desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into user_portrait_by_visited_table_everyday
     (user_name, rule_name, visited_table, visited_count, visited_date)
@@ -114,7 +170,8 @@
       where user_name=#{item.userName} and visited_table=#{item.visitedTable} and visited_date=#{item.visitedDate}
     </foreach>
   </update>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
+  <update id="updateByPrimaryKeySelective"
+          parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
     update user_portrait_by_visited_table_everyday
     <set>
       <if test="isDelete != null">

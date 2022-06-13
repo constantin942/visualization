@@ -1,10 +1,7 @@
 package com.mingshi.skyflying.controller;
 
 import com.mingshi.skyflying.response.ServerResponse;
-import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.service.SegmentDetailService;
-import com.mingshi.skyflying.service.UserPortraitByVisitedTableService;
-import com.mingshi.skyflying.service.UserPortraitByVisitedTimeService;
+import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,17 +28,150 @@ public class SkyflyingController {
   @Resource
   private AuditLogService auditLogService;
   @Resource
+  private MsAlarmInformationService msAlarmInformationService;
+  @Resource
   private UserPortraitByVisitedTimeService userPortraitByTimeService;
   @Resource
   private UserPortraitByVisitedTableService userPortraitByTableService;
 
+
+  /**
+   * <B>方法名称：getUserNameAnomalyDetectionInfo</B>
+   * <B>概要说明：获取异常信息中的所有的用户名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getUserNameAnomalyDetectionInfo", method = RequestMethod.GET)
+  public ServerResponse<String> getUserNameAnomalyDetectionInfo() {
+    return msAlarmInformationService.getUserNameAnomalyDetectionInfo();
+  }
+
+
+  /**
+   * <B>方法名称：getAnomalyDetectionInfo</B>
+   * <B>概要说明：获取异常信息</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAnomalyDetectionInfo", method = RequestMethod.GET)
+  public ServerResponse<String> getAnomalyDetectionInfo(String userName, /* 登录系统的名称 */
+                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return msAlarmInformationService.getAllAlarmInfo(userName, pageNo, pageSize);
+  }
+
+  /**
+   * <B>方法名称：getAllUserNamePortraitByVisitedTime</B>
+   * <B>概要说明：获取所有的用户</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllUserNamePortraitByVisitedTime", method = RequestMethod.GET)
+  public ServerResponse<String> getAllUserNamePortraitByVisitedTime() {
+    return userPortraitByTimeService.getAllUserNamePortraitByVisitedTime();
+  }
+
+  /**
+   * <B>方法名称：getUserPortraitByVisitedTime</B>
+   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllUserPortraitByVisitedTime", method = RequestMethod.GET)
+  public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, /* 登录系统的名称 */
+                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return userPortraitByTimeService.getAllUserPortraitByVisitedTime(userName, pageNo, pageSize);
+  }
+
+  /**
+   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取所有的表名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
+    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
+  }
+
+  /**
+   * <B>方法名称：getUserPortraitByVisitedTime</B>
+   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getUserPortraitByVisitedTime", method = RequestMethod.GET)
+  public ServerResponse<String> getUserPortraitByVisitedTime() {
+    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
+  }
+
+  /**
+   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取所有的用户名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
+    return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
+  }
+
+  /**
+   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：获取用户每天访问表的次数的画像信息</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月13日 09:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getUserPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
+                                                                      String visitedTable, /* 访问数据库的表 */
+                                                                      String visitedDate, /* 访问数据库表的时间 */
+                                                                      @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, pageNo, pageSize);
+  }
+
   /**
    * <B>方法名称：userPortraitByVisitedTable</B>
    * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月08日 14:06:08
    * @Param []
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/userPortraitByVisitedTableEveryday", method = RequestMethod.GET)
@@ -52,10 +182,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：userPortraitByVisitedTime</B>
    * <B>概要说明：基于历史数据，统计用户访问系统的时间，以此来生成用户的画像</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月07日 14:06:08
    * @Param []
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/userPortraitByVisitedTime", method = RequestMethod.GET)
@@ -166,13 +297,13 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
   public ServerResponse<String> getAllSegments(String applicationUserName, /* 登录系统的名称 */
-                                                String dbUserName, /* 访问数据库的用户名 */
-                                                String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
-                                                String msTableName, /* 数据库表名 */
-                                                String startTime, /* 开始时间 */
-                                                String endTime, /* 结束时间 */
-                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                               String dbUserName, /* 访问数据库的用户名 */
+                                               String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                               String msTableName, /* 数据库表名 */
+                                               String startTime, /* 开始时间 */
+                                               String endTime, /* 结束时间 */
+                                               @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                               @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getAllSegmentsBySegmentRelation2(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
   }
 
