@@ -29,7 +29,8 @@
            rule_name,
            visited_table,
            visited_count,
-           visited_date
+           visited_date,
+           db_type
     from user_portrait_by_visited_table_everyday
   </select>
   <select id="selectAllUserName" resultType="java.lang.String">
@@ -62,7 +63,7 @@
   <select id="selectByUserNameAndVisitedTableAndVisitedDate" parameterType="java.util.Map"
           resultMap="BaseResultMap">
     select
-    id, user_name, rule_name, visited_table, visited_count, visited_date
+    id, user_name, rule_name, visited_table, visited_count, visited_date, db_type
     from user_portrait_by_visited_table_everyday
     <where>
       <if test="userName != null and  userName != null   ">

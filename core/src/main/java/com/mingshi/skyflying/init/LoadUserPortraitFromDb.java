@@ -9,6 +9,7 @@ import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
 import com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.utils.DateTimeUtil;
+import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -102,7 +103,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
         dbTypeCountMap = new ConcurrentHashMap<>();
         dateDbTypeCountMap.put(strToDateToStr,dbTypeCountMap);
       }
-      if (null != visitedCount) {
+      if (null != visitedCount && StringUtil.isNotBlank(dbType)) {
         dbTypeCountMap.put(dbType, visitedCount);
       }
     }
