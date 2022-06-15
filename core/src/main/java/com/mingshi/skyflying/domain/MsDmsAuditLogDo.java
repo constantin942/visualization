@@ -11,6 +11,8 @@ public class MsDmsAuditLogDo {
 
     private String sqlSource;
 
+    private String msTableName;
+
     private String opTime;
 
     private String userName;

@@ -132,7 +132,11 @@ public class AnomalyDetectionUtil {
           Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateCountMap = visitedTableDateCountMap.get(tableName);
 
           Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateCountMap.get(strToDateToStr);
-          count = dbTypeCountMap.get(dbType);
+          try {
+            count = dbTypeCountMap.get(dbType);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
           dbTypeCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
 
           // 设置变更标记；2022-06-08 10:53:05

@@ -17,10 +17,7 @@ import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.ListUtils;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +41,8 @@ import java.util.Map;
 @Service("auditLogService")
 public class AuditLogServiceImpl implements AuditLogService {
 
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
   @Resource
   private MsAuditLogDao msAuditLogDao;
   @Resource
@@ -417,8 +416,16 @@ public class AuditLogServiceImpl implements AuditLogService {
         // 大写统一转换成消息、去掉多余的空格
         String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
         String hash = StringUtil.MD5(strData);
-
         MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
+
+        String sqlType1 = mingshiServerUtil.getSqlType(msSql);
+        // 获取表名；2022-06-06 14:11:21
+        if (StringUtil.isNotBlank(sqlType1) && !execState.equals("FAIL")) {
+          String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
+          msDmsAuditLogDo.setMsTableName(tableName);
+        }
+
+
         msDmsAuditLogDo.setMsSql(msSql);
         msDmsAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
         msDmsAuditLogDo.setMsSchemaName(msSchemaName);
@@ -453,44 +460,45 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
-    Map<String ,Object> queryMap=new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>();
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
-    }else{
-      queryMap.put("pageNo",pageNo);
+    } else {
+      queryMap.put("pageNo", pageNo);
     }
     if (null == pageSize) {
       queryMap.put("pageSize", 10);
-    }else{
-      queryMap.put("pageSize",pageSize);
+    } else {
+      queryMap.put("pageSize", pageSize);
     }
-    queryMap.put("applicationUserName",applicationUserName);
-    queryMap.put("sqlType",sqlType);
+    queryMap.put("applicationUserName", applicationUserName);
+    queryMap.put("sqlType", sqlType);
 
-    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByUserName(queryMap);
+    List<MsAuditLogDo> listMsAuditLog = msAuditLogDao.selectBehaviorByUserName(queryMap);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
     return bySuccess;
   }
+
   @Override
-  public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime,Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>();
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
-    }else{
-      queryMap.put("pageNo",pageNo);
+    } else {
+      queryMap.put("pageNo", pageNo);
     }
     if (null == pageSize) {
       queryMap.put("pageSize", 10);
-    }else{
-      queryMap.put("pageSize",pageSize);
+    } else {
+      queryMap.put("pageSize", pageSize);
     }
-    queryMap.put("sqlType",sqlType);
-    queryMap.put("startTime",startTime);
-    queryMap.put("endTime",endTime);
+    queryMap.put("sqlType", sqlType);
+    queryMap.put("startTime", startTime);
+    queryMap.put("endTime", endTime);
 
 
-    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByOptTime(queryMap);
+    List<MsAuditLogDo> listMsAuditLog = msAuditLogDao.selectBehaviorByOptTime(queryMap);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
     return bySuccess;
@@ -501,18 +509,17 @@ public class AuditLogServiceImpl implements AuditLogService {
     Map<String, Object> queryMap = new HashMap<>();
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
-    }else{
-      queryMap.put("pageNo",pageNo);
+    } else {
+      queryMap.put("pageNo", pageNo);
     }
     if (null == pageSize) {
       queryMap.put("pageSize", 10);
-    }else{
-      queryMap.put("pageSize",pageSize);
+    } else {
+      queryMap.put("pageSize", pageSize);
     }
-    queryMap.put("msTableName",msTableName);
+    queryMap.put("msTableName", msTableName);
 
-
-    List<MsAuditLogDo> listMsAuditLog=msAuditLogDao.selectBehaviorByTableName(queryMap);
+    List<MsAuditLogDo> listMsAuditLog = msAuditLogDao.selectBehaviorByTableName(queryMap);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
     return bySuccess;
@@ -520,7 +527,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getAllUserName() {
-    List<String> listMsAuditLog=msAuditLogDao.selectAllUserName();
+    List<String> listMsAuditLog = msAuditLogDao.selectAllUserName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
     return bySuccess;
@@ -528,7 +535,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getAllMsTableName() {
-    List<String> listMsAuditLog=msAuditLogDao.selectAllMsTableName();
+    List<String> listMsAuditLog = msAuditLogDao.selectAllMsTableName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
     return bySuccess;
@@ -536,9 +543,85 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
-    List<String> listMsAuditLog=msAuditLogDao.selectAllMsTableName();
+    List<String> listMsAuditLog = msAuditLogDao.selectAllMsTableName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(listMsAuditLog));
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getDmsAuditLogFromDb</B>
+   * <B>概要说明：从数据库中获取来自DMS的数据库审计日志</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月15日 15:06:35
+   * @Param []
+   **/
+  @Override
+  public ServerResponse<String> getDmsAuditLogFromDb(String dbUserName,
+                                                     String sqlType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                                     String msTableName, /* 数据库表名 */
+                                                     String startTime, /* 开始时间 */
+                                                     String endTime, /* 结束时间 */
+                                                     Integer pageNo,
+                                                     Integer pageSize) {
+    Instant now = Instant.now();
+    Map<String, Object> queryMap = new HashMap<>();
+    if (StringUtil.isNotBlank(sqlType)) {
+      queryMap.put("sqlType", sqlType);
+    }
+    if (StringUtil.isNotBlank(msTableName)) {
+      queryMap.put("msTableName", msTableName);
+    }
+    if (StringUtil.isNotBlank(startTime)) {
+      queryMap.put("startTime", startTime);
+    }
+    if (StringUtil.isNotBlank(endTime)) {
+      queryMap.put("endTime", endTime);
+    }
+    if (StringUtil.isNotBlank(dbUserName)) {
+      queryMap.put("userName", dbUserName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+
+    List<MsDmsAuditLogDo> listMsAuditLog = msDmsAuditLogDao.selectAll(queryMap);
+    Integer count = msDmsAuditLogDao.selectAllCount(queryMap);
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(listMsAuditLog));
+    context.put("total", count);
+    log.info("执行完毕 AuditLogServiceImpl.getDmsAuditLogFromDb() # 获取来自DMS的数据库审计日志信息。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", JsonUtil.obj2String(context));
+  }
+
+  @Override
+  public ServerResponse<String> getAllUserNameFromDMS() {
+    List<String> userNameList = msDmsAuditLogDao.selectAllUserName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(userNameList));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllSqlTypeFromDMS() {
+    List<String> list = msDmsAuditLogDao.selectAllSqlType();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(list));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllTableNameFromDMS() {
+    List<String> list = msDmsAuditLogDao.selectAllTableName();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(list));
     return bySuccess;
   }
 

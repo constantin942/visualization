@@ -2,33 +2,35 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsDmsAuditLogDao">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="sql_insight_db_user_name" jdbcType="VARCHAR" property="sqlInsightDbUserName" />
-    <result column="sql_source" jdbcType="VARCHAR" property="sqlSource" />
-    <result column="op_time" jdbcType="VARCHAR" property="opTime" />
-    <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="instance_name" jdbcType="VARCHAR" property="instanceName" />
-    <result column="instance_id" jdbcType="INTEGER" property="instanceId" />
-    <result column="ms_schema_name" jdbcType="VARCHAR" property="msSchemaName" />
-    <result column="db_id" jdbcType="INTEGER" property="dbId" />
-    <result column="logic" jdbcType="VARCHAR" property="logic" />
-    <result column="sql_type" jdbcType="VARCHAR" property="sqlType" />
-    <result column="exec_state" jdbcType="VARCHAR" property="execState" />
-    <result column="affect_rows" jdbcType="INTEGER" property="affectRows" />
-    <result column="elapsed_time" jdbcType="INTEGER" property="elapsedTime" />
-    <result column="remark" jdbcType="VARCHAR" property="remark" />
-    <result column="user_id" jdbcType="INTEGER" property="userId" />
-    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
-    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
-    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
-    <result column="hash" jdbcType="VARCHAR" property="hash" />
-    <result column="sql_insight_user_ip" jdbcType="VARCHAR" property="sqlInsightUserIp" />
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="sql_insight_db_user_name" jdbcType="VARCHAR" property="sqlInsightDbUserName"/>
+    <result column="sql_source" jdbcType="VARCHAR" property="sqlSource"/>
+    <result column="op_time" jdbcType="VARCHAR" property="opTime"/>
+    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+    <result column="instance_name" jdbcType="VARCHAR" property="instanceName"/>
+    <result column="instance_id" jdbcType="INTEGER" property="instanceId"/>
+    <result column="ms_schema_name" jdbcType="VARCHAR" property="msSchemaName"/>
+    <result column="db_id" jdbcType="INTEGER" property="dbId"/>
+    <result column="logic" jdbcType="VARCHAR" property="logic"/>
+    <result column="sql_type" jdbcType="VARCHAR" property="sqlType"/>
+    <result column="exec_state" jdbcType="VARCHAR" property="execState"/>
+    <result column="affect_rows" jdbcType="INTEGER" property="affectRows"/>
+    <result column="elapsed_time" jdbcType="INTEGER" property="elapsedTime"/>
+    <result column="remark" jdbcType="VARCHAR" property="remark"/>
+    <result column="user_id" jdbcType="INTEGER" property="userId"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="hash" jdbcType="VARCHAR" property="hash"/>
+    <result column="sql_insight_user_ip" jdbcType="VARCHAR" property="sqlInsightUserIp"/>
+    <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
-    <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql" />
+    <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id, sql_insight_db_user_name, sql_source,
+    id,ms_table_name
+    , sql_insight_db_user_name, sql_source,
     op_time, user_name, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type,
     exec_state, affect_rows, elapsed_time, remark, user_id, gmt_create, gmt_modified,
     is_delete, hash, sql_insight_user_ip
@@ -36,21 +38,84 @@
   <sql id="Blob_Column_List">
     ms_sql
   </sql>
+  <select id="selectAll" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select id,user_name,op_time,ms_sql,instance_name,ms_schema_name,sql_type
+    from ms_dms_audit_log
+    where sql_source='dms'
+      <if test="userName != null and  userName != null   ">
+        and user_name = #{userName}
+      </if>
+      <if test="sqlType != null and  sqlType != null   ">
+        and sql_type = #{sqlType}
+      </if>
+      <if test="startTime != null and  startTime != null   ">
+        and op_time <![CDATA[ >= ]]> #{startTime}
+      </if>
+      <if test="endTime != null and  endTime != null   ">
+        and op_time <![CDATA[ <= ]]> #{endTime}
+      </if>
+      <if test="msTableName != null and  msTableName != null   ">
+        and ms_table_name like concat('%',#{msTableName},'%')
+      </if>
+    order by id desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectAllUserName" resultType="java.lang.String">
+    select
+      user_name
+    from ms_dms_audit_log
+    group by user_name
+  </select>
+  <select id="selectAllSqlType" resultType="java.lang.String">
+    select
+      sql_type
+    from ms_dms_audit_log
+    group by sql_type
+  </select>
+  <select id="selectAllTableName" resultType="java.lang.String">
+    select
+      ms_table_name
+    from ms_dms_audit_log
+    group by ms_table_name
+  </select>
+  <select id="selectAllCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(id)
+    from ms_dms_audit_log
+    where sql_source='dms'
+      <if test="userName != null and  userName != null   ">
+        and user_name = #{userName}
+      </if>
+      <if test="sqlType != null and  sqlType != null   ">
+        and sql_type = #{sqlType}
+      </if>
+      <if test="startTime != null and  startTime != null   ">
+        and op_time <![CDATA[ >= ]]> #{startTime}
+      </if>
+      <if test="endTime != null and  endTime != null   ">
+        and op_time <![CDATA[ <= ]]> #{endTime}
+      </if>
+      <if test="msTableName != null and  msTableName != null   ">
+        and ms_table_name like concat('%',#{msTableName},'%')
+      </if>
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
     select
-    <include refid="Base_Column_List" />
+    <include refid="Base_Column_List"/>
     ,
-    <include refid="Blob_Column_List" />
+    <include refid="Blob_Column_List"/>
     from ms_dms_audit_log
     where id = #{id,jdbcType=INTEGER}
   </select>
   <insert id="insertSelectiveBatchNoSqlInsightDbUserName" parameterType="java.util.List">
     insert into ms_dms_audit_log
-    ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
+    ( ms_table_name, op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
     affect_rows, elapsed_time, remark, ms_sql, sql_source, hash)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
+      #{item.msTableName,jdbcType=VARCHAR},
       #{item.opTime,jdbcType=VARCHAR},
       #{item.userName,jdbcType=VARCHAR},
       #{item.userId,jdbcType=INTEGER},
@@ -140,6 +205,9 @@
       <if test="msSql != null">
         ms_sql,
       </if>
+      <if test="msTableName != null">
+        ms_table_name,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -208,15 +276,19 @@
       <if test="msSql != null">
         #{msSql,jdbcType=LONGVARCHAR},
       </if>
+      <if test="msTableName != null">
+        #{msTableName,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_dms_audit_log
-    ( op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
+    ( ms_table_name,op_time, user_name, user_id, instance_name, instance_id, ms_schema_name, db_id, logic, sql_type, exec_state,
     affect_rows, elapsed_time, remark, ms_sql, sql_source, hash, sql_insight_db_user_name)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
+      #{item.msTableName,jdbcType=VARCHAR},
       #{item.opTime,jdbcType=VARCHAR},
       #{item.userName,jdbcType=VARCHAR},
       #{item.userId,jdbcType=INTEGER},
@@ -303,6 +375,9 @@
       </if>
       <if test="msSql != null">
         ms_sql = #{msSql,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="msTableName != null">
+        ms_table_name = #{msTableName,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

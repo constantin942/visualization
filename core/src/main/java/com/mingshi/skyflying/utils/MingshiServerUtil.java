@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
+import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,108 @@ public class MingshiServerUtil {
   @Resource
   private UserTokenDao userTokenDao;
 
+  /**
+   * <B>方法名称：getSqlType</B>
+   * <B>概要说明：获取SQL语句的类型</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年05月28日 12:05:33
+   * @Param [msSql]
+   **/
+  public String getSqlType(String msSql) {
+    if (msSql.startsWith(Const.SQL_TYPE_SELECT) || msSql.startsWith(Const.SQL_TYPE_SELECT.toLowerCase())) {
+      return Const.SQL_TYPE_SELECT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_INSERT) || msSql.startsWith(Const.SQL_TYPE_INSERT.toLowerCase())) {
+      return Const.SQL_TYPE_INSERT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_UPDATE) || msSql.startsWith(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+      return Const.SQL_TYPE_UPDATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DELETE) || msSql.startsWith(Const.SQL_TYPE_DELETE.toLowerCase())) {
+      return Const.SQL_TYPE_DELETE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGIN) || msSql.startsWith(Const.SQL_TYPE_LOGIN.toLowerCase())) {
+      return Const.SQL_TYPE_LOGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGOUT) || msSql.startsWith(Const.SQL_TYPE_LOGOUT.toLowerCase())) {
+      return Const.SQL_TYPE_LOGOUT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_MERGE) || msSql.startsWith(Const.SQL_TYPE_MERGE.toLowerCase())) {
+      return Const.SQL_TYPE_MERGE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ALTER) || msSql.startsWith(Const.SQL_TYPE_ALTER.toLowerCase())) {
+      return Const.SQL_TYPE_ALTER.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATEINDEX) || msSql.startsWith(Const.SQL_TYPE_CREATEINDEX.toLowerCase())) {
+      return Const.SQL_TYPE_CREATEINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROPINDEX) || msSql.startsWith(Const.SQL_TYPE_DROPINDEX.toLowerCase())) {
+      return Const.SQL_TYPE_DROPINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATE) || msSql.startsWith(Const.SQL_TYPE_CREATE.toLowerCase())) {
+      return Const.SQL_TYPE_CREATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROP) || msSql.startsWith(Const.SQL_TYPE_DROP.toLowerCase())) {
+      return Const.SQL_TYPE_DROP.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SET) || msSql.startsWith(Const.SQL_TYPE_SET.toLowerCase())) {
+      return Const.SQL_TYPE_SET.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESC) || msSql.startsWith(Const.SQL_TYPE_DESC.toLowerCase())) {
+      return Const.SQL_TYPE_DESC.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_REPLACE) || msSql.startsWith(Const.SQL_TYPE_REPLACE.toLowerCase())) {
+      return Const.SQL_TYPE_REPLACE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CALL) || msSql.startsWith(Const.SQL_TYPE_CALL.toLowerCase())) {
+      return Const.SQL_TYPE_CALL.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_BEGIN) || msSql.startsWith(Const.SQL_TYPE_BEGIN.toLowerCase())) {
+      return Const.SQL_TYPE_BEGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESCRIBE) || msSql.startsWith(Const.SQL_TYPE_DESCRIBE.toLowerCase())) {
+      return Const.SQL_TYPE_DESCRIBE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ROLLBACK) || msSql.startsWith(Const.SQL_TYPE_ROLLBACK.toLowerCase())) {
+      return Const.SQL_TYPE_ROLLBACK.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_FLUSH) || msSql.startsWith(Const.SQL_TYPE_FLUSH.toLowerCase())) {
+      return Const.SQL_TYPE_FLUSH.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_USE) || msSql.startsWith(Const.SQL_TYPE_USE.toLowerCase())) {
+      return Const.SQL_TYPE_USE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SHOW) || msSql.startsWith(Const.SQL_TYPE_SHOW.toLowerCase())) {
+      return Const.SQL_TYPE_SHOW.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_START) || msSql.startsWith(Const.SQL_TYPE_START.toLowerCase())) {
+      return Const.SQL_TYPE_START.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_COMMIT) || msSql.startsWith(Const.SQL_TYPE_COMMIT.toLowerCase())) {
+      return Const.SQL_TYPE_COMMIT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase())) {
+      return Const.SQL_TYPE_RENAME.toLowerCase();
+    }
+    log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
+    return null;
+  }
+
+  /**
+   * <B>方法名称：getTableName</B>
+   * <B>概要说明：根据SQL类型和SQL语句，获取表名</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年06月06日 14:06:39
+   * @Param [sqlType, msSql]
+   **/
+  public String getTableName(String sqlType, String msSql) {
+    String tableName = null;
+    if (StringUtil.isBlank(sqlType)) {
+      return tableName;
+    }
+    List<String> tableNameList = null;
+    if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
+      tableNameList = SqlParserUtils.selectTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
+      tableNameList = SqlParserUtils.insertTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+      tableNameList = SqlParserUtils.updateTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
+      tableNameList = SqlParserUtils.deleteTable(msSql);
+    } else {
+      log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+    }
+    if (0 < tableNameList.size()) {
+      for (String table : tableNameList) {
+        if (StringUtil.isBlank(tableName)) {
+          tableName = table;
+        } else {
+          tableName = tableName + "," + table;
+        }
+      }
+    }
+    return tableName;
+  }
 
   /**
    * <B>方法名称：updateUserNameByGlobalTraceId</B>

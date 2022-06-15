@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -9,7 +8,6 @@ import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.init.LoadUserPortraitFromDb;
 import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
 import com.mingshi.skyflying.reactor.queue.BatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -80,8 +78,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 判断是否是异常信息；2022-06-07 18:00:13
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
 
-      AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-      AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
+      // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+      // AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
@@ -201,10 +199,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
     try {
       // sql类型；
-      String sqlType = getSqlType(value);
+      String sqlType = mingshiServerUtil.getSqlType(value);
       msSegmentDetailDo.setDbType(sqlType);
       // 获取表名；2022-06-06 14:11:21
-      String tableName = getTableName(sqlType, value);
+      String tableName = mingshiServerUtil.getTableName(sqlType, value);
       msSegmentDetailDo.setMsTableName(tableName);
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
@@ -548,11 +546,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 发送请求的客户端IP；
       // msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
       // sql类型；
-      String sqlType = getSqlType(msSql);
+      String sqlType = mingshiServerUtil.getSqlType(msSql);
       msAuditLogDo.setSqlType(sqlType);
 
       // 获取表名；2022-05-31 17:01:39
-      String tableName = getTableName(sqlType, msSql);
+      String tableName = mingshiServerUtil.getTableName(sqlType, msSql);
       msAuditLogDo.setMsTableName(tableName);
 
       // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
@@ -567,109 +565,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("#SegmentConsumeServiceImpl.getMsAuditLogDo()# 组装MsAuditLogDo实例时，出现了异常。", JsonUtil.obj2String(msAuditLogDo));
     }
-  }
-
-  /**
-   * <B>方法名称：getTableName</B>
-   * <B>概要说明：根据SQL类型和SQL语句，获取表名</B>
-   *
-   * @return java.lang.String
-   * @Author zm
-   * @Date 2022年06月06日 14:06:39
-   * @Param [sqlType, msSql]
-   **/
-  private String getTableName(String sqlType, String msSql) {
-    String tableName = null;
-    if (StringUtil.isBlank(sqlType)) {
-      return tableName;
-    }
-    List<String> tableNameList = null;
-    if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
-      tableNameList = SqlParserUtils.selectTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
-      tableNameList = SqlParserUtils.insertTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
-      tableNameList = SqlParserUtils.updateTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
-      tableNameList = SqlParserUtils.deleteTable(msSql);
-    } else {
-      log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
-    }
-    if (0 < tableNameList.size()) {
-      for (String table : tableNameList) {
-        if (StringUtil.isBlank(tableName)) {
-          tableName = table;
-        } else {
-          tableName = tableName + "," + table;
-        }
-      }
-    }
-    return tableName;
-  }
-
-  /**
-   * <B>方法名称：getSqlType</B>
-   * <B>概要说明：获取SQL语句的类型</B>
-   *
-   * @return java.lang.String
-   * @Author zm
-   * @Date 2022年05月28日 12:05:33
-   * @Param [msSql]
-   **/
-  private String getSqlType(String msSql) {
-    if (msSql.startsWith(Const.SQL_TYPE_SELECT) || msSql.startsWith(Const.SQL_TYPE_SELECT.toLowerCase())) {
-      return Const.SQL_TYPE_SELECT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_INSERT) || msSql.startsWith(Const.SQL_TYPE_INSERT.toLowerCase())) {
-      return Const.SQL_TYPE_INSERT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_UPDATE) || msSql.startsWith(Const.SQL_TYPE_UPDATE.toLowerCase())) {
-      return Const.SQL_TYPE_UPDATE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DELETE) || msSql.startsWith(Const.SQL_TYPE_DELETE.toLowerCase())) {
-      return Const.SQL_TYPE_DELETE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_LOGIN) || msSql.startsWith(Const.SQL_TYPE_LOGIN.toLowerCase())) {
-      return Const.SQL_TYPE_LOGIN.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_LOGOUT) || msSql.startsWith(Const.SQL_TYPE_LOGOUT.toLowerCase())) {
-      return Const.SQL_TYPE_LOGOUT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_MERGE) || msSql.startsWith(Const.SQL_TYPE_MERGE.toLowerCase())) {
-      return Const.SQL_TYPE_MERGE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_ALTER) || msSql.startsWith(Const.SQL_TYPE_ALTER.toLowerCase())) {
-      return Const.SQL_TYPE_ALTER.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CREATEINDEX) || msSql.startsWith(Const.SQL_TYPE_CREATEINDEX.toLowerCase())) {
-      return Const.SQL_TYPE_CREATEINDEX.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DROPINDEX) || msSql.startsWith(Const.SQL_TYPE_DROPINDEX.toLowerCase())) {
-      return Const.SQL_TYPE_DROPINDEX.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CREATE) || msSql.startsWith(Const.SQL_TYPE_CREATE.toLowerCase())) {
-      return Const.SQL_TYPE_CREATE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DROP) || msSql.startsWith(Const.SQL_TYPE_DROP.toLowerCase())) {
-      return Const.SQL_TYPE_DROP.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_SET) || msSql.startsWith(Const.SQL_TYPE_SET.toLowerCase())) {
-      return Const.SQL_TYPE_SET.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DESC) || msSql.startsWith(Const.SQL_TYPE_DESC.toLowerCase())) {
-      return Const.SQL_TYPE_DESC.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_REPLACE) || msSql.startsWith(Const.SQL_TYPE_REPLACE.toLowerCase())) {
-      return Const.SQL_TYPE_REPLACE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CALL) || msSql.startsWith(Const.SQL_TYPE_CALL.toLowerCase())) {
-      return Const.SQL_TYPE_CALL.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_BEGIN) || msSql.startsWith(Const.SQL_TYPE_BEGIN.toLowerCase())) {
-      return Const.SQL_TYPE_BEGIN.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DESCRIBE) || msSql.startsWith(Const.SQL_TYPE_DESCRIBE.toLowerCase())) {
-      return Const.SQL_TYPE_DESCRIBE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_ROLLBACK) || msSql.startsWith(Const.SQL_TYPE_ROLLBACK.toLowerCase())) {
-      return Const.SQL_TYPE_ROLLBACK.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_FLUSH) || msSql.startsWith(Const.SQL_TYPE_FLUSH.toLowerCase())) {
-      return Const.SQL_TYPE_FLUSH.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_USE) || msSql.startsWith(Const.SQL_TYPE_USE.toLowerCase())) {
-      return Const.SQL_TYPE_USE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_SHOW) || msSql.startsWith(Const.SQL_TYPE_SHOW.toLowerCase())) {
-      return Const.SQL_TYPE_SHOW.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_START) || msSql.startsWith(Const.SQL_TYPE_START.toLowerCase())) {
-      return Const.SQL_TYPE_START.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_COMMIT) || msSql.startsWith(Const.SQL_TYPE_COMMIT.toLowerCase())) {
-      return Const.SQL_TYPE_COMMIT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase())) {
-      return Const.SQL_TYPE_RENAME.toLowerCase();
-    }
-    log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
-    return null;
   }
 
   /**
@@ -738,7 +633,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       userName = globalTraceIdAndUserNameMap.get(globalTraceId);
       if (StringUtil.isNotBlank(userName)) {
         segment.setUserName(userName);
-      } else {
         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
       }
 
@@ -768,14 +662,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           segment.setUserName(userName);
           SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
           globalTraceIdAndUserNameMap.put(globalTraceId, userName);
-        } else {
           SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-          // try {
-          //   tokenAndUserNameMap.put(segmentToken, null);
-          //   globalTraceIdAndUserNameMap.put(globalTraceId, null);
-          // } catch (Exception e) {
-          //   e.printStackTrace();
-          // }
         }
       }
     } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {

@@ -331,7 +331,7 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  // @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 */1 * * * ?")
   public void scheduledGetDmsAuditLog() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。");
     Instant start = Instant.now();

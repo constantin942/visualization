@@ -36,6 +36,69 @@ public class SkyflyingController {
 
 
   /**
+   * <B>方法名称：getAllTableNameFromDMS</B>
+   * <B>概要说明：获取所有数据库表名</B>
+   * @Author zm
+   * @Date 2022年06月15日 17:06:51
+   * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllTableNameFromDMS", method = RequestMethod.GET)
+  public ServerResponse<String> getAllTableNameFromDMS() {
+    return auditLogService.getAllTableNameFromDMS();
+  }
+
+  /**
+   * <B>方法名称：getAllSqlTypeFromDMS</B>
+   * <B>概要说明：获取所有sql语句的操作类型</B>
+   * @Author zm
+   * @Date 2022年06月15日 17:06:51
+   * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllSqlTypeFromDMS", method = RequestMethod.GET)
+  public ServerResponse<String> getAllSqlTypeFromDMS() {
+    return auditLogService.getAllSqlTypeFromDMS();
+  }
+
+  /**
+   * <B>方法名称：getAllUserNameFromDMS</B>
+   * <B>概要说明：获取所有操作DMS的用户名</B>
+   * @Author zm
+   * @Date 2022年06月15日 17:06:51
+   * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllUserNameFromDMS", method = RequestMethod.GET)
+  public ServerResponse<String> getAllUserNameFromDMS() {
+    return auditLogService.getAllUserNameFromDMS();
+  }
+
+  /**
+   * <B>方法名称：getDmsAuditLogFromDb</B>
+   * <B>概要说明：从数据库中获取DMS的数据库审计日志</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月15日 15:06:08
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getDmsAuditLogFromDb", method = RequestMethod.GET)
+  public ServerResponse<String> getDmsAuditLogFromDb(String dbUserName, /* 访问数据库的用户名 */
+                                                     String sqlType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                                     String msTableName, /* 数据库表名 */
+                                                     String startTime, /* 开始时间 */
+                                                     String endTime, /* 结束时间 */
+                                                     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return auditLogService.getDmsAuditLogFromDb(dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize);
+  }
+
+  /**
    * <B>方法名称：getUserNameAnomalyDetectionInfo</B>
    * <B>概要说明：获取异常信息中的所有的用户名</B>
    *
@@ -63,8 +126,8 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getAnomalyDetectionInfo", method = RequestMethod.GET)
   public ServerResponse<String> getAnomalyDetectionInfo(String userName, /* 登录系统的名称 */
-                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return msAlarmInformationService.getAllAlarmInfo(userName, pageNo, pageSize);
   }
 
