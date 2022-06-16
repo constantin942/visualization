@@ -1,9 +1,11 @@
 package com.mingshi.skyflying.impl;
 
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.mingshi.skyflying.dao.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.dao.SegmentRelationDao;
+import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.SegmentRelationDo;
 import com.mingshi.skyflying.domain.UserTokenDo;
@@ -77,7 +79,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     Long count = msSegmentDetailDao.selectCountAll(map);
     Map<String, Object> context = new HashMap<>();
-    context.put("rows", JsonUtil.obj2String(traceInfo));
+    context.put("rows", traceInfo);
     context.put("total", count);
     log.info("执行完毕 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", JsonUtil.obj2String(context));
@@ -170,14 +172,14 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Param [hashMap]
    **/
   private String getEveryCallChainInfo(LinkedHashMap<String, LinkedHashMap<String, List<MsSegmentDetailDo>>> hashMap) {
-    HashSet<JSONObject> hashSet = new HashSet<>();
+    HashSet<ObjectNode> hashSet = new HashSet<>();
     try {
       Iterator<String> iterator1 = hashMap.keySet().iterator();
       while (iterator1.hasNext()) {
-        JSONObject everyGlobalCallInfoJson = new JSONObject();
+        ObjectNode everyGlobalCallInfoJson = JsonUtil.createJSONObject();
         hashSet.add(everyGlobalCallInfoJson);
-        JSONObject headerJson = new JSONObject();
-        JSONArray bodyJsonArray = new JSONArray();
+        ObjectNode headerJson = JsonUtil.createJSONObject();
+        ArrayNode bodyJsonArray = JsonUtil.createJSONArray();
         // JSONObject bodyJson = new JSONObject();
         String globalTraceId = iterator1.next();
         // 组装每一个调用链；2022-06-02 15:03:11
@@ -187,9 +189,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
           String url = iterator2.next();
           List<MsSegmentDetailDo> segmentDetailDoList = urlHhashMap.get(url);
           if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-            JSONObject jsonObject = new JSONObject();
-            LinkedList<JSONObject> everyBodylinkedList = new LinkedList<>();
-            jsonObject.put("segments", everyBodylinkedList);
+            ObjectNode jsonObject = JsonUtil.createJSONObject();
+            ArrayNode everyBodylinkedList = JsonUtil.createJSONArray();
             bodyJsonArray.add(jsonObject);
             everyGlobalCallInfoJson.put("body",bodyJsonArray);
             for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
@@ -201,7 +202,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 everyGlobalCallInfoJson.put("header", headerJson);
               }
               jsonObject.put("url", msSegmentDetailDo.getOperationName());
-              JSONObject detailJson = new JSONObject();
+              ObjectNode detailJson = JsonUtil.createJSONObject();
               detailJson.put("peer", msSegmentDetailDo.getPeer());
               detailJson.put("serviceInstanceName", msSegmentDetailDo.getServiceInstanceName());
               detailJson.put("serviceCode", msSegmentDetailDo.getServiceCode());
@@ -211,6 +212,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
               detailJson.put("dbStatement", msSegmentDetailDo.getDbStatement());
               everyBodylinkedList.add(detailJson);
             }
+            jsonObject.put("segments", everyBodylinkedList);
           }
         }
       }
@@ -218,7 +220,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       log.error("# SegmentDetailServiceImpl.getEveryCallChainInfo() # 组装每一条调用链信息时，出现了异常。", e);
     }
     if(0 < hashSet.size()){
-      return JsonUtil.obj2String(hashSet);
+      return hashSet.toString();
     }
     return null;
   }

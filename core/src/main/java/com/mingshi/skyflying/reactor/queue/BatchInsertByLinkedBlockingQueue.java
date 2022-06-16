@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.reactor.queue;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.reactor.thread.IoThread;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ public class BatchInsertByLinkedBlockingQueue {
 
   // 阻塞队列中，元素的个数；2021-06-09 16:30:20
   private final static Integer QUEUE_SIZE = 500;
-  private volatile static LinkedBlockingQueue<JSONObject> linkedBlockingQueue = null;
+  private volatile static LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = null;
   // 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
   private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(0);
 

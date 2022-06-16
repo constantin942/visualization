@@ -1,17 +1,16 @@
 package com.mingshi.skyflying.impl;
 
-
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.metadata.CellExtra;
 import com.alibaba.excel.read.listener.ReadListener;
-import com.alibaba.fastjson.JSONObject;
 import com.aliyun.dms_enterprise20181101.models.ListSQLExecAuditLogResponseBody;
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.IAcsClient;
 import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogRequest;
 import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogResponse;
 import com.aliyuncs.profile.DefaultProfile;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
@@ -127,9 +126,10 @@ public class AuditLogServiceImpl implements AuditLogService {
     String sk = null;
     try {
       config = msConfigDo.getConfig();
-      JSONObject jsonObject = JSONObject.parseObject(config);
-      ak = jsonObject.getString(Const.AK);
-      sk = jsonObject.getString(Const.SK);
+
+      ObjectNode jsonObject = JsonUtil.parse(config,ObjectNode.class);
+      ak = jsonObject.get(Const.AK).asText();
+      sk = jsonObject.get(Const.SK).asText();;
       if (StringUtil.isBlank(ak) || StringUtil.isBlank(sk)) {
         log.error("#AuditLogServiceImpl.manualFetchAuditlog()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
         return ServerResponse.createByErrorMessage("没有配置ak或者sk信息", "");

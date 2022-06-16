@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.impl;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -78,8 +79,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 判断是否是异常信息；2022-06-07 18:00:13
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
 
-      // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-      // AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
+      AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+      AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
@@ -128,7 +129,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         LinkedHashMap map = list.get(i);
         msSegmentDetailDo.setOperationName(String.valueOf(url));
 
-        Integer spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
+        Integer spanId = null;
+        if(null != map.get("spanId")){
+          spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
+        }
+
         String component = String.valueOf(map.get("component"));
         String serviceCode = String.valueOf(map.get("serviceCode"));
         String peer = String.valueOf(map.get("peer"));
@@ -220,6 +225,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private Boolean ignoreMethod(String operationName) {
     if (operationName.equals("Redisson/PING") ||
+      operationName.equals("Jedis/sentinelGetMasterAddrByName") ||
       operationName.equals("Lettuce/SENTINEL") ||
       operationName.equals("Mysql/JDBI/Connection/close") ||
       operationName.equals("GET:/devices/notification") ||
@@ -254,7 +260,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
-      JSONObject jsonObject = new JSONObject();
+      ObjectNode jsonObject = JsonUtil.createJSONObject();
       jsonObject.put(Const.SEGMENT, JsonUtil.obj2String(segmentDo));
       if (0 < auditLogFromSkywalkingAgentList.size()) {
         jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
@@ -262,7 +268,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
-      if (null != msAlarmInformationDoList) {
+      if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
         jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
       }
       linkedBlockingQueue.put(jsonObject);
@@ -303,7 +309,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           return;
         }
         String service = segmentObject.getService();
-        JSONObject jsonObject = new JSONObject();
+        ObjectNode jsonObject = JsonUtil.createJSONObject();
         jsonObject.put("parentSegmentId", parentSegmentId == null ? "##" : parentSegmentId);
         jsonObject.put("currentSegmentId", traceSegmentId);
         jsonObject.put("service", service);
@@ -317,7 +323,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             segmentRelationDo.setToken(token);
           }
           segmentRelationDo.setGlobalTraceId(globalTraceId);
-          linkedHashSet.add(jsonObject.toJSONString());
+          linkedHashSet.add(jsonObject.toString());
           segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
           int insertReslut = segmentRelationDao.insertSelective(segmentRelationDo);
           if (1 != insertReslut) {
@@ -347,7 +353,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             return;
           }
           linkedHashSet = JsonUtil.string2Obj(segmentIds, LinkedHashSet.class);
-          linkedHashSet.add(jsonObject.toJSONString());
+          linkedHashSet.add(jsonObject.toString());
           segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
           int updateResult = segmentRelationDao.updateByPrimaryKeySelective(segmentRelationDo);
           if (1 != updateResult) {
@@ -449,7 +455,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
     try {
-      JSONObject jsonObject = new JSONObject();
+      ObjectNode jsonObject = JsonUtil.createJSONObject();
       int spanId = span.getSpanId();
       if (0 == spanId) {
         getSpringMVCInfo(span, jsonObject, linkedList);
@@ -502,7 +508,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
           if (false == flag) {
             jsonObject.put("tags", JsonUtil.obj2String(tags));
-            linkedList.add(jsonObject.toJSONString());
+            linkedList.add(jsonObject.toString());
           }
         }
       }
@@ -576,13 +582,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月12日 16:05:24
    * @Param [span, jsonObject, linkedList]
    **/
-  private void getSpringMVCInfo(Span span, JSONObject jsonObject, List<String> linkedList) {
+  private void getSpringMVCInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
     List<KeyValue> tagsList = span.getTags();
     for (KeyValue keyValue : tagsList) {
       if (keyValue.getKey().equals("url")) {
         String url = keyValue.getValue();
         jsonObject.put("url", url);
-        linkedList.add(jsonObject.toJSONString());
+        linkedList.add(jsonObject.toString());
       }
     }
   }

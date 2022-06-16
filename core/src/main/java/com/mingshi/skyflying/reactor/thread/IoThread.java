@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.reactor.thread;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class IoThread extends Thread {
   // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
-  private LinkedBlockingQueue<JSONObject> linkedBlockingQueue;
+  private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
   private Integer flushToRocketMQInterval = 5;
   private LinkedList<SegmentDo> segmentList = null;
@@ -39,7 +40,7 @@ public class IoThread extends Thread {
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
 
-  public IoThread(LinkedBlockingQueue<JSONObject> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
+  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     segmentList = new LinkedList();
@@ -63,7 +64,7 @@ public class IoThread extends Thread {
     try {
       while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         try {
-          JSONObject jsonObject = linkedBlockingQueue.poll();
+          ObjectNode jsonObject = linkedBlockingQueue.poll();
           if (null == jsonObject) {
             TimeUnit.MILLISECONDS.sleep(10);
           } else {
@@ -104,12 +105,15 @@ public class IoThread extends Thread {
    * @Date 2022年06月02日 11:06:40
    * @Param [jsonObject]
    **/
-  private void getAbnormalFromJSONObject(JSONObject jsonObject) {
+  private void getAbnormalFromJSONObject(ObjectNode jsonObject) {
     try {
-      String listString = jsonObject.getString(Const.ABNORMAL);
-      if (StringUtil.isNotBlank(listString)) {
-        LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = JsonUtil.string2Obj(listString, LinkedList.class, MsAlarmInformationDo.class);
-        msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+      JsonNode jsonNode = jsonObject.get(Const.ABNORMAL);
+      if(null != jsonNode){
+        String listString = jsonNode.asText();
+        if (StringUtil.isNotBlank(listString)) {
+          LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = JsonUtil.string2Obj(listString, LinkedList.class, MsAlarmInformationDo.class);
+          msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+        }
       }
     } catch (Exception e) {
       log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
@@ -125,9 +129,17 @@ public class IoThread extends Thread {
    * @Date 2022年06月02日 11:06:40
    * @Param [jsonObject]
    **/
-  private void getSegmentDetailFromJSONObject(JSONObject jsonObject) {
+  private void getSegmentDetailFromJSONObject(ObjectNode jsonObject) {
     try {
-      String listString = jsonObject.getString(Const.SEGMENT_DETAIL_DO_LIST);
+      String listString = null;
+      try {
+        JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_DO_LIST);
+        if(null != jsonNode){
+          listString = jsonNode.asText();
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
         segmentDetailDoList.addAll(segmentDetailList);
@@ -146,9 +158,9 @@ public class IoThread extends Thread {
    * @Date 2022年06月01日 10:06:21
    * @Param [jsonObject]
    **/
-  private void getAuditLogFromJSONObject(JSONObject jsonObject) {
+  private void getAuditLogFromJSONObject(ObjectNode jsonObject) {
     try {
-      String listString = jsonObject.getString(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST);
+      String listString = jsonObject.get(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST).asText();
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = JsonUtil.string2Obj(listString, LinkedList.class, MsAuditLogDo.class);
         auditLogList.addAll(auditLogFromSkywalkingAgentList);
@@ -167,9 +179,9 @@ public class IoThread extends Thread {
    * @Date 2022年06月01日 10:06:21
    * @Param [jsonObject]
    **/
-  private void getSegmentFromJSONObject(JSONObject jsonObject) {
+  private void getSegmentFromJSONObject(ObjectNode jsonObject) {
     try {
-      String segmentStr = jsonObject.getString(Const.SEGMENT);
+      String segmentStr = jsonObject.get(Const.SEGMENT).asText();
       SegmentDo segmentDo = JsonUtil.string2Obj(segmentStr, SegmentDo.class);
       if (null == segmentDo) {
         TimeUnit.MILLISECONDS.sleep(10);

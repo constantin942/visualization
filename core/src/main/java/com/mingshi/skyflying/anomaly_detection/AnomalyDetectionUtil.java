@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <B>主类名称: AnomalyDetectionUtil</B>
@@ -133,11 +134,17 @@ public class AnomalyDetectionUtil {
 
           Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateCountMap.get(strToDateToStr);
           try {
-            count = dbTypeCountMap.get(dbType);
+            if(StringUtil.isNotBlank(dbType)){
+              count = dbTypeCountMap.get(dbType);
+            }
+            if(null == dbTypeCountMap){
+              dbTypeCountMap = new ConcurrentHashMap<>();
+              dateCountMap.put(strToDateToStr,dbTypeCountMap);
+            }
+            dbTypeCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
           } catch (Exception e) {
             e.printStackTrace();
           }
-          dbTypeCountMap.put(strToDateToStr, null == count ? 1 : (1 + count));
 
           // 设置变更标记；2022-06-08 10:53:05
           AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableIsChanged(true);

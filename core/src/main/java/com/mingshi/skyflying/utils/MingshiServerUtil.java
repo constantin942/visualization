@@ -127,7 +127,7 @@ public class MingshiServerUtil {
     } else {
       log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
     }
-    if (0 < tableNameList.size()) {
+    if (null != tableNameList && 0 < tableNameList.size()) {
       for (String table : tableNameList) {
         if (StringUtil.isBlank(tableName)) {
           tableName = table;
