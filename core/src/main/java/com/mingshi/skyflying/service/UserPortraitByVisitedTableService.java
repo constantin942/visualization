@@ -12,4 +12,9 @@ public interface UserPortraitByVisitedTableService extends ParentService<UserPor
   ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday();
 
   ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday();
+
+  ServerResponse<String> updateUserPortraitByVisitedTableEverydayRule(Integer ruleId, Integer isDelete);
+
+  ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(String userName, String visitedTable, Integer visitedCount, String visitedDate, String dbType);
+
 }

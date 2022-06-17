@@ -13,6 +13,8 @@ public interface UserPortraitByVisitedTimeMapper {
 
     List<UserPortraitByVisitedTimeDo> selectAll();
 
+    List<UserPortraitByVisitedTimeDo> selectAllEnable();
+
     List<UserPortraitByVisitedTimeDo> selectByUserName(Map<String, Object> queryMap);
 
     Integer selectByUserNameCount(Map<String, Object> queryMap);

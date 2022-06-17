@@ -1,5 +1,7 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 // TODO：与弘毅讨论下这个异常检测该怎么实现？
 // 2022-06-06 17:02:50
@@ -90,6 +93,158 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
     bySuccess.setData(JsonUtil.obj2String(context));
     return bySuccess;
   }
+
+  /**
+   * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
+   * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:55
+   * @Param []
+   **/
+  @Override
+  public ServerResponse<String> updateUserPortraitByVisitedTimeRule(Integer ruleId, Integer isDelete) {
+    log.info("开始执行 # UserPortraitByVisitedVisitedTimeServiceImpl.updateUserPortraitByVisitedTimeRule() # 更新用户在什么时间访问过的系统次数画像规则启用状态。 ");
+    if (!isDelete.equals(Const.IS_DELETE_ZERO) && !isDelete.equals(Const.IS_DELETE_ONE)) {
+      return ServerResponse.createByErrorMessage("参数非法：是否启用的参数isDelete应该是0或者1.", "");
+    }
+
+    // 先根据规则id在数据库中找到这条规则；2022-06-16 14:44:21
+    UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo = userPortraitByVisitedTimeMapper.selectByPrimaryKey(ruleId);
+    if (null == userPortraitByVisitedTimeDo) {
+      return ServerResponse.createByErrorMessage("参数非法：规则id在数据库中不存在.", "");
+    }
+
+    Integer isDelete1 = userPortraitByVisitedTimeDo.getIsDelete();
+    // 如果数据库中该条规则的状态已经是当前要更新的状态，那么就结束当前请求；2022-06-16 17:36:58
+    if(isDelete1.equals(isDelete)){
+      return ServerResponse.createBySuccess();
+    }
+    // 设置规则启用/禁用的状态；2022-06-16 15:20:09
+    userPortraitByVisitedTimeDo.setIsDelete(isDelete);
+
+    // TODO: 2022/6/16 这里如果要禁用或者启用一条规则，要同时把本地内存中存储的规则执行相同的操作。
+    // 比如，一条规则之前都是在运行状态，现在要禁用了，那么需要在内存里删除这条规则。
+    // 如果一条规则本来已经禁用了，现在要启用这条规则，那么需要将这条规则从数据库中加载到本地内存中。
+    // 更新本地内存；2022-06-16 14:49:29
+    ServerResponse<String> response = doUpdateUserPortraitByVisitedTimeRule(userPortraitByVisitedTimeDo, isDelete);
+    log.info("执行完毕 # UserPortraitByVisitedVisitedTimeServiceImpl.updateUserPortraitByVisitedTimeRule() # 更新用户访问过的表的画像规则启用状态。 ");
+    return response;
+  }
+
+  @Override
+  public ServerResponse<String> addUserPortraitByVisitedTtimeRule(String userName, Integer forenoonCount, Integer afternoonCount, Integer nightCount) {
+    if (StringUtil.isBlank(userName)) {
+      return ServerResponse.createByErrorMessage("参数 userName 不能为空。", "");
+    }
+    if (null == forenoonCount || 0 > forenoonCount) {
+      return ServerResponse.createByErrorMessage("参数 forenoonCount 不能为空或不能为负数。", "");
+    }
+    if (null == afternoonCount || 0 > afternoonCount) {
+      return ServerResponse.createByErrorMessage("参数 afternoonCount 不能为空或不能为负数。", "");
+    }
+    if (null == nightCount || 0 > nightCount) {
+      return ServerResponse.createByErrorMessage("参数 nightCount 不能为空或不能为负数。", "");
+    }
+    UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo = new UserPortraitByVisitedTimeDo();
+    userPortraitByVisitedTimeDo.setUserName(userName);
+    userPortraitByVisitedTimeDo.setForenoonCount(forenoonCount == 0 ? null : forenoonCount);
+    userPortraitByVisitedTimeDo.setAfternoonCount(afternoonCount == 0 ? null : afternoonCount);
+    userPortraitByVisitedTimeDo.setNightCount(nightCount == 0 ? null : nightCount);
+    int insertResult = userPortraitByVisitedTimeMapper.insertSelective(userPortraitByVisitedTimeDo);
+    if (1 != insertResult) {
+      log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.addUserPortraitByVisitedTtimeRule() # 增加用户在什么时间访问过多少次系统规则时，插入到表中失败。");
+      return ServerResponse.createByErrorMessage("数据库插入操作失败。", "");
+    }
+
+    // 将规则加入到本地内存中，这里的做法只适用于单实例部署，如果有定时任务定时将数据库中的规则加载到本地内存，也适用。2022-06-16 16:51:04
+    addUserPortraitByVisitedTimeRuleToLocalMemory(userPortraitByVisitedTimeDo);
+
+    return ServerResponse.createBySuccess();
+  }
+
+
+  private ServerResponse<String> doUpdateUserPortraitByVisitedTimeRule(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo, Integer isDelete) {
+    if (isDelete.equals(Const.IS_DELETE_ONE)) {
+      // 禁用这条规则；2022-06-16 14:55:51
+      return noEnableByUserPortraitByVisitedTime(userPortraitByVisitedTimeDo);
+    }
+    if (isDelete.equals(Const.IS_DELETE_ZERO)) {
+      // 启用这条规则；2022-06-16 14:55:51
+      return enableByUserPortraitByVisitedTime(userPortraitByVisitedTimeDo);
+    }
+
+    return null;
+  }
+
+  /**
+   * <B>方法名称：noEnableByUserPortraitByVisitedTime</B>
+   * <B>概要说明：将用户在什么时间访问多少次系统这个规则先在数据库中禁用，然后在本地内存中删除</B>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:20
+   * @Param [userPortraitByVisitedTimeDo]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  private ServerResponse<String> noEnableByUserPortraitByVisitedTime(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+    int updateResult = userPortraitByVisitedTimeMapper.updateByPrimaryKeySelective(userPortraitByVisitedTimeDo);
+    if (1 != updateResult) {
+      log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.noEnableByUserPortraitByVisitedTime() # 把禁用这条规则的状态更新到数据库中失败。");
+      return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
+    }
+
+    // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
+    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userVisitedDateCountMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
+    String userName = userPortraitByVisitedTimeDo.getUserName();
+    Map<String, Integer> visitedDateCountMap = userVisitedDateCountMap.get(userName);
+    if (null != visitedDateCountMap) {
+      userVisitedDateCountMap.remove(userName);
+    }
+    return ServerResponse.createBySuccess();
+  }
+
+  /**
+   * <B>方法名称：enableByUserPortraitByVisitedTime</B>
+   * <B>概要说明：将用户在什么时间访问多少次系统这个规则先在数据库中启用，然后添加到本地内存中</B>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:20
+   * @Param [userPortraitByVisitedTimeDo]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  private ServerResponse<String> enableByUserPortraitByVisitedTime(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+
+    addUserPortraitByVisitedTimeRuleToLocalMemory(userPortraitByVisitedTimeDo);
+
+    int updateResult = userPortraitByVisitedTimeMapper.updateByPrimaryKeySelective(userPortraitByVisitedTimeDo);
+    if (1 != updateResult) {
+      log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.enableByUserPortraitByVisitedTime() # 把启用这条规则的状态更新到数据库中失败。");
+      return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
+    }
+    return ServerResponse.createBySuccess();
+  }
+
+  private void addUserPortraitByVisitedTimeRuleToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userVisitedDateCountMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
+    String userName = userPortraitByVisitedTimeDo.getUserName();
+    Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
+    Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
+    Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
+    Map<String, Integer> visitedDateCountMap = userVisitedDateCountMap.get(userName);
+    if (null == visitedDateCountMap) {
+      visitedDateCountMap = new ConcurrentHashMap<>();
+      userVisitedDateCountMap.put(userName, visitedDateCountMap);
+    }
+    if(null != forenoonCount && 0 <= forenoonCount){
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn(),forenoonCount);
+    }
+    if(null != afternoonCount && 0 <= afternoonCount){
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn(),afternoonCount);
+    }
+    if(null != nightCount && 0 <= nightCount){
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn(),nightCount);
+    }
+  }
+
 
   @Override
   public ServerResponse<String> getAllUserNamePortraitByVisitedTime() {

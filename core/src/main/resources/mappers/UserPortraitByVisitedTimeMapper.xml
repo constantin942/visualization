@@ -49,6 +49,11 @@
     select
       user_name, rule_name, forenoon_count, night_count, afternoon_count
     from user_portrait_by_visited_time
+  </select>
+  <select id="selectAllEnable" resultMap="BaseResultMap">
+    select
+      user_name, rule_name, forenoon_count, night_count, afternoon_count
+    from user_portrait_by_visited_time
     where is_delete = 0
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">

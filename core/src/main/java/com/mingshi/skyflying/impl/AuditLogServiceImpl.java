@@ -127,9 +127,9 @@ public class AuditLogServiceImpl implements AuditLogService {
     try {
       config = msConfigDo.getConfig();
 
-      ObjectNode jsonObject = JsonUtil.parse(config,ObjectNode.class);
+      ObjectNode jsonObject = JsonUtil.parse(config, ObjectNode.class);
       ak = jsonObject.get(Const.AK).asText();
-      sk = jsonObject.get(Const.SK).asText();;
+      sk = jsonObject.get(Const.SK).asText();
       if (StringUtil.isBlank(ak) || StringUtil.isBlank(sk)) {
         log.error("#AuditLogServiceImpl.manualFetchAuditlog()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
         return ServerResponse.createByErrorMessage("没有配置ak或者sk信息", "");
@@ -362,7 +362,12 @@ public class AuditLogServiceImpl implements AuditLogService {
           // 当本次拉取的审计信息小于每页设置的大小时，则说明这个时间段内的数据已经被拉取完毕了，那么就退出循环。2022-05-26 16:29:47
           flag = false;
         }
-        batchProcessDMSAuditLog(sqlExecAuditLogList);
+        log.info("# AuditLogServiceImpl.autoFetchAuditlogByDMS() # 通过定时任务自动拉取DMS的审计日志，终止死循环条件是totalCount.intValue() == increment，" +
+          "当前totalCount.intValue() =【{}】，increment = 【{}】。", totalCount.intValue(), increment);
+
+        if (0 < sqlExecAuditLogList.size()) {
+          batchProcessDMSAuditLog(sqlExecAuditLogList);
+        }
 
         msScheduledTaskDo.setStartTime(startTime);
         msScheduledTaskDo.setEndTime(endTime);
@@ -375,9 +380,15 @@ public class AuditLogServiceImpl implements AuditLogService {
         log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志时，出现了异常。", e);
         byErrorMessage = ServerResponse.createByErrorMessage("拉取DMS审计日志时，出现了异常。" + e.getMessage(), "");
       }
-      int insertResult = msScheduledTaskDao.insertSelective(msScheduledTaskDo);
-      if (1 != insertResult) {
-        log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志，把拉取到的数据 = 【{}】存入到数据库失败。", JsonUtil.obj2String(msScheduledTaskDo));
+      if (StringUtil.isNotBlank(msScheduledTaskDo.getStartTime()) &&
+        StringUtil.isNotBlank(msScheduledTaskDo.getEndTime()) &&
+        null != msScheduledTaskDo.getPageNumber() &&
+        null != msScheduledTaskDo.getPageSize() &&
+        null != msScheduledTaskDo.getRecordCount() && 0 < msScheduledTaskDo.getRecordCount()) {
+        int insertResult = msScheduledTaskDao.insertSelective(msScheduledTaskDo);
+        if (1 != insertResult) {
+          log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志，把拉取到的数据 = 【{}】存入到数据库失败。", JsonUtil.obj2String(msScheduledTaskDo));
+        }
       }
     }
 

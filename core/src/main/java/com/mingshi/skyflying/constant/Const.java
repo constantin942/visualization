@@ -20,6 +20,9 @@ package com.mingshi.skyflying.constant;
 
 public class Const {
 
+  public static final Integer IS_DELETE_ZERO = 0;
+  public static final Integer IS_DELETE_ONE = 1;
+
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
   public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";

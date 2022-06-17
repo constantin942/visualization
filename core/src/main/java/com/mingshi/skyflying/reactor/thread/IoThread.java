@@ -62,7 +62,8 @@ public class IoThread extends Thread {
   @Override
   public void run() {
     try {
-      while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
+      while (true) {
+      // while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         try {
           ObjectNode jsonObject = linkedBlockingQueue.poll();
           if (null == jsonObject) {

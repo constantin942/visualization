@@ -10,4 +10,8 @@ public interface UserPortraitByVisitedTimeService extends ParentService<UserPort
 		ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, Integer pageNo, Integer pageSize);
 
     ServerResponse<String> getAllUserNamePortraitByVisitedTime();
+
+		ServerResponse<String> updateUserPortraitByVisitedTimeRule(Integer ruleId, Integer isDelete);
+
+    ServerResponse<String> addUserPortraitByVisitedTtimeRule(String userName, Integer forenoonCount, Integer afternoonCount, Integer nightCount);
 }

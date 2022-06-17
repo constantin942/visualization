@@ -27,7 +27,13 @@
     select
     <include refid="Base_Column_List" />
     from ms_scheduled_task
-    where status = #{status,jdbcType=VARCHAR} order by id desc limit 1
+    where status = #{status,jdbcType=VARCHAR} and
+          start_time is not null and
+          end_time is not null and
+          page_number is not null and
+          page_size is not null and
+          record_count is not null
+    order by id desc limit 1
   </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsScheduledTaskDo">
     insert into ms_scheduled_task

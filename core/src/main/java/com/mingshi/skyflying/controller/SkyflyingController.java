@@ -38,10 +38,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getAllTableNameFromDMS</B>
    * <B>概要说明：获取所有数据库表名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllTableNameFromDMS", method = RequestMethod.GET)
@@ -52,10 +53,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getAllSqlTypeFromDMS</B>
    * <B>概要说明：获取所有sql语句的操作类型</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllSqlTypeFromDMS", method = RequestMethod.GET)
@@ -66,10 +68,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getAllUserNameFromDMS</B>
    * <B>概要说明：获取所有操作DMS的用户名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllUserNameFromDMS", method = RequestMethod.GET)
@@ -164,7 +167,7 @@ public class SkyflyingController {
   }
 
   /**
-   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>方法名称：getAllVisitedTablePortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的表名</B>
    *
    * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
@@ -194,7 +197,22 @@ public class SkyflyingController {
   }
 
   /**
-   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+   * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
+   * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:55
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateUserPortraitByVisitedTimeRule", method = RequestMethod.GET)
+  public ServerResponse<String> updateUserPortraitByVisitedTimeRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
+    return userPortraitByTimeService.updateUserPortraitByVisitedTimeRule(ruleId, isDelete);
+  }
+
+  /**
+   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的用户名</B>
    *
    * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
@@ -206,6 +224,58 @@ public class SkyflyingController {
   @RequestMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday", method = RequestMethod.GET)
   public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
     return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
+  }
+
+  /**
+   * <B>方法名称：updateUserPortraitByVisitedTableEveryday</B>
+   * <B>概要说明：更新用户访问过的表的画像规则：isDelete=0，启用这个规则；isDelete=1，禁用这个规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 14:06:35
+   * @Param [ruleId, isDelete]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateUserPortraitByVisitedTableEverydayRule", method = RequestMethod.GET)
+  public ServerResponse<String> updateUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
+    return userPortraitByTableService.updateUserPortraitByVisitedTableEverydayRule(ruleId, isDelete);
+  }
+
+  /**
+   * <B>方法名称：addUserPortraitByVisitedTtimeRule</B>
+   * <B>概要说明：增加用户在什么时间访问过系统多少次的画像规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:41:35
+   * @Param [ruleId, isDelete]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/addUserPortraitByVisitedTtimeRule", method = RequestMethod.GET)
+  public ServerResponse<String> addUserPortraitByVisitedTtimeRule(@RequestParam(value = "userName") String userName,
+                                                                          @RequestParam(value = "forenoonCount") Integer forenoonCount,
+                                                                          @RequestParam(value = "afternoonCount") Integer afternoonCount,
+                                                                          @RequestParam(value = "nightCount") Integer nightCount) {
+    return userPortraitByTimeService.addUserPortraitByVisitedTtimeRule(userName, forenoonCount, afternoonCount, nightCount);
+  }
+
+  /**
+   * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
+   * <B>概要说明：增加用户访问过的表的画像规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 16:41:35
+   * @Param [ruleId, isDelete]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/addUserPortraitByVisitedTableEverydayRule", method = RequestMethod.GET)
+  public ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "userName") String userName,
+                                                                          @RequestParam(value = "visitedTable") String visitedTable,
+                                                                          @RequestParam(value = "visitedCount") Integer visitedCount,
+                                                                          @RequestParam(value = "visitedDate") String visitedDate,
+                                                                          @RequestParam(value = "dbType") String dbType) {
+    return userPortraitByTableService.addUserPortraitByVisitedTableEverydayRule(userName, visitedTable, visitedCount, visitedDate, dbType);
   }
 
   /**

@@ -33,6 +33,16 @@
            db_type
     from user_portrait_by_visited_table_everyday
   </select>
+  <select id="selectAllEnable" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select user_name,
+           rule_name,
+           visited_table,
+           visited_count,
+           visited_date,
+           db_type
+    from user_portrait_by_visited_table_everyday
+    where is_delete = 0
+  </select>
   <select id="selectAllUserName" resultType="java.lang.String">
     select user_name
     from user_portrait_by_visited_table_everyday group by user_name
@@ -63,7 +73,7 @@
   <select id="selectByUserNameAndVisitedTableAndVisitedDate" parameterType="java.util.Map"
           resultMap="BaseResultMap">
     select
-    id, user_name, rule_name, visited_table, visited_count, visited_date, db_type
+    id, is_delete, user_name, rule_name, visited_table, visited_count, visited_date, db_type
     from user_portrait_by_visited_table_everyday
     <where>
       <if test="userName != null and  userName != null   ">

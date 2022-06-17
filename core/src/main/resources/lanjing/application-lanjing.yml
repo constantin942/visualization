@@ -132,4 +132,4 @@ reactor:
   processor:
     enable: true
     thread:
-      count: 6
+      count: 4

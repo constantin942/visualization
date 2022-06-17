@@ -14,8 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  **/
 public class AnomylyDetectionSingletonByVisitedTableEveryday {
   // 存放用户基于访问过的表的告警规则；2022-06-08 17:08:05
-  private static volatile Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap = null;
-  // private static volatile Map<String/* 用户名 */, Map<String/* 访问过的表 */, Integer/* 访问次数 */>> userPortraitByVisitedTableEverydayMap = null;
+  private static volatile Map<String/* 用户名 */,
+    Map<String/* 访问过的表 */,
+      Map<String/* 访问日期，以天为单位 */,
+        Map<String,/* 数据库操作类型：insert、delete、update、select */
+          Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap = null;
 
   private static AtomicBoolean userPortraitByVisitedTableEverydayIsChanged = new AtomicBoolean(false);
 
@@ -27,7 +30,11 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
     userPortraitByVisitedTableEverydayIsChanged.set(flag);
   }
 
-  public static Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> getUserPortraitByVisitedTableMap() {
+  public static Map<String/* 用户名 */,
+    Map<String/* 访问过的表 */,
+      Map<String/* 访问日期，以天为单位 */,
+        Map<String,/* 数据库操作类型：insert、delete、update、select */
+          Integer/* 访问次数 */>>>> getUserPortraitByVisitedTableMap() {
     if (null == userPortraitByVisitedTableEverydayMap) {
       synchronized (AnomylyDetectionSingletonByVisitedTableEveryday.class) {
         if (null == userPortraitByVisitedTableEverydayMap) {

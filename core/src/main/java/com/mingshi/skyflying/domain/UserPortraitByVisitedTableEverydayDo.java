@@ -7,7 +7,7 @@ import java.util.Date;
 public class UserPortraitByVisitedTableEverydayDo {
     private Integer id;
 
-    private Byte isDelete;
+    private Integer isDelete;
 
     private Date gmtCreate;
 

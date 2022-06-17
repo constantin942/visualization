@@ -72,7 +72,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
     Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */,Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap =
       AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
     Instant now = Instant.now();
-    List<UserPortraitByVisitedTableEverydayDo> list = userPortraitByVisitedTableEverydayMapper.selectAll();
+    List<UserPortraitByVisitedTableEverydayDo> list = userPortraitByVisitedTableEverydayMapper.selectAllEnable();
     if (null == list || 0 == list.size()) {
       if (0 == atomicInteger.incrementAndGet() % 500) {
         log.error("# LoadUserPortraitFromDb.initUserPortraitByVisitedTableMap() # 从数据库中没有查询到用户的访问过的表的画像信息。");
@@ -123,7 +123,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
   public Boolean initUserPortraitByVisitedTimeMap() {
     Map<String, Map<String, Integer>> userPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
     Instant now = Instant.now();
-    List<UserPortraitByVisitedTimeDo> list = userPortraitByVisitedTimeMapper.selectAll();
+    List<UserPortraitByVisitedTimeDo> list = userPortraitByVisitedTimeMapper.selectAllEnable();
     if (null == list || 0 == list.size()) {
       if (0 == atomicInteger.incrementAndGet() % 500) {
         log.error("# LoadUserPortraitFromDb.initUserPortraitByVisitedTimeMap() # 从数据库中没有查询到用户的基于访问时间的画像信息。");
