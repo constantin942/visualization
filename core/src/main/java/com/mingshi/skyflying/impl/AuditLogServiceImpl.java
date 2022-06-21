@@ -577,7 +577,6 @@ public class AuditLogServiceImpl implements AuditLogService {
                                                      String endTime, /* 结束时间 */
                                                      Integer pageNo,
                                                      Integer pageSize) {
-    Instant now = Instant.now();
     Map<String, Object> queryMap = new HashMap<>();
     if (StringUtil.isNotBlank(sqlType)) {
       queryMap.put("sqlType", sqlType);

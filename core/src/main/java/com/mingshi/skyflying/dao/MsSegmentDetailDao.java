@@ -35,5 +35,7 @@ public interface MsSegmentDetailDao {
 
     List<String> selectAllMsTableName();
 
+    List<String> selectAllInstanceName();
+
     List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
 }

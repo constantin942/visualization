@@ -49,6 +49,11 @@
     SELECT DISTINCT ms_table_name
     FROM `ms_segment_detail`
   </select>
+  <select id="selectAllInstanceName" resultType="java.lang.String">
+    SELECT DISTINCT db_instance
+    FROM `ms_segment_detail`
+    where db_instance is not null
+  </select>
   <select id="selectByTokenUserNameGlobalTraceIdIsNotNull" parameterType="java.lang.String" resultMap="BaseResultMap">
     select user_name, token, global_trace_id
     from ms_segment_detail
