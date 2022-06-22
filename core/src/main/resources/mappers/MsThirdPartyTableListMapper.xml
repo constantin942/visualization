@@ -9,16 +9,23 @@
     <result column="third_party_name" jdbcType="VARCHAR" property="thirdPartyName"/>
     <result column="third_party_db_name" jdbcType="VARCHAR" property="thirdPartyDbName"/>
     <result column="third_party_table_name" jdbcType="VARCHAR" property="thirdPartyTableName"/>
+    <result column="table_desc" jdbcType="VARCHAR" property="tableDesc"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , is_delete, gmt_create, gmt_modified, third_party_name, third_party_db_name, third_party_table_name
+    , is_delete, gmt_create, gmt_modified, third_party_name, third_party_db_name, third_party_table_name, table_desc
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
     from ms_third_party_table_list
     where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByTableName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select id
+         , is_delete, third_party_name, third_party_db_name, third_party_table_name, table_desc
+    from ms_third_party_table_list
+    where is_delete != 1 and third_party_table_name = #{tableName}
   </select>
   <select id="selectByDbNameAndTableName" parameterType="java.util.Map" resultType="java.util.Map">
     select id as thirdPartyNameId
@@ -71,6 +78,9 @@
       <if test="thirdPartyTableName != null">
         third_party_table_name,
       </if>
+      <if test="tableDesc != null">
+        table_desc,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -94,19 +104,24 @@
       <if test="thirdPartyTableName != null">
         #{thirdPartyTableName,jdbcType=VARCHAR},
       </if>
+      <if test="tableDesc != null">
+        #{tableDesc,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <insert id="insertBatch" parameterType="java.util.List">
     insert into ms_third_party_table_list
-    ( third_party_name, third_party_db_name, third_party_table_name)
+    ( third_party_name, third_party_db_name, third_party_table_name, table_desc)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
       #{item.thirdPartyName,jdbcType=VARCHAR},
       #{item.thirdPartyDbName,jdbcType=VARCHAR},
-      #{item.thirdPartyTableName,jdbcType=VARCHAR}
+      #{item.thirdPartyTableName,jdbcType=VARCHAR},
+      #{item.tableDesc,jdbcType=VARCHAR}
       )
     </foreach>
+    ON DUPLICATE KEY UPDATE third_party_db_name=values(third_party_db_name)
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsThirdPartyTableListDo">
     update ms_third_party_table_list
@@ -128,6 +143,9 @@
       </if>
       <if test="thirdPartyTableName != null">
         third_party_table_name = #{thirdPartyTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="tableDesc != null">
+        table_desc = #{tableDesc,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

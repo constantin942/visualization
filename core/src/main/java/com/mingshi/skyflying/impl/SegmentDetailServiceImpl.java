@@ -4,9 +4,11 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
 import com.mingshi.skyflying.domain.SegmentRelationDo;
 import com.mingshi.skyflying.domain.UserTokenDo;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -38,9 +40,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private SegmentRelationDao segmentRelationDao;
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
+  @Resource
+  private MsThirdPartyTableListMapper msThirdPartyTableListMapper;
 
   @Override
-  public ServerResponse<String> getAllSegmentsBySegmentRelation2(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
     log.info("开始执行 # SegmentDetailServiceImpl.getAllSegmentsBySegmentRelation2() # 获取用户的调用链信息。");
     Map<String, Object> map = new HashMap<>();
     if (StringUtil.isNotBlank(applicationUserName)) {
@@ -75,7 +79,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     // 组装每一条调用链信息；2022-06-02 17:41:16
     String traceInfo = getEveryCallChainInfo(hashMap);
-
 
     Long count = msSegmentDetailDao.selectCountAll(map);
     Map<String, Object> context = new HashMap<>();
@@ -192,7 +195,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             ObjectNode jsonObject = JsonUtil.createJSONObject();
             ArrayNode everyBodylinkedList = JsonUtil.createJSONArray();
             bodyJsonArray.add(jsonObject);
-            everyGlobalCallInfoJson.put("body",bodyJsonArray);
+            everyGlobalCallInfoJson.put("body", bodyJsonArray);
             for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
               String parentSegmentId = msSegmentDetailDo.getParentSegmentId();
               if (StringUtil.isBlank(parentSegmentId) && 0 == headerJson.size()) {
@@ -206,10 +209,20 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
               detailJson.put("peer", msSegmentDetailDo.getPeer());
               detailJson.put("serviceInstanceName", msSegmentDetailDo.getServiceInstanceName());
               detailJson.put("serviceCode", msSegmentDetailDo.getServiceCode());
-              detailJson.put("dbType", msSegmentDetailDo.getDbType());
+              String dbType = msSegmentDetailDo.getDbType();
+              detailJson.put("dbType", dbType);
               detailJson.put("dbInstance", msSegmentDetailDo.getDbInstance());
               detailJson.put("dbUserName", msSegmentDetailDo.getDbUserName());
               detailJson.put("dbStatement", msSegmentDetailDo.getDbStatement());
+              String tableName = msSegmentDetailDo.getMsTableName();
+              // 根据表名，去数据库中查找这个表里是存储的什么数据；2022-06-22 09:32:12
+              // 正常来说，应该在本地缓存里存储表的信息，每次根据表名获取表的信息时，从本地内存中直接获取即可；2022-06-22 09:36:34
+              if (StringUtil.isNotBlank(tableName)) {
+                MsThirdPartyTableListDo msThirdPartyTableListDo = msThirdPartyTableListMapper.selectByTableName(tableName);
+                if (null != msThirdPartyTableListDo && StringUtil.isNotBlank(msThirdPartyTableListDo.getTableDesc())) {
+                  detailJson.put("function", msThirdPartyTableListDo.getTableDesc());
+                }
+              }
               everyBodylinkedList.add(detailJson);
             }
             jsonObject.put("segments", everyBodylinkedList);
@@ -219,7 +232,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     } catch (Exception e) {
       log.error("# SegmentDetailServiceImpl.getEveryCallChainInfo() # 组装每一条调用链信息时，出现了异常。", e);
     }
-    if(0 < hashSet.size()){
+    if (0 < hashSet.size()) {
       return hashSet.toString();
     }
     return null;

@@ -28,7 +28,7 @@
   </select>
   <select id="selectByUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
-      user_name, rule_name, forenoon_count, night_count, afternoon_count
+    id, is_delete, user_name, rule_name, forenoon_count, night_count, afternoon_count
     from user_portrait_by_visited_time
     <where>
       <if test="userName != null and  userName != null   ">

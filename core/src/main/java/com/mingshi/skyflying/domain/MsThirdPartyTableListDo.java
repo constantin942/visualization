@@ -19,4 +19,6 @@ public class MsThirdPartyTableListDo {
     private String thirdPartyDbName;
 
     private String thirdPartyTableName;
+
+    private String tableDesc;
 }

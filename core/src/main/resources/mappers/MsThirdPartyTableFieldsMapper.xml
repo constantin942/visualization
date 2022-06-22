@@ -27,7 +27,7 @@
       COLUMN_NAME fColumn,
       DATA_TYPE fDatatype,
       case when COLUMN_COMMENT='' then COLUMN_NAME else COLUMN_COMMENT END fRemark
-    from (select  * from information_schema.`COLUMNS` t1 where TABLE_SCHEMA=database() and TABLE_NAME ='ms_config') t2 order by fNumber
+    from (select  * from information_schema.`COLUMNS` t1 where TABLE_SCHEMA=database() and TABLE_NAME =#{tableName}) t2 order by fNumber
   </select>
   <select id="selectByThirdPartyNameId" parameterType="java.util.Map" resultMap="BaseResultMap">
     select  id, third_party_name_id, field, feld_type, field_name, field_note

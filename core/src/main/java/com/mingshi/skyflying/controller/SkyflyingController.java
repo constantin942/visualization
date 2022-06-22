@@ -483,7 +483,7 @@ public class SkyflyingController {
   }
 
   /**
-   * <B>方法名称：getAllSegments2</B>
+   * <B>方法名称：getAllSegments</B>
    * <B>概要说明：获取所有的访问链条信息，版本2的实现</B>
    *
    * @return ServerResponse<SysOperator>
@@ -501,7 +501,7 @@ public class SkyflyingController {
                                                String endTime, /* 结束时间 */
                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getAllSegmentsBySegmentRelation2(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+    return segmentDetailService.getAllSegmentsBySegmentRelation(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
   }
 
   /**
