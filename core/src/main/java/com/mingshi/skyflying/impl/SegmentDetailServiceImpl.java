@@ -75,7 +75,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     map.put("pageSize", pageSize);
 
     // 从数据库中获取一次调用链中所涉及到的segment信息；2022-06-02 17:41:11
-    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, List<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map);
+    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map);
 
     // 组装每一条调用链信息；2022-06-02 17:41:16
     String traceInfo = getEveryCallChainInfo(hashMap);
@@ -131,21 +131,22 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Date 2022年06月02日 17:06:01
    * @Param [map]
    **/
-  private LinkedHashMap<String, LinkedHashMap<String, List<MsSegmentDetailDo>>> getSegmentDetailsFromDb(Map<String, Object> map) {
-    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, List<MsSegmentDetailDo>>> linkedHashMap = new LinkedHashMap<>();
+  private LinkedHashMap<String, LinkedHashMap<String, LinkedList<MsSegmentDetailDo>>> getSegmentDetailsFromDb(Map<String, Object> map) {
+
+    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> linkedHashMap = new LinkedHashMap<>();
     try {
       List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAll(map);
       log.info("# SegmentDetailServiceImpl.getSegmentDetailsFromDb() # 根据查询条件 = 【{}】，在表ms_segment_detail中获取到了【{}】条详细数据。", JsonUtil.obj2String(map), msSegmentDetailDoList.size());
       if (null != msSegmentDetailDoList && 0 < msSegmentDetailDoList.size()) {
         for (MsSegmentDetailDo msSegmentDetailDo : msSegmentDetailDoList) {
           String globalTraceId = msSegmentDetailDo.getGlobalTraceId();
-          LinkedHashMap<String, List<MsSegmentDetailDo>> globalTraceIdHashMap = linkedHashMap.get(globalTraceId);
+          LinkedHashMap<String, LinkedList<MsSegmentDetailDo>> globalTraceIdHashMap = linkedHashMap.get(globalTraceId);
           if (null == globalTraceIdHashMap) {
             globalTraceIdHashMap = new LinkedHashMap<>();
             linkedHashMap.put(globalTraceId, globalTraceIdHashMap);
           }
           String operationName = msSegmentDetailDo.getOperationName();
-          List<MsSegmentDetailDo> msSegmentDetailDosList = globalTraceIdHashMap.get(operationName);
+          LinkedList<MsSegmentDetailDo> msSegmentDetailDosList = globalTraceIdHashMap.get(operationName);
           if (null == msSegmentDetailDosList) {
             msSegmentDetailDosList = new LinkedList<>();
             globalTraceIdHashMap.put(operationName, msSegmentDetailDosList);
@@ -153,7 +154,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
           String parentSegmentId = msSegmentDetailDo.getParentSegmentId();
           if (StringUtil.isBlank(parentSegmentId)) {
             // 把最顶级的segment放入list的第一个位置；2022-06-02 18:07:31
-            msSegmentDetailDosList.add(0, msSegmentDetailDo);
+            msSegmentDetailDosList.addFirst(msSegmentDetailDo);
           } else {
             msSegmentDetailDosList.add(msSegmentDetailDo);
           }
@@ -174,7 +175,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Date 2022年06月02日 17:06:31
    * @Param [hashMap]
    **/
-  private String getEveryCallChainInfo(LinkedHashMap<String, LinkedHashMap<String, List<MsSegmentDetailDo>>> hashMap) {
+  private String getEveryCallChainInfo(LinkedHashMap<String, LinkedHashMap<String, LinkedList<MsSegmentDetailDo>>> hashMap) {
     HashSet<ObjectNode> hashSet = new HashSet<>();
     try {
       Iterator<String> iterator1 = hashMap.keySet().iterator();
@@ -186,7 +187,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         // JSONObject bodyJson = new JSONObject();
         String globalTraceId = iterator1.next();
         // 组装每一个调用链；2022-06-02 15:03:11
-        HashMap<String, List<MsSegmentDetailDo>> urlHhashMap = hashMap.get(globalTraceId);
+        HashMap<String, LinkedList<MsSegmentDetailDo>> urlHhashMap = hashMap.get(globalTraceId);
         Iterator<String> iterator2 = urlHhashMap.keySet().iterator();
         while (iterator2.hasNext()) {
           String url = iterator2.next();
