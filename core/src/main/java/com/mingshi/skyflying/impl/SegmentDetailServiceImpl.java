@@ -48,7 +48,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     log.info("开始执行 # SegmentDetailServiceImpl.getAllSegmentsBySegmentRelation2() # 获取用户的调用链信息。");
     Map<String, Object> map = new HashMap<>();
     if (StringUtil.isNotBlank(applicationUserName)) {
-      map.put("applicationUserName", applicationUserName);
+      map.put("userName", applicationUserName);
     }
     if (StringUtil.isNotBlank(dbType)) {
       map.put("dbType", dbType);

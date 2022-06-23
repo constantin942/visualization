@@ -78,7 +78,7 @@
       <if test="startTime != null and  startTime != null   ">
         and start_time <![CDATA[ >= ]]> #{startTime}
       </if>
-      <if test="end_time != null and  endTime != null   ">
+      <if test="endTime != null and  endTime != null   ">
         and end_time <![CDATA[ <= ]]> #{endTime}
       </if>
       <if test="msTableName != null and  msTableName != null   ">
@@ -104,14 +104,14 @@
       <if test="startTime != null and  startTime != null   ">
         and start_time <![CDATA[ >= ]]> #{startTime}
       </if>
-      <if test="end_time != null and  endTime != null   ">
+      <if test="endTime != null and  endTime != null   ">
         and end_time <![CDATA[ <= ]]> #{endTime}
       </if>
       <if test="msTableName != null and  msTableName != null   ">
         and ms_table_name = #{msTableName}
       </if>
     </where>
-    group by global_trace_id order by global_trace_id asc
+    group by global_trace_id order by global_trace_id desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>
@@ -128,18 +128,19 @@
     <if test="startTime != null and  startTime != null   ">
       and start_time <![CDATA[ >= ]]> #{startTime}
     </if>
-    <if test="end_time != null and  endTime != null   ">
+    <if test="endTime != null and  endTime != null   ">
       and end_time <![CDATA[ <= ]]> #{endTime}
     </if>
     <if test="msTableName != null and  msTableName != null   ">
       and ms_table_name = #{msTableName}
     </if>
+    order by id desc;
 --     先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
 --     and (db_type != 'url')
 
 --     这行代码同时也输出对Redis的操作。
 --     and (db_type != 'url' or db_type is null)
-    order by id asc;
+--     order by id desc;
   </select>
   <select id="selectAllUserNameIsNotNullAndVisitedTimeIsZero" parameterType="java.lang.Integer"
           resultMap="BaseResultMap">
