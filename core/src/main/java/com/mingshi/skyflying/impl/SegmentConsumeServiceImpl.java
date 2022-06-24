@@ -2,6 +2,7 @@ package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -51,6 +52,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
+    doConsume(record,enableReactorModelFlag);
+    // 统计QPS；2022-06-24 10:34:24
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(),DateTimeUtil.dateToStrformat(new Date()));
+    return null;
+  }
+
+  private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
     SegmentObject segmentObject = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
@@ -60,7 +68,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String operationName = segment.getOperationName();
       Boolean flag = ignoreMethod(operationName);
       if (true == flag) {
-        return null;
+        return ;
       }
 
       // 设置segment_id、trace_id；2022-04-24 14:26:12
@@ -105,7 +113,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
-    return null;
   }
 
   private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment) {
@@ -273,7 +280,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
       linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {
-      e.printStackTrace();
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
     }
   }

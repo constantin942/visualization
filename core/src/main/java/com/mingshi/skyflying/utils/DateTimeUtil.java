@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.utils;
 
-import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -487,15 +486,15 @@ public class DateTimeUtil {
     int a = Integer.parseInt(str);
     if ((a >= 0 && a <= 6) || (a > 18 && a <= 24)) {
       // System.out.println("晚上");
-      return ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn();
+      return ConstantsCode.USER_PORTRAIT_NIGHT.getCode();
     }
     if (a > 6 && a <= 12) {
       // System.out.println("上午");
-      return ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn();
+      return ConstantsCode.USER_PORTRAIT_FORENOON.getCode();
     }
     if (a > 12 && a <= 18) {
       // System.out.println("下午");
-      return ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn();
+      return ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode();
     }
     // if (a >= 0 && a <= 6) {
     //   // System.out.println("凌晨");

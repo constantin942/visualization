@@ -7,16 +7,16 @@
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
+    <result column="rule_id" jdbcType="INTEGER" property="ruleId" />
     <result column="visited_table" jdbcType="VARCHAR" property="visitedTable" />
     <result column="visited_count" jdbcType="VARCHAR" property="visitedCount" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count
+    id, is_delete, gmt_create, gmt_modified, user_name, rule_id, visited_table, visited_count
   </sql>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
-      user_name, rule_name, visited_table, visited_count
+      user_name, rule_id, visited_table, visited_count
     from user_portrait_by_visited_table
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
@@ -27,12 +27,12 @@
   </select>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into user_portrait_by_visited_table
-    (user_name, rule_name, visited_table, visited_count)
+    (user_name, rule_id, visited_table, visited_count)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
       #{item.userName,jdbcType=VARCHAR},
-      #{item.ruleName,jdbcType=VARCHAR},
+      #{item.ruleId,jdbcType=INTEGER},
       #{item.visitedTable,jdbcType=VARCHAR},
       #{item.visitedCount,jdbcType=INTEGER}
       )
@@ -56,8 +56,8 @@
       <if test="userName != null">
         user_name,
       </if>
-      <if test="ruleName != null">
-        rule_name,
+      <if test="ruleId != null">
+        rule_id,
       </if>
       <if test="visitedTable != null">
         visited_table,
@@ -82,8 +82,8 @@
       <if test="userName != null">
         #{userName,jdbcType=VARCHAR},
       </if>
-      <if test="ruleName != null">
-        #{ruleName,jdbcType=VARCHAR},
+      <if test="ruleId != null">
+        #{ruleId,jdbcType=VARCHAR},
       </if>
       <if test="visitedTable != null">
         #{visitedTable,jdbcType=VARCHAR},
@@ -108,8 +108,8 @@
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},
       </if>
-      <if test="ruleName != null">
-        rule_name = #{ruleName,jdbcType=VARCHAR},
+      <if test="ruleId != null">
+        rule_id = #{ruleId,jdbcType=INTEGER},
       </if>
       <if test="visitedTable != null">
         visited_table = #{visitedTable,jdbcType=VARCHAR},

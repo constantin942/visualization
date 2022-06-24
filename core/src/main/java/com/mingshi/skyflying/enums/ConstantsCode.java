@@ -14,28 +14,31 @@ public enum ConstantsCode {
   USER_PORTRAIT_NIGHT("night", "晚上"),
   USER_PORTRAIT_FORENOON("forenoon", "中午"),
   USER_PORTRAIT_AFTERNOON("afternoon", "下午"),
+
+  USER_PORTRAIT_RULE_VISITED_TIME("user_visited_time", "基于访问时间段的告警规则：即若某用户通常白天访问数据，则夜间为异常；"),
+  USER_PORTRAIT_RULE_VISITED_TABLE("user_visited_table", "基于访问过的表的告警规则：若某用户访问从未访问过的表时，则给出告警；"),
   ;
 
   /**
    * 错误中文描述信息
    */
-  private String msgCn;
+  private String code;
 
   /**
    * 错误英文描述信息
    */
-  private String msgEn;
+  private String desc;
 
-  private ConstantsCode(String msgEn, String msgCn) {
-    this.msgEn = msgEn;
-    this.msgCn = msgCn;
+  private ConstantsCode(String code, String desc) {
+    this.desc = desc;
+    this.code = code;
   }
 
-  public String getMsgCn() {
-    return msgCn;
+  public String getCode() {
+    return code;
   }
 
-  public String getMsgEn() {
-    return msgEn;
+  public String getDesc() {
+    return desc;
   }
 }

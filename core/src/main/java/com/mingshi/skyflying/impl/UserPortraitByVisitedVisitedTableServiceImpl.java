@@ -310,6 +310,10 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * @Param [userPortraitByVisitedTableEverydayDo]
    **/
   private void updateLocalMemoryUserPortraitByVisitedTableEveryday(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
+    Boolean userPortraitByVisitedTableEnable = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableEnable();
+    if(false == userPortraitByVisitedTableEnable){
+      return;
+    }
     Map<String/* 用户名 */,
       Map<String/* 访问过的表 */,
         Map<String/* 访问日期，以天为单位 */,
@@ -352,42 +356,46 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * @Param [userPortraitByVisitedTableEverydayDo]
    **/
   private ServerResponse<String> updateLocalMemoryNoEnableByUserPortraitByVisitedTable(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
-    Map<String/* 用户名 */,
-      Map<String/* 访问过的表 */,
-        Map<String/* 访问日期，以天为单位 */,
-          Map<String,/* 数据库操作类型：insert、delete、update、select */
-            Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
-    String userName = userPortraitByVisitedTableEverydayDo.getUserName();
-    String visitedTable = userPortraitByVisitedTableEverydayDo.getVisitedTable();
-    String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
-    String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
-    Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
-    Map<String, Integer> dbtypeCountMap = null;
-    Map<String, Map<String, Map<String, Integer>>> visitedTableDateDbtypeCountMap = userPortraitByVisitedTableMap.get(userName);
-    if (null != userPortraitByVisitedTableMap) {
-      if (null != visitedTableDateDbtypeCountMap) {
-        Map<String, Map<String, Integer>> dateDbtypeCountMap = visitedTableDateDbtypeCountMap.get(visitedTable);
-        if (null != dateDbtypeCountMap) {
-          dbtypeCountMap = dateDbtypeCountMap.get(visitedDate);
-          if (null != dbtypeCountMap) {
-            Integer visitedCountFromLocalMemory = dbtypeCountMap.get(dbType);
-            if (null != visitedCountFromLocalMemory && 0 <= visitedCountFromLocalMemory) {
-              // 当要禁用这条规则时，要把这条规则在当前内存里的统计数据更新到数据库中；2022-06-16 15:07:11
-              userPortraitByVisitedTableEverydayDo.setVisitedCount(visitedCount < visitedCountFromLocalMemory ? visitedCountFromLocalMemory : visitedCount);
+    Boolean userPortraitByVisitedTableEnable = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableEnable();
+    if(true == userPortraitByVisitedTableEnable){
+      Map<String/* 用户名 */,
+        Map<String/* 访问过的表 */,
+          Map<String/* 访问日期，以天为单位 */,
+            Map<String,/* 数据库操作类型：insert、delete、update、select */
+              Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
+      String userName = userPortraitByVisitedTableEverydayDo.getUserName();
+      String visitedTable = userPortraitByVisitedTableEverydayDo.getVisitedTable();
+      String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
+      String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
+      Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
+      Map<String, Integer> dbtypeCountMap = null;
+      Map<String, Map<String, Map<String, Integer>>> visitedTableDateDbtypeCountMap = userPortraitByVisitedTableMap.get(userName);
+      if (null != userPortraitByVisitedTableMap) {
+        if (null != visitedTableDateDbtypeCountMap) {
+          Map<String, Map<String, Integer>> dateDbtypeCountMap = visitedTableDateDbtypeCountMap.get(visitedTable);
+          if (null != dateDbtypeCountMap) {
+            dbtypeCountMap = dateDbtypeCountMap.get(visitedDate);
+            if (null != dbtypeCountMap) {
+              Integer visitedCountFromLocalMemory = dbtypeCountMap.get(dbType);
+              if (null != visitedCountFromLocalMemory && 0 <= visitedCountFromLocalMemory) {
+                // 当要禁用这条规则时，要把这条规则在当前内存里的统计数据更新到数据库中；2022-06-16 15:07:11
+                userPortraitByVisitedTableEverydayDo.setVisitedCount(visitedCount < visitedCountFromLocalMemory ? visitedCountFromLocalMemory : visitedCount);
+              }
             }
           }
         }
       }
+      int updateResult = userPortraitByVisitedTableEverydayMapper.updateByPrimaryKeySelective(userPortraitByVisitedTableEverydayDo);
+      if (1 != updateResult) {
+        log.error(" # UserPortraitByVisitedVisitedTableServiceImpl.updateLocalMemoryNoEnableByUserPortraitByVisitedTable() # 把禁用这条规则的状态更新到数据库中失败。");
+        return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
+      }
+      // 只有当数据库操作成功的情况下，才把本地内存里的数据删除。2022-06-16 15:05:56
+      if (null != dbtypeCountMap) {
+        dbtypeCountMap.remove(dbType);
+      }
     }
-    int updateResult = userPortraitByVisitedTableEverydayMapper.updateByPrimaryKeySelective(userPortraitByVisitedTableEverydayDo);
-    if (1 != updateResult) {
-      log.error(" # UserPortraitByVisitedVisitedTableServiceImpl.updateLocalMemoryNoEnableByUserPortraitByVisitedTable() # 把禁用这条规则的状态更新到数据库中失败。");
-      return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
-    }
-    // 只有当数据库操作成功的情况下，才把本地内存里的数据删除。2022-06-16 15:05:56
-    if (null != dbtypeCountMap) {
-      dbtypeCountMap.remove(dbType);
-    }
+
     return ServerResponse.createBySuccess();
   }
 

@@ -134,10 +134,9 @@
     <if test="msTableName != null and  msTableName != null   ">
       and ms_table_name = #{msTableName}
     </if>
+    --     先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
+    and (db_type != 'url')
     order by id desc;
---     先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
---     and (db_type != 'url')
-
 --     这行代码同时也输出对Redis的操作。
 --     and (db_type != 'url' or db_type is null)
 --     order by id desc;

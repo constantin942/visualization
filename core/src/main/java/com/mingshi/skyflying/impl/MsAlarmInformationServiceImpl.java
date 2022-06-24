@@ -30,8 +30,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
   private MsAlarmInformationMapper msAlarmInformationMapper;
 
   @Override
-  public ServerResponse<String> getAllAlarmInfo(String userName, Integer pageNo, Integer pageSize) {
-
+  public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>();
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put("userName", userName);
@@ -47,6 +46,35 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     List<MsAlarmInformationDo> alarmInformationDoList = msAlarmInformationMapper.selectAll(queryMap);
 
     Integer count = msAlarmInformationMapper.selectAllCount(queryMap);
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
+    context.put("total", count);
+
+    log.info("# MsAlarmInformationServiceImpl.getAllAlarmInfo() # 获取所有的告警信息，根据条件【{}】在数据库中查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), alarmInformationDoList.size());
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(context));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAllAlarmInfo(String userName, Integer pageNo, Integer pageSize) {
+
+    Map<String, Object> queryMap = new HashMap<>();
+    if (StringUtil.isNotBlank(userName)) {
+      queryMap.put("userName", userName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+    List<Map<String,Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllUserTimes(queryMap);
+
+    Integer count = msAlarmInformationMapper.selectAllUserTimesCount(queryMap);
 
     Map<String, Object> context = new HashMap<>();
     context.put("rows", JsonUtil.obj2String(alarmInformationDoList));

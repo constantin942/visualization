@@ -7,11 +7,15 @@ import java.util.Date;
 public class MsAlarmInformationDo {
     private Integer id;
 
+    private Integer matchRuleId;
+
     private Byte isDelete;
 
     private Date gmtCreate;
 
     private Date gmtModified;
+
+    private Date originalTime;
 
     private String userName;
 

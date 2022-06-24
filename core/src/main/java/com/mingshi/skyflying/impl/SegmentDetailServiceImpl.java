@@ -197,7 +197,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             ArrayNode everyBodylinkedList = JsonUtil.createJSONArray();
             bodyJsonArray.add(jsonObject);
             everyGlobalCallInfoJson.put("body", bodyJsonArray);
+            MsSegmentDetailDo msSegmentDetailDoBackup = new MsSegmentDetailDo();
             for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
+              msSegmentDetailDoBackup = msSegmentDetailDo;
               String parentSegmentId = msSegmentDetailDo.getParentSegmentId();
               if (StringUtil.isBlank(parentSegmentId) && 0 == headerJson.size()) {
                 headerJson.put("userName", msSegmentDetailDo.getUserName());
@@ -216,6 +218,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
               detailJson.put("dbUserName", msSegmentDetailDo.getDbUserName());
               detailJson.put("dbStatement", msSegmentDetailDo.getDbStatement());
               String tableName = msSegmentDetailDo.getMsTableName();
+              detailJson.put("dbTableName", tableName);
               // 根据表名，去数据库中查找这个表里是存储的什么数据；2022-06-22 09:32:12
               // 正常来说，应该在本地缓存里存储表的信息，每次根据表名获取表的信息时，从本地内存中直接获取即可；2022-06-22 09:36:34
               if (StringUtil.isNotBlank(tableName)) {
@@ -225,6 +228,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 }
               }
               everyBodylinkedList.add(detailJson);
+            }
+            if (0 == headerJson.size()) {
+              headerJson.put("userName", msSegmentDetailDoBackup.getUserName());
+              headerJson.put("url", msSegmentDetailDoBackup.getOperationName());
+              headerJson.put("requestStartTime", msSegmentDetailDoBackup.getStartTime());
+              everyGlobalCallInfoJson.put("header", headerJson);
             }
             jsonObject.put("segments", everyBodylinkedList);
           }

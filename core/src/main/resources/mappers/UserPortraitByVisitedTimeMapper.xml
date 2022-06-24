@@ -7,13 +7,13 @@
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
-    <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
+    <result column="rule_id" jdbcType="INTEGER" property="ruleId" />
     <result column="forenoon_count" jdbcType="INTEGER" property="forenoonCount" />
     <result column="night_count" jdbcType="INTEGER" property="nightCount" />
     <result column="afternoon_count" jdbcType="INTEGER" property="afternoonCount" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, rule_name, forenoon_count, night_count,
+    id, is_delete, gmt_create, gmt_modified, user_name, rule_id, forenoon_count, night_count,
     afternoon_count
   </sql>
   <select id="selectByUserNameCount" parameterType="java.util.Map" resultType="java.lang.Integer">
@@ -28,7 +28,7 @@
   </select>
   <select id="selectByUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
-    id, is_delete, user_name, rule_name, forenoon_count, night_count, afternoon_count
+    id, is_delete, user_name, rule_id, forenoon_count, night_count, afternoon_count
     from user_portrait_by_visited_time
     <where>
       <if test="userName != null and  userName != null   ">
@@ -47,12 +47,12 @@
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
-      user_name, rule_name, forenoon_count, night_count, afternoon_count
+      user_name, rule_id, forenoon_count, night_count, afternoon_count
     from user_portrait_by_visited_time
   </select>
   <select id="selectAllEnable" resultMap="BaseResultMap">
     select
-      user_name, rule_name, forenoon_count, night_count, afternoon_count
+      user_name, rule_id, forenoon_count, night_count, afternoon_count
     from user_portrait_by_visited_time
     where is_delete = 0
   </select>
@@ -61,6 +61,12 @@
     <include refid="Base_Column_List" />
     from user_portrait_by_visited_time
     where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByRuleId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_portrait_by_visited_time
+    where rule_id = #{ruleId,jdbcType=INTEGER}
   </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo">
     insert into user_portrait_by_visited_time
@@ -80,8 +86,8 @@
       <if test="userName != null">
         user_name,
       </if>
-      <if test="ruleName != null">
-        rule_name,
+      <if test="ruleId != null">
+        rule_id,
       </if>
       <if test="forenoonCount != null">
         forenoon_count,
@@ -109,8 +115,8 @@
       <if test="userName != null">
         #{userName,jdbcType=VARCHAR},
       </if>
-      <if test="ruleName != null">
-        #{ruleName,jdbcType=VARCHAR},
+      <if test="ruleId != null">
+        #{ruleId,jdbcType=VARCHAR},
       </if>
       <if test="forenoonCount != null">
         #{forenoonCount,jdbcType=INTEGER},
@@ -125,12 +131,12 @@
   </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into user_portrait_by_visited_time
-    (user_name, rule_name, forenoon_count, night_count, afternoon_count)
+    (user_name, rule_id, forenoon_count, night_count, afternoon_count)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
       #{item.userName,jdbcType=VARCHAR},
-      #{item.ruleName,jdbcType=VARCHAR},
+      #{item.ruleId,jdbcType=INTEGER},
       #{item.forenoonCount,jdbcType=INTEGER},
       #{item.nightCount,jdbcType=INTEGER},
       #{item.afternoonCount,jdbcType=INTEGER}
@@ -170,8 +176,8 @@
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},
       </if>
-      <if test="ruleName != null">
-        rule_name = #{ruleName,jdbcType=VARCHAR},
+      <if test="ruleId != null">
+        rule_id = #{ruleId,jdbcType=INTEGER},
       </if>
       <if test="forenoonCount != null">
         forenoon_count = #{forenoonCount,jdbcType=INTEGER},

@@ -1,0 +1,169 @@
+package com.mingshi.skyflying.impl;
+
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.domain.UserPortraitRulesDo;
+import com.mingshi.skyflying.enums.ConstantsCode;
+import com.mingshi.skyflying.init.rule.LoadUserPortraitFromDb;
+import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.service.UserPortraitRulesService;
+import com.mingshi.skyflying.utils.JsonUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * <B>方法名称：UserPortraitRulesServiceImpl</B>
+ * <B>概要说明：</B>
+ *
+ * @Author zm
+ * @Date 2022年06月23日 15:06:59
+ * @Param
+ * @return
+ **/
+@Slf4j
+@Service("userPortraitRulesService")
+public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
+  @Resource
+  private LoadUserPortraitFromDb loadUserPortraitFromDb;
+  @Resource
+  private UserPortraitRulesMapper userPortraitRulesMapper;
+
+  @Override
+  public ServerResponse<String> getAllUserPortraitRules(Integer pageNo, Integer pageSize) {
+    ServerResponse<String> bySuccess = null;
+    try {
+      Map<String, Object> queryMap = new HashMap<>();
+      if (null == pageNo) {
+        pageNo = 1;
+      }
+      if (null == pageSize) {
+        pageSize = 10;
+      }
+      queryMap.put("pageNo", (pageNo - 1) * pageSize);
+      queryMap.put("pageSize", pageSize);
+
+      List<UserPortraitRulesDo> userPortraitRulesDoList = new LinkedList<>();
+      userPortraitRulesDoList = userPortraitRulesMapper.selectAllRules(queryMap);
+      log.info("执行 # UserPortraitRulesServiceImpl.getAllUserPortraitRules() # 获取所有的规则信息。根据查询条件【{}】获取到的规则信息是【{}】。", JsonUtil.obj2String(queryMap), JsonUtil.obj2String(userPortraitRulesDoList));
+
+      Integer count = userPortraitRulesMapper.selectAllRulesCount(queryMap);
+      Map<String, Object> context = new HashMap<>();
+      bySuccess = ServerResponse.createBySuccess();
+      context.put("rows", JsonUtil.obj2String(userPortraitRulesDoList));
+      context.put("total", count);
+      bySuccess.setData(JsonUtil.obj2String(context));
+    } catch (Exception e) {
+      log.info(" # UserPortraitRulesServiceImpl.getAllUserPortraitRules() # 获取所有的规则信息时，出现了异常。", e);
+    }
+    log.info("执行完毕 # UserPortraitRulesServiceImpl.getAllUserPortraitRules() # 获取所有的规则信息。");
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> updateUserPortraitRule(Integer ruleId, Integer isDelete) {
+    log.info("开始执行 # UserPortraitRulesServiceImpl.updateUserPortraitRule() # 更新用户在什么时间访问过的系统次数画像规则启用状态。 ");
+    if (!isDelete.equals(Const.IS_DELETE_ZERO) && !isDelete.equals(Const.IS_DELETE_ONE)) {
+      return ServerResponse.createByErrorMessage("参数非法：是否启用的参数isDelete应该是0或者1.", "");
+    }
+
+    // 先根据规则id在数据库中找到这条规则；2022-06-16 14:44:21
+    UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(ruleId);
+    if (null == userPortraitRulesDo) {
+      return ServerResponse.createByErrorMessage("参数非法：规则id在数据库中不存在.", "");
+    }
+
+    Integer isDelete1 = userPortraitRulesDo.getIsDelete();
+    // 如果数据库中该条规则的状态已经是当前要更新的状态，那么就结束当前请求；2022-06-16 17:36:58
+    if (isDelete1.equals(isDelete)) {
+      return ServerResponse.createBySuccess();
+    }
+    // 设置规则启用/禁用的状态；2022-06-16 15:20:09
+    userPortraitRulesDo.setIsDelete(isDelete);
+
+    // TODO: 2022/6/16 这里如果要禁用或者启用一条规则，要同时把本地内存中存储的规则执行相同的操作。
+    // 比如，一条规则之前都是在运行状态，现在要禁用了，那么需要在内存里删除这条规则。
+    // 如果一条规则本来已经禁用了，现在要启用这条规则，那么需要将这条规则从数据库中加载到本地内存中。
+    // 更新本地内存；2022-06-16 14:49:29
+    ServerResponse<String> response = doUpdateUserPortraitRuleRule(userPortraitRulesDo, isDelete);
+    log.info("执行完毕 # UserPortraitRulesServiceImpl.updateUserPortraitRule() # 更新用户访问过的表的画像规则启用状态。 ");
+    return response;
+  }
+
+  private ServerResponse<String> doUpdateUserPortraitRuleRule(UserPortraitRulesDo userPortraitRulesDo, Integer isDelete) {
+    if (isDelete.equals(Const.IS_DELETE_ONE)) {
+      // 禁用这条规则；2022-06-16 14:55:51
+      return noEnableByUserPortraitRule(userPortraitRulesDo);
+    }
+    if (isDelete.equals(Const.IS_DELETE_ZERO)) {
+      // 启用这条规则；2022-06-16 14:55:51
+      return enableByUserPortraitRule(userPortraitRulesDo);
+    }
+    return null;
+  }
+
+  /**
+   * <B>方法名称：noEnableByUserPortraitRule</B>
+   * <B>概要说明：禁用规则：规则先在数据库中禁用，然后在本地内存中删除</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:20
+   * @Param [userPortraitByVisitedTimeDo]
+   **/
+  private ServerResponse<String> noEnableByUserPortraitRule(UserPortraitRulesDo userPortraitRulesDo) {
+    int updateResult = userPortraitRulesMapper.updateByPrimaryKeySelective(userPortraitRulesDo);
+    if (1 != updateResult) {
+      log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.noEnableByUserPortraitByVisitedTime() # 把禁用这条规则的状态更新到数据库中失败。");
+      return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
+    }
+
+    // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
+    String ruleName = userPortraitRulesDo.getRuleName();
+    if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TABLE.getCode())) {
+      AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableEnable(false);
+      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap().clear();
+    } else if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TIME.getCode())) {
+      AnomylyDetectionSingletonByVisitedTime.setUserPortraitByVisitedTimeEnable(false);
+      AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap().clear();
+    }
+
+    return ServerResponse.createBySuccess();
+  }
+
+  /**
+   * <B>方法名称：enableByUserPortraitByVisitedTime</B>
+   * <B>概要说明：将用户在什么时间访问多少次系统这个规则先在数据库中启用，然后添加到本地内存中</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:20
+   * @Param [userPortraitByVisitedTimeDo]
+   **/
+  private ServerResponse<String> enableByUserPortraitRule(UserPortraitRulesDo userPortraitRulesDo) {
+    int updateResult = userPortraitRulesMapper.updateByPrimaryKeySelective(userPortraitRulesDo);
+    if (1 != updateResult) {
+      log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.enableByUserPortraitByVisitedTime() # 把启用这条规则的状态更新到数据库中失败。");
+      return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
+    }
+
+    Integer ruleId = userPortraitRulesDo.getId();
+    // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
+    String ruleName = userPortraitRulesDo.getRuleName();
+    if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TABLE.getCode())) {
+      loadUserPortraitFromDb.initUserPortraitByVisitedTableEverydayMap(ruleId);
+    } else if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TIME.getCode())) {
+      loadUserPortraitFromDb.initUserPortraitByVisitedTimeMap(ruleId);
+    }
+
+    return ServerResponse.createBySuccess();
+  }
+
+}

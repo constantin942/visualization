@@ -13,6 +13,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @Version 1.0
  **/
 public class AnomylyDetectionSingletonByVisitedTableEveryday {
+  // 规则在数据库表里的id；
+  private static volatile Integer visitedTableRuleId = null;
+
+  public static void setVisitedTableRuleId(Integer visitedTableRuleId){
+    visitedTableRuleId = visitedTableRuleId;
+  }
+
+  public static Integer getVisitedTableRuleId(){
+    return visitedTableRuleId;
+  }
+
+
   // 存放用户基于访问过的表的告警规则；2022-06-08 17:08:05
   private static volatile Map<String/* 用户名 */,
     Map<String/* 访问过的表 */,
@@ -20,7 +32,7 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
         Map<String,/* 数据库操作类型：insert、delete、update、select */
           Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap = null;
 
-  private static AtomicBoolean userPortraitByVisitedTableEverydayIsChanged = new AtomicBoolean(false);
+  private static volatile AtomicBoolean userPortraitByVisitedTableEverydayIsChanged = new AtomicBoolean(false);
 
   public static Boolean getUserPortraitByVisitedTableIsChanged() {
     return userPortraitByVisitedTableEverydayIsChanged.get();
@@ -28,6 +40,17 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
 
   public static void setUserPortraitByVisitedTableIsChanged(Boolean flag) {
     userPortraitByVisitedTableEverydayIsChanged.set(flag);
+  }
+
+  // 禁启用标志；
+  private static volatile AtomicBoolean userPortraitByVisitedTableEverydayEnable = new AtomicBoolean(false);
+
+  public static Boolean getUserPortraitByVisitedTableEnable() {
+    return userPortraitByVisitedTableEverydayEnable.get();
+  }
+
+  public static void setUserPortraitByVisitedTableEnable(Boolean flag) {
+    userPortraitByVisitedTableEverydayEnable.set(flag);
   }
 
   public static Map<String/* 用户名 */,

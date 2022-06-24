@@ -17,7 +17,7 @@ public interface UserPortraitByVisitedTableEverydayMapper {
 
     List<UserPortraitByVisitedTableEverydayDo> selectAll();
 
-    List<UserPortraitByVisitedTableEverydayDo> selectAllEnable();
+    List<UserPortraitByVisitedTableEverydayDo> selectAllEnable(Map<String,Integer> query);
 
     List<UserPortraitByVisitedTableEverydayDo> selectByUserNameAndVisitedTableAndVisitedDate(Map<String,Object> map);
 

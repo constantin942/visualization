@@ -15,7 +15,7 @@ public class UserPortraitByVisitedTableDo {
 
     private String userName;
 
-    private String ruleName;
+    private Integer ruleId;
 
     private String visitedTable;
 

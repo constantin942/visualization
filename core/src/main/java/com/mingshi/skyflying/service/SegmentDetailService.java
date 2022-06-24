@@ -14,3 +14,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 }
 // 恢复kafak的某个topic下某个消费组的offset为最早；2022-06-07 10:25:58
 // bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group skyflying-consumer-group --reset-offsets --all-topics --to-earliest --execute
+// topic的数据改为保存60天
+// bin/kafka-configs.sh --bootstrap-server localhost:9092  --entity-type topics --entity-name skywalking-segments --alter --add-config retention.ms=518400000
+// 查看更改后的效果
+// bin/kafka-topics.sh --bootstrap-server localhost:9092  --topic skywalking-segments --describe

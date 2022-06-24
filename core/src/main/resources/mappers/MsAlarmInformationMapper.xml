@@ -3,15 +3,17 @@
 <mapper namespace="com.mingshi.skyflying.dao.MsAlarmInformationMapper">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsAlarmInformationDo">
     <id column="id" jdbcType="INTEGER" property="id" />
+    <id column="match_rule_id" jdbcType="INTEGER" property="matchRuleId" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="original_time" jdbcType="TIMESTAMP" property="originalTime" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
     <result column="alarm_content" jdbcType="VARCHAR" property="alarmContent" />
     <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, alarm_content, global_trace_id
+    id, is_delete, gmt_create, gmt_modified, user_name, alarm_content, global_trace_id, original_time, match_rule_id
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -37,7 +39,7 @@
   </select>
   <select id="selectAll" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
-    user_name, alarm_content, global_trace_id
+    id, user_name, alarm_content, global_trace_id, original_time, match_rule_id
     from ms_alarm_information
     <where>
       <if test="userName != null and  userName != null   ">
@@ -48,11 +50,37 @@
       LIMIT #{pageNo},#{pageSize}
     </if>
   </select>
+  <select id="selectAllUserTimes" parameterType="java.util.Map" resultType="java.util.Map">
+    select user_name as userName, count(user_name) as times
+    from ms_alarm_information
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+    group by user_name
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectAllUserTimesCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*)  from  (select  user_name
+    from ms_alarm_information
+    <where>
+      <if test="userName != null and  userName != null   ">
+        user_name = #{userName}
+      </if>
+    </where>
+    group by user_name) as t1
+  </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
     insert into ms_alarm_information
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
+      </if>
+      <if test="matchRuleId != null">
+        match_rule_id,
       </if>
       <if test="isDelete != null">
         is_delete,
@@ -62,6 +90,9 @@
       </if>
       <if test="gmtModified != null">
         gmt_modified,
+      </if>
+      <if test="originalTime != null">
+        original_time,
       </if>
       <if test="userName != null">
         user_name,
@@ -77,6 +108,9 @@
       <if test="id != null">
         #{id,jdbcType=INTEGER},
       </if>
+      <if test="matchRuleId != null">
+        #{matchRuleId,jdbcType=INTEGER},
+      </if>
       <if test="isDelete != null">
         #{isDelete,jdbcType=TINYINT},
       </if>
@@ -85,6 +119,9 @@
       </if>
       <if test="gmtModified != null">
         #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="originalTime != null">
+        #{originalTime,jdbcType=TIMESTAMP},
       </if>
       <if test="userName != null">
         #{userName,jdbcType=VARCHAR},
@@ -99,13 +136,15 @@
   </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_alarm_information
-    ( user_name, alarm_content, global_trace_id )
+    ( user_name, alarm_content, global_trace_id,original_time,match_rule_id )
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
       #{item.userName,jdbcType=VARCHAR},
       #{item.alarmContent,jdbcType=VARCHAR},
-      #{item.globalTraceId,jdbcType=INTEGER}
+      #{item.globalTraceId,jdbcType=INTEGER},
+      #{item.originalTime,jdbcType=TIMESTAMP},
+      #{item.matchRuleId,jdbcType=INTEGER}
       )
     </foreach>
   </insert>
@@ -115,11 +154,17 @@
       <if test="isDelete != null">
         is_delete = #{isDelete,jdbcType=TINYINT},
       </if>
+      <if test="matchRuleId != null">
+        match_rule_id = #{matchRuleId,jdbcType=INTEGER},
+      </if>
       <if test="gmtCreate != null">
         gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
       </if>
       <if test="gmtModified != null">
         gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="originalTime != null">
+        original_time = #{originalTime,jdbcType=TIMESTAMP},
       </if>
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},

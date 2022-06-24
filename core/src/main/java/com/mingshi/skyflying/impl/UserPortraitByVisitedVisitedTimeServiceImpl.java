@@ -193,6 +193,11 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
       return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
     }
 
+    Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
+    if(false == userPortraitByVisitedTimeEnable){
+      // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
+      return ServerResponse.createBySuccess();
+    }
     // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
     Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userVisitedDateCountMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
     String userName = userPortraitByVisitedTimeDo.getUserName();
@@ -224,6 +229,11 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
   }
 
   private void addUserPortraitByVisitedTimeRuleToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+    Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
+    if(false == userPortraitByVisitedTimeEnable){
+      // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
+      return;
+    }
     Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userVisitedDateCountMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
     String userName = userPortraitByVisitedTimeDo.getUserName();
     Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
@@ -235,13 +245,13 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
       userVisitedDateCountMap.put(userName, visitedDateCountMap);
     }
     if(null != forenoonCount && 0 <= forenoonCount){
-      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn(),forenoonCount);
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(),forenoonCount);
     }
     if(null != afternoonCount && 0 <= afternoonCount){
-      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn(),afternoonCount);
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(),afternoonCount);
     }
     if(null != nightCount && 0 <= nightCount){
-      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn(),nightCount);
+      visitedDateCountMap.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(),nightCount);
     }
   }
 
@@ -326,11 +336,11 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
         while (iterator2.hasNext()) {
           String time = iterator2.next();
           Integer count = map.get(time);
-          if (time.equals(ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn())) {
+          if (time.equals(ConstantsCode.USER_PORTRAIT_NIGHT.getCode())) {
             userPortraitByVisitedTimeDo.setNightCount(count);
-          } else if (time.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn())) {
+          } else if (time.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
             userPortraitByVisitedTimeDo.setForenoonCount(count);
-          } else if (time.equals(ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn())) {
+          } else if (time.equals(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode())) {
             userPortraitByVisitedTimeDo.setAfternoonCount(count);
           } else {
             log.error("# UserPortraitByTimeServiceImpl.createUserPortraitByTime() # 基于时间统计用户的访问次数时，出现了错误。当前时间 = 【{}】既不是上午、下午，也不是晚上。这是不对的，需要排查错误原因。", time);

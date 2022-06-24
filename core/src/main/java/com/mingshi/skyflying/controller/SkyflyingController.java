@@ -40,7 +40,39 @@ public class SkyflyingController {
   private MsThirdPartyTableListService msThirdPartyTableListService;
   @Resource
   private MsThirdPartyTableFieldsService msThirdPartyTableFieldsService;
+  @Resource
+  private UserPortraitRulesService userPortraitRulesService;
 
+  /**
+   * <B>方法名称：getUserPortraitRules</B>
+   * <B>概要说明：获取所有的规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月23日 15:06:53
+   * @Param [pageNo, pageSize]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getUserPortraitRules", method = RequestMethod.GET)
+  public ServerResponse<String> getUserPortraitRules(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return userPortraitRulesService.getAllUserPortraitRules(pageNo, pageSize);
+  }
+
+  /**
+   * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
+   * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月16日 17:06:55
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateUserPortraitRule", method = RequestMethod.POST)
+  public ServerResponse<String> updateUserPortraitRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
+    return userPortraitRulesService.updateUserPortraitRule(ruleId, isDelete);
+  }
 
   /**
    * <B>方法名称：initAllTableNameFields</B>
@@ -75,10 +107,10 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/updateSpecificDbTableNameFields", method = RequestMethod.POST)
   public ServerResponse<String> updateSpecificDbTableNameFields(@RequestParam(value = "id") Integer id,
-                                                      String field,
-                                                      String fieldName,
-                                                      String fieldNote) {
-    return msThirdPartyTableFieldsService.updateSpecificDbTableNameFields(id, field, fieldName,fieldNote);
+                                                                String field,
+                                                                String fieldName,
+                                                                String fieldNote) {
+    return msThirdPartyTableFieldsService.updateSpecificDbTableNameFields(id, field, fieldName, fieldNote);
   }
 
   /**
@@ -93,9 +125,9 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getSpecificDbTableNameFields", method = RequestMethod.GET)
   public ServerResponse<String> getSpecificDbTableNameFields(String dbName,
-                                                      String tableName,
-                                                      @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                                             String tableName,
+                                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return msThirdPartyTableFieldsService.getSpecificDbTableNameFields(dbName, tableName, pageNo, pageSize);
   }
 
@@ -182,6 +214,22 @@ public class SkyflyingController {
 
 
   /**
+   * <B>方法名称：getAllAlarmInfoDetailByUserName</B>
+   * <B>概要说明：获取指定用户所有的异常信息</B>
+   * @Author zm
+   * @Date 2022年06月24日 16:06:19
+   * @Param [userName, pageNo, pageSize]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllAlarmInfoDetailByUserName", method = RequestMethod.GET)
+  public ServerResponse<String> getAllAlarmInfoDetailByUserName(@RequestParam(value = "userName") String userName,
+                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return msAlarmInformationService.getAllAlarmInfoDetailByUserName(userName, pageNo, pageSize);
+  }
+
+  /**
    * <B>方法名称：getAnomalyDetectionInfo</B>
    * <B>概要说明：获取异常信息</B>
    *
@@ -192,7 +240,7 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAnomalyDetectionInfo", method = RequestMethod.GET)
-  public ServerResponse<String> getAnomalyDetectionInfo(String userName, /* 登录系统的名称 */
+  public ServerResponse<String> getAnomalyDetectionInfo(String userName,
                                                         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return msAlarmInformationService.getAllAlarmInfo(userName, pageNo, pageSize);

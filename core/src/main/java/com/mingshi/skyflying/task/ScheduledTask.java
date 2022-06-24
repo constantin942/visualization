@@ -10,7 +10,7 @@ import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.enums.ConstantsCode;
-import com.mingshi.skyflying.init.LoadUserPortraitFromDb;
+import com.mingshi.skyflying.init.rule.LoadUserPortraitFromDb;
 import com.mingshi.skyflying.service.AuditLogService;
 import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -91,6 +91,10 @@ public class ScheduledTask {
       }
 
       log.info("# scheduledGetDmsAuditLog.updateUserPortraitByVisitedTable() # 基于访问过的表的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
+      Boolean userPortraitByVisitedTableEnable = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableEnable();
+      if(false == userPortraitByVisitedTableEnable){
+        return;
+      }
       Map<String/* 用户名 */,
         Map<String/* 访问过的表 */,
           Map<String/* 访问日期，以天为单位 */,
@@ -185,6 +189,11 @@ public class ScheduledTask {
       }
 
       log.info("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 基于访问时间的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
+      Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
+      if(false == userPortraitByVisitedTimeEnable){
+        // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
+        return;
+      }
       Map<String, Map<String, Integer>> oldMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
       if (null == oldMap || 0 == oldMap.size()) {
         // 如果数据库中不存在该画像信息，那么每次都要去数据库中获取一次，会给数据库造成很大的压力。所以这里先注释掉。2022-06-09 08:29:33
@@ -208,15 +217,15 @@ public class ScheduledTask {
 
         Map<String, Integer> map = newMap.get(userName);
         if (null != map) {
-          Integer forenoonCount = map.get(ConstantsCode.USER_PORTRAIT_FORENOON.getMsgEn());
+          Integer forenoonCount = map.get(ConstantsCode.USER_PORTRAIT_FORENOON.getCode());
           if (null != forenoonCount) {
             userPortraitByVisitedTimeDo.setForenoonCount(forenoonCount);
           }
-          Integer afternoonCount = map.get(ConstantsCode.USER_PORTRAIT_AFTERNOON.getMsgEn());
+          Integer afternoonCount = map.get(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode());
           if (null != afternoonCount) {
             userPortraitByVisitedTimeDo.setAfternoonCount(afternoonCount);
           }
-          Integer nightCount = map.get(ConstantsCode.USER_PORTRAIT_NIGHT.getMsgEn());
+          Integer nightCount = map.get(ConstantsCode.USER_PORTRAIT_NIGHT.getCode());
           if (null != nightCount) {
             userPortraitByVisitedTimeDo.setNightCount(nightCount);
           }
@@ -311,6 +320,11 @@ public class ScheduledTask {
    * @Param [msAlarmInformationDoLinkedListist, userNameIsNotNullAndVisitedTimeList]
    **/
   private void getNoCheckVisitedTimeAbnormalRecord(LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist, List<MsSegmentDetailDo> userNameIsNotNullAndVisitedTimeList) {
+    Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
+    if(false == userPortraitByVisitedTimeEnable){
+      // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
+      return;
+    }
     try {
       List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAllUserNameIsNotNullAndVisitedTimeIsZero();
       if (null != msSegmentDetailDoList & 0 != msSegmentDetailDoList.size()) {
@@ -318,7 +332,7 @@ public class ScheduledTask {
         // 如果用户画像还没有加载到本地内存中来，那么先加载进来，然后在进行异常检测；
         Map<String, Map<String, Integer>> oldUserPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
         if (null == oldUserPortraitByVisitedTimeMap || 0 == oldUserPortraitByVisitedTimeMap.size()) {
-          loadUserPortraitFromDb.initUserPortraitByVisitedTimeMap();
+          loadUserPortraitFromDb.getAllUserPortraitRules();
           return;
         }
 

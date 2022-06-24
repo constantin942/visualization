@@ -11,6 +11,8 @@ public interface UserPortraitByVisitedTimeMapper {
 
     UserPortraitByVisitedTimeDo selectByPrimaryKey(Integer id);
 
+    UserPortraitByVisitedTimeDo selectByRuleId(Integer id);
+
     List<UserPortraitByVisitedTimeDo> selectAll();
 
     List<UserPortraitByVisitedTimeDo> selectAllEnable();

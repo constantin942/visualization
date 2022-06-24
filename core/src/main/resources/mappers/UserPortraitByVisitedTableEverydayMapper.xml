@@ -14,9 +14,7 @@
     <result column="db_type" jdbcType="TIMESTAMP" property="dbType"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id
-    , is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count,
-    visited_date, db_type
+    id, is_delete, gmt_create, gmt_modified, user_name, rule_name, visited_table, visited_count, visited_date, db_type
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -33,23 +31,26 @@
            db_type
     from user_portrait_by_visited_table_everyday
   </select>
-  <select id="selectAllEnable" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select user_name,
-           rule_name,
-           visited_table,
-           visited_count,
-           visited_date,
-           db_type
+  <select id="selectAllEnable" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select id,
+           user_name,
+    rule_name,
+    visited_table,
+    visited_count,
+    visited_date,
+    db_type
     from user_portrait_by_visited_table_everyday
-    where is_delete = 0
+    where is_delete = 0 and id <![CDATA[ >= ]]> #{startId} and id <![CDATA[ < ]]> #{endId}
   </select>
   <select id="selectAllUserName" resultType="java.lang.String">
     select user_name
-    from user_portrait_by_visited_table_everyday group by user_name
+    from user_portrait_by_visited_table_everyday
+    group by user_name
   </select>
   <select id="selectAllVisitedTable" resultType="java.lang.String">
     select visited_table
-    from user_portrait_by_visited_table_everyday group by visited_table
+    from user_portrait_by_visited_table_everyday
+    group by visited_table
   </select>
   <select id="selectByUserNameAndVisitedTableAndVisitedDateCount" parameterType="java.util.Map"
           resultType="java.lang.Integer">
