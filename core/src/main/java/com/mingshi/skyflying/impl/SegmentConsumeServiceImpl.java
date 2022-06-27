@@ -26,8 +26,10 @@ import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>方法名称：SegmentConsumeServiceImpl</B>
@@ -50,6 +52,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Resource
   private UserTokenDao userTokenDao;
 
+  private AtomicInteger atomicInteger = new AtomicInteger(0);
+
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
     doConsume(record,enableReactorModelFlag);
@@ -59,6 +63,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
+    Instant now = Instant.now();
     SegmentObject segmentObject = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
@@ -113,6 +118,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
+    // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
   }
 
   private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment) {
@@ -277,6 +283,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
       if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
         jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
+      }
+      if (0 == atomicInteger.incrementAndGet() % 500) {
+        // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+        log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
       }
       linkedBlockingQueue.put(jsonObject);
     } catch (Exception e) {
