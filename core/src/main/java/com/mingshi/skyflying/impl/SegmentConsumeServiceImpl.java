@@ -26,7 +26,6 @@ import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,14 +55,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
-    doConsume(record,enableReactorModelFlag);
+    doConsume(record, enableReactorModelFlag);
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(),DateTimeUtil.dateToStrformat(new Date()));
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
   private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
-    Instant now = Instant.now();
     SegmentObject segmentObject = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
@@ -73,7 +71,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String operationName = segment.getOperationName();
       Boolean flag = ignoreMethod(operationName);
       if (true == flag) {
-        return ;
+        return;
       }
 
       // 设置segment_id、trace_id；2022-04-24 14:26:12
@@ -93,7 +91,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
 
       AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-      AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoList, segmentDetaiDolList);
+      AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
@@ -143,7 +141,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         msSegmentDetailDo.setOperationName(String.valueOf(url));
 
         Integer spanId = null;
-        if(null != map.get("spanId")){
+        if (null != map.get("spanId")) {
           spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
         }
 
@@ -274,7 +272,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
-      jsonObject.put(Const.SEGMENT, JsonUtil.obj2String(segmentDo));
+      jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
       if (0 < auditLogFromSkywalkingAgentList.size()) {
         jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
       }
