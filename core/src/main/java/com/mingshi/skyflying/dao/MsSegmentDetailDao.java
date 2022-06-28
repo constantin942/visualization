@@ -7,35 +7,39 @@ import java.util.Map;
 
 public interface MsSegmentDetailDao {
 
-    void insertSelectiveBatch(List<MsSegmentDetailDo> list);
+  void insertSelectiveBatch(List<MsSegmentDetailDo> list);
 
-    int insertSelective(MsSegmentDetailDo record);
+  int insertSelective(MsSegmentDetailDo record);
 
-    MsSegmentDetailDo selectByPrimaryKey(Integer id);
+  MsSegmentDetailDo selectByPrimaryKey(Integer id);
 
-    List<MsSegmentDetailDo> selectAllUserNameIsNotNull();
+  List<MsSegmentDetailDo> selectAllUserNameIsNotNull();
 
-    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndTableNameIsNotNull();
+  List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndTableNameIsNotNull();
 
-    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTimeIsZero();
+  List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTimeIsZero();
 
-    List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTableIsZero();
+  List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTableIsZero();
 
-    List<MsSegmentDetailDo> selectAll(Map<String,Object> map);
+  List<MsSegmentDetailDo> selectAll(Map<String, Object> map);
 
-    int updateByPrimaryKeySelective(MsSegmentDetailDo record);
+  List<Map<String, String>> selectAllUserNameIsNotNullAndTokeIsNotNull();
 
-    void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
+  int updateByPrimaryKeySelective(MsSegmentDetailDo record);
 
-    void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
+  void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 
-    Long selectCountAll(Map<String, Object> map);
+  void updateBatchByToken(List<Map<String,String>> list);
 
-    List<String> selectAllUserName();
+  void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
 
-    List<String> selectAllMsTableName();
+  Long selectCountAll(Map<String, Object> map);
 
-    List<String> selectAllInstanceName();
+  List<String> selectAllUserName();
 
-    List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
+  List<String> selectAllMsTableName();
+
+  List<String> selectAllInstanceName();
+
+  List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
 }
