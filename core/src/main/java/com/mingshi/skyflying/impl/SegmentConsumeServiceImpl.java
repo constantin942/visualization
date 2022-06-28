@@ -63,21 +63,20 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
     SegmentObject segmentObject = null;
+    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
       List<Span> spanList = buildSpanList(segmentObject);
       // 组装segment；2022-04-20 16:33:48
       SegmentDo segment = setUserNameAndToken(spanList);
-      String operationName = segment.getOperationName();
-      Boolean flag = ignoreMethod(operationName);
-      if (true == flag) {
-        return;
-      }
 
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
 
       setSegmentIndex(segment);
+
+      // 获取探针的名称；2022-06-28 14:25:46
+      skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
       // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
       LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = new LinkedList<>();
@@ -96,8 +95,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList);
+        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
+        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
         LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
@@ -117,6 +119,31 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
     // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+  }
+
+  /**
+   * <B>方法名称：getAgentServiceName</B>
+   * <B>概要说明：获取探针的名称</B>
+   *
+   * @return java.util.Map<java.lang.String, java.lang.String>
+   * @Author zm
+   * @Date 2022年06月28日 14:06:38
+   * @Param [segmentObject]
+   **/
+  private Map<String, String> getAgentServiceName(SegmentObject segmentObject) {
+    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
+    try {
+      skywalkingAgentHeartBeatMap = new HashMap<>();
+      String service = segmentObject.getService();
+      String serviceInstance = segmentObject.getServiceInstance();
+      ObjectNode jsonObject = JsonUtil.createJSONObject();
+      jsonObject.put("serviceCode", service);
+      jsonObject.put("serviceInstanceName", serviceInstance);
+      skywalkingAgentHeartBeatMap.put(jsonObject.toString(), DateTimeUtil.DateToStr(new Date()));
+    } catch (Exception e) {
+      log.error("# SegmentConsumeServiceImpl.getAgentServiceName() # 获取探针的名称时，出现了异常。", e);
+    }
+    return skywalkingAgentHeartBeatMap;
   }
 
   private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment) {
@@ -268,25 +295,36 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(SegmentDo segmentDo, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+  private void doEnableReactorModel(SegmentDo segmentDo,
+                                    LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList,
+                                    LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
+                                    LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
+                                    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
-      jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
+      if (null != segmentDo) {
+        jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
+      }
       if (0 < auditLogFromSkywalkingAgentList.size()) {
         jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
       }
-      if (0 < segmentDetaiDolList.size()) {
+      if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
       if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
         jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
       }
+      if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
+        jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
+      }
       if (0 == atomicInteger.incrementAndGet() % 500) {
         // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
         log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
       }
-      linkedBlockingQueue.put(jsonObject);
+      if (null != jsonObject && 0 < jsonObject.size()) {
+        linkedBlockingQueue.put(jsonObject);
+      }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
     }
@@ -934,6 +972,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
     List<SpanObject> spansList = segmentObject.getSpansList();
     for (SpanObject spanObject : spansList) {
+      String operationName = spanObject.getOperationName();
+
+      // 忽略掉不需要的链路信息；2022-06-28 14:18:20
+      Boolean flag = ignoreMethod(operationName);
+      if (true == flag) {
+        continue;
+      }
+
       Span span = new Span();
       span.setUserName(spanObject.getUserName());
       span.setToken(spanObject.getToken());
@@ -956,7 +1002,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
       span.setPeer(spanObject.getPeer());
 
-      span.setEndpointName(spanObject.getOperationName());
+      span.setEndpointName(operationName);
 
       span.setServiceCode(segmentObject.getService());
       span.setServiceInstanceName(segmentObject.getServiceInstance());
