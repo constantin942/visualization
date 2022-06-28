@@ -142,6 +142,7 @@
       #{item.afternoonCount,jdbcType=INTEGER}
       )
     </foreach>
+    ON DUPLICATE KEY UPDATE rule_id = VALUES(rule_id)
   </insert>
   <update id="updateBatch" parameterType="java.util.List">
     <foreach collection="list" item="item" index="index" open="" close="" separator=";">
