@@ -55,6 +55,8 @@ public class Const {
   public static final String RELATION_ID_PARSER_SPLIT = "\\-";
   public static final String SEGMENT_SPAN_SPLIT = "S";
 
+  public static final String DOLLAR = "$";
+
   // 判断skywalking Java探针发出的SQL语句的SQL类型；2022-05-28 12:56:57
   public static final String SQL_TYPE_SELECT = "SELECT";
   public static final String SQL_TYPE_INSERT = "INSERT";

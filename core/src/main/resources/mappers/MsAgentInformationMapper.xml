@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.MsAgentInformationMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsAgentInformationDo">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="agent_code" jdbcType="VARCHAR" property="agentCode"/>
+    <result column="agent_name" jdbcType="VARCHAR" property="agentName"/>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id
+    , is_delete, gmt_create, gmt_modified, agent_code, agent_name
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_agent_information
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_agent_information
+  </select>
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into ms_agent_information
+    (agent_code)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.agentCode,jdbcType=VARCHAR}
+      )
+    </foreach>
+    ON DUPLICATE KEY UPDATE gmt_modified = VALUES(gmt_modified)
+  </insert>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+    insert into ms_agent_information
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="agentCode != null">
+        agent_code,
+      </if>
+      <if test="agentName != null">
+        agent_name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="agentCode != null">
+        #{agentCode,jdbcType=VARCHAR},
+      </if>
+      <if test="agentName != null">
+        #{agentName,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+    update ms_agent_information
+    <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="agentCode != null">
+        agent_code = #{agentCode,jdbcType=VARCHAR},
+      </if>
+      <if test="agentName != null">
+        agent_name = #{agentName,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
