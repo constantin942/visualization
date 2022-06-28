@@ -23,12 +23,17 @@ public class Const {
   public static final Integer IS_DELETE_ZERO = 0;
   public static final Integer IS_DELETE_ONE = 1;
 
+  // 心跳间隔15分钟；2022-06-27 14:52:54
+  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL = 15;
+
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
   public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
+  public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "skywalkingAgentHeartBeatDolList";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
-  public static final String SEGMENT = "segment";
+  // public static final String SEGMENT = "segment";
+  public static final String SEGMENT_LIST = "segmentList";
 
   // 配置表中的配置项
   public static final String AK_SK = "akSk";

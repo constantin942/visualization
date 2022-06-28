@@ -167,20 +167,48 @@ public class DateTimeUtil {
    */
   public static final String DATEFORMAT_STR_023 = "MM月dd日 hh:mm";
 
+  /**
+   * <B>方法名称：getDateIntervalMin</B>
+   * <B>概要说明：获取两个时间相差的分钟数</B>
+   * @Author zm
+   * @Date 2022年06月27日 14:06:43
+   * @Param [endDate, nowDate]
+   * @return java.lang.String
+   **/
+  public static long getDateIntervalMin(Date endDate, Date nowDate) {
+    long nd = 1000 * 24 * 60 * 60;
+    long nh = 1000 * 60 * 60;
+    long nm = 1000 * 60;
+    // long ns = 1000;
+    // 获得两个时间的毫秒时间差异
+    long time = endDate.getTime() - nowDate.getTime();
+    // // 计算差多少天
+    // long day = time / nd;
+    // // 计算差多少小时
+    // long hour = time % nd / nh;
+    // 计算差多少分钟
+    long min = time % nd % nh / nm;
+    // 计算差多少秒//输出结果
+    // long sec = time % nd % nh % nm / ns;
+    return min;
+    // return day + "天" + hour + "小时" + min + "分钟";
+  }
 
   /**
    * <B>方法名称：longToDate</B>
    * <B>概要说明：长整形转换成字符串类型的时间</B>
+   *
+   * @return java.lang.String
    * @Author zm
    * @Date 2022年04月20日 16:04:43
    * @Param [longTime]
-   * @return java.lang.String
    **/
-  public static String longToDate(long longTime){
+  public static String longToDate(long longTime) {
     Date date = new Date(longTime);
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATEFORMAT_STR_001);
     return simpleDateFormat.format(date);
   }
+
   /**
    * @return long
    * @Author zhaoming
@@ -192,6 +220,7 @@ public class DateTimeUtil {
     Instant instEnd = Instant.now();
     return Duration.between(instStart, instEnd).toMillis();
   }
+
   /**
    * @return long
    * @Author zhaoming
@@ -427,17 +456,17 @@ public class DateTimeUtil {
   public void LeaveSignIn() {
     try {
       SimpleDateFormat df = new SimpleDateFormat("HH:mm");//设置日期格式
-      Date nowTime =df.parse(df.format(new Date()));
+      Date nowTime = df.parse(df.format(new Date()));
       // 规定白天时间为早上6点到晚上10点；2022-06-07 15:36:10
       Date amBeginTime = df.parse("06:00");
       Date pmEndTime = df.parse("22:00");
       //调用判断方法是否在规定时间段内
       boolean isTime = timeCalendar(nowTime, amBeginTime, pmEndTime);
 
-      if(isTime){
+      if (isTime) {
         //处于规定的时间段内
         System.out.println(isTime);
-      }else{
+      } else {
         //不处于规定的时间段内
         System.out.println(isTime);
       }
@@ -449,10 +478,11 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：timeCalendar</B>
    * <B>概要说明：判断是否在规定的时间内签到 nowTime 当前时间 beginTime规定开始时间 endTime规定结束时间</B>
+   *
+   * @return boolean
    * @Author zm
    * @Date 2022年06月07日 15:06:15
    * @Param [nowTime, amBeginTime, amEndTime, pmBeginTime, pmEndTime]
-   * @return boolean
    **/
   public static boolean timeCalendar(Date nowTime, Date amBeginTime, Date amEndTime) {
     //设置当前时间
@@ -475,10 +505,11 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：judgmentTime</B>
    * <B>概要说明：判断时间是上午、中午、下午、凌晨、晚上</B>
+   *
+   * @return java.lang.String
    * @Author zm
    * @Date 2022年06月07日 15:06:18
    * @Param []
-   * @return java.lang.String
    **/
   public static String judgmentTime(Date date) {
     SimpleDateFormat df = new SimpleDateFormat(STANDARD_FORMAT_HH);
@@ -518,6 +549,7 @@ public class DateTimeUtil {
     // }
     return null;
   }
+
   /**
    * Get start of date.
    *
@@ -2093,7 +2125,7 @@ public class DateTimeUtil {
     String endTime = time;
     String nowDate = date.format(new Date());
     Date now = null;
-    Date end = null ;
+    Date end = null;
     try {
       now = date.parse(nowDate);
       end = date.parse(endTime);
@@ -2102,12 +2134,13 @@ public class DateTimeUtil {
     }
     return Days.daysBetween(new DateTime(end), new DateTime(now)).getDays();
   }
+
   public static Integer getTimeDifferenceSeconds(String time) {
     SimpleDateFormat date = new SimpleDateFormat(STANDARD_FORMAT);
     String endTime = time;
     String nowDate = date.format(new Date());
     Date now = null;
-    Date end = null ;
+    Date end = null;
     try {
       now = date.parse(nowDate);
       end = date.parse(endTime);
@@ -2117,7 +2150,7 @@ public class DateTimeUtil {
     return Seconds.secondsBetween(new DateTime(end), new DateTime(now)).getSeconds() % 60;
   }
 
-  public static String timeLongToString(Long startTime){
+  public static String timeLongToString(Long startTime) {
     SimpleDateFormat sdf = new SimpleDateFormat(STANDARD_FORMAT);
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(startTime);

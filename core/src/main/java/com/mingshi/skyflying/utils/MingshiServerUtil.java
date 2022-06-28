@@ -26,6 +26,8 @@ import java.util.Map;
 @Component
 public class MingshiServerUtil {
   @Resource
+  private RedisPoolUtil redisPoolUtil;
+  @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsAlarmInformationMapper msAlarmInformationMapper;
@@ -321,10 +323,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：flushAbnormalToDB</B>
    * <B>概要说明：将异常信息批量插入到MySQL中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月07日 18:06:24
    * @Param [segmentDetaiDolList]
-   * @return void
    **/
   public void flushAbnormalToDB(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
     if (0 < msAlarmInformationDoLinkedListist.size()) {
@@ -339,12 +342,35 @@ public class MingshiServerUtil {
   }
 
   /**
+   * <B>方法名称：flushSkywalkingAgentNameToRedis</B>
+   * <B>概要说明：将探针信息发送到Redis中，用于计算探针心跳</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年06月27日 13:06:22
+   * @Param [segmentDetailDoList]
+   **/
+  public void flushSkywalkingAgentNameToRedis(Map<String, String> map) {
+    if (0 < map.size()) {
+      try {
+        Instant now = Instant.now();
+        redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
+        map.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
+      }
+    }
+  }
+
+  /**
    * <B>方法名称：flushSegmentDetailToDB</B>
    * <B>概要说明：将segmentDetail实例信息批量插入到MySQL中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月02日 11:06:24
    * @Param [segmentDetaiDolList]
-   * @return void
    **/
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (0 < segmentDetailDoList.size()) {
