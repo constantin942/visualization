@@ -66,47 +66,62 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
-      List<Span> spanList = buildSpanList(segmentObject);
-      // 组装segment；2022-04-20 16:33:48
-      SegmentDo segment = setUserNameAndToken(spanList);
 
-      // 设置segment_id、trace_id；2022-04-24 14:26:12
-      getRef(segmentObject, segment);
-
-      setSegmentIndex(segment);
-
-      // 获取探针的名称；2022-06-28 14:25:46
+      SegmentDo segment = null;
+      // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
+      LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = null;
+      // 判断是否是异常信息；2022-06-07 18:00:13
+      LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
+      // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
+      LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+        // 获取探针的名称；2022-06-28 14:25:46
       skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
-      // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
-      LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = new LinkedList<>();
-      // 重组span数据，返回前端使用；2022-04-20 16:49:02
-      reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
+      List<Span> spanList = buildSpanList(segmentObject);
+      if(null != spanList && 0 < spanList.size()){
+        // 组装segment；2022-04-20 16:33:48
+        segment = setUserNameAndToken(spanList);
 
-      // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
-      LinkedList<MsSegmentDetailDo> segmentDetaiDolList = getSegmentDetaiDolList(segment);
+        // 设置segment_id、trace_id；2022-04-24 14:26:12
+        getRef(segmentObject, segment);
 
-      // 判断是否是异常信息；2022-06-07 18:00:13
-      LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
+        setSegmentIndex(segment);
 
-      AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-      AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        auditLogFromSkywalkingAgentList = new LinkedList<>();
+        // 重组span数据，返回前端使用；2022-04-20 16:49:02
+        reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
+
+        // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
+        segmentDetaiDolList = getSegmentDetaiDolList(segment);
+
+        // 判断是否是异常信息；2022-06-07 18:00:13
+        msAlarmInformationDoList = new LinkedList<>();
+
+        AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+        AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+      }
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
         doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
+
+        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
-        LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-        segmentDoLinkedList.add(segment);
+        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+        // segmentDoLinkedList.add(segment);
         // mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+
         // 插入segment对应的index数据；2022-05-23 10:15:38
         mingshiServerUtil.updateUserNameByGlobalTraceId();
+
         // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
         // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
@@ -262,6 +277,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [operationName]
    **/
   private Boolean ignoreMethod(String operationName) {
+    // TODO: 2022/6/28 正常来说，需要忽略的操作类型应该配置到数据库中或者配置到配置文件中，不应该写死在这里。
     if (operationName.equals("Redisson/PING") ||
       operationName.equals("Jedis/sentinelGetMasterAddrByName") ||
       operationName.equals("Lettuce/SENTINEL") ||
@@ -306,7 +322,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (null != segmentDo) {
         jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
       }
-      if (0 < auditLogFromSkywalkingAgentList.size()) {
+      if (null != auditLogFromSkywalkingAgentList && 0 < auditLogFromSkywalkingAgentList.size()) {
         jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
       }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
