@@ -36,9 +36,9 @@ public class AnomalyDetectionUtil {
    * @Date 2022年06月08日 17:06:37
    * @Param [segmentDo, list]
    **/
-  public static void userVisitedTimeIsAbnormal(SegmentDo segmentDo, LinkedList<MsAlarmInformationDo> list) {
+  public static void userVisitedTimeIsAbnormal(SegmentDo segmentDo, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
     Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
-    if(false == userPortraitByVisitedTimeEnable){
+    if (false == userPortraitByVisitedTimeEnable) {
       // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
       return;
     }
@@ -68,7 +68,7 @@ public class AnomalyDetectionUtil {
       msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
       msAlarmInformationDo.setGlobalTraceId(globalTraceId);
       msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有出现过。");
-      list.add(msAlarmInformationDo);
+      msAlarmInformationDoList.add(msAlarmInformationDo);
     } else {
       String content = null;
       if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
@@ -91,7 +91,7 @@ public class AnomalyDetectionUtil {
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
         msAlarmInformationDo.setGlobalTraceId(globalTraceId);
         msAlarmInformationDo.setAlarmContent("用户 " + userName + " 在之前从来没有在 " + content + " 访问过系统。");
-        list.add(msAlarmInformationDo);
+        msAlarmInformationDoList.add(msAlarmInformationDo);
       } else {
         // 设置变更标记；2022-06-08 10:53:05
         AnomylyDetectionSingletonByVisitedTime.setUserPortraitByVisitedTimeIsChanged(true);
@@ -108,9 +108,9 @@ public class AnomalyDetectionUtil {
    * @Date 2022年06月08日 17:06:37
    * @Param [segmentDo, list]
    **/
-  public static void userVisitedTableIsAbnormal(LinkedList<MsAlarmInformationDo> list, List<MsSegmentDetailDo> segmentDetaiDolList) {
+  public static void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
     Boolean userPortraitByVisitedTableEnable = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableEnable();
-    if(false == userPortraitByVisitedTableEnable){
+    if (false == userPortraitByVisitedTableEnable) {
       return;
     }
 
@@ -148,7 +148,7 @@ public class AnomalyDetectionUtil {
           msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(msSegmentDetailDo.getStartTime()));
           msAlarmInformationDo.setGlobalTraceId(globalTraceId);
           msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有访问过这个表 " + tableName + "。");
-          list.add(msAlarmInformationDo);
+          msAlarmInformationDoList.add(msAlarmInformationDo);
         } else {
           Map<String/* 访问日期，以天为单位 */,
             Map<String,/* 数据库操作类型：insert、delete、update、select */
@@ -156,16 +156,16 @@ public class AnomalyDetectionUtil {
 
           Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateCountMap.get(strToDateToStr);
           try {
-            if(null == dbTypeCountMap){
+            if (null == dbTypeCountMap) {
               dbTypeCountMap = new ConcurrentHashMap<>();
-              dateCountMap.put(strToDateToStr,dbTypeCountMap);
+              dateCountMap.put(strToDateToStr, dbTypeCountMap);
             }
-            if(StringUtil.isNotBlank(dbType)){
+            if (StringUtil.isNotBlank(dbType)) {
               count = dbTypeCountMap.get(dbType);
               dbTypeCountMap.put(dbType, null == count ? 1 : (1 + count));
             }
           } catch (Exception e) {
-            log.error(" # AnomalyDetectionUtil.userVisitedTableIsAbnormal() # 出现了异常。",e);
+            log.error(" # AnomalyDetectionUtil.userVisitedTableIsAbnormal() # 出现了异常。", e);
           }
 
           // 设置变更标记；2022-06-08 10:53:05

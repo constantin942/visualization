@@ -15,9 +15,7 @@ import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +32,7 @@ public class IoThread extends Thread {
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
   private Integer flushToRocketMQInterval = 5;
+  private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
@@ -43,6 +42,7 @@ public class IoThread extends Thread {
   public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
+    skywalkingAgentHeartBeatMap = new HashMap<>();
     segmentList = new LinkedList();
     auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
@@ -63,13 +63,16 @@ public class IoThread extends Thread {
   public void run() {
     try {
       while (true) {
-      // while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
+        // while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         try {
           ObjectNode jsonObject = linkedBlockingQueue.poll();
           if (null == jsonObject) {
             TimeUnit.MILLISECONDS.sleep(10);
           } else {
-            // 从json实例中segmentDetail实例的信息
+            // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
+            getSkywalkingAgentNameFromJSONObject(jsonObject);
+
+            // 从json实例中获取segmentDetail实例的信息
             getSegmentDetailFromJSONObject(jsonObject);
 
             // 从json实例中获取异常信息
@@ -109,7 +112,7 @@ public class IoThread extends Thread {
   private void getAbnormalFromJSONObject(ObjectNode jsonObject) {
     try {
       JsonNode jsonNode = jsonObject.get(Const.ABNORMAL);
-      if(null != jsonNode){
+      if (null != jsonNode) {
         String listString = jsonNode.asText();
         if (StringUtil.isNotBlank(listString)) {
           LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = JsonUtil.string2Obj(listString, LinkedList.class, MsAlarmInformationDo.class);
@@ -118,6 +121,31 @@ public class IoThread extends Thread {
       }
     } catch (Exception e) {
       log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：getSkywalkingAgentNameFromJSONObject</B>
+   * <B>概要说明：获取探针名称，用于更新探针心跳</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年06月27日 13:06:49
+   * @Param [jsonObject]
+   **/
+  private void getSkywalkingAgentNameFromJSONObject(ObjectNode jsonObject) {
+    try {
+      String listString = null;
+      JsonNode jsonNode = jsonObject.get(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST);
+      if (null != jsonNode) {
+        listString = jsonNode.asText();
+      }
+      if (StringUtil.isNotBlank(listString)) {
+        Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentTimeMap = JsonUtil.string2Obj(listString, Map.class);
+        skywalkingAgentHeartBeatMap.putAll(skywalkingAgentTimeMap);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
     }
   }
 
@@ -135,7 +163,7 @@ public class IoThread extends Thread {
       String listString = null;
       try {
         JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_DO_LIST);
-        if(null != jsonNode){
+        if (null != jsonNode) {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
@@ -182,12 +210,12 @@ public class IoThread extends Thread {
    **/
   private void getSegmentFromJSONObject(ObjectNode jsonObject) {
     try {
-      String segmentStr = jsonObject.get(Const.SEGMENT).asText();
-      SegmentDo segmentDo = JsonUtil.string2Obj(segmentStr, SegmentDo.class);
-      if (null == segmentDo) {
+      String segmentStr = jsonObject.get(Const.SEGMENT_LIST).asText();
+      List<SegmentDo> segmentDoList = JsonUtil.string2Obj(segmentStr, List.class, SegmentDo.class);
+      if (null == segmentDoList) {
         TimeUnit.MILLISECONDS.sleep(10);
       } else {
-        segmentList.add(segmentDo);
+        segmentList.addAll(segmentDoList);
       }
     } catch (Exception e) {
       log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
@@ -212,6 +240,10 @@ public class IoThread extends Thread {
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
         // mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
+
+        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+
         mingshiServerUtil.updateUserNameByGlobalTraceId();
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
         mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);

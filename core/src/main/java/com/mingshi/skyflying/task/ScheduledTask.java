@@ -92,7 +92,7 @@ public class ScheduledTask {
 
       log.info("# scheduledGetDmsAuditLog.updateUserPortraitByVisitedTable() # 基于访问过的表的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
       Boolean userPortraitByVisitedTableEnable = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableEnable();
-      if(false == userPortraitByVisitedTableEnable){
+      if (false == userPortraitByVisitedTableEnable) {
         return;
       }
       Map<String/* 用户名 */,
@@ -133,7 +133,7 @@ public class ScheduledTask {
               String dateTime = iterator1.next();
               Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateDbTypeCountMap.get(dateTime);
               Iterator<String> iterator3 = dbTypeCountMap.keySet().iterator();
-              while(iterator3.hasNext()){
+              while (iterator3.hasNext()) {
                 String dbType = iterator3.next();
                 Integer visitedCount = dbTypeCountMap.get(dbType);
                 UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableDo = new UserPortraitByVisitedTableEverydayDo();
@@ -142,10 +142,10 @@ public class ScheduledTask {
                 userPortraitByVisitedTableDo.setVisitedTable(tableName);
                 userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
                 userPortraitByVisitedTableDo.setDbType(dbType);
-                if(!dbType.equals(Const.SQL_TYPE_SELECT.toLowerCase()) &&
+                if (!dbType.equals(Const.SQL_TYPE_SELECT.toLowerCase()) &&
                   !dbType.equals(Const.SQL_TYPE_INSERT.toLowerCase()) &&
-                !dbType.equals(Const.SQL_TYPE_UPDATE.toLowerCase()) &&
-                !dbType.equals(Const.SQL_TYPE_DELETE.toLowerCase()) ){
+                  !dbType.equals(Const.SQL_TYPE_UPDATE.toLowerCase()) &&
+                  !dbType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
                   System.out.println("");
                 }
                 list.add(userPortraitByVisitedTableDo);
@@ -190,7 +190,7 @@ public class ScheduledTask {
 
       log.info("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 基于访问时间的用户画像统计信息有变更，此次定时任务将其更新到数据库中了。");
       Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
-      if(false == userPortraitByVisitedTimeEnable){
+      if (false == userPortraitByVisitedTimeEnable) {
         // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
         return;
       }
@@ -303,7 +303,7 @@ public class ScheduledTask {
       List<MsSegmentDetailDo> userNameIsNotNullAndVisitedTableList = msSegmentDetailDao.selectAllUserNameIsNotNullAndVisitedTableIsZero();
       if (null != userNameIsNotNullAndVisitedTableList && 0 != userNameIsNotNullAndVisitedTableList.size()) {
         userNameIsNotNullAndVisitedTimeList.addAll(userNameIsNotNullAndVisitedTableList);
-        AnomalyDetectionUtil.userVisitedTableIsAbnormal(msAlarmInformationDoLinkedListist, userNameIsNotNullAndVisitedTableList);
+        AnomalyDetectionUtil.userVisitedTableIsAbnormal(userNameIsNotNullAndVisitedTableList, msAlarmInformationDoLinkedListist);
       }
     } catch (Exception e) {
       log.error("# ScheduledTask.getNoCheckVisitedTableAbnormalRecord() # 将基于访问过的表还没有进行检测的记录进行检测时，出现了异常。", e);
@@ -321,7 +321,7 @@ public class ScheduledTask {
    **/
   private void getNoCheckVisitedTimeAbnormalRecord(LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist, List<MsSegmentDetailDo> userNameIsNotNullAndVisitedTimeList) {
     Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
-    if(false == userPortraitByVisitedTimeEnable){
+    if (false == userPortraitByVisitedTimeEnable) {
       // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
       return;
     }
