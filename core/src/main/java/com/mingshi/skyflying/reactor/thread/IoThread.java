@@ -2,6 +2,7 @@ package com.mingshi.skyflying.reactor.thread;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
@@ -31,6 +32,7 @@ public class IoThread extends Thread {
   // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
+
   private Integer flushToRocketMQInterval = 5;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private LinkedList<SegmentDo> segmentList = null;
@@ -142,6 +144,12 @@ public class IoThread extends Thread {
       }
       if (StringUtil.isNotBlank(listString)) {
         Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentTimeMap = JsonUtil.string2Obj(listString, Map.class);
+        Set<String> stringSet = skywalkingAgentTimeMap.keySet();
+        for (String set : stringSet) {
+          Map<String, String> map = JsonUtil.string2Obj(set, Map.class);
+          String serviceCode = map.get("serviceCode");
+          AgentInformationSingleton.putIfAbsent(serviceCode, Const.DOLLAR);
+        }
         skywalkingAgentHeartBeatMap.putAll(skywalkingAgentTimeMap);
       }
     } catch (Exception e) {
@@ -240,6 +248,9 @@ public class IoThread extends Thread {
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
         // mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
+
+        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
 
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);

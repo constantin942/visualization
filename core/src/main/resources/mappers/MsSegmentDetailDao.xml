@@ -141,6 +141,12 @@
 --     and (db_type != 'url' or db_type is null)
 --     order by id desc;
   </select>
+  <select id="selectAllUserNameIsNotNullAndTokeIsNotNull" resultType="java.util.Map">
+    select user_name as userName, token
+    from ms_segment_detail
+    where token is not null and user_name is not null
+    group by user_name, token
+  </select>
   <select id="selectAllUserNameIsNotNullAndVisitedTimeIsZero" parameterType="java.lang.Integer"
           resultMap="BaseResultMap">
     select id,
@@ -410,6 +416,13 @@
         </if>
       </set>
       where global_trace_id=#{item.globalTraceId} and user_name is null
+    </foreach>
+  </update>
+  <update id="updateBatchByToken" parameterType="java.util.List">
+    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+      update ms_segment_detail
+      set user_name = #{item.userName}
+      where token=#{item.token} and user_name is null
     </foreach>
   </update>
   <update id="updateBatchById" parameterType="java.util.List">

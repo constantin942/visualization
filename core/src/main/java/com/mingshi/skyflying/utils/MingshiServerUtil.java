@@ -1,10 +1,12 @@
 package com.mingshi.skyflying.utils;
 
+import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -13,6 +15,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <B>主类名称: mingshiServerUtil</B>
@@ -31,6 +34,8 @@ public class MingshiServerUtil {
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsAlarmInformationMapper msAlarmInformationMapper;
+  @Resource
+  private MsAgentInformationMapper msAgentInformationMapper;
   @Resource
   private MsAuditLogDao msAuditLogDao;
   @Resource
@@ -343,6 +348,44 @@ public class MingshiServerUtil {
 
   /**
    * <B>方法名称：flushSkywalkingAgentNameToRedis</B>
+   * <B>概要说明：将探针信息发送到MySQL中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年06月27日 13:06:22
+   * @Param [segmentDetailDoList]
+   **/
+  public void flushSkywalkingAgentInformationToDb() {
+    try {
+      AtomicBoolean atomicBoolean = AgentInformationSingleton.getAtomicBoolean();
+      if (atomicBoolean.get() == false) {
+        // 只有当数据有变动时，才将其刷入到数据库中；2022-06-28 17:35:54
+        return;
+      }
+      CopyOnWriteMap<String, String> instance = AgentInformationSingleton.getInstance();
+      if (null != instance && 0 < instance.size()) {
+        Instant now = Instant.now();
+        LinkedList<MsAgentInformationDo> list = new LinkedList<>();
+        Iterator<String> iterator = instance.keySet().iterator();
+        while (iterator.hasNext()) {
+          String key = iterator.next();
+          System.out.println("");
+          MsAgentInformationDo msAgentInformationDo = new MsAgentInformationDo();
+          msAgentInformationDo.setAgentCode(key);
+          list.add(msAgentInformationDo);
+        }
+        msAgentInformationMapper.insertBatch(list);
+        // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
+        AgentInformationSingleton.setAtomicBooleanToFalse();
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
+      }
+    } catch (Exception e) {
+      log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：flushSkywalkingAgentNameToRedis</B>
    * <B>概要说明：将探针信息发送到Redis中，用于计算探针心跳</B>
    *
    * @return void
@@ -351,7 +394,7 @@ public class MingshiServerUtil {
    * @Param [segmentDetailDoList]
    **/
   public void flushSkywalkingAgentNameToRedis(Map<String, String> map) {
-    if (0 < map.size()) {
+    if (null != map && 0 < map.size()) {
       try {
         Instant now = Instant.now();
         redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
