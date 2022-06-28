@@ -51,6 +51,29 @@ public class ScheduledTask {
   private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   /**
+   * <B>方法名称：scheduledUpdateUserNameByToken</B>
+   * <B>概要说明：定时基于token更新用户名</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年06月28日 15:06:34
+   * @Param []
+   **/
+  // 每隔30分钟执行一次：
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void scheduledUpdateUserNameByToken() {
+    log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。");
+    try {
+      List<Map<String, String>> resultList = msSegmentDetailDao.selectAllUserNameIsNotNullAndTokeIsNotNull();
+      if (null != resultList && 0 < resultList.size()) {
+        msSegmentDetailDao.updateBatchByToken(resultList);
+      }
+    } catch (Exception e) {
+      log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
+    }
+  }
+
+  /**
    * <B>方法名称：scheduledUpdateUserPortraitByVisitedTime</B>
    * <B>概要说明：定时更新基于访问时间的用户画像信息</B>
    * 只有用户画像信息有变更了，才将其更新到数据库中。其目的是减少数据库的访问压力。
