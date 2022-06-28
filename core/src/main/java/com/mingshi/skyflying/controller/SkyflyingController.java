@@ -1,9 +1,12 @@
 package com.mingshi.skyflying.controller;
 
+import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
+import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -42,6 +47,50 @@ public class SkyflyingController {
   private MsThirdPartyTableFieldsService msThirdPartyTableFieldsService;
   @Resource
   private UserPortraitRulesService userPortraitRulesService;
+  @Resource
+  private RedisPoolUtil redisPoolUtil;
+
+  /**
+   * <B>方法名称：getActiveSkywalkingAgent</B>
+   * <B>概要说明：获取存活的探针</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月27日 14:06:57
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getActiveSkywalkingAgent", method = RequestMethod.GET)
+  public ServerResponse<String> getActiveSkywalkingAgent() {
+    Integer count = 0;
+    Map<Object, Object> hgetall = redisPoolUtil.hgetall(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST);
+    if (null != hgetall && 0 < hgetall.size()) {
+      Iterator<Object> iterator = hgetall.keySet().iterator();
+      while (iterator.hasNext()) {
+        String key = String.valueOf(iterator.next());
+        String value = String.valueOf(hgetall.get(key));
+
+        long dateIntervalMin = DateTimeUtil.getDateIntervalMin(new Date(), DateTimeUtil.strToDate(value));
+        if (Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL < dateIntervalMin) {
+          iterator.remove();
+          // 暂时先不删除，等以后测试好了，再删除；2022-06-27 15:15:43
+          // 测试的点是：探针所针对的服务实例，每次重新启动时，serviceCode和serviceInstanceName是否会变化；2022-06-27 15:16:47
+          // try {
+          //   redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
+          // } catch (Exception e) {
+          //   e.printStackTrace();
+          //   log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
+          // }
+        }else{
+          ++count;
+        }
+      }
+    }
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(hgetall));
+    log.info(" 执行完毕 # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针数量是【{}】。", count);
+    return bySuccess;
+  }
 
   /**
    * <B>方法名称：getUserPortraitRules</B>
@@ -216,16 +265,17 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getAllAlarmInfoDetailByUserName</B>
    * <B>概要说明：获取指定用户所有的异常信息</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月24日 16:06:19
    * @Param [userName, pageNo, pageSize]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllAlarmInfoDetailByUserName", method = RequestMethod.GET)
   public ServerResponse<String> getAllAlarmInfoDetailByUserName(@RequestParam(value = "userName") String userName,
-                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return msAlarmInformationService.getAllAlarmInfoDetailByUserName(userName, pageNo, pageSize);
   }
 
