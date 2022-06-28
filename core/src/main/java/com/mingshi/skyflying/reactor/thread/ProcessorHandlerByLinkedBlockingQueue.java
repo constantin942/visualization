@@ -19,7 +19,8 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> linkedBlockingQueue;
 
   // 队列里存放的消息的个数；2022-06-01 09:42:19
-  private final Integer queueNoBatchSize = 256;
+  private final Integer queueNoBatchSize = 2000;
+  // private final Integer queueNoBatchSize = 256;
 
   private Instant now = Instant.now();
   private SegmentConsumerService segmentConsumerService;
