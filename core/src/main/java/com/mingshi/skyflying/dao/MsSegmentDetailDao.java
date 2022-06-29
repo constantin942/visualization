@@ -23,7 +23,11 @@ public interface MsSegmentDetailDao {
 
   List<MsSegmentDetailDo> selectAll(Map<String, Object> map);
 
+  List<Map<String, String>> selectBatchUserNameIsNotNullAndTokeIsNotNull(List<Integer> list);
+
   List<Map<String, String>> selectAllUserNameIsNotNullAndTokeIsNotNull();
+
+  List<Integer> selectAllId();
 
   int updateByPrimaryKeySelective(MsSegmentDetailDo record);
 
