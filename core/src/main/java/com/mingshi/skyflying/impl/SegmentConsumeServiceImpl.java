@@ -323,7 +323,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       if (null != segmentDo) {
         jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
@@ -340,10 +340,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
         jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
       }
-      if (0 == atomicInteger.incrementAndGet() % 500) {
+      if (linkedBlockingQueue.size() == BatchInsertByLinkedBlockingQueue.getQueueSize()) {
         // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
+        log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
       }
+      // if (0 == atomicInteger.incrementAndGet() % 5000) {
+      //   // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+      //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
+      // }
       if (null != jsonObject && 0 < jsonObject.size()) {
         linkedBlockingQueue.put(jsonObject);
       }

@@ -60,6 +60,31 @@ public class RedisPoolUtil {
     return false;
   }
 
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "hmsetFallback2")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public boolean hsetBatch2(String key, Map<String, Integer> map) {
+    try {
+      stringRedisTemplate.opsForHash().putAll(key, map);
+      return true;
+    } catch (Exception e) {
+      log.error("# RedisPoolUtil.hsetBatch2() # 往redis中存放数据时，出现了异常。", e);
+      return false;
+    }
+  }
+
+  public boolean hmsetFallbackBatch2(String key, Map<String, Integer> map, Throwable throwable) {
+    log.error("hmsetFallbackBatch2 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return false;
+  }
+
   //批量插入redis，key的类型是string
   @HystrixCommand(
     threadPoolProperties = {

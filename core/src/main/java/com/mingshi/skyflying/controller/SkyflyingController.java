@@ -1,10 +1,8 @@
 package com.mingshi.skyflying.controller;
 
-import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
-import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.JsonUtil;
 import com.mingshi.skyflying.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -48,7 +44,45 @@ public class SkyflyingController {
   @Resource
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
-  private RedisPoolUtil redisPoolUtil;
+  private MsAgentInformationService msAgentInformationService;
+
+  /**
+   * <B>方法名称：updateSkywalkingAgent</B>
+   * <B>概要说明：更新探针别名</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月29日 14:06:30
+   * @Param [agentCode, pageNo, pageSize]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateSkywalkingAgent", method = RequestMethod.GET)
+  public ServerResponse<String> updateSkywalkingAgent(
+    @RequestParam(value = "id") Integer id,
+    @RequestParam(value = "agentName") String agentName) {
+    ServerResponse<String> bySuccess = msAgentInformationService.updateSkywalkingAgent(id, agentName);
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getAllSkywalkingAgent</B>
+   * <B>概要说明：从数据库中获取所有的探针信息</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月29日 10:06:11
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllSkywalkingAgent", method = RequestMethod.GET)
+  public ServerResponse<String> getAllSkywalkingAgent(
+    String agentCode,
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+    ServerResponse<String> bySuccess = msAgentInformationService.getAllSkywalkingAgent(agentCode, pageNo, pageSize);
+    return bySuccess;
+  }
 
   /**
    * <B>方法名称：getActiveSkywalkingAgent</B>
@@ -62,34 +96,7 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getActiveSkywalkingAgent", method = RequestMethod.GET)
   public ServerResponse<String> getActiveSkywalkingAgent() {
-    Integer count = 0;
-    Map<Object, Object> hgetall = redisPoolUtil.hgetall(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST);
-    if (null != hgetall && 0 < hgetall.size()) {
-      Iterator<Object> iterator = hgetall.keySet().iterator();
-      while (iterator.hasNext()) {
-        String key = String.valueOf(iterator.next());
-        String value = String.valueOf(hgetall.get(key));
-
-        long dateIntervalMin = DateTimeUtil.getDateIntervalMin(new Date(), DateTimeUtil.strToDate(value));
-        if (Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL < dateIntervalMin) {
-          iterator.remove();
-          // 暂时先不删除，等以后测试好了，再删除；2022-06-27 15:15:43
-          // 测试的点是：探针所针对的服务实例，每次重新启动时，serviceCode和serviceInstanceName是否会变化；2022-06-27 15:16:47
-          // try {
-          //   redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
-          // } catch (Exception e) {
-          //   e.printStackTrace();
-          //   log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
-          // }
-        }else{
-          ++count;
-        }
-      }
-    }
-    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    bySuccess.setData(JsonUtil.obj2String(hgetall));
-    log.info(" 执行完毕 # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针数量是【{}】。", count);
-    return bySuccess;
+    return msAgentInformationService.getActiveSkywalkingAgent();
   }
 
   /**

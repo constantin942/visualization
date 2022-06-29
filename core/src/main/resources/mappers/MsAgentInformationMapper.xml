@@ -24,7 +24,35 @@
     <include refid="Base_Column_List"/>
     from ms_agent_information
   </select>
-  <insert id="insertBatch" parameterType="java.util.List">
+  <select id="selectAllAgents" resultType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+    select <include refid="Base_Column_List" />
+    from ms_agent_information
+    <where>
+      <if test="agentCode != null and  agentCode != null   ">
+        agent_code = #{agentCode}
+      </if>
+    </where>
+    order by id desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectAllAgentsCount" resultType="java.lang.Integer">
+    select count(*)
+    from ms_agent_information
+    <where>
+      <if test="agentCode != null and  agentCode != null   ">
+        agent_code = #{agentCode}
+      </if>
+    </where>
+    order by id desc
+  </select>
+  <select id="selectByAgentCode" parameterType="java.lang.String" resultType="java.lang.String">
+    select agent_name
+    from ms_agent_information
+    where agent_code = #{agentCode}
+  </select>
+  <insert id="insertBatch"  parameterType="java.util.List">
     insert into ms_agent_information
     (agent_code)
     values

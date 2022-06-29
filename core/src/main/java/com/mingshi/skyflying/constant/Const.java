@@ -30,6 +30,7 @@ public class Const {
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
   public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
   public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "skywalkingAgentHeartBeatDolList";
+  public static final String SKYWALKING_CONSUME_QPS = "skywalkingConsumeQps";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
   // public static final String SEGMENT = "segment";
