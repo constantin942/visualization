@@ -107,6 +107,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
 
+        // 将QPS信息刷入Redis中；2022-06-27 13:42:13
+        // mingshiServerUtil.flushQpsToRedis();
+
+        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
 
