@@ -60,17 +60,47 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */1 * * * ?")
+  // @Scheduled(cron = "0 */3 * * * ?")
+  // 每隔2小时执行一次；
+  @Scheduled(cron = "0 0 0/2 * * ?")
   public void scheduledUpdateUserNameByToken() {
+    Instant now1 = Instant.now();
+    Instant now = Instant.now();
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。");
+    List<Integer> resultList = new LinkedList<>();
     try {
-      List<Map<String, String>> resultList = msSegmentDetailDao.selectAllUserNameIsNotNullAndTokeIsNotNull();
+      resultList = msSegmentDetailDao.selectAllId();
       if (null != resultList && 0 < resultList.size()) {
-        msSegmentDetailDao.updateBatchByToken(resultList);
+        Integer stepLength = 2000;
+        Integer end = 0;
+        for (int i = 0; i < resultList.size(); i = i + stepLength) {
+          if (stepLength >= resultList.size()) {
+            List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(resultList);
+            if (null != userNameTokenList && 0 < userNameTokenList.size()) {
+              msSegmentDetailDao.updateBatchByToken(userNameTokenList);
+              break;
+            }
+          } else {
+            if (i + stepLength > resultList.size()) {
+              end = resultList.size();
+            } else {
+              end = i + stepLength;
+            }
+            List<Integer> list = resultList.subList(i, end);
+            List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(list);
+            if (null != userNameTokenList && 0 < userNameTokenList.size()) {
+              msSegmentDetailDao.updateBatchByToken(userNameTokenList);
+              log.info(" #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。更新【{}】条记录，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
+              now = Instant.now();
+            }
+          }
+        }
       }
     } catch (Exception e) {
       log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
     }
+    log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now1));
+    log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
   }
 
   /**
@@ -84,7 +114,8 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */1 * * * ?")
+  // @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 0 0/3 * * ?")
   public void scheduledUpdateUserPortrait() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserPortrait()#定时更新基于访问时间的用户画像信息。");
 
@@ -280,7 +311,8 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */1 * * * ?")
+  // @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 0 0/4 * * ?")
   public void scheduledGetNoCheckAbnormalRecord() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord()# 定时将数据库中用户名不为空，且未进行过基于访问时间的异常检测记录查询出来，然后进行异常检测。");
     Instant start = Instant.now();
@@ -387,7 +419,8 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */1 * * * ?")
+  // @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 0 0/5 * * ?")
   public void scheduledGetDmsAuditLog() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。");
     Instant start = Instant.now();
