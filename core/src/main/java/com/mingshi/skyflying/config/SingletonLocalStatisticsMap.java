@@ -66,6 +66,18 @@ public class SingletonLocalStatisticsMap implements ApplicationRunner {
     return globalTraceIdAndUserNameMap;
   }
 
+  public static Integer getTokenAndUserNameMapLength() {
+    return tokenAndUserNameMap.toString().getBytes().length;
+  }
+
+  public static Integer getGlobalTraceIdAndUserNameMapLength() {
+    return globalTraceIdAndUserNameMap.toString().getBytes().length;
+  }
+
+  public static Integer getGlobalTraceIdAndTokenMapLength() {
+    return globalTraceIdAndTokenMap.toString().getBytes().length;
+  }
+
   /**
    * <B>方法名称：run</B>
    * <B>概要说明：项目启动，从数据库中加载用户名、token、globalTraceId</B>
@@ -81,6 +93,10 @@ public class SingletonLocalStatisticsMap implements ApplicationRunner {
    **/
   @Override
   public void run(ApplicationArguments args) throws Exception {
+    doRun();
+  }
+
+  private void doRun() {
     Instant now = Instant.now();
     log.info("# SingletonLocalStatisticsMap.run() # 项目启动，从数据库中加载用户名、token、globalTraceId到本地内存中。");
     List<MsSegmentDetailDo> list = msSegmentDetailDao.selectByTokenUserNameGlobalTraceIdIsNotNull();
@@ -95,6 +111,13 @@ public class SingletonLocalStatisticsMap implements ApplicationRunner {
       globalTraceIdAndUserNameMap.put(globalTraceId, userName);
       globalTraceIdAndTokenMap.put(globalTraceId, token);
     }
+    Integer tokenAndUserNameMapLength = getTokenAndUserNameMapLength() / 1024 / 1024;
+
+    Integer globalTraceIdAndUserNameMapLength = getGlobalTraceIdAndUserNameMapLength() / 1024 / 1024;
+
+    Integer globalTraceIdAndTokenMapLength = getGlobalTraceIdAndTokenMapLength() / 1024 / 1024;
+    log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中【{}条】。token和用户名map占用【{}】MB、全局链路id和用户名map占据【{}】MB、全局链路id和token map占据【{}】MB", tokenAndUserNameMapLength, globalTraceIdAndUserNameMapLength, globalTraceIdAndTokenMapLength);
     log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中【{}条】。耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
+
   }
 }

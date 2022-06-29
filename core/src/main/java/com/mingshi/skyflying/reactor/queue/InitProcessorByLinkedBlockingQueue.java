@@ -45,6 +45,10 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
+    doRun();
+  }
+
+  private void doRun() {
     if(true == reactorProcessorEnable){
       if(null == reactorProcessorThreadCount || 0 > reactorProcessorThreadCount){
         // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
@@ -57,15 +61,6 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
       createProcessors();
       createProcessorsFinishedFlag = true;
     }
-
-    // 当jvm进程退出时，优雅关闭processor线程；2022-06-01 10:03:12
-    // Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-    //   @Override
-    //   public void run() {
-    //     log.error("# InitProcessorByLinkedBlockingQueue.run() # jvm进程要退出了，将关闭的标志位设置为true。这样processor线程就可以正常的退出了。");
-    //     shutdown = true;
-    //   }
-    // }));
   }
 
   /**
