@@ -19,7 +19,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> linkedBlockingQueue;
 
   // 队列里存放的消息的个数；2022-06-01 09:42:19
-  private final Integer queueNoBatchSize = 2000;
+  private final Integer queueNoBatchSize = 500;
   // private final Integer queueNoBatchSize = 256;
 
   private Instant now = Instant.now();
@@ -33,7 +33,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
 
   public boolean offer(ConsumerRecord<String, Bytes> record) {
     try {
-      if (0 == ++count % 500) {
+      if (0 == ++count % (10 * 10000)) {
         // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
         log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueNoBatchSize);
       }
