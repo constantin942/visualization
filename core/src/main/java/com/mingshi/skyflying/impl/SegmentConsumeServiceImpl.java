@@ -332,7 +332,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       if (null != segmentDo) {
         jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
@@ -569,6 +569,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               break;
             }
             if (tag.getValue().equals("Redis")) {
+              // 不再存储单纯的Redis请求；2022-06-30 16:34:24
+              flag = true;
               break;
             }
             if (key.equals("http.method")) {
