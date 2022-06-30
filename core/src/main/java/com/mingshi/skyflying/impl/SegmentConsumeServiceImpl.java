@@ -140,7 +140,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
         // 将异常信息插入到MySQL中；2022-06-07 18:16:44
         LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
-        msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+        if(null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()){
+          msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+        }
         mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
       }
     } catch (Exception e) {

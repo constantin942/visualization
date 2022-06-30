@@ -445,7 +445,7 @@ public class MingshiServerUtil {
    * @Param [segmentDetaiDolList]
    **/
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
-    if (0 < segmentDetailDoList.size()) {
+    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       try {
         Instant now = Instant.now();
         msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
