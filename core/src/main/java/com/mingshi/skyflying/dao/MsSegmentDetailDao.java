@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.dao;
 
+import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 
 import java.util.List;
@@ -46,4 +47,6 @@ public interface MsSegmentDetailDao {
   List<String> selectAllInstanceName();
 
   List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
+
+  List<InstanceTable> selectAllInstanceAndTableName();
 }

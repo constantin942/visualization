@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.controller;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
+import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
@@ -511,10 +512,14 @@ public class SkyflyingController {
   public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
                                                                       String visitedTable, /* 访问数据库的表 */
                                                                       String visitedDate, /* 访问数据库表的时间 */
+                                                                      String visitedDbInstance,/*访问的数据库*/
                                                                       @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, pageNo, pageSize);
+
+
+    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance,pageNo, pageSize);
   }
+
 
   /**
    * <B>方法名称：userPortraitByVisitedTable</B>
@@ -636,6 +641,23 @@ public class SkyflyingController {
   public ServerResponse<String> getAllMsTableName() {
     return segmentDetailService.getAllMsTableName();
   }
+
+
+  /**
+   * <B>方法名称：getAllInstanceAndTableName/B>
+   * <B>概要说明：获取所有的库表名以及数据库名</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年06月1日 14:30:19
+   * @Param
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllInstanceAndTableName", method = RequestMethod.GET)
+  public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
+    return segmentDetailService.getAllInstanceAndTableName();
+  }
+
 
   /**
    * <B>方法名称：getAllSegments</B>

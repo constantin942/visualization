@@ -7,10 +7,7 @@ import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.domain.SegmentRelationDo;
-import com.mingshi.skyflying.domain.UserTokenDo;
+import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.JsonUtil;
@@ -117,6 +114,14 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Override
   public ServerResponse<String> getAllMsTableName() {
     List<String> list = msSegmentDetailDao.selectAllMsTableName();
+    ServerResponse serverResponse = ServerResponse.createBySuccess();
+    serverResponse.setData(JsonUtil.obj2String(list));
+    return serverResponse;
+  }
+
+  @Override
+  public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
+    List<InstanceTable> list = msSegmentDetailDao.selectAllInstanceAndTableName();
     ServerResponse serverResponse = ServerResponse.createBySuccess();
     serverResponse.setData(JsonUtil.obj2String(list));
     return serverResponse;

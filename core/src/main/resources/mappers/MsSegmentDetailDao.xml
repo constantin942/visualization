@@ -201,6 +201,7 @@
            user_name,
            start_time,
            ms_table_name,
+           db_instance,
            db_type
     from ms_segment_detail
     where user_name is not null
@@ -214,6 +215,11 @@
     <include refid="Blob_Column_List"/>
     from ms_segment_detail
     where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAllInstanceAndTableName" resultType="com.mingshi.skyflying.domain.InstanceTable">
+    SELECT DISTINCT db_instance,ms_table_name
+    FROM `ms_segment_detail`
+    where db_instance is not null
   </select>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail

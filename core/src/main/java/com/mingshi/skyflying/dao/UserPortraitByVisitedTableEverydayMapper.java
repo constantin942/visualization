@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.dao;
 
+import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
 
 import java.util.List;
@@ -27,5 +28,5 @@ public interface UserPortraitByVisitedTableEverydayMapper {
 
     List<String> selectAllUserName();
 
-    List<String> selectAllVisitedTable();
+    List<InstanceTable> selectAllVisitedTable();
 }

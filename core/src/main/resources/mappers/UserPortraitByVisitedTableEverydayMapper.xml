@@ -47,11 +47,13 @@
     from user_portrait_by_visited_table_everyday
     group by user_name
   </select>
-  <select id="selectAllVisitedTable" resultType="java.lang.String">
-    select visited_table
+
+  <select id="selectAllVisitedTable" resultType="com.mingshi.skyflying.domain.InstanceTable">
+    select distinct visited_db_instance,visited_table
     from user_portrait_by_visited_table_everyday
-    group by visited_table
+--     group by visited_table,visited_db_instance
   </select>
+
   <select id="selectByUserNameAndVisitedTableAndVisitedDateCount" parameterType="java.util.Map"
           resultType="java.lang.Integer">
     select count(id)
@@ -69,12 +71,15 @@
       <if test="visitedDate != null and  visitedDate != null   ">
         and visited_date <![CDATA[ <= ]]> #{visitedDate}
       </if>
+      <if test="visitedDbInstance != null and  visitedDbInstance != null   ">
+        and visited_db_instance=#{visitedDbInstance}
+      </if>
     </where>
   </select>
   <select id="selectByUserNameAndVisitedTableAndVisitedDate" parameterType="java.util.Map"
           resultMap="BaseResultMap">
     select
-    id, is_delete, user_name, rule_name, visited_table, visited_count, visited_date, db_type
+    id, is_delete, user_name, rule_name, visited_table, visited_count, visited_date, db_type,visited_db_instance
     from user_portrait_by_visited_table_everyday
     <where>
       <if test="userName != null and  userName != null   ">
@@ -89,6 +94,9 @@
       <if test="visitedDate != null and  visitedDate != null   ">
         and visited_date <![CDATA[ <= ]]> #{visitedDate}
       </if>
+      <if test="visitedDbInstance != null and  visitedDbInstance != null   ">
+        and visited_db_instance=#{visitedDbInstance}
+      </if>
     </where>
     order by visited_date desc
     <if test="pageNo != null and  pageSize != null   ">
@@ -98,7 +106,7 @@
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into user_portrait_by_visited_table_everyday
-    (user_name, rule_name, visited_table, visited_count, visited_date, db_type)
+    (user_name, rule_name, visited_table, visited_count, visited_date, db_type,visited_db_instance)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -107,7 +115,8 @@
       #{item.visitedTable,jdbcType=VARCHAR},
       #{item.visitedCount,jdbcType=INTEGER},
       #{item.visitedDate,jdbcType=TIMESTAMP},
-      #{item.dbType,jdbcType=VARCHAR}
+      #{item.dbType,jdbcType=VARCHAR},
+      #{item.visitedDbInstance,jdbcType=VARCHAR}
       )
     </foreach>
     ON DUPLICATE KEY UPDATE visited_count=values(visited_count)

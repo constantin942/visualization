@@ -5,6 +5,7 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
+import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -67,7 +68,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
 
   @Override
   public ServerResponse<String> createUserPortraitByVisitedTableEveryday() {
-    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> statisticsMap = new HashMap<>();
+    Map<String/* 用户名 */,Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>> statisticsMap = new HashMap<>();
 
     // 统计用户每天访问过的表的访问次数
     statisticsEverydayVistedTableCount(statisticsMap);
@@ -88,7 +89,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * @Param [userName, visitedTable, visitedTime, pageNo, pageSize]
    **/
   @Override
-  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, String visitedTable, String visitedDate, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, String visitedTable, String visitedDate, String visitedDbInstance,Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>();
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put("userName", userName);
@@ -99,6 +100,9 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     if (StringUtil.isNotBlank(visitedDate)) {
       queryMap.put("visitedDate", visitedDate);
     }
+    if (StringUtil.isNotBlank(visitedDbInstance)) {
+      queryMap.put("visitedDbInstance", visitedDbInstance);
+    }
     if (null == pageNo) {
       pageNo = 1;
     }
@@ -107,6 +111,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     }
     queryMap.put("pageNo", (pageNo - 1) * pageSize);
     queryMap.put("pageSize", pageSize);
+
     List<UserPortraitByVisitedTableEverydayDo> userPortraitByVisitedTableEverydayDos = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndVisitedTableAndVisitedDate(queryMap);
 
 
@@ -132,18 +137,22 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    **/
   @Override
   public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
-    HashSet<String> hashSet = new HashSet<>();
-    List<String> visitedTableList = userPortraitByVisitedTableEverydayMapper.selectAllVisitedTable();
-    for (String table : visitedTableList) {
-      if (table.contains(",")) {
-        String[] split = table.split(",");
+    //lhx新增：返回值从String变为InstanceTable，即新增了instance的信息。
+    //HashSet<String> hashSet = new HashSet<>();
+    HashSet<InstanceTable> hashSet=new HashSet<>();
+    List<InstanceTable> visitedTableList = userPortraitByVisitedTableEverydayMapper.selectAllVisitedTable();
+
+    for (InstanceTable table : visitedTableList) {
+      if (table.getMsTableName().contains(",")) {
+        String[] split = table.getMsTableName().split(",");
         for (String s : split) {
-          hashSet.add(s);
+          hashSet.add(new InstanceTable(table.getDbInstance(),s));
         }
       } else {
-        hashSet.add(table);
+        hashSet.add(new InstanceTable(table.getDbInstance(),table.getMsTableName()));
       }
     }
+
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(hashSet));
     return bySuccess;
@@ -425,7 +434,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * @Date 2022年06月08日 16:06:44
    * @Param [statisticsMap]
    **/
-  private void statisticsEverydayVistedTableCount(Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userVisitedTableDateCountMap) {
+  private void statisticsEverydayVistedTableCount( Map<String/* 用户名 */,Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>> userVisitedTableDateCountMap) {
     Instant selectNow = Instant.now();
     // 获取所有的历史数据，根据用户访问系统的时间，来计算其时间维度的画像。
     List<MsSegmentDetailDo> list = msSegmentDetailDao.selectAllUserNameIsNotNullAndTableNameIsNotNull();
@@ -436,16 +445,31 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
         String userName = msSegmentDetailDo.getUserName();
         String tableName = msSegmentDetailDo.getMsTableName();
         String startTime = msSegmentDetailDo.getStartTime();
+        //lhx新增
+        String dbInstance=msSegmentDetailDo.getDbInstance();
+
         Date date = DateTimeUtil.strToDate(startTime, DateTimeUtil.DATEFORMAT_STR_001);
         String strToDateToStr = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
+
         msSegmentDetailDo.setUserPortraitFlagByVisitedTableEveryday(1);
 
-        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = userVisitedTableDateCountMap.get(userName);
+
+        //lhx新增，再tablename外嵌套一层dbInstance
+        Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> visitedDbInstanceMap=userVisitedTableDateCountMap.get(userName);
+        if (null == visitedDbInstanceMap) {
+          visitedDbInstanceMap = new ConcurrentHashMap<>();
+          userVisitedTableDateCountMap.put(userName,visitedDbInstanceMap);
+        }
+
+
+        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = visitedDbInstanceMap.get(dbInstance);
         if (null == visitedTableDateCountMap) {
           visitedTableDateCountMap = new ConcurrentHashMap<>();
-          userVisitedTableDateCountMap.put(userName, visitedTableDateCountMap);
+          visitedDbInstanceMap.put(dbInstance,visitedTableDateCountMap);
         }
+
+
         Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
         if (null == dateDbTypeCountMap) {
           dateDbTypeCountMap = new ConcurrentHashMap<>();
@@ -480,36 +504,43 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * @Date 2022年06月08日 16:06:35
    * @Param [list]
    **/
-  private void batchInsertUserPortraitByVisitedTable(Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userVisitedTableDateCountMap) {
+  private void batchInsertUserPortraitByVisitedTable(Map<String/* 用户名 */,Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>> userVisitedTableDateCountMap) {
     try {
       List<UserPortraitByVisitedTableEverydayDo> list = new LinkedList<>();
       if (null == userVisitedTableDateCountMap || 0 == userVisitedTableDateCountMap.size()) {
         return;
       }
-      Iterator<String> iterator = userVisitedTableDateCountMap.keySet().iterator();
-      while (iterator.hasNext()) {
-        String userName = iterator.next();
-        Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = userVisitedTableDateCountMap.get(userName);
-        Iterator<String> iterator2 = visitedTableDateCountMap.keySet().iterator();
-        while (iterator2.hasNext()) {
-          String tableName = iterator2.next();
-          Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
-          Iterator<String> iterator3 = dateDbTypeCountMap.keySet().iterator();
-          while (iterator3.hasNext()) {
+      Iterator<String> iterator0 = userVisitedTableDateCountMap.keySet().iterator();
 
-            String dateTime = iterator3.next();
-            Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateDbTypeCountMap.get(dateTime);
-            Iterator<String> iterator1 = dbTypeCountMap.keySet().iterator();
-            while (iterator1.hasNext()) {
-              UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo = new UserPortraitByVisitedTableEverydayDo();
-              userPortraitByVisitedTableEverydayDo.setUserName(userName);
-              String dbType = iterator1.next();
-              Integer tableNameCount = dbTypeCountMap.get(dbType);
-              userPortraitByVisitedTableEverydayDo.setDbType(dbType);
-              userPortraitByVisitedTableEverydayDo.setVisitedTable(tableName);
-              userPortraitByVisitedTableEverydayDo.setVisitedCount(tableNameCount);
-              userPortraitByVisitedTableEverydayDo.setVisitedDate(dateTime);
-              list.add(userPortraitByVisitedTableEverydayDo);
+      while (iterator0.hasNext()) {
+
+        String userName = iterator0.next();
+        Map<String/*数据库名*/,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>visitedDbInstanceDateCountMap = userVisitedTableDateCountMap.get(userName);
+        Iterator<String> iterator1=visitedDbInstanceDateCountMap.keySet().iterator();
+        while (iterator1.hasNext()){
+          String dbInstance=iterator1.next();
+          Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>visitedTableDateCountMap=visitedDbInstanceDateCountMap.get(dbInstance);
+          Iterator<String> iterator2 = visitedTableDateCountMap.keySet().iterator();
+          while (iterator2.hasNext()) {
+            String tableName = iterator2.next();
+            Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
+            Iterator<String> iterator3 = dateDbTypeCountMap.keySet().iterator();
+            while (iterator3.hasNext()) {
+              String dateTime = iterator3.next();
+              Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateDbTypeCountMap.get(dateTime);
+              Iterator<String> iterator4 = dbTypeCountMap.keySet().iterator();
+              while (iterator4.hasNext()) {
+                UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo = new UserPortraitByVisitedTableEverydayDo();
+                userPortraitByVisitedTableEverydayDo.setUserName(userName);
+                String dbType = iterator4.next();
+                Integer tableNameCount = dbTypeCountMap.get(dbType);
+                userPortraitByVisitedTableEverydayDo.setDbType(dbType);
+                userPortraitByVisitedTableEverydayDo.setVisitedTable(tableName);
+                userPortraitByVisitedTableEverydayDo.setVisitedCount(tableNameCount);
+                userPortraitByVisitedTableEverydayDo.setVisitedDate(dateTime);
+                userPortraitByVisitedTableEverydayDo.setVisitedDbInstance(dbInstance);
+                list.add(userPortraitByVisitedTableEverydayDo);
+              }
             }
           }
         }
