@@ -116,7 +116,7 @@ public class SingletonLocalStatisticsMap implements ApplicationRunner {
     Integer globalTraceIdAndUserNameMapLength = getGlobalTraceIdAndUserNameMapLength() / 1024 / 1024;
 
     Integer globalTraceIdAndTokenMapLength = getGlobalTraceIdAndTokenMapLength() / 1024 / 1024;
-    log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中【{}条】。token和用户名map占用【{}】MB、全局链路id和用户名map占据【{}】MB、全局链路id和token map占据【{}】MB", tokenAndUserNameMapLength, globalTraceIdAndUserNameMapLength, globalTraceIdAndTokenMapLength);
+    log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中。token和用户名map占用【{}】MB、全局链路id和用户名map占据【{}】MB、全局链路id和token map占据【{}】MB", tokenAndUserNameMapLength, globalTraceIdAndUserNameMapLength, globalTraceIdAndTokenMapLength);
     log.info("# SingletonLocalStatisticsMap.run() # 执行完毕，从数据库中加载用户名、token、globalTraceId到本地内存中【{}条】。耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
 
   }

@@ -30,10 +30,16 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
   private MsAlarmInformationMapper msAlarmInformationMapper;
 
   @Override
-  public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>();
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put("userName", userName);
+    }
+    if (null != matchRuleId) {
+      queryMap.put("matchRuleId", matchRuleId);
+    }
+    if (StringUtil.isNotBlank(originalTime)) {
+      queryMap.put("originalTime", originalTime);
     }
     if (null == pageNo) {
       pageNo = 1;
@@ -72,7 +78,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     }
     queryMap.put("pageNo", (pageNo - 1) * pageSize);
     queryMap.put("pageSize", pageSize);
-    List<Map<String,Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllUserTimes(queryMap);
+    List<Map<String, Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllUserTimes(queryMap);
 
     Integer count = msAlarmInformationMapper.selectAllUserTimesCount(queryMap);
 
@@ -91,6 +97,31 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     List<String> userNameList = msAlarmInformationMapper.selectAllUserName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(userNameList));
+    return bySuccess;
+  }
+
+  @Override
+  public ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(Integer pageNo, Integer pageSize) {
+    Map<String, Object> queryMap = new HashMap<>();
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+    List<Map<String, Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllByGroupByUserName(queryMap);
+
+    Integer count = msAlarmInformationMapper.selectAllByGroupByUserNameCount();
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
+    context.put("total", count);
+
+    log.info("# MsAlarmInformationServiceImpl.getAllAlarmInfo() # 获取所有的告警信息，根据条件【{}】在数据库中查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), alarmInformationDoList.size());
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    bySuccess.setData(JsonUtil.obj2String(context));
     return bySuccess;
   }
 }

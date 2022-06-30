@@ -26,6 +26,7 @@ import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,6 +63,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
+    Instant now1 = Instant.now();
+    Instant now = Instant.now();
     SegmentObject segmentObject = null;
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
@@ -91,8 +94,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
         reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
 
+        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完95行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+        // now = Instant.now();
+
         // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
         segmentDetaiDolList = getSegmentDetaiDolList(segment);
+        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完100行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
 
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
@@ -139,7 +146,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
-    // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+    // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now1));
   }
 
   /**
@@ -471,7 +478,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         childrenSpan.add(span);
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        // getData(span, linkedList);
         getData2(segment, span, linkedList, auditLogFromSkywalkingAgent);
         findChildrenDetail(segment, spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
       }
@@ -515,7 +521,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
-        // getData(span, linkedList);
         getData2(segmentDo, span, linkedList, auditLogFromSkywalkingAgent);
         findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
       }
@@ -566,8 +571,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             }
             if (key.equals("http.method")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              // flag = true;
-              // break;
+              flag = true;
+              break;
             } else if (key.equals("db.instance")) {
               msSchemaName = tag.getValue();
             } else if (key.equals("db_user_name")) {

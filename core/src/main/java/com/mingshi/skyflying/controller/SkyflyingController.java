@@ -1,10 +1,10 @@
 package com.mingshi.skyflying.controller;
 
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
 import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author zhaoming
@@ -45,6 +48,34 @@ public class SkyflyingController {
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
   private MsAgentInformationService msAgentInformationService;
+
+  /**
+   * <B>方法名称：getQps</B>
+   * <B>概要说明：获取消费线程的QPS</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月29日 17:06:41
+   * @Param [id, agentName]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getQps", method = RequestMethod.GET)
+  public ServerResponse<String> getQps() {
+    Map<String, Integer> countMap = new HashMap<>();
+    Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    if (null != timeCountMap && 0 < timeCountMap.size()) {
+      Iterator<String> iterator = timeCountMap.keySet().iterator();
+      while (iterator.hasNext()) {
+        String key = iterator.next();
+        AtomicInteger atomicInteger = timeCountMap.get(key);
+        Integer value = atomicInteger.intValue();
+        countMap.put(key, value);
+      }
+    }
+    bySuccess.setData(JsonUtil.obj2String(countMap));
+    return bySuccess;
+  }
 
   /**
    * <B>方法名称：updateSkywalkingAgent</B>
@@ -281,9 +312,11 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getAllAlarmInfoDetailByUserName", method = RequestMethod.GET)
   public ServerResponse<String> getAllAlarmInfoDetailByUserName(@RequestParam(value = "userName") String userName,
+                                                                Integer matchRuleId,
+                                                                String originalTime,
                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return msAlarmInformationService.getAllAlarmInfoDetailByUserName(userName, pageNo, pageSize);
+    return msAlarmInformationService.getAllAlarmInfoDetailByUserName(userName, matchRuleId, originalTime, pageNo, pageSize);
   }
 
   /**
@@ -301,6 +334,23 @@ public class SkyflyingController {
                                                         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return msAlarmInformationService.getAllAlarmInfo(userName, pageNo, pageSize);
+  }
+
+  /**
+   * <B>方法名称：getAnomalyDetectionInfoByGroupByUserName</B>
+   * <B>概要说明：根据用户名分组获取告警摘要信息</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年06月30日 09:06:06
+   * @Param [pageNo, pageSize]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAnomalyDetectionInfoByGroupByUserName", method = RequestMethod.GET)
+  public ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return msAlarmInformationService.getAnomalyDetectionInfoByGroupByUserName(pageNo, pageSize);
   }
 
   /**

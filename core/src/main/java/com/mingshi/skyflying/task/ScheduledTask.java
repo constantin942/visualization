@@ -60,9 +60,9 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  // @Scheduled(cron = "0 */3 * * * ?")
+  @Scheduled(cron = "0 */3 * * * ?")
   // 每隔2小时执行一次；
-  @Scheduled(cron = "0 0 0/2 * * ?")
+  // @Scheduled(cron = "0 0 0/2 * * ?")
   public void scheduledUpdateUserNameByToken() {
     Instant now1 = Instant.now();
     Instant now = Instant.now();
@@ -419,8 +419,7 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  // @Scheduled(cron = "0 */1 * * * ?")
-  @Scheduled(cron = "0 0 0/5 * * ?")
+  @Scheduled(cron = "0 */30 * * * ?")
   public void scheduledGetDmsAuditLog() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。");
     Instant start = Instant.now();

@@ -34,7 +34,6 @@ public class AiitKafkaConsumer {
   public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());
     if (message.isPresent()) {
-      // recordForwarding(record);
       if(true == reactorProcessorEnable){
         useReactorModel(record);
       }else{
