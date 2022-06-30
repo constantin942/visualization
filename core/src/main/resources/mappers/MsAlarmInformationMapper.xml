@@ -36,10 +36,10 @@
         user_name = #{userName}
       </if>
       <if test="matchRuleId != null and  matchRuleId != null   ">
-        match_rule_id = #{matchRuleId}
+        and match_rule_id = #{matchRuleId}
       </if>
       <if test="originalTime != null and  originalTime != null   ">
-        original_time = #{originalTime}
+        and original_time = #{originalTime}
       </if>
     </where>
   </select>
@@ -49,13 +49,13 @@
     from ms_alarm_information
     <where>
       <if test="userName != null and  userName != null   ">
-        user_name = #{userName}
+       user_name = #{userName}
       </if>
       <if test="matchRuleId != null and  matchRuleId != null   ">
-        match_rule_id = #{matchRuleId}
+        and match_rule_id = #{matchRuleId}
       </if>
       <if test="originalTime != null and  originalTime != null   ">
-        original_time = #{originalTime}
+        and original_time = #{originalTime}
       </if>
     </where>
     <if test="pageNo != null and  pageSize != null   ">
