@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.controller;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
@@ -62,19 +63,62 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getQps", method = RequestMethod.GET)
   public ServerResponse<String> getQps() {
-    Map<String, Integer> countMap = new HashMap<>();
-    Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
-    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    if (null != timeCountMap && 0 < timeCountMap.size()) {
-      Iterator<String> iterator = timeCountMap.keySet().iterator();
+    Map<String/* 时间 */, Integer> countMap1 = new HashMap<>();
+    Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
+      StatisticsConsumeProcessorThreadQPS.getStatisticsConsumeProcessorThreadQPSMap();
+
+    Integer maxValue1 = -1;
+    if (null != threadNameTimeCountMap && 0 < threadNameTimeCountMap.size()) {
+      Iterator<String> iterator = threadNameTimeCountMap.keySet().iterator();
       while (iterator.hasNext()) {
-        String key = iterator.next();
-        AtomicInteger atomicInteger = timeCountMap.get(key);
-        Integer value = atomicInteger.intValue();
-        countMap.put(key, value);
+        String threadName = iterator.next();
+        Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */> timeCountMap = threadNameTimeCountMap.get(threadName);
+        if (null != timeCountMap && 0 < timeCountMap.size()) {
+          Iterator<String> iterator1 = timeCountMap.keySet().iterator();
+          while (iterator1.hasNext()) {
+            String time = iterator1.next();
+            AtomicInteger atomicInteger = timeCountMap.get(time);
+            Integer value = atomicInteger.intValue();
+            Integer count = countMap1.get(time);
+            if (null == count) {
+              countMap1.put(time, value);
+              maxValue1 = Math.max(maxValue1, value);
+            } else {
+              int tempValue = value + count;
+              countMap1.put(time, tempValue);
+              maxValue1 = Math.max(maxValue1, tempValue);
+            }
+          }
+        }
       }
     }
-    bySuccess.setData(JsonUtil.obj2String(countMap));
+
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    ObjectNode jsonObject = JsonUtil.createJSONObject();
+    jsonObject.put("maxQps1", maxValue1);
+
+    // return bySuccess;
+    // Map<String, Integer> countMap2 = new HashMap<>();
+    // Integer maxValue2 = -1;
+    // Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
+    // // ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    // if (null != timeCountMap && 0 < timeCountMap.size()) {
+    //   Iterator<String> iterator = timeCountMap.keySet().iterator();
+    //   while (iterator.hasNext()) {
+    //     String key = iterator.next();
+    //     AtomicInteger atomicInteger = timeCountMap.get(key);
+    //     Integer value = atomicInteger.intValue();
+    //     countMap2.put(key, value);
+    //     maxValue2 = Math.max(maxValue2, value);
+    //   }
+    // }
+    // if(!maxValue1.equals(maxValue2)){
+    //   jsonObject.put("detail1", JsonUtil.obj2String(countMap1));
+    //   jsonObject.put("maxValue2", maxValue2);
+    //   jsonObject.put("detail2", JsonUtil.obj2String(countMap2));
+    // }
+
+    bySuccess.setData(jsonObject.toString());
     return bySuccess;
   }
 

@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
@@ -12,9 +11,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>主类名称: mingshiServerUtil</B>
@@ -391,26 +392,26 @@ public class MingshiServerUtil {
    * @Param []
    * @return void
    **/
-  public void flushQpsToRedis() {
-    Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
-    if (null != timeCountMap && 0 < timeCountMap.size()) {
-      try {
-        Map<String, Integer> countMap = new HashMap<>();
-        // Map<String, String> countMap = new HashMap<>();
-        Iterator<String> iterator = timeCountMap.keySet().iterator();
-        while(iterator.hasNext()){
-          String key = iterator.next();
-          AtomicInteger value = timeCountMap.get(key);
-          countMap.put(key,value.intValue());
-        }
-        Instant now = Instant.now();
-        redisPoolUtil.hsetBatch2(Const.SKYWALKING_CONSUME_QPS, countMap);
-        log.info("#SegmentConsumeServiceImpl.flushQpsToRedis()# 将QPS信息【{}条】发送到Redis中耗时【{}】毫秒。", timeCountMap.size(), DateTimeUtil.getTimeMillis(now));
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushQpsToRedis() # 将QPS批量发送到Redis中出现了异常。", e);
-      }
-    }
-  }
+  // public void flushQpsToRedis() {
+  //   Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
+  //   if (null != timeCountMap && 0 < timeCountMap.size()) {
+  //     try {
+  //       Map<String, Integer> countMap = new HashMap<>();
+  //       // Map<String, String> countMap = new HashMap<>();
+  //       Iterator<String> iterator = timeCountMap.keySet().iterator();
+  //       while(iterator.hasNext()){
+  //         String key = iterator.next();
+  //         AtomicInteger value = timeCountMap.get(key);
+  //         countMap.put(key,value.intValue());
+  //       }
+  //       Instant now = Instant.now();
+  //       redisPoolUtil.hsetBatch2(Const.SKYWALKING_CONSUME_QPS, countMap);
+  //       log.info("#SegmentConsumeServiceImpl.flushQpsToRedis()# 将QPS信息【{}条】发送到Redis中耗时【{}】毫秒。", timeCountMap.size(), DateTimeUtil.getTimeMillis(now));
+  //     } catch (Exception e) {
+  //       log.error("# SegmentConsumeServiceImpl.flushQpsToRedis() # 将QPS批量发送到Redis中出现了异常。", e);
+  //     }
+  //   }
+  // }
 
   /**
    * <B>方法名称：flushSkywalkingAgentNameToRedis</B>
