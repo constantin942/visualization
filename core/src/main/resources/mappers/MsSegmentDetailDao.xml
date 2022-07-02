@@ -65,9 +65,9 @@
     select count(*)
     from (select global_trace_id
     from ms_segment_detail
-    <where>
+    where user_name is not null
       <if test="userName != null and  userName != null   ">
-        user_name = #{userName}
+        and user_name = #{userName}
       </if>
       <if test="operationType != null and  operationType != null   ">
         and operation_type = #{operationType}
@@ -84,13 +84,12 @@
       <if test="msTableName != null and  msTableName != null   ">
         and ms_table_name = #{msTableName}
       </if>
-    </where>
     group by global_trace_id) as t1;
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select *
     from ms_segment_detail
-    where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
+    where user_name is not null and global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
     <where>
       <if test="userName != null and  userName != null   ">
         user_name = #{userName}
