@@ -69,13 +69,20 @@ public class SqlParserUtils {
     List<String> tableList = new ArrayList<>();
     TablesNamesFinder tablesNamesFinder = null;
     try {
-      Statement statement = CCJSqlParserUtil.parse(sql);
+      Statement statement = null;
+        String newSql = null;
+      if(sql.contains("like")){
+        newSql = sql.replace("\"%\"","");
+        statement = CCJSqlParserUtil.parse(newSql);
+      }else{
+        statement = CCJSqlParserUtil.parse(sql);
+      }
       selectStatement = (Select) statement;
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(selectStatement);
     } catch (Exception e) {
       // TODO：当这里出现异常的时候，大部分是因为SQL语句不完整造成的。有空了需要确认下，是不是skywalking探针获取到的SQL就是这个样子的。2022-06-06 16:47:37
-      // log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql);
+      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
     }
     return tableList;
   }
@@ -90,7 +97,7 @@ public class SqlParserUtils {
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(insertStatement);
     } catch (JSQLParserException e) {
-      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql);
+      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
     }
     return tableList;
   }
@@ -120,7 +127,7 @@ public class SqlParserUtils {
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(deleteStatement);
     } catch (Exception e) {
-      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql);
+      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
     }
     return tableList;
   }

@@ -195,17 +195,17 @@ public class IoThread extends Thread {
    * @Date 2022年06月01日 10:06:21
    * @Param [jsonObject]
    **/
-  private void getAuditLogFromJSONObject(ObjectNode jsonObject) {
-    try {
-      String listString = jsonObject.get(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST).asText();
-      if (StringUtil.isNotBlank(listString)) {
-        LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = JsonUtil.string2Obj(listString, LinkedList.class, MsAuditLogDo.class);
-        auditLogList.addAll(auditLogFromSkywalkingAgentList);
-      }
-    } catch (Exception e) {
-      log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
-    }
-  }
+  // private void getAuditLogFromJSONObject(ObjectNode jsonObject) {
+  //   try {
+  //     String listString = jsonObject.get(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST).asText();
+  //     if (StringUtil.isNotBlank(listString)) {
+  //       LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = JsonUtil.string2Obj(listString, LinkedList.class, MsAuditLogDo.class);
+  //       auditLogList.addAll(auditLogFromSkywalkingAgentList);
+  //     }
+  //   } catch (Exception e) {
+  //     log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
+  //   }
+  // }
 
   /**
    * <B>方法名称：getSegmentFromJSONObject</B>

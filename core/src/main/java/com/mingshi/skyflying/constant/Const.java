@@ -28,7 +28,7 @@ public class Const {
 
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
-  public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
+  // public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
   public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "skywalkingAgentHeartBeatDolList";
   public static final String SKYWALKING_CONSUME_QPS = "skywalkingConsumeQps";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";

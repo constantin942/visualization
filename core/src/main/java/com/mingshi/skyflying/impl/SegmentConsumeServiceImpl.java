@@ -72,7 +72,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
       SegmentDo segment = null;
       // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
-      LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = null;
+      // LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = null;
       // 判断是否是异常信息；2022-06-07 18:00:13
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
       // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
@@ -90,9 +90,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         setSegmentIndex(segment);
 
-        auditLogFromSkywalkingAgentList = new LinkedList<>();
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
-        reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
+        reorganizingSpans(segment, spanList);
+
+        // auditLogFromSkywalkingAgentList = new LinkedList<>();
+        // // 重组span数据，返回前端使用；2022-04-20 16:49:02
+        // reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
 
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完95行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
         // now = Instant.now();
@@ -111,7 +114,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        doEnableReactorModel(segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
 
         // 将QPS信息刷入Redis中；2022-06-27 13:42:13
@@ -211,6 +215,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
         Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
         String tags = String.valueOf(map.get("tags"));
+        String logs = String.valueOf(map.get("logs"));
+
+        Boolean isError = false;
 
         List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
         if (null != tagsList) {
@@ -225,10 +232,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               msSegmentDetailDo.setDbInstance(value);
             } else if (key.equals("db_user_name")) {
               msSegmentDetailDo.setDbUserName(value);
+              if(StringUtil.isBlank(value)){
+                System.out.println("");
+              }
             } else if (key.equals("db.statement")) {
               if (isSql.equals("sql")) {
+                if((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)){
+                  isError = true;
+                  // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                  break;
+                }
                 // 获取表名；2022-06-06 14:16:59
-                setTableName(value, msSegmentDetailDo);
+                String tableName = setTableName(value, msSegmentDetailDo);
+                if(StringUtil.isBlank(tableName)){
+                  isError = true;
+                  // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                  break;
+                }
+                msSegmentDetailDo.setMsTableName(tableName);
               }
               msSegmentDetailDo.setDbStatement(value);
             } else if (key.equals("url")) {
@@ -238,21 +259,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           }
         }
 
-        msSegmentDetailDo.setToken(segment.getToken());
-        msSegmentDetailDo.setComponent(component);
-        msSegmentDetailDo.setSpanId(spanId);
-        msSegmentDetailDo.setServiceCode(serviceCode);
-        msSegmentDetailDo.setPeer(peer);
-        msSegmentDetailDo.setEndpointName(endpointName);
-        msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
-        msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
-        msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
-        msSegmentDetailDo.setParentSpanId(parentSpanId);
-        msSegmentDetailDo.setUserName(segment.getUserName());
-        msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
-        msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
-        msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
-        segmentDetaiDolList.add(msSegmentDetailDo);
+        if(false == isError){
+          // 当没有出现sql异常时，才保存SQL信息；2022-07-01 14:41:31
+          msSegmentDetailDo.setToken(segment.getToken());
+          msSegmentDetailDo.setComponent(component);
+          msSegmentDetailDo.setSpanId(spanId);
+          msSegmentDetailDo.setServiceCode(serviceCode);
+          msSegmentDetailDo.setPeer(peer);
+          msSegmentDetailDo.setEndpointName(endpointName);
+          msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
+          msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
+          msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
+          msSegmentDetailDo.setParentSpanId(parentSpanId);
+          msSegmentDetailDo.setUserName(segment.getUserName());
+          msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+          msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
+          msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+          segmentDetaiDolList.add(msSegmentDetailDo);
+        }
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
@@ -269,18 +293,31 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年06月06日 14:06:09
    * @Param [value, msSegmentDetailDo]
    **/
-  private void setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+  private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+    String tableName = null;
     try {
       // sql类型；
       String sqlType = mingshiServerUtil.getSqlType(value);
       msSegmentDetailDo.setDbType(sqlType);
       // 获取表名；2022-06-06 14:11:21
-      String tableName = mingshiServerUtil.getTableName(sqlType, value);
-      msSegmentDetailDo.setMsTableName(tableName);
+      tableName = mingshiServerUtil.getTableName(sqlType, value);
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
     }
+    return tableName;
   }
+  // private void setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+  //   try {
+  //     // sql类型；
+  //     String sqlType = mingshiServerUtil.getSqlType(value);
+  //     msSegmentDetailDo.setDbType(sqlType);
+  //     // 获取表名；2022-06-06 14:11:21
+  //     String tableName = mingshiServerUtil.getTableName(sqlType, value);
+  //     msSegmentDetailDo.setMsTableName(tableName);
+  //   } catch (Exception e) {
+  //     log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
+  //   }
+  // }
 
   /**
    * <B>方法名称：ignoreMethod</B>
@@ -327,18 +364,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   private void doEnableReactorModel(SegmentDo segmentDo,
-                                    LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList,
                                     LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       if (null != segmentDo) {
         jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
-      }
-      if (null != auditLogFromSkywalkingAgentList && 0 < auditLogFromSkywalkingAgentList.size()) {
-        jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
       }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
@@ -364,6 +397,44 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
     }
   }
+  // private void doEnableReactorModel(SegmentDo segmentDo,
+  //                                   LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList,
+  //                                   LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
+  //                                   LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
+  //                                   Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
+  //   try {
+  //     LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
+  //     ObjectNode jsonObject = JsonUtil.createJSONObject();
+  //     if (null != segmentDo) {
+  //       jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
+  //     }
+  //     // if (null != auditLogFromSkywalkingAgentList && 0 < auditLogFromSkywalkingAgentList.size()) {
+  //     //   jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
+  //     // }
+  //     if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
+  //       jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
+  //     }
+  //     if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+  //       jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
+  //     }
+  //     if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
+  //       jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
+  //     }
+  //     if (linkedBlockingQueue.size() == BatchInsertByLinkedBlockingQueue.getQueueSize()) {
+  //       // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+  //       log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
+  //     }
+  //     // if (0 == atomicInteger.incrementAndGet() % 5000) {
+  //     //   // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+  //     //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
+  //     // }
+  //     if (null != jsonObject && 0 < jsonObject.size()) {
+  //       linkedBlockingQueue.put(jsonObject);
+  //     }
+  //   } catch (Exception e) {
+  //     log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
+  //   }
+  // }
 
 
   /**
@@ -466,7 +537,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return null;
   }
 
-  private void reorganizingSpans(SegmentDo segment, List<Span> spanList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void reorganizingSpans(SegmentDo segment, List<Span> spanList) {
     if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
       // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
@@ -480,14 +551,36 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         childrenSpan.add(span);
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        getData2(segment, span, linkedList, auditLogFromSkywalkingAgent);
-        findChildrenDetail(segment, spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+        getData2(segment, span, linkedList);
+        findChildrenDetail(segment, spanList, span, childrenSpan, linkedList);
       }
     }
 
     String toString = linkedList.toString();
     segment.setReorganizingSpans(toString);
   }
+  // private void reorganizingSpans(SegmentDo segment, List<Span> spanList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  //   if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
+  //     // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+  //     return;
+  //   }
+  //
+  //   List<String> linkedList = new LinkedList<>();
+  //   if (CollectionUtils.isNotEmpty(spanList)) {
+  //     List<Span> rootSpans = findRoot(spanList);
+  //     for (Span span : rootSpans) {
+  //       List<Span> childrenSpan = new ArrayList<>();
+  //       childrenSpan.add(span);
+  //
+  //       // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
+  //       getData2(segment, span, linkedList, auditLogFromSkywalkingAgent);
+  //       findChildrenDetail(segment, spanList, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+  //     }
+  //   }
+  //
+  //   String toString = linkedList.toString();
+  //   segment.setReorganizingSpans(toString);
+  // }
 
   private List<Span> findRoot(List<Span> spans) {
     List<Span> rootSpans = new ArrayList<>();
@@ -519,15 +612,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return rootSpans;
   }
 
-  private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList) {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
-        getData2(segmentDo, span, linkedList, auditLogFromSkywalkingAgent);
-        findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+        getData2(segmentDo, span, linkedList);
+        findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList);
       }
     });
   }
+  // private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  //   spans.forEach(span -> {
+  //     if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
+  //       childrenSpan.add(span);
+  //       getData2(segmentDo, span, linkedList, auditLogFromSkywalkingAgent);
+  //       findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList, auditLogFromSkywalkingAgent);
+  //     }
+  //   });
+  // }
 
   /**
    * <B>方法名称：getData2</B>
@@ -538,7 +640,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月17日 10:05:41
    * @Param [span, linkedList]
    **/
-  private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList) {
     try {
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       int spanId = span.getSpanId();
@@ -554,6 +656,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         jsonObject.put("endpointName", span.getEndpointName());
         jsonObject.put("peer", span.getPeer());
         jsonObject.put("component", span.getComponent());
+        List<LogEntity> logs = span.getLogs();
+        if(null != logs && 0 < logs.size()){
+          jsonObject.put("logs", JsonUtil.obj2String(logs));
+        }
         List<KeyValue> tags = span.getTags();
         if (0 < tags.size()) {
           Boolean flag = false;
@@ -588,10 +694,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               isSQL = true;
             }
           }
-          if (true == isSQL && StringUtil.isNotBlank(msSql)) {
-            // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
-            getMsAuditLogDo(segmentDo, msSql, span, msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
-          }
+          // 已经不再往ms_audit_log表里插入数据了，所以这里注释掉；2022-07-01 09:27:49
+          // if (true == isSQL && StringUtil.isNotBlank(msSql)) {
+          //   // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
+          //   getMsAuditLogDo(segmentDo, msSql, span, msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
+          // }
 
           if (false == flag) {
             jsonObject.put("tags", JsonUtil.obj2String(tags));
@@ -603,6 +710,75 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
     }
   }
+  // private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
+  //   try {
+  //     ObjectNode jsonObject = JsonUtil.createJSONObject();
+  //     int spanId = span.getSpanId();
+  //     if (0 == spanId) {
+  //       getSpringMVCInfo(span, jsonObject, linkedList);
+  //     } else if (0 < span.getTags().size()) {
+  //       jsonObject.put("spanId", spanId);
+  //       jsonObject.put("parentSpanId", span.getParentSpanId());
+  //       jsonObject.put("serviceCode", span.getServiceCode());
+  //       jsonObject.put("serviceInstanceName", span.getServiceInstanceName());
+  //       jsonObject.put("startTime", span.getStartTime());
+  //       jsonObject.put("endTime", span.getEndTime());
+  //       jsonObject.put("endpointName", span.getEndpointName());
+  //       jsonObject.put("peer", span.getPeer());
+  //       jsonObject.put("component", span.getComponent());
+  //       List<KeyValue> tags = span.getTags();
+  //       if (0 < tags.size()) {
+  //         Boolean flag = false;
+  //         Boolean isSQL = false;
+  //         String dbUserName = null;
+  //         String msSql = null;
+  //         String msSchemaName = null;
+  //         String key = null;
+  //         for (KeyValue tag : tags) {
+  //           key = tag.getKey();
+  //           if (segmentDo.getOperationName().equals("Jedis/sentinelGetMasterAddrByName")) {
+  //             flag = true;
+  //             break;
+  //           }
+  //           if (tag.getValue().equals("Redis")) {
+  //             // 不再存储单纯的Redis请求；2022-06-30 16:34:24
+  //             flag = true;
+  //             break;
+  //           }
+  //           if (key.equals("http.method")) {
+  //             // 不再存储单纯的GET请求；2022-05-27 18:14:25
+  //             flag = true;
+  //             break;
+  //           } else if (key.equals("db.instance")) {
+  //             msSchemaName = tag.getValue();
+  //           } else if (key.equals("db_user_name")) {
+  //             dbUserName = tag.getValue();
+  //             if(StringUtil.isBlank(dbUserName)){
+  //               System.out.println("");
+  //             }
+  //           } else if (key.equals("db.statement") && !key.equals("Redis")) {
+  //             // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
+  //             // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
+  //             msSql = tag.getValue();
+  //             isSQL = true;
+  //           }
+  //         }
+  //         // 已经不再往ms_audit_log表里插入数据了，所以这里注释掉；2022-07-01 09:27:49
+  //         // if (true == isSQL && StringUtil.isNotBlank(msSql)) {
+  //         //   // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
+  //         //   getMsAuditLogDo(segmentDo, msSql, span, msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
+  //         // }
+  //
+  //         if (false == flag) {
+  //           jsonObject.put("tags", JsonUtil.obj2String(tags));
+  //           linkedList.add(jsonObject.toString());
+  //         }
+  //       }
+  //     }
+  //   } catch (Exception e) {
+  //     log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
+  //   }
+  // }
 
   /**
    * <B>方法名称：getMsAuditLogDo</B>

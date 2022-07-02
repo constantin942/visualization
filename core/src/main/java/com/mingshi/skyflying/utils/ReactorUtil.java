@@ -52,7 +52,7 @@ public class ReactorUtil {
         ProcessorHandlerByLinkedBlockingQueue processorHandlerByLinkedBlockingQueue = InitProcessorByLinkedBlockingQueue.getProcessor();
         offerResult = processorHandlerByLinkedBlockingQueue.offer(record);
         if (false == offerResult) {
-          log.info("所有的processor线程队列都满了，暂停100毫秒，接着再尝试。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+          // log.info("所有的processor线程队列都满了，暂停100毫秒，接着再尝试。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
           TimeUnit.MILLISECONDS.sleep(100);
         }
       }

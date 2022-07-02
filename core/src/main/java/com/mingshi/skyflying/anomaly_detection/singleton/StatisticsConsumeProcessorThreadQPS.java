@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.anomaly_detection.singleton;
 
-import com.mingshi.skyflying.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -49,13 +48,13 @@ public class StatisticsConsumeProcessorThreadQPS {
   // 统计每个processor线程在每秒中的QPS；2022-06-24 10:28:45
   public static void accumulateTimes(String threadName, String time) {
     try {
-      int incrementAndGet = atomicInteger.incrementAndGet();
-      if (0 == incrementAndGet % (10 * 10000)) {
-        // 每1000次后输出当前的QPS；
-        // log.info(" # StatisticsConsumeProcessorThreadQPS.accumulateTimes() # 各个线程的QPS =【{}】。", JsonUtil.obj2String(timeCountMap));
-        log.info(" # StatisticsConsumeProcessorThreadQPS.accumulateTimes() # 各个线程的QPS = 【{}】。", JsonUtil.obj2String(statisticsConsumeProcessorThreadQPSMap));
-        atomicInteger.set(0);
-      }
+      // int incrementAndGet = atomicInteger.incrementAndGet();
+      // if (0 == incrementAndGet % (10 * 10000)) {
+      //   // 每1000次后输出当前的QPS；
+      //   // log.info(" # StatisticsConsumeProcessorThreadQPS.accumulateTimes() # 各个线程的QPS =【{}】。", JsonUtil.obj2String(timeCountMap));
+      //   log.info(" # StatisticsConsumeProcessorThreadQPS.accumulateTimes() # 各个线程的QPS = 【{}】。", JsonUtil.obj2String(statisticsConsumeProcessorThreadQPSMap));
+      //   atomicInteger.set(0);
+      // }
       // timeCount(time);
       threadNameTimeCount(threadName, time);
 
