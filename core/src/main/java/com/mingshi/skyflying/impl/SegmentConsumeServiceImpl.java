@@ -177,6 +177,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       jsonObject.put("serviceCode", service);
       jsonObject.put("serviceInstanceName", serviceInstance);
+      // todo：不应该用当前时间，如果当kafka中出现了消息积压时，那么这个时间就不是探针目前存活的时间。这个时间应该用消息本身的时间。2022-07-04 10:03:17
       skywalkingAgentHeartBeatMap.put(jsonObject.toString(), DateTimeUtil.DateToStr(new Date()));
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.getAgentServiceName() # 获取探针的名称时，出现了异常。", e);
