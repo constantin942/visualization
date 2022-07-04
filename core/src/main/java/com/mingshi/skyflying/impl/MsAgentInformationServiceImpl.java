@@ -13,11 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 
 /**
  * <B>方法名称：MsAgentInformationServiceImpl</B>
  * <B>概要说明：操作探针的实现类</B>
+ *
  * @Author zm
  * @Date 2022年06月28日 16:06:31
  * @Param
@@ -66,18 +68,18 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
 
   @Override
   public ServerResponse<String> updateSkywalkingAgent(Integer id, String agentName) {
-    if(null == id){
-      return ServerResponse.createByErrorMessage("规则id不能为空。","");
+    if (null == id) {
+      return ServerResponse.createByErrorMessage("规则id不能为空。", "");
     }
-    if(StringUtil.isBlank(agentName)){
-      return ServerResponse.createByErrorMessage("规则别名不能为空。","");
+    if (StringUtil.isBlank(agentName)) {
+      return ServerResponse.createByErrorMessage("规则别名不能为空。", "");
     }
     MsAgentInformationDo msAgentInformationDo = new MsAgentInformationDo();
     msAgentInformationDo.setAgentName(agentName);
     msAgentInformationDo.setId(id);
     int updateResult = msAgentInformationMapper.updateByPrimaryKeySelective(msAgentInformationDo);
-    if(1 != updateResult){
-      return ServerResponse.createByErrorMessage("更新失败。","");
+    if (1 != updateResult) {
+      return ServerResponse.createByErrorMessage("更新失败。", "");
     }
     return ServerResponse.createBySuccess();
   }
@@ -91,39 +93,40 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
       Iterator<Object> iterator = hgetall.keySet().iterator();
       while (iterator.hasNext()) {
         String key = String.valueOf(iterator.next());
-        String value = String.valueOf(hgetall.get(key));
+        String date = String.valueOf(hgetall.get(key));
+        Instant instant = DateTimeUtil.stringToInstant1(date);
+        long interval = DateTimeUtil.getSecond(instant);
 
-        long dateIntervalMin = DateTimeUtil.getDateIntervalMin(new Date(), DateTimeUtil.strToDate(value));
-        if (Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL < dateIntervalMin) {
-          iterator.remove();
-          // 暂时先不删除，等以后测试好了，再删除；2022-06-27 15:15:43
-          // 测试的点是：探针所针对的服务实例，每次重新启动时，serviceCode和serviceInstanceName是否会变化；2022-06-27 15:16:47
-          // try {
-          //   redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
-          // } catch (Exception e) {
-          //   e.printStackTrace();
-          //   log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
-          // }
-        } else {
-          ++count;
-          Map<String, String> codeNameMap = JsonUtil.string2Obj(key, Map.class);
-          if (null != codeNameMap) {
-            Map<String, String> map = new HashMap<>();
-            String serviceCode = codeNameMap.get("serviceCode");
-            String serviceInstanceName = codeNameMap.get("serviceInstanceName");
-            map.put("serviceCode", serviceCode);
-            String agentName = msAgentInformationMapper.selectByAgentCode(serviceCode);
-            map.put("agentName", agentName);
-            map.put("serviceInstanceName", serviceInstanceName);
-            map.put("time", value);
-            list.add(map);
-          }
-        }
+        doActiveSkywalkingAgent(list, interval, key, count, date);
       }
     }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(list));
     log.info(" 执行完毕 # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针数量是【{}】。", count);
     return bySuccess;
+  }
+
+  private void doActiveSkywalkingAgent(List<Map<String, String>> list, long interval, String key, Integer count, String date) {
+    if (interval > Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL_MINUTES) {
+      try {
+        redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
+      } catch (Exception e) {
+        log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
+      }
+    } else {
+      ++count;
+      Map<String, String> codeNameMap = JsonUtil.string2Obj(key, Map.class);
+      if (null != codeNameMap) {
+        Map<String, String> map = new HashMap<>();
+        String serviceCode = codeNameMap.get("serviceCode");
+        String serviceInstanceName = codeNameMap.get("serviceInstanceName");
+        map.put("serviceCode", serviceCode);
+        String agentName = msAgentInformationMapper.selectByAgentCode(serviceCode);
+        map.put("agentName", agentName);
+        map.put("serviceInstanceName", serviceInstanceName);
+        map.put("time", date);
+        list.add(map);
+      }
+    }
   }
 }

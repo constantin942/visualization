@@ -24,7 +24,8 @@ public class Const {
   public static final Integer IS_DELETE_ONE = 1;
 
   // 心跳间隔15分钟；2022-06-27 14:52:54
-  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL = 15;
+  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_MINUTES = 15;
+  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS = 15 * 60;
 
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;

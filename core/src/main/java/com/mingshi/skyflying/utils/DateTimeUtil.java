@@ -13,8 +13,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -168,30 +167,61 @@ public class DateTimeUtil {
   public static final String DATEFORMAT_STR_023 = "MM月dd日 hh:mm";
 
   /**
-   * <B>方法名称：getDateIntervalMin</B>
-   * <B>概要说明：获取两个时间相差的分钟数</B>
-   * @Author zm
-   * @Date 2022年06月27日 14:06:43
-   * @Param [endDate, nowDate]
+   * <B>方法名称：instantToString</B>
+   * <B>概要说明：将Instant类型的时间转换成String类型的时间，使用默认的时间格式 </B>
+   *
    * @return java.lang.String
+   * @Author zm
+   * @Date 2022年07月04日 09:07:50
+   * @Param []
    **/
-  public static long getDateIntervalMin(Date endDate, Date nowDate) {
-    long nd = 1000 * 24 * 60 * 60;
-    long nh = 1000 * 60 * 60;
-    long nm = 1000 * 60;
-    // long ns = 1000;
-    // 获得两个时间的毫秒时间差异
-    long time = endDate.getTime() - nowDate.getTime();
-    // // 计算差多少天
-    // long day = time / nd;
-    // // 计算差多少小时
-    // long hour = time % nd / nh;
-    // 计算差多少分钟
-    long min = time % nd % nh / nm;
-    // 计算差多少秒//输出结果
-    // long sec = time % nd % nh % nm / ns;
-    return min;
-    // return day + "天" + hour + "小时" + min + "分钟";
+  public static String instantToString1(Instant instant) {
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(STANDARD_FORMAT).withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA);
+    return formatter.format(instant);
+  }
+
+  /**
+   * <B>方法名称：instantToString</B>
+   * <B>概要说明：将Instant类型的时间转换成String类型的时间，使用指定的时间格式 </B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年07月04日 09:07:50
+   * @Param []
+   **/
+  public static String instantToString2(Instant instant, String dateFormat) {
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(dateFormat).withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA);
+    return formatter.format(instant);
+  }
+
+  /**
+   * <B>方法名称：stringToInstant</B>
+   * <B>概要说明：将String类型的时间转换成Instant类型的时间，使用默认的时间格式 </B>
+   * @Author zm
+   * @Date 2022年07月04日 09:07:50
+   * @Param []
+   * @return java.time.Instant
+   **/
+  public static Instant stringToInstant1(String date){
+    // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
+    Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(STANDARD_FORMAT)
+      .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
+    return instant;
+  }
+
+  /**
+   * <B>方法名称：stringToInstant</B>
+   * <B>概要说明：将String类型的时间转换成Instant类型的时间，使用指定的时间格式 </B>
+   * @Author zm
+   * @Date 2022年07月04日 09:07:50
+   * @Param []
+   * @return java.time.Instant
+   **/
+  public static Instant stringToInstant2(String date, String dateFormat){
+    // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
+    Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(dateFormat)
+      .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
+    return instant;
   }
 
   /**
