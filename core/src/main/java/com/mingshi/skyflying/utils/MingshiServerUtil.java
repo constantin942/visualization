@@ -1,10 +1,12 @@
 package com.mingshi.skyflying.utils;
 
+import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
+import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MingshiServerUtil {
   @Resource
   private RedisPoolUtil redisPoolUtil;
+  @Resource
+  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
@@ -446,6 +450,19 @@ public class MingshiServerUtil {
    * @Date 2022年06月02日 11:06:24
    * @Param [segmentDetaiDolList]
    **/
+  public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
+    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+      try {
+        Instant now = Instant.now();
+        mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
+        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        segmentDetailDoList.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
+      }
+    }
+  }
+
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       try {
