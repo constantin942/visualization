@@ -1,12 +1,10 @@
 package com.mingshi.skyflying.utils;
 
-import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.stereotype.Component;
@@ -32,8 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MingshiServerUtil {
   @Resource
   private RedisPoolUtil redisPoolUtil;
-  @Resource
-  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
+  // @Resource
+  // private MingshiElasticSearchUtil mingshiElasticSearchUtil;
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
@@ -107,7 +105,7 @@ public class MingshiServerUtil {
       return Const.SQL_TYPE_COMMIT.toLowerCase();
     } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME)) {
       return Const.SQL_TYPE_RENAME.toLowerCase();
-    }else if(msSql.equals("keys *")){
+    } else if (msSql.equals("keys *")) {
       return null;
     }
     // TODO: 2022/6/24  SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下
@@ -433,7 +431,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}】【{}条】批量插入到Redis中耗时【{}】毫秒。", JsonUtil.obj2String(map), map.size(), DateTimeUtil.getTimeMillis(now));
         map.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
@@ -450,19 +448,18 @@ public class MingshiServerUtil {
    * @Date 2022年06月02日 11:06:24
    * @Param [segmentDetaiDolList]
    **/
-  public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
-    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-      try {
-        Instant now = Instant.now();
-        mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
-        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-        segmentDetailDoList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
-      }
-    }
-  }
-
+  // public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
+  //   if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+  //     try {
+  //       Instant now = Instant.now();
+  //       mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
+  //       log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+  //       segmentDetailDoList.clear();
+  //     } catch (Exception e) {
+  //       log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
+  //     }
+  //   }
+  // }
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       try {
