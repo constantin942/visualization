@@ -5,6 +5,7 @@ import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProces
 import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
+import com.mingshi.skyflying.domain.UserCoarseInfo;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -733,14 +735,35 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfUser", method = RequestMethod.GET)
-  public ServerResponse<Long>getCoarseCountsOfUser(String applicationUserName, /* 登录系统的名称 */
-                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<List<UserCoarseInfo>>getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                   @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
-    return segmentDetailService.getCoarseCountsOfUser(applicationUserName, pageNo, pageSize);
+
+    return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
 
   }
 
+
+  /**
+   * <B>方法名称：getCoarseCountsOfOneUser/B>
+   * <B>概要说明：获取某一特定用户对数据的粗粒度信息</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getCoarseCountsOfOneUser", method = RequestMethod.GET)
+  public ServerResponse<UserCoarseInfo>getCoarseCountsOfOneUser( @RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
+                                                                    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+
+    return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
+
+  }
 
 
   /**

@@ -3,8 +3,8 @@ package com.mingshi.skyflying.dao;
 import com.mingshi.skyflying.domain.InstanceTable;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.response.ServerResponse;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -56,4 +56,8 @@ public interface MsSegmentDetailDao {
 
   Long selectCountsOfUser(Map<String, Object> map);
 
+
+  Long selectCountOfOneUser(Map<String, Object> userName);
+
+  Date selectLastVisitedTime(Map<String, Object> userName);
 }

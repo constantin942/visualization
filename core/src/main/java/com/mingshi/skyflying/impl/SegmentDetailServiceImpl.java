@@ -174,26 +174,64 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<Long> getCoarseCountsOfUser(String applicationUserName, Integer pageNo, Integer pageSize) {
-    log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
-    Map<String, Object> map = new HashMap<>();
-    if (StringUtil.isNotBlank(applicationUserName)) {
-      map.put("userName", applicationUserName);
-    }
-    if (null == pageNo) {
-      pageNo = 1;
-    }
-    if (null == pageSize) {
-      pageSize = 10;
-    }
-    map.put("pageNo", (pageNo - 1) * pageSize);
-    map.put("pageSize", pageSize);
+  public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(Integer pageNo, Integer pageSize) {
 
-    Long count = msSegmentDetailDao.selectCountsOfUser(map);
+
+    log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
+
+    List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
+
+    //获取所有的用户名
+    List<String> userNames=msSegmentDetailDao.selectAllUserName();
+
+    for(int i=0;i<userNames.size();i++){
+      UserCoarseInfo temp=new UserCoarseInfo();
+      temp.setUserName(userNames.get(i));
+      userCoarseInfos.add(temp);
+    }
+
+    //根据用户名获取用户对数据的访问次数
+    for(int i=0;i<userCoarseInfos.size();i++){
+      String userName=userCoarseInfos.get(i).getUserName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("userName",userName);
+      Long count=msSegmentDetailDao.selectCountOfOneUser(queryMap);
+      userCoarseInfos.get(i).setVisitedCount(count);
+    }
+
+    // 根据用户名获取用户的最后访问时间
+    for(int i=0;i<userCoarseInfos.size();i++){
+      String userName=userCoarseInfos.get(i).getUserName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("userName",userName);
+      Date lastVisited=msSegmentDetailDao.selectLastVisitedTime(queryMap);
+      userCoarseInfos.get(i).setLastVisitedDate(lastVisited);
+    }
+
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
 
-    return ServerResponse.createBySuccess("获取数据成功！", "success", count);
+
+    return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfos);
+  }
+
+  @Override
+  public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize) {
+    log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
+
+      UserCoarseInfo userCoarseInfo=new UserCoarseInfo();
+      userCoarseInfo.setUserName(applicationUserName);
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("userName",applicationUserName);
+      Long count=msSegmentDetailDao.selectCountOfOneUser(queryMap);
+      Date lastVisited=msSegmentDetailDao.selectLastVisitedTime(queryMap);
+
+      userCoarseInfo.setVisitedCount(count);
+      userCoarseInfo.setLastVisitedDate(lastVisited);
+      log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
+      List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
+
+      return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
   }
 
 

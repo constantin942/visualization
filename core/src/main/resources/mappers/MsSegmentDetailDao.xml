@@ -249,6 +249,22 @@
     </if>
   </select>
 
+  <select id="selectCountOfOneUser" resultType="java.lang.Long" parameterType="java.util.Map">
+    select count(*) from ms_segment_detail
+    where user_name is not null
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+  </select>
+
+
+  <select id="selectLastVisitedTime" resultType="java.util.Date" parameterType="java.util.Map">
+    SELECT max(start_time) from ms_segment_detail
+    where user_name is not null
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+  </select>
 
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
