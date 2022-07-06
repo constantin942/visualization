@@ -38,6 +38,7 @@
 //    * Keyword : 短语,不进行分词
 //    */
 //   @Field(type = FieldType.Text, analyzer = "ik_max_word")
+//   @Field(type = FieldType.Keyword, index = true)
 //   private String userName;
 //
 //   @Field(type = FieldType.Keyword, index = true)
@@ -51,7 +52,7 @@
 //   private Date startTime;
 //
 //   @JsonFormat(pattern="YYYY-MM-dd'T'HH:mm:ss",timezone="GMT+8")
-//   @Field(type = FieldType.Keyword, index = true)
+//   @Field(type = FieldType.Date, index = true)
 //   private Date endTime;
 //
 //   @Field(type = FieldType.Keyword, index = true)
