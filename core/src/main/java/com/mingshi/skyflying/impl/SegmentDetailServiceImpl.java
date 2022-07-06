@@ -102,6 +102,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     return serverResponse;
   }
 
+
   /**
    * <B>方法名称：getAllMsTableName</B>
    * <B>概要说明：获取数据库名</B>
@@ -126,6 +127,75 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     serverResponse.setData(JsonUtil.obj2String(list));
     return serverResponse;
   }
+
+  @Override
+  public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
+    List<MsThirdPartyTableListDo> list=msSegmentDetailDao.selectAllInstanceTrueName();
+    ServerResponse serverResponse=ServerResponse.createBySuccess();
+    serverResponse.setData(JsonUtil.obj2String(list));
+    return serverResponse;
+  }
+
+  @Override
+  public ServerResponse<Long> getCountsOfUser(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
+    log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser # 获取用户的访问次数。");
+    Map<String, Object> map = new HashMap<>();
+    if (StringUtil.isNotBlank(applicationUserName)) {
+      map.put("userName", applicationUserName);
+    }
+    if (StringUtil.isNotBlank(dbType)) {
+      map.put("dbType", dbType);
+    }
+    if (StringUtil.isNotBlank(msTableName)) {
+      map.put("msTableName", msTableName);
+    }
+    if (StringUtil.isNotBlank(startTime)) {
+      map.put("startTime", startTime);
+    }
+    if (StringUtil.isNotBlank(endTime)) {
+      map.put("endTime", endTime);
+    }
+    if (StringUtil.isNotBlank(dbUserName)) {
+      map.put("dbUserName", dbUserName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    map.put("pageNo", (pageNo - 1) * pageSize);
+    map.put("pageSize", pageSize);
+
+    Long count = msSegmentDetailDao.selectCountsOfUser(map);
+    log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUser # 获取用户的访问次数。");
+
+    return ServerResponse.createBySuccess("获取数据成功！", "success", count);
+  }
+
+  @Override
+  public ServerResponse<Long> getCoarseCountsOfUser(String applicationUserName, Integer pageNo, Integer pageSize) {
+    log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
+    Map<String, Object> map = new HashMap<>();
+    if (StringUtil.isNotBlank(applicationUserName)) {
+      map.put("userName", applicationUserName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    map.put("pageNo", (pageNo - 1) * pageSize);
+    map.put("pageSize", pageSize);
+
+    Long count = msSegmentDetailDao.selectCountsOfUser(map);
+
+    log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
+
+    return ServerResponse.createBySuccess("获取数据成功！", "success", count);
+  }
+
 
   /**
    * <B>方法名称：getSegmentDetailsFromDb</B>

@@ -3,6 +3,8 @@ package com.mingshi.skyflying.controller;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.domain.InstanceTable;
+import com.mingshi.skyflying.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
@@ -671,6 +673,7 @@ public class SkyflyingController {
   }
 
 
+
   /**
    * <B>方法名称：getAllMsTableName/B>
    * <B>概要说明：获取所有的库表名</B>
@@ -701,6 +704,69 @@ public class SkyflyingController {
   public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
     return segmentDetailService.getAllInstanceAndTableName();
   }
+
+
+  /**
+   * <B>方法名称：getAllInstanceTrueName/B>
+   * <B>概要说明：获取数据库表名与汉语名字的对应关系</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllInstanceTrueName", method = RequestMethod.GET)
+  public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
+    return segmentDetailService.getAllInstanceTrueName();
+  }
+
+  /**
+   * <B>方法名称：getCoarseCountsOfUser/B>
+   * <B>概要说明：获取用户对数据的粗粒度信息</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getCoarseCountsOfUser", method = RequestMethod.GET)
+  public ServerResponse<Long>getCoarseCountsOfUser(String applicationUserName, /* 登录系统的名称 */
+                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+    return segmentDetailService.getCoarseCountsOfUser(applicationUserName, pageNo, pageSize);
+
+  }
+
+
+
+  /**
+   * <B>方法名称：getCountsOfUser/B>
+   * <B>概要说明：获取用户对数据的详细数据</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getCountsOfUser", method = RequestMethod.GET)
+  public ServerResponse<Long>getCountsOfUser(String applicationUserName, /* 登录系统的名称 */
+                                               String dbUserName, /* 访问数据库的用户名 */
+                                               String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                               String msTableName, /* 数据库表名 */
+                                               String startTime, /* 开始时间 */
+                                               String endTime, /* 结束时间 */
+                                               @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+    return segmentDetailService.getCountsOfUser(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+  }
+
 
 
   /**
