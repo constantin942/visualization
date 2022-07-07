@@ -89,6 +89,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 设置segment_id、trace_id；2022-04-24 14:26:12
         getRef(segmentObject, segment);
 
+        // 获取用户名、token、globalTraceId；2022-07-07 16:15:53
         setSegmentIndex(segment);
 
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
@@ -237,9 +238,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               msSegmentDetailDo.setDbInstance(value);
             } else if (key.equals("db_user_name")) {
               msSegmentDetailDo.setDbUserName(value);
-              if(StringUtil.isBlank(value)){
-                System.out.println("");
-              }
             } else if (key.equals("db.statement")) {
               if (isSql.equals("sql")) {
                 if((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)){
@@ -1406,10 +1404,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       segment.setRequestStartTime(DateTimeUtil.longToDate(span.getStartTime()));
       String userName = span.getUserName();
       String token = span.getToken();
-      if (null != userName && "" != userName) {
+      if (StringUtil.isNotBlank(userName)) {
         segment.setUserName(userName);
       }
-      if (null != token && "" != token) {
+      if (StringUtil.isNotBlank(token)) {
         segment.setToken(token);
       }
     } catch (Exception e) {
