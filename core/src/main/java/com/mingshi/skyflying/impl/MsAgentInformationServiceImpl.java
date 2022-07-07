@@ -95,7 +95,7 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
         String key = String.valueOf(iterator.next());
         String date = String.valueOf(hgetall.get(key));
         Instant instant = DateTimeUtil.stringToInstant1(date);
-        long interval = DateTimeUtil.getSecond(instant);
+        long interval = Math.abs(DateTimeUtil.getSecond(instant));
 
         doActiveSkywalkingAgent(list, interval, key, count, date);
       }
@@ -107,7 +107,7 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
   }
 
   private void doActiveSkywalkingAgent(List<Map<String, String>> list, long interval, String key, Integer count, String date) {
-    if (interval > Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL_MINUTES) {
+    if (interval > Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS) {
       try {
         redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
       } catch (Exception e) {
