@@ -175,7 +175,7 @@ public class IoThread extends Thread {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        log.error("# IoThread.run() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
