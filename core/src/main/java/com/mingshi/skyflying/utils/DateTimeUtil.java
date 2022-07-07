@@ -24,6 +24,7 @@ import java.util.*;
 public class DateTimeUtil {
 
   public static final String STANDARD_FORMAT = "yyyy-MM-dd HH:mm:ss";
+  public static final String STANDARD_FORMAT_T = "yyyy-MM-dd'T'HH:mm:ss";
   public static final String STANDARD_FORMAT_yyyyMMdd = "yyyy-MM-dd";
   public static final String STANDARD_FORMAT_yyyyMMddHHmmssSSS = "yyyyMMddHHmmssSSS";
   public static final String STANDARD_FORMAT_yyyy_MM_dd_HHmmssSSSSSS = "yyyy-MM-dd HH:mm:ss.SSSSSS";
@@ -2212,6 +2213,11 @@ public class DateTimeUtil {
     String str = format.format(date);
     return str;
   }
+  public static String DateToStr2(Date date) {
+    SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_T);
+    String str = format.format(date);
+    return str;
+  }
 
   public static String DateToStrYYYYMMDDHHMMSS(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_yyyy_MM_dd_HHmmssSSSSSS);
@@ -2252,6 +2258,12 @@ public class DateTimeUtil {
     DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(formatStr);
     DateTime dateTime = dateTimeFormatter.parseDateTime(dateTimeStr);
     return DateToStr(dateTime.toDate());
+  }
+
+  public static String strToDateToStr2(String dateTimeStr, String formatStr) {
+    DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(formatStr);
+    DateTime dateTime = dateTimeFormatter.parseDateTime(dateTimeStr);
+    return DateToStr2(dateTime.toDate());
   }
 
   public static String dateToStr(Date date, String formatStr) {
