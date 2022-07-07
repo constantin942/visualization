@@ -2,10 +2,7 @@ package com.mingshi.skyflying.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
-import com.mingshi.skyflying.domain.InstanceTable;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.domain.UserCoarseInfo;
+import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
@@ -18,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -785,10 +780,54 @@ public class SkyflyingController {
                                                String startTime, /* 开始时间 */
                                                String endTime, /* 结束时间 */
                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                               @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
     return segmentDetailService.getCountsOfUser(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
   }
+
+  /**
+   * <B>方法名称：getCountsOfUserRecentSevenDays/B>
+   * <B>概要说明：获取用户对数据的详细数据</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getCountsOfUserRecentSevenDays", method = RequestMethod.GET)
+  public ServerResponse<List<Long>>getCountsOfUserRecentSevenDays(String applicationUserName, /* 登录系统的名称 */
+                                             String dbUserName, /* 访问数据库的用户名 */
+                                             String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                             String msTableName, /* 数据库表名 */
+                                             String startTime, /* 开始时间 */
+                                             String endTime, /* 结束时间 */
+                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) throws ParseException {
+
+
+    return segmentDetailService.getCountsOfUserUserRecentSevenDays(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+  }
+
+
+
+//  /**
+//   * <B>方法名称：getUserUsualAndUnusualData/B>
+//   * <B>概要说明：获取用户的经常访问数据和不常访问数据</B>
+//   *
+//   * @return ServerResponse<SysOperator>
+//   * @Author lhx
+//   * @Date 2022年07月6日 14:30:19
+//   * @Param
+//   **/
+//
+//  @ResponseBody
+//  @RequestMapping(value = "/getUserUsualAndUnusualData", method = RequestMethod.GET)
+//  public ServerResponse<List<UserPortraitByVisitedTableEverydayDo>> getUserUsualAndUnusualData(String applicationUserName) {
+//    return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
+//  }
+
 
 
 

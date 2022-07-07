@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -223,7 +225,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       userCoarseInfo.setUserName(applicationUserName);
       Map<String, Object> queryMap = new HashMap<>();
       queryMap.put("userName",applicationUserName);
+
       Long count=msSegmentDetailDao.selectCountOfOneUser(queryMap);
+
       Date lastVisited=msSegmentDetailDao.selectLastVisitedTime(queryMap);
 
       userCoarseInfo.setVisitedCount(count);
@@ -232,6 +236,78 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
 
       return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
+  }
+
+  @Override
+  public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize)  {
+
+    log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
+    Map<String, Object> map = new HashMap<>();
+    if (StringUtil.isNotBlank(applicationUserName)) {
+      map.put("userName", applicationUserName);
+    }
+    if (StringUtil.isNotBlank(dbType)) {
+      map.put("dbType", dbType);
+    }
+    if (StringUtil.isNotBlank(msTableName)) {
+      map.put("msTableName", msTableName);
+    }
+    if (StringUtil.isNotBlank(dbUserName)) {
+      map.put("dbUserName", dbUserName);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    map.put("pageNo", (pageNo - 1) * pageSize);
+    map.put("pageSize", pageSize);
+
+    List<String> DateList = new ArrayList();
+
+    Calendar startTimeCalendar=Calendar.getInstance();
+    Calendar endTimeCalendar=Calendar.getInstance();
+
+    Date startTimeDate=new Date();
+    Date endTimeDate=new Date();
+
+    //创建SimpleDateFormat对象实例并定义好转换格式
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    try{
+      startTimeDate=sdf.parse(startTime);
+      endTimeDate=sdf.parse(endTime);
+      startTimeCalendar.setTime(startTimeDate);
+      endTimeCalendar.setTime(endTimeDate);
+    }catch (Exception e){
+
+    }
+
+    while (startTimeCalendar.compareTo(endTimeCalendar)<1){
+      String startTimeStr = sdf.format(startTimeCalendar.getTime());
+      DateList.add(startTimeStr);
+      startTimeCalendar.add(Calendar.DATE, 1);
+    }
+
+    if(startTimeCalendar.before(endTimeCalendar)){
+      String endTimeStr=sdf.format(startTimeCalendar.getTime());
+      DateList.add(endTimeStr);
+    }
+
+    List<Long> returnList=new ArrayList<>();
+
+    for(int i=0;i<DateList.size()-1;i++){
+      map.put("startTime", DateList.get(i));
+      map.put("endTime", DateList.get(i+1));
+      Long count = msSegmentDetailDao.selectCountsOfUser(map);
+      returnList.add(count);
+    }
+
+
+    System.out.println(111);
+    log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
   }
 
 

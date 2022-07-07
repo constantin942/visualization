@@ -6,6 +6,8 @@ import com.mingshi.skyflying.domain.SegmentDetailDo;
 import com.mingshi.skyflying.domain.UserCoarseInfo;
 import com.mingshi.skyflying.response.ServerResponse;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 
 public interface SegmentDetailService extends ParentService<SegmentDetailDo, Long> {
@@ -25,6 +27,8 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
   ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(Integer pageNo, Integer pageSize);
 
   ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize);
+
+  ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) throws ParseException;
 }
 
 // 恢复kafak的某个topic下某个消费组的offset为最早；2022-06-07 10:25:58
