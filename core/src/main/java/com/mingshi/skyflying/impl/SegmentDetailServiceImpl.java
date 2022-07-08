@@ -8,8 +8,6 @@ import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
-import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.JsonUtil;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -43,8 +40,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsThirdPartyTableListMapper msThirdPartyTableListMapper;
-  @Resource
-  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
+  // @Resource
+  // private MingshiElasticSearchUtil mingshiElasticSearchUtil;
 
   @Override
   public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
@@ -331,7 +328,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAll(map);
 
       // 在ES中进行搜索；2022-07-07 11:13:25
-      List<EsMsSegmentDetailDo> msSegmentDetailDoListByEs = mingshiElasticSearchUtil.termQueryByMap(map);
+      // List<EsMsSegmentDetailDo> msSegmentDetailDoListByEs = mingshiElasticSearchUtil.termQueryByMap(map);
       log.info("# SegmentDetailServiceImpl.getSegmentDetailsFromDb() # 根据查询条件 = 【{}】，在表ms_segment_detail中获取到了【{}】条详细数据。", JsonUtil.obj2String(map), msSegmentDetailDoList.size());
       if (null != msSegmentDetailDoList && 0 < msSegmentDetailDoList.size()) {
         for (MsSegmentDetailDo msSegmentDetailDo : msSegmentDetailDoList) {
