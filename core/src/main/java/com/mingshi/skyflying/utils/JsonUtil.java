@@ -150,6 +150,16 @@ public class JsonUtil {
       return objectMapper.readValue(str, javaType);
     } catch (Exception e) {
       log.warn("Parse String to Object error", e);
+      return string2Obj2(str, collectionClass, elementClasses);
+    }
+  }
+
+  public static <T> T string2Obj2(String str, Class<?> collectionClass, Class<?>... elementClasses) {
+    com.fasterxml.jackson.databind.JavaType javaType = mapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
+    try {
+      return mapper.readValue(str, javaType);
+    } catch (Exception e) {
+      log.warn("Parse String to Object error", e);
       return null;
     }
   }

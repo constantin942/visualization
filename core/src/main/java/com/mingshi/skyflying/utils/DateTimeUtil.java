@@ -198,12 +198,13 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：stringToInstant</B>
    * <B>概要说明：将String类型的时间转换成Instant类型的时间，使用默认的时间格式 </B>
+   *
+   * @return java.time.Instant
    * @Author zm
    * @Date 2022年07月04日 09:07:50
    * @Param []
-   * @return java.time.Instant
    **/
-  public static Instant stringToInstant1(String date){
+  public static Instant stringToInstant1(String date) {
     // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
     Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(STANDARD_FORMAT)
       .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
@@ -213,12 +214,13 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：stringToInstant</B>
    * <B>概要说明：将String类型的时间转换成Instant类型的时间，使用指定的时间格式 </B>
+   *
+   * @return java.time.Instant
    * @Author zm
    * @Date 2022年07月04日 09:07:50
    * @Param []
-   * @return java.time.Instant
    **/
-  public static Instant stringToInstant2(String date, String dateFormat){
+  public static Instant stringToInstant2(String date, String dateFormat) {
     // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
     Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(dateFormat)
       .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
@@ -2201,6 +2203,19 @@ public class DateTimeUtil {
     long seconds = ChronoUnit.SECONDS.between(fromDate, toDate);
     return seconds;
   }
+  public static long getSecond2(Instant fromDate) {
+    Instant toDate = Instant.now();
+    ZonedDateTime zonedDateTimeEnd = Instant.now().atZone(ZoneId.systemDefault());
+    LocalDateTime localDateTimeEnd = zonedDateTimeEnd.toLocalDateTime();
+    // ZonedDateTime zonedDateTimeFrom = fromDate.atZone(ZoneId.systemDefault());
+    // LocalDateTime localDateTimeFrom = zonedDateTimeFrom.toLocalDateTime();
+    // long seconds1 = ChronoUnit.SECONDS.between(localDateTimeFrom, localDateTimeEnd);
+    long seconds2 = ChronoUnit.SECONDS.between(fromDate, localDateTimeEnd);
+    // if(seconds1 != seconds2){
+    //   System.out.println("");
+    // }
+    return seconds2;
+  }
 
   /**
    * 日期转换成字符串
@@ -2213,6 +2228,7 @@ public class DateTimeUtil {
     String str = format.format(date);
     return str;
   }
+
   public static String DateToStr2(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_T);
     String str = format.format(date);

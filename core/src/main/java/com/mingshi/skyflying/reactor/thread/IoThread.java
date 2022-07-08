@@ -84,7 +84,7 @@ public class IoThread extends Thread {
             // getAuditLogFromJSONObject(jsonObject);
 
             // 从json实例中获取segment的信息
-            // getSegmentFromJSONObject(jsonObject);
+            getSegmentFromJSONObject(jsonObject);
           }
 
           // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
@@ -218,12 +218,11 @@ public class IoThread extends Thread {
    **/
   private void getSegmentFromJSONObject(ObjectNode jsonObject) {
     try {
-      String segmentStr = jsonObject.get(Const.SEGMENT_LIST).asText();
-      List<SegmentDo> segmentDoList = JsonUtil.string2Obj(segmentStr, List.class, SegmentDo.class);
-      if (null == segmentDoList) {
-        TimeUnit.MILLISECONDS.sleep(10);
-      } else {
-        segmentList.addAll(segmentDoList);
+      JsonNode jsonNode = jsonObject.get(Const.SEGMENT);
+      if(null != jsonNode){
+        String segmentStr = jsonNode.asText();
+        SegmentDo segmentDo = JsonUtil.string2Obj(segmentStr, SegmentDo.class);
+        segmentList.add(segmentDo);
       }
     } catch (Exception e) {
       log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
@@ -246,7 +245,7 @@ public class IoThread extends Thread {
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
-        // mingshiServerUtil.flushSegmentToDB(segmentList);
+        mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13

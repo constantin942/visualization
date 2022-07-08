@@ -34,8 +34,8 @@ public class Const {
   public static final String SKYWALKING_CONSUME_QPS = "skywalkingConsumeQps";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
-  // public static final String SEGMENT = "segment";
-  public static final String SEGMENT_LIST = "segmentList";
+  public static final String SEGMENT = "segment";
+  // public static final String SEGMENT_LIST = "segmentList";
 
   // 配置表中的配置项
   public static final String AK_SK = "akSk";

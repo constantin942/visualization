@@ -493,7 +493,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       if (null != segmentDo) {
-        jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
+        jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
       }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));

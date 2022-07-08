@@ -127,7 +127,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     try {
       config = msConfigDo.getConfig();
 
-      ObjectNode jsonObject = JsonUtil.parse(config, ObjectNode.class);
+      ObjectNode jsonObject = JsonUtil.string2Object(config, ObjectNode.class);
       ak = jsonObject.get(Const.AK).asText();
       sk = jsonObject.get(Const.SK).asText();
       if (StringUtil.isBlank(ak) || StringUtil.isBlank(sk)) {
