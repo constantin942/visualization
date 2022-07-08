@@ -8,6 +8,7 @@ import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
 import com.mingshi.skyflying.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.jdbc.Null;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -811,22 +812,55 @@ public class SkyflyingController {
   }
 
 
+  /**
+   * <B>方法名称：getCountsOfAllRecentSevenDays/B>
+   * <B>概要说明：获取用户对数据的详细数据</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
 
-//  /**
-//   * <B>方法名称：getUserUsualAndUnusualData/B>
-//   * <B>概要说明：获取用户的经常访问数据和不常访问数据</B>
-//   *
-//   * @return ServerResponse<SysOperator>
-//   * @Author lhx
-//   * @Date 2022年07月6日 14:30:19
-//   * @Param
-//   **/
-//
-//  @ResponseBody
-//  @RequestMapping(value = "/getUserUsualAndUnusualData", method = RequestMethod.GET)
-//  public ServerResponse<List<UserPortraitByVisitedTableEverydayDo>> getUserUsualAndUnusualData(String applicationUserName) {
-//    return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
-//  }
+  @ResponseBody
+  @RequestMapping(value = "/getCountsOfAllRecentSevenDays", method = RequestMethod.GET)
+  public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, /* 开始时间 */String endTime /* 结束时间 */) {
+    return segmentDetailService.getCountsOfAllRecentSevenDays(startTime,endTime);
+  }
+
+  /**
+   * <B>方法名称：getOverviewOfSystem/B>
+   * <B>概要说明：获取可视化系统关于、管理信息数量、用户数量的总览信息</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getOverviewOfSystem", method = RequestMethod.GET)
+  public ServerResponse<SystemOverview> getOverviewOfSystem() {
+    return segmentDetailService.getOverviewOfSystem();
+  }
+
+
+  /**
+   * <B>方法名称：getUserUsualAndUnusualData/B>
+   * <B>概要说明：获取用户的经常访问数据和不常访问数据</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月6日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getUserUsualAndUnusualData", method = RequestMethod.GET)
+  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName) {
+    return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
+  }
+
 
 
 

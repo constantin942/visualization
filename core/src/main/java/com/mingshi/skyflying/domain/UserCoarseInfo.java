@@ -13,5 +13,5 @@ public class UserCoarseInfo {
 
     private Long visitedCount;
 
-    private Date usualVisitedData;
+    private String usualVisitedData;
 }

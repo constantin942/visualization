@@ -211,10 +211,19 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       userCoarseInfos.get(i).setLastVisitedDate(lastVisited);
     }
 
+    for(int i=0;i<userCoarseInfos.size();i++){
+      String userName=userCoarseInfos.get(i).getUserName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("userName",userName);
+      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+
+      userCoarseInfos.get(i).setUsualVisitedData(list.get(0).getVisitedData());
+    }
+
+
+
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-
-
     return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfos);
   }
 
@@ -233,6 +242,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
       userCoarseInfo.setVisitedCount(count);
       userCoarseInfo.setLastVisitedDate(lastVisited);
+
+      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+      userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
+
       log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
       List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
 
@@ -306,9 +319,100 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
 
-    System.out.println(111);
     log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
+  }
+
+  @Override
+  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName) {
+
+
+    Map<String, Object> queryMap = new HashMap<>();
+    queryMap.put("userName",applicationUserName);
+    List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+    Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
+      @Override
+      public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
+        if(t1.getVisitedCount()<t2.getVisitedCount()){
+          return 1;
+        }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+          return 0;
+        }else{
+          return -1;
+        }
+      }
+    });
+
+    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+  }
+
+  @Override
+  public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, String endTime) {
+
+    log.info("开始执行 # SegmentDetailServiceImpl. getCountsOfAllRecentSevenDays # 获取用户近七天的访问次数。");
+    List<String> DateList = new ArrayList();
+    Map<String, Object> map = new HashMap<>();
+
+    Calendar startTimeCalendar=Calendar.getInstance();
+    Calendar endTimeCalendar=Calendar.getInstance();
+
+    Date startTimeDate=new Date();
+    Date endTimeDate=new Date();
+
+    //创建SimpleDateFormat对象实例并定义好转换格式
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    try{
+      startTimeDate=sdf.parse(startTime);
+      endTimeDate=sdf.parse(endTime);
+      startTimeCalendar.setTime(startTimeDate);
+      endTimeCalendar.setTime(endTimeDate);
+    }catch (Exception e){
+
+    }
+
+    while (startTimeCalendar.compareTo(endTimeCalendar)<1){
+      String startTimeStr = sdf.format(startTimeCalendar.getTime());
+      DateList.add(startTimeStr);
+      startTimeCalendar.add(Calendar.DATE, 1);
+    }
+
+    if(startTimeCalendar.before(endTimeCalendar)){
+      String endTimeStr=sdf.format(startTimeCalendar.getTime());
+      DateList.add(endTimeStr);
+    }
+
+    List<Long> returnList=new ArrayList<>();
+
+    for(int i=0;i<DateList.size()-1;i++){
+      map.put("startTime", DateList.get(i));
+      map.put("endTime", DateList.get(i+1));
+      Long count = msSegmentDetailDao.selectCountsOfAllRecentSevenDays(map);
+      returnList.add(count);
+    }
+
+    log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
+  }
+
+  @Override
+  public ServerResponse<SystemOverview> getOverviewOfSystem() {
+    log.info("开始执行 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
+    SystemOverview systemOverview=new SystemOverview();
+
+    Long informationCount=msSegmentDetailDao.selectinformationCount();
+    systemOverview.setVisitedInformation(informationCount);
+
+    Long dbInstanceCount=msSegmentDetailDao.selectDbInstanceCount();
+    systemOverview.setDbInstance(dbInstanceCount);
+
+    Long tableCount= msSegmentDetailDao.selectTableCount();
+    systemOverview.setTable(tableCount);
+
+    Long userCount=msSegmentDetailDao.selectUserCount();
+    systemOverview.setUser(userCount);
+    log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", systemOverview);
   }
 
 
