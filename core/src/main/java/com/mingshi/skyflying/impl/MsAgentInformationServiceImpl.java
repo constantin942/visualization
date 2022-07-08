@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -93,11 +92,10 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
       Iterator<Object> iterator = hgetall.keySet().iterator();
       while (iterator.hasNext()) {
         String key = String.valueOf(iterator.next());
-        String date = String.valueOf(hgetall.get(key));
-        Instant instant = DateTimeUtil.stringToInstant1(date);
-        long interval = Math.abs(DateTimeUtil.getSecond(instant));
+        String stringDate = String.valueOf(hgetall.get(key));
+        long interval = DateTimeUtil.getSecondByDate(stringDate);
 
-        doActiveSkywalkingAgent(list, interval, key, count, date);
+        doActiveSkywalkingAgent(list, interval, key, count, stringDate);
       }
     }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();

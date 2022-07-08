@@ -485,6 +485,36 @@ public class DateTimeUtil {
     return calendar.getTime();
   }
 
+  /**
+   * <B>方法名称：getSecondByDate</B>
+   * <B>概要说明：根据字符串类型的时间获取毫秒级时间差</B>
+   * @Author zm
+   * @Date 2022年07月08日 09:07:14
+   * @Param [stringDate]
+   * @return long
+   **/
+  public static long getSecondByDate(String stringDate) {
+    long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
+    long timeEnd = System.currentTimeMillis();
+    long interval = Math.abs((timeEnd - timeFrom) / 1000);
+    return interval;
+  }
+
+  /**
+   * <B>方法名称：getMilliSecondByDate</B>
+   * <B>概要说明：根据字符串类型的时间获取秒级时间差</B>
+   * @Author zm
+   * @Date 2022年07月08日 09:07:14
+   * @Param [stringDate]
+   * @return long
+   **/
+  public static long getMilliSecondByDate(String stringDate) {
+    long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
+    long timeEnd = System.currentTimeMillis();
+    long interval = Math.abs((timeEnd - timeFrom));
+    return interval;
+  }
+
 
   public void LeaveSignIn() {
     try {
