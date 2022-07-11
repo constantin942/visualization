@@ -739,6 +739,29 @@ public class SkyflyingController {
 
   }
 
+  /**
+   * <B>方法名称：getCoarseCountsOfTableName/B>
+   * <B>概要说明：获取数据库的粗粒度信息</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月5日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
+  public ServerResponse<List<TableCoarseInfo>>getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                   @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+
+    return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
+
+  }
+
+
+
+
 
   /**
    * <B>方法名称：getCoarseCountsOfOneUser/B>
@@ -755,7 +778,6 @@ public class SkyflyingController {
   public ServerResponse<UserCoarseInfo>getCoarseCountsOfOneUser( @RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
                                                                     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-
 
     return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
 
@@ -862,6 +884,40 @@ public class SkyflyingController {
   }
 
 
+
+
+  /**
+   * <B>方法名称：getAlarmData/B>
+   * <B>概要说明：获取告警数据</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月6日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getAlarmData", method = RequestMethod.GET)
+  public ServerResponse<List<AlarmData>> getAlarmData() {
+    return segmentDetailService.getAlarmData();
+  }
+
+  /**
+   * <B>方法名称：getAlarmData/B>
+   * <B>概要说明：获取高危用户</B>
+   *
+   * @return ServerResponse<SysOperator>
+   * @Author lhx
+   * @Date 2022年07月6日 14:30:19
+   * @Param
+   **/
+
+  @ResponseBody
+  @RequestMapping(value = "/getUserAlarmData", method = RequestMethod.GET)
+  public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
+
+    return segmentDetailService.getUserAlarmData();
+  }
 
 
 

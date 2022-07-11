@@ -1,9 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.InstanceTable;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData;
+import com.mingshi.skyflying.domain.*;
 
 import java.util.Date;
 import java.util.List;
@@ -74,4 +71,17 @@ public interface MsSegmentDetailDao {
   Long selectTableCount();
 
   Long selectUserCount();
+
+  List<String> selectAllTableName();
+
+  Long selectCountOfOneTable(Map<String, Object> queryMap);
+
+  Date selectTableLastVisitedTime(Map<String, Object> queryMap);
+
+  List<UserUsualAndUnusualVisitedData> selectTableUsualAndUnusualData(Map<String, Object> queryMap);
+
+  List<AlarmData> selectAlarmData();
+
+  List<UserAlarmData> selectUserAlarmData();
+
 }

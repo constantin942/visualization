@@ -266,6 +266,7 @@
     </if>
   </select>
 
+
   <select id="selectUserUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData"
           parameterType="java.util.Map">
     SELECT user_name,visited_table as visited_data,SUM(visited_count) as visited_count FROM `user_portrait_by_visited_table_everyday`
@@ -311,6 +312,56 @@
   </select>
   <select id="selectUserCount" resultType="java.lang.Long">
     select count(distinct user_name) from ms_segment_detail where user_name is not null
+  </select>
+
+
+  <select id="selectAllTableName" resultType="java.lang.String">
+    select distinct ms_table_name
+    from  ms_segment_detail
+    where ms_table_name is not null
+  </select>
+
+  <select id="selectCountOfOneTable" resultType="java.lang.Long"
+          parameterType="java.util.Map">
+    select count(*) from ms_segment_detail
+    where ms_table_name is not null and user_name is not null
+    <if test="tableName != null and  tableName != null">
+      and ms_table_name = #{tableName}
+    </if>
+  </select>
+
+  <select id="selectTableLastVisitedTime" resultType="java.util.Date"
+          parameterType="java.util.Map">
+    SELECT max(start_time) from ms_segment_detail
+    where ms_table_name is not null and user_name is not null
+    <if test="tableName != null and  tableName != null">
+      and ms_table_name = #{tableName}
+    </if>
+
+  </select>
+
+  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData"
+          parameterType="java.util.Map">
+    select ms_table_name as visited_data,count(*) as visited_count,user_name
+    from ms_segment_detail
+    where ms_table_name is not null and user_name is not null
+    <if test="tableName != null and  tableName != null">
+      and ms_table_name = #{tableName}
+    </if>
+    group by user_name
+  </select>
+  <select id="selectAlarmData" resultType="com.mingshi.skyflying.domain.AlarmData">
+    SELECT COUNT(*) as alarm_data,match_rule_id
+
+    FROM ms_alarm_information where match_rule_id is not NULL
+
+    GROUP BY match_rule_id
+  </select>
+
+  <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.domain.UserAlarmData">
+    SELECT count(*) as alarm_count,user_name
+    from ms_alarm_information
+    GROUP BY user_name
   </select>
 
 

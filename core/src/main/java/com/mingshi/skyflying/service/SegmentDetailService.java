@@ -32,6 +32,13 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
   ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, String endTime);
 
   ServerResponse<SystemOverview> getOverviewOfSystem();
+
+  ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize);
+
+  ServerResponse<List<AlarmData>> getAlarmData();
+
+  ServerResponse<List<UserAlarmData>> getUserAlarmData();
+
 }
 
 // 恢复kafak的某个topic下某个消费组的offset为最早；2022-06-07 10:25:58

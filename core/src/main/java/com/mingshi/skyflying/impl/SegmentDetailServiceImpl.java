@@ -216,11 +216,21 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       Map<String, Object> queryMap = new HashMap<>();
       queryMap.put("userName",userName);
       List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+      Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
+        @Override
+        public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
+          if(t1.getVisitedCount()<t2.getVisitedCount()){
+            return 1;
+          }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+            return 0;
+          }else{
+            return -1;
+          }
+        }
+      });
 
       userCoarseInfos.get(i).setUsualVisitedData(list.get(0).getVisitedData());
     }
-
-
 
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
@@ -413,6 +423,108 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     systemOverview.setUser(userCount);
     log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
     return ServerResponse.createBySuccess("获取数据成功！", "success", systemOverview);
+  }
+
+  @Override
+  public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize) {
+    log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
+
+    List<TableCoarseInfo> tableCoarseInfos=new ArrayList<>();
+
+    //获取所有的数据库表名
+    List<String> tableNames=msSegmentDetailDao.selectAllTableName();
+
+    for(int i=0;i<tableNames.size();i++){
+      TableCoarseInfo temp=new TableCoarseInfo();
+      temp.setTableName(tableNames.get(i));
+      tableCoarseInfos.add(temp);
+    }
+
+    //根据数据库表获取用户对数据的访问次数
+    for(int i=0;i<tableCoarseInfos.size();i++){
+      String tableName=tableCoarseInfos.get(i).getTableName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("tableName",tableName);
+      Long count=msSegmentDetailDao.selectCountOfOneTable(queryMap);
+      tableCoarseInfos.get(i).setVisitedCount(count);
+    }
+
+    // 根据用户名获取用户的最后访问时间
+    for(int i=0;i<tableCoarseInfos.size();i++){
+      String tableName=tableCoarseInfos.get(i).getTableName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("tableName",tableName);
+      Date lastVisited=msSegmentDetailDao.selectTableLastVisitedTime(queryMap);
+      tableCoarseInfos.get(i).setLastVisitedDate(lastVisited);
+    }
+
+    for(int i=0;i<tableCoarseInfos.size();i++){
+      String tableName=tableCoarseInfos.get(i).getTableName();
+      Map<String, Object> queryMap = new HashMap<>();
+      queryMap.put("tableName",tableName);
+      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectTableUsualAndUnusualData(queryMap);
+
+      Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
+        @Override
+        public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
+          if(t1.getVisitedCount()<t2.getVisitedCount()){
+            return 1;
+          }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+            return 0;
+          }else{
+            return -1;
+          }
+        }
+      });
+
+      if(list.size()!=0){
+        tableCoarseInfos.get(i).setUsualVisitedUser(list.get(0).getUserName());
+      }else{
+        tableCoarseInfos.get(i).setUsualVisitedUser("从未有人访问过这张表");
+      }
+    }
+
+    log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", tableCoarseInfos);
+  }
+
+  @Override
+  public ServerResponse<List<AlarmData>> getAlarmData() {
+
+    log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData # 获取告警信息。");
+    List<AlarmData> list=msSegmentDetailDao.selectAlarmData();
+    for(int i=0;i<list.size();i++){
+      if(list.get(i).getMatchRuleId()==1){
+        list.get(i).setAlarmName("基于访问时间段的告警规则：即若某用户通常白天访问数据，则夜间为异常；");
+      }else if(list.get(i).getMatchRuleId()==2){
+        list.get(i).setAlarmName("基于访问过的表的告警规则：若某用户访问从未访问过的表时，则给出告警；");
+      }
+    }
+    log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取告警信息。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+
+  }
+
+  @Override
+  public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
+    log.info("开始执行 # SegmentDetailServiceImpl.getUserAlarmData # 获取用户告警信息。");
+
+    List<UserAlarmData> list=msSegmentDetailDao.selectUserAlarmData();
+
+    Collections.sort(list, new Comparator<UserAlarmData>() {
+      @Override
+      public int compare(UserAlarmData t1, UserAlarmData t2) {
+        if(t1.getAlarmCount()<t2.getAlarmCount()){
+          return 1;
+        }else if(t1.getAlarmCount()==t2.getAlarmCount()){
+          return 0;
+        }else{
+          return -1;
+        }
+      }
+    });
+    log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取用户告警信息。");
+    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
   }
 
 

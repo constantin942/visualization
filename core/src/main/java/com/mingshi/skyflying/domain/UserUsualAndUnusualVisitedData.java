@@ -6,6 +6,8 @@ import java.util.List;
 
 @Data
 public class UserUsualAndUnusualVisitedData {
+
+
     String userName;
 
     String visitedData;
