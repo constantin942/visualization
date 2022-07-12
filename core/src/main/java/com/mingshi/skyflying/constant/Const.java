@@ -20,6 +20,9 @@ package com.mingshi.skyflying.constant;
 
 public class Const {
 
+  public static final String LOGIN_FISH_EASIER = "login/fish/easier";
+  public static final String ES_INDEX_SEGMENT_DETAIL = "segment_detail";
+
   public static final Integer IS_DELETE_ZERO = 0;
   public static final Integer IS_DELETE_ONE = 1;
 
