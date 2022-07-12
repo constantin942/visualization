@@ -74,6 +74,11 @@ message SegmentObject {
   bool isSizeLimited = 6;
 
   string ref = 7;
+
+  // 尽量给每一个segmentObject实例设置用户名和token，这样可以减少丢失用户名的概率。2022-07-12 09:53:35
+  string userName = 8;
+
+  string token = 9;
 }
 
 // Segment reference represents the link between two existing segment.
