@@ -58,12 +58,11 @@ spring:
       # 值的反序列化方式
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: flows_match_group
-      #最多拉取1000条数据
-      max-poll-records: 1000
       #最长1000毫秒
       fetch-max-wait: 1000
       properties:
         max.poll.interval.ms: 1200000
+        #最多拉取1000条数据
         max.poll.records: 5
     listener:
       # 在侦听器容器中运行的线程数。
@@ -82,6 +81,9 @@ mybatis:
 
 logging:
   config: classpath:logback-spring.xml
+
+es:
+  enable: false
 
 reactor:
   processor:

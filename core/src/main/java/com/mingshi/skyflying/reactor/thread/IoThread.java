@@ -8,6 +8,8 @@ import com.mingshi.skyflying.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.domain.MsAuditLogDo;
 import com.mingshi.skyflying.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.domain.SegmentDo;
+import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
+import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.JsonUtil;
@@ -38,16 +40,19 @@ public class IoThread extends Thread {
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
+  private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
+  private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
-  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil) {
+  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
     segmentList = new LinkedList();
     auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
+    esSegmentDetailDoList = new LinkedList();
     msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
@@ -55,6 +60,7 @@ public class IoThread extends Thread {
     }
     this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
+    this.esSegmentDetailDoList = esSegmentDetailDoList;
   }
 
   // todo: 1. 前端查询时，不再根据 user_token 表关联 segment 表来获取数据，而是直接根据 segment 表来查询数据，因为 user_token 表里已经有了 用户名 、token、全局追踪id了。
@@ -76,6 +82,9 @@ public class IoThread extends Thread {
 
             // 从json实例中获取segmentDetail实例的信息
             getSegmentDetailFromJSONObject(jsonObject);
+
+            // 从json实例中获取esSegmentDetail实例的信息
+            getEsSegmentDetailFromJSONObject(jsonObject);
 
             // 从json实例中获取异常信息
             getAbnormalFromJSONObject(jsonObject);
@@ -158,6 +167,38 @@ public class IoThread extends Thread {
   }
 
   /**
+   * <B>方法名称：getEsSegmentDetailFromJSONObject</B>
+   * <B>概要说明：将EsSegmentDetail实例信息放入到 esSegmentDetailList 中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月13日 08:07:22
+   * @Param [jsonObject]
+   **/
+  private void getEsSegmentDetailFromJSONObject(ObjectNode jsonObject) {
+    if(false == esMsSegmentDetailUtil.getEsEnable()){
+      return;
+    }
+    try {
+      String listString = null;
+      try {
+        JsonNode jsonNode = jsonObject.get(Const.ES_SEGMENT_DETAIL_DO_LIST);
+        if (null != jsonNode) {
+          listString = jsonNode.asText();
+        }
+      } catch (Exception e) {
+        log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+      }
+      if (StringUtil.isNotBlank(listString)) {
+        LinkedList<EsMsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, EsMsSegmentDetailDo.class);
+        esSegmentDetailDoList.addAll(segmentDetailList);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+    }
+  }
+
+  /**
    * <B>方法名称：getSegmentDetailFromJSONObject</B>
    * <B>概要说明：将segmentDetail实例信息放入到 segmentDetailList 中</B>
    *
@@ -175,14 +216,14 @@ public class IoThread extends Thread {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
-        log.error("# IoThread.run() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+        log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
         segmentDetailDoList.addAll(segmentDetailList);
       }
     } catch (Exception e) {
-      log.error("# IoThread.run() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+      log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
     }
   }
 
@@ -203,7 +244,7 @@ public class IoThread extends Thread {
   //       auditLogList.addAll(auditLogFromSkywalkingAgentList);
   //     }
   //   } catch (Exception e) {
-  //     log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
+  //     log.error("# IoThread.getAuditLogFromJSONObject() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
   //   }
   // }
 
@@ -219,13 +260,13 @@ public class IoThread extends Thread {
   private void getSegmentFromJSONObject(ObjectNode jsonObject) {
     try {
       JsonNode jsonNode = jsonObject.get(Const.SEGMENT);
-      if(null != jsonNode){
+      if (null != jsonNode) {
         String segmentStr = jsonNode.asText();
         SegmentDo segmentDo = JsonUtil.string2Obj(segmentStr, SegmentDo.class);
         segmentList.add(segmentDo);
       }
     } catch (Exception e) {
-      log.error("# IoThread.run() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
+      log.error("# IoThread.getSegmentFromJSONObject() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
     }
   }
 

@@ -36,6 +36,7 @@ public class Const {
   public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "skywalkingAgentHeartBeatDolList";
   public static final String SKYWALKING_CONSUME_QPS = "skywalkingConsumeQps";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
+  public static final String ES_SEGMENT_DETAIL_DO_LIST = "esSegmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
   public static final String SEGMENT = "segment";
   // public static final String SEGMENT_LIST = "segmentList";
