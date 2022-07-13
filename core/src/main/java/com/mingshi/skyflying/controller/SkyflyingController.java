@@ -8,7 +8,6 @@ import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.*;
 import com.mingshi.skyflying.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.jdbc.Null;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequestMapping("/api/skyflying")
 public class SkyflyingController {
 
+  @Resource
+  private MsMonitorBusinessSystemTablesService msMonitorBusinessSystemTablesService;
   @Resource
   private SegmentDetailService segmentDetailService;
   @Resource
@@ -97,28 +98,40 @@ public class SkyflyingController {
     ObjectNode jsonObject = JsonUtil.createJSONObject();
     jsonObject.put("maxQps1", maxValue1);
 
-    // return bySuccess;
-    // Map<String, Integer> countMap2 = new HashMap<>();
-    // Integer maxValue2 = -1;
-    // Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
-    // // ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    // if (null != timeCountMap && 0 < timeCountMap.size()) {
-    //   Iterator<String> iterator = timeCountMap.keySet().iterator();
-    //   while (iterator.hasNext()) {
-    //     String key = iterator.next();
-    //     AtomicInteger atomicInteger = timeCountMap.get(key);
-    //     Integer value = atomicInteger.intValue();
-    //     countMap2.put(key, value);
-    //     maxValue2 = Math.max(maxValue2, value);
-    //   }
-    // }
-    // if(!maxValue1.equals(maxValue2)){
-    //   jsonObject.put("detail1", JsonUtil.obj2String(countMap1));
-    //   jsonObject.put("maxValue2", maxValue2);
-    //   jsonObject.put("detail2", JsonUtil.obj2String(countMap2));
-    // }
-
     bySuccess.setData(jsonObject.toString());
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getAllMonitorTables</B>
+   * <B>概要说明：获取所有监管的表</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年07月13日 14:07:42
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getAllMonitorTables", method = RequestMethod.GET)
+  public ServerResponse<String> getAllMonitorTables() {
+    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.getAllTables();
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：updateMonitorTable</B>
+   * <B>概要说明：更新监管的表状态</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年07月13日 14:07:42
+   * @Param []
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
+  public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
+                                                   @RequestParam(value = "isDelete") Integer isDelete) {
+    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableInformation(id, isDelete);
     return bySuccess;
   }
 
@@ -561,7 +574,7 @@ public class SkyflyingController {
                                                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
 
-    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance,pageNo, pageSize);
+    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance, pageNo, pageSize);
   }
 
 
@@ -731,8 +744,8 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfUser", method = RequestMethod.GET)
-  public ServerResponse<List<UserCoarseInfo>>getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                   @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
 
     return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
@@ -751,14 +764,13 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
-  public ServerResponse<List<TableCoarseInfo>>getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                   @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
 
     return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
 
   }
-
 
 
 
@@ -775,9 +787,9 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfOneUser", method = RequestMethod.GET)
-  public ServerResponse<UserCoarseInfo>getCoarseCountsOfOneUser( @RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
-                                                                    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
+                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
     return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
 
@@ -796,14 +808,14 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUser", method = RequestMethod.GET)
-  public ServerResponse<Long>getCountsOfUser(String applicationUserName, /* 登录系统的名称 */
-                                               String dbUserName, /* 访问数据库的用户名 */
-                                               String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
-                                               String msTableName, /* 数据库表名 */
-                                               String startTime, /* 开始时间 */
-                                               String endTime, /* 结束时间 */
-                                               @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                               @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<Long> getCountsOfUser(String applicationUserName, /* 登录系统的名称 */
+                                              String dbUserName, /* 访问数据库的用户名 */
+                                              String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                              String msTableName, /* 数据库表名 */
+                                              String startTime, /* 开始时间 */
+                                              String endTime, /* 结束时间 */
+                                              @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                              @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
 
     return segmentDetailService.getCountsOfUser(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
   }
@@ -820,14 +832,14 @@ public class SkyflyingController {
 
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUserRecentSevenDays", method = RequestMethod.GET)
-  public ServerResponse<List<Long>>getCountsOfUserRecentSevenDays(String applicationUserName, /* 登录系统的名称 */
-                                             String dbUserName, /* 访问数据库的用户名 */
-                                             String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
-                                             String msTableName, /* 数据库表名 */
-                                             String startTime, /* 开始时间 */
-                                             String endTime, /* 结束时间 */
-                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) throws ParseException {
+  public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(String applicationUserName, /* 登录系统的名称 */
+                                                                   String dbUserName, /* 访问数据库的用户名 */
+                                                                   String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
+                                                                   String msTableName, /* 数据库表名 */
+                                                                   String startTime, /* 开始时间 */
+                                                                   String endTime, /* 结束时间 */
+                                                                   @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                                   @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) throws ParseException {
 
 
     return segmentDetailService.getCountsOfUserUserRecentSevenDays(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
@@ -847,7 +859,7 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getCountsOfAllRecentSevenDays", method = RequestMethod.GET)
   public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, /* 开始时间 */String endTime /* 结束时间 */) {
-    return segmentDetailService.getCountsOfAllRecentSevenDays(startTime,endTime);
+    return segmentDetailService.getCountsOfAllRecentSevenDays(startTime, endTime);
   }
 
   /**

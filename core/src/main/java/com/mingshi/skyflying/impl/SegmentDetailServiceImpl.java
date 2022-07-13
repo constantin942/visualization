@@ -8,6 +8,7 @@ import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.*;
+import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.JsonUtil;
@@ -40,8 +41,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsThirdPartyTableListMapper msThirdPartyTableListMapper;
-  // @Resource
-  // private MingshiElasticSearchUtil mingshiElasticSearchUtil;
+  @Resource
+  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
 
   @Override
   public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {

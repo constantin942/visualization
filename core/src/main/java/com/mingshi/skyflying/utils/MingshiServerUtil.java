@@ -7,16 +7,14 @@ import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
+import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,6 +38,8 @@ public class MingshiServerUtil {
   private MsAlarmInformationMapper msAlarmInformationMapper;
   @Resource
   private MsAgentInformationMapper msAgentInformationMapper;
+  @Resource
+  private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
   @Resource
   private MsAuditLogDao msAuditLogDao;
   @Resource
@@ -151,6 +151,25 @@ public class MingshiServerUtil {
       }
     }
     return tableName;
+  }
+
+  public List<String> getTableNameList(String sqlType, String msSql) {
+    List<String> tableNameList = null;
+    if (StringUtil.isBlank(sqlType)) {
+      return tableNameList;
+    }
+    if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
+      tableNameList = SqlParserUtils.selectTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
+      tableNameList = SqlParserUtils.insertTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+      tableNameList = SqlParserUtils.updateTable(msSql);
+    } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
+      tableNameList = SqlParserUtils.deleteTable(msSql);
+    } else {
+      log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+    }
+    return tableNameList;
   }
 
   /**
@@ -473,6 +492,32 @@ public class MingshiServerUtil {
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
       }
+    }
+  }
+
+  /**
+   * <B>方法名称：insertMonitorTables</B>
+   * <B>概要说明：将不存在的表批量插入到数据库中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月13日 14:07:03
+   * @Param []
+   **/
+  public void insertMonitorTables() {
+    try {
+      Map<String, Integer> isChangedMap = LoadAllEnableMonitorTablesFromDb.getIsChangedMap();
+      if (null != isChangedMap && 0 < isChangedMap.size()) {
+        Set<String> keySet = isChangedMap.keySet();
+        LinkedList<String> list = new LinkedList<>();
+        list.addAll(keySet);
+        if (0 < list.size()) {
+          msMonitorBusinessSystemTablesMapper.insertSelectiveBatch(list);
+        }
+        isChangedMap.clear();
+      }
+    } catch (Exception e) {
+      log.error("# SegmentConsumeServiceImpl.insertMonitorTables() # 将监管表中不存在的表插入到监管表中，出现了异常。", e);
     }
   }
 }

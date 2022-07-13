@@ -12,6 +12,7 @@ import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
+import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
 import com.mingshi.skyflying.reactor.queue.BatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -145,6 +146,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
         // segmentDoLinkedList.add(segment);
         // mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+
+        // 将表名字插入到监管表中；2022-07-13 14:16:57
+        mingshiServerUtil.insertMonitorTables();
 
         // 插入segment对应的index数据；2022-05-23 10:15:38
         mingshiServerUtil.updateUserNameByGlobalTraceId();
@@ -298,13 +302,26 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+    List<String> tableNameList = null;
     String tableName = null;
     try {
       // sql类型；
       String sqlType = mingshiServerUtil.getSqlType(value);
       msSegmentDetailDo.setDbType(sqlType);
       // 获取表名；2022-06-06 14:11:21
-      tableName = mingshiServerUtil.getTableName(sqlType, value);
+      tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
+      for (String tableNameTemp : tableNameList) {
+        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(tableNameTemp);
+        if(null != tableEnableStatus && 1 == tableEnableStatus){
+          // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+          return null;
+        }
+        if(StringUtil.isBlank(tableName)){
+          tableName = tableNameTemp;
+        }else{
+          tableName = tableName + "," + tableNameTemp;
+        }
+      }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
     }

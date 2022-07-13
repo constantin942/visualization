@@ -95,16 +95,33 @@ public class MingshiElasticSearchUtil {
    * @Author zm
    * @Date 2022年07月02日 19:07:44
    * @Param [queryByField]
+   * GET /segment_detail/_search
+   * {
+   *   "query": {
+   *     "bool": {
+   *       "should": [
+   *         {"term": {"userName": ""}},
+   *         {"bool": {"must_not":{"exists": {"field":"userName"}}}}
+   *       ]
+   *     }
+   *   }
+   * }
+   * 上面es搜索语句对应的sql语句如下所示：
+   * select *
+   * from segment_detail
+   * where userName is null or userName = ''
    **/
   public Iterable<EsMsSegmentDetailDo> termQueryByFiledsIsNull(String queryByField/* 根据那个字段查询 */) {
     Iterable<EsMsSegmentDetailDo> esMsSegmentDetailDos = null;
     try {
-      BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery().must(
-        QueryBuilders.boolQuery()
-          .should(QueryBuilders.termQuery(queryByField, ""))
-          .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery(queryByField))
-          ));
-      esMsSegmentDetailDos = msSegmentDetailEsDao.search(queryBuilder);
+      // 根据es的查询语句，先构造出来一个term查询；
+      // 然后再构造一个bool、must_not、exists查询；
+      // 最后将term查询和bool_must_not_exitst查询放入到一个should查询中；
+      // 接着将should查询放入到一个bool查询中。
+      TermQueryBuilder termQuery = QueryBuilders.termQuery(queryByField, "");
+      BoolQueryBuilder boolMustNotExistsQueryBuilder = QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery(queryByField));
+      BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.boolQuery().should(termQuery).should(boolMustNotExistsQueryBuilder));
+      esMsSegmentDetailDos = msSegmentDetailEsDao.search(boolQueryBuilder);
     } catch (Exception e) {
       log.error("# MingshiElasticSearchUtil.termQueryByFiledsIsNull() # 查询字段【{}】为空的记录时，出现了异常。", queryByField);
     }

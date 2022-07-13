@@ -11,11 +11,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Aiit@123
-#    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/es_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/zm_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   jpa:
     show-sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -140,9 +140,14 @@ server:
 # es启用状态；2022-07-13 08:22:04
 es:
   enable: false
+# es 地址
+elasticsearch:
+  host: 10.0.107.5
+  # es 端口号
+  port: 9300
 
 reactor:
   processor:
-    enable: true
+    enable: false
     thread:
       count: 1

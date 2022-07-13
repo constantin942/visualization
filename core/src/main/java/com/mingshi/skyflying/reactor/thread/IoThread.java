@@ -298,6 +298,7 @@ public class IoThread extends Thread {
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
+        mingshiServerUtil.insertMonitorTables();
         mingshiServerUtil.updateUserNameByGlobalTraceId();
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
         mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
