@@ -112,7 +112,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if (true == esMsSegmentDetailUtil.getEsEnable()) {
           esSegmentDetaiDolList = esMsSegmentDetailUtil.getEsSegmentDetaiDolList(segment);
         }
-        segmentDetaiDolList = getSegmentDetaiDolList(segment);
+        segmentDetaiDolList = getSegmentDetaiDolList(segment, segmentObject);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完100行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
 
         // 判断是否是异常信息；2022-06-07 18:00:13
@@ -143,9 +143,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
-        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-        // segmentDoLinkedList.add(segment);
-        // mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+        LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+        if (null != segment) {
+          segmentDoLinkedList.add(segment);
+          mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+        }
 
         // 将表名字插入到监管表中；2022-07-13 14:16:57
         mingshiServerUtil.insertMonitorTables();
@@ -200,16 +202,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return skywalkingAgentHeartBeatMap;
   }
 
-  private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment) {
+  private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment, SegmentObject segmentObject) {
     LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
     try {
       segmentDetaiDolList = new LinkedList<>();
       String reorganizingSpans = segment.getReorganizingSpans();
       if (StringUtil.isBlank(reorganizingSpans)) {
+        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentObject);
         return segmentDetaiDolList;
       }
       List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
-      if (null == list || 0 == list.size()) {
+      if (null == list || 0 == list.size() || 1 == list.size()) {
+        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentObject);
         return segmentDetaiDolList;
       }
       LinkedHashMap map1 = list.get(0);
@@ -301,6 +305,28 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return segmentDetaiDolList;
   }
 
+  private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, SegmentObject segmentObject) {
+    if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
+      MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+      msSegmentDetailDo.setUserName(segment.getUserName());
+      msSegmentDetailDo.setToken(segment.getToken());
+      msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+      msSegmentDetailDo.setOperationName(segment.getOperationName());
+      msSegmentDetailDo.setStartTime(segment.getRequestStartTime());
+      msSegmentDetailDo.setServiceCode(segmentObject.getService());
+      msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+      String reorganizingSpans = segment.getReorganizingSpans();
+      List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
+      if(null != list && 1 == list.size()){
+        LinkedHashMap hashMap = (LinkedHashMap)list.get(0);
+        if(null != hashMap && null != hashMap.get("url")){
+          msSegmentDetailDo.setOperationType("url");
+        }
+      }
+      segmentDetaiDolList.add(msSegmentDetailDo);
+    }
+  }
+
   private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
     List<String> tableNameList = null;
     String tableName = null;
@@ -312,18 +338,21 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
       for (String tableNameTemp : tableNameList) {
         Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(tableNameTemp);
-        if(null != tableEnableStatus && 1 == tableEnableStatus){
+        if (null != tableEnableStatus && 1 == tableEnableStatus) {
           // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
           return null;
         }
-        if(StringUtil.isBlank(tableName)){
+        if (StringUtil.isBlank(tableName)) {
           tableName = tableNameTemp;
-        }else{
+        } else {
           tableName = tableName + "," + tableNameTemp;
         }
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
+    }
+    if (StringUtil.isNotBlank(tableName)) {
+      tableName = tableName.replace("`", "");
     }
     return tableName;
   }
@@ -380,9 +409,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil, esMsSegmentDetailUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
-      // if (null != segmentDo) {
-      //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-      // }
+      if (null != segmentDo) {
+        jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
+      }
       if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
         jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
       }
@@ -537,15 +566,28 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
   }
 
+  /**
+   * <B>方法名称：getRef</B>
+   * <B>概要说明：获取TraceSegmentId</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年07月14日 15:07:12
+   * @Param [segmentObject, segment]
+   **/
   private String getRef(SegmentObject segmentObject, SegmentDo segment) {
-    segment.setCurrentSegmentId(segmentObject.getTraceSegmentId());
-    segment.setGlobalTraceId(segmentObject.getTraceId());
-    String ref = segmentObject.getRef();
-    if (!StringUtil.isBlank(ref)) {
-      TraceSegmentRef traceSegmentRef = JsonUtil.string2Obj(ref, TraceSegmentRef.class);
-      String parentSegmentId = traceSegmentRef.getTraceSegmentId();
-      segment.setParentSegmentId(parentSegmentId);
-      return parentSegmentId;
+    try {
+      segment.setCurrentSegmentId(segmentObject.getTraceSegmentId());
+      segment.setGlobalTraceId(segmentObject.getTraceId());
+      String ref = segmentObject.getRef();
+      if (!StringUtil.isBlank(ref)) {
+        TraceSegmentRef traceSegmentRef = JsonUtil.string2Obj(ref, TraceSegmentRef.class);
+        String parentSegmentId = traceSegmentRef.getTraceSegmentId();
+        segment.setParentSegmentId(parentSegmentId);
+        return parentSegmentId;
+      }
+    } catch (Exception e) {
+      log.error("# getRef() # 根据SegmentObject实例【{}】获取TraceSegmentId时，出现了异常。", segmentObject.toString(), e);
     }
     return null;
   }
@@ -751,12 +793,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 2022-07-11 17:28:27
       if (StringUtil.isNotBlank(url) && url.contains(Const.LOGIN_FISH_EASIER)) {
         CommonResponse commonResponse = JsonUtil.string2Obj(httpBody, CommonResponse.class);
-        Object data = commonResponse.getData();
-        if (null != data) {
-          String username = String.valueOf(((LinkedHashMap) data).get("username"));
-          if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
-            segmentDo.setUserName(username);
-            setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
+        if (null != commonResponse) {
+          Object data = commonResponse.getData();
+          if (null != data) {
+            String username = String.valueOf(((LinkedHashMap) data).get("username"));
+            if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
+              segmentDo.setUserName(username);
+              setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
+            }
           }
         }
       }
@@ -950,7 +994,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 当用户名和token都为null，但全局追踪id不为空；
       // 首先根据globalTraceId获取userName；
       userName = globalTraceIdAndUserNameMap.get(globalTraceId);
-      if (StringUtil.isNotBlank(userName)) {
+      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
       }
@@ -960,7 +1004,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (StringUtil.isNotBlank(token)) {
         // 首先根据 token 获取 userName；
         userName = tokenAndUserNameMap.get(token);
-        if (StringUtil.isNotBlank(userName)) {
+        if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
           segment.setUserName(userName);
           SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
           globalTraceIdAndUserNameMap.put(globalTraceId, userName);
@@ -971,13 +1015,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       globalTraceIdAndTokenMap.put(globalTraceId, segmentToken);
       // 当用户名为null，但token和全局追踪id不为空；
       userName = globalTraceIdAndUserNameMap.get(globalTraceId);
-      if (StringUtil.isNotBlank(userName)) {
+      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
         tokenAndUserNameMap.put(segmentToken, userName);
         segment.setUserName(userName);
       } else {
         userName = tokenAndUserNameMap.get(segmentToken);
-        if (StringUtil.isNotBlank(userName)) {
+        if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
           segment.setUserName(userName);
           SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
           globalTraceIdAndUserNameMap.put(globalTraceId, userName);
@@ -994,7 +1038,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
       globalTraceIdAndUserNameMap.put(globalTraceId, segmentUserName);
     } else {
-      log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() #出现异常情况了。用户名、token和全局追踪id都为空。");
+      log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() # 出现异常情况了。用户名、token和全局追踪id都为空。");
     }
   }
 
@@ -1047,7 +1091,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         List<SegmentDo> segmentDoList = segmentDao.selectByGlobalTraceId(globalTraceId);
         if (null != segmentDoList && 0 < segmentDoList.size()) {
           for (SegmentDo segmentDo : segmentDoList) {
-            if (StringUtil.isNotBlank(segmentDo.getUserName())) {
+            if (StringUtil.isNotBlank(segmentDo.getUserName()) && StringUtil.isBlank(segment.getUserName())) {
               segment.setUserName(segmentDo.getUserName());
               insertUserNameAndToken(segment);
               return true;
@@ -1057,7 +1101,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
     } else {
       String userName = userTokenDo.getUserName();
-      if (StringUtil.isNotBlank(userName)) {
+      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
         return true;
       }
@@ -1321,7 +1365,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
       String userName = span.getUserName();
       String token = span.getToken();
-      if (StringUtil.isNotBlank(userName)) {
+      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
       }
       if (StringUtil.isNotBlank(token)) {
@@ -1350,7 +1394,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
       // 获取用户名和token；2022-07-12 10:04:05
       String userName = segmentObject.getUserName();
-      if (StringUtil.isNotBlank(userName)) {
+      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
       }
       String token = segmentObject.getToken();
