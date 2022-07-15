@@ -54,7 +54,6 @@ public class AnomalyDetectionUtil {
     if (StringUtil.isBlank(userName) || StringUtil.isBlank(startTimeStr) || StringUtil.isBlank(globalTraceId)) {
       return;
     }
-    // TODO：设置kafka保存消息的时间为1个月；2022-06-08 11:26:21
     // 标识该条记录已进行过基于访问时间的异常检测；2022-06-08 09:02:37
     segmentDo.setUserPortraitFlagByVisitedTime(1);
     Date date = DateTimeUtil.strToDate(startTimeStr);
@@ -73,15 +72,21 @@ public class AnomalyDetectionUtil {
       String content = null;
       if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_FORENOON.getCode());
-        map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), null == count ? (null) : (1 + count));
+        if(null != count && 0 < count){
+          map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), 1 + count);
+        }
         content = ConstantsCode.USER_PORTRAIT_FORENOON.getDesc();
       } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode());
-        map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), null == count ? (null) : (1 + count));
+        if(null != count && 0 < count){
+          map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), 1 + count);
+        }
         content = ConstantsCode.USER_PORTRAIT_AFTERNOON.getDesc();
       } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_NIGHT.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_NIGHT.getCode());
-        map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), null == count ? (null) : (1 + count));
+        if(null != count && 0 < count){
+          map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), 1 + count);
+        }
         content = ConstantsCode.USER_PORTRAIT_NIGHT.getDesc();
       } else {
         log.error("# LoadUserPortraitFromDb.urlIsAbnormal() # 用户【{}】访问时间【{}】既不是上午、下午，也不是晚上。这是不对的，要排查下原因。", userName, startTimeStr);
