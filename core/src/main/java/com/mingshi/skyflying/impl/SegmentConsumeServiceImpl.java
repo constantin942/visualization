@@ -337,7 +337,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 获取表名；2022-06-06 14:11:21
       tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
       for (String tableNameTemp : tableNameList) {
-        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(tableNameTemp);
+        String dbInstance = msSegmentDetailDo.getDbInstance();
+        String peer = msSegmentDetailDo.getPeer();
+        // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(peer + "#" + dbInstance + "#" + tableNameTemp);
         if (null != tableEnableStatus && 1 == tableEnableStatus) {
           // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
           return null;

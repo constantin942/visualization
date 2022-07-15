@@ -509,8 +509,17 @@ public class MingshiServerUtil {
       Map<String, Integer> isChangedMap = LoadAllEnableMonitorTablesFromDb.getIsChangedMap();
       if (null != isChangedMap && 0 < isChangedMap.size()) {
         Set<String> keySet = isChangedMap.keySet();
-        LinkedList<String> list = new LinkedList<>();
-        list.addAll(keySet);
+        LinkedList<MsMonitorBusinessSystemTablesDo> list = new LinkedList<>();
+        for (String tables : keySet) {
+          String[] splits = tables.split("#");
+          if(3 == splits.length){
+            MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
+            msMonitorBusinessSystemTablesDo.setDbAddress(splits[0]);
+            msMonitorBusinessSystemTablesDo.setDbName(splits[1]);
+            msMonitorBusinessSystemTablesDo.setTableName(splits[2]);
+            list.add(msMonitorBusinessSystemTablesDo);
+          }
+        }
         if (0 < list.size()) {
           msMonitorBusinessSystemTablesMapper.insertSelectiveBatch(list);
         }

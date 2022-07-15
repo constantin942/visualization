@@ -113,8 +113,13 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllMonitorTables", method = RequestMethod.GET)
-  public ServerResponse<String> getAllMonitorTables() {
-    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.getAllTables();
+  public ServerResponse<String> getAllMonitorTables(
+                                                    String tableName,
+                                                    String dbName,
+                                                    String dbAddress,
+                                                    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.getAllTables(tableName, dbName, dbAddress, pageNo, pageSize);
     return bySuccess;
   }
 

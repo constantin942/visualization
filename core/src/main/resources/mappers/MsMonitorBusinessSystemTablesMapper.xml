@@ -8,10 +8,12 @@
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
     <result column="system_name" jdbcType="VARCHAR" property="systemName"/>
     <result column="table_name" jdbcType="VARCHAR" property="tableName"/>
+    <result column="db_name" jdbcType="VARCHAR" property="dbName"/>
+    <result column="db_address" jdbcType="VARCHAR" property="dbAddress"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , is_delete, gmt_create, gmt_modified, system_name, table_name
+    , is_delete, gmt_create, gmt_modified, system_name, table_name, db_name, db_address
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -23,6 +25,43 @@
     select
     <include refid="Base_Column_List"/>
     from ms_monitor_business_system_tables
+  </select>
+  <select id="selectAllByQueryMap" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_monitor_business_system_tables
+    <where>
+      <if test="tableName != null and  tableName != null   ">
+        table_name = #{tableName} and
+      </if>
+      <if test="dbName != null and  dbName != null   ">
+        db_name = #{dbName} and
+      </if>
+      <if test="dbAddress != null and  dbAddress != null   ">
+        db_address = #{dbAddress}
+      </if>
+    </where>
+    order by id desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectAllByQueryMapCount" resultType="java.lang.Integer">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_monitor_business_system_tables
+    <where>
+      <if test="tableName != null and  tableName != null   ">
+        table_name = #{tableName} and
+      </if>
+      <if test="dbName != null and  dbName != null   ">
+        db_name = #{dbName} and
+      </if>
+      <if test="dbAddress != null and  dbAddress != null   ">
+        db_address = #{dbAddress}
+      </if>
+    </where>
+    order by id desc
   </select>
   <select id="selectAllEnable" resultMap="BaseResultMap">
     select
@@ -57,6 +96,12 @@
       <if test="tableName != null">
         table_name,
       </if>
+      <if test="dbName != null">
+        db_name,
+      </if>
+      <if test="dbAddress != null">
+        db_address,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -76,6 +121,12 @@
       </if>
       <if test="tableName != null">
         #{tableName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbName != null">
+        #{dbName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbAddress != null">
+        #{dbAddress,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -97,15 +148,24 @@
       <if test="tableName != null">
         table_name = #{tableName,jdbcType=VARCHAR},
       </if>
+      <if test="dbName != null">
+        db_name = #{dbName,jdbcType=VARCHAR},
+      </if>
+      <if test="dbAddress != null">
+        db_address = #{dbAddress,jdbcType=VARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_monitor_business_system_tables
-    (table_name)
+    (table_name,db_name,db_address)
     values
     <foreach collection="list" item="item" index="index" separator=",">
-      (#{item,jdbcType=VARCHAR})
+      (#{item.tableName,jdbcType=VARCHAR},
+      #{item.dbName,jdbcType=VARCHAR},
+      #{item.dbAddress,jdbcType=VARCHAR}
+       )
     </foreach>
     ON DUPLICATE KEY UPDATE
     table_name = VALUES(table_name)

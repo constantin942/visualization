@@ -14,7 +14,7 @@ public interface MsMonitorBusinessSystemTablesService extends ParentService<MsMo
    * @Date 2022年07月13日 10:07:54
    * @Param []
    **/
-  ServerResponse<String> getAllTables();
+  ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress,Integer pageNo, Integer pageSize);
 
   /**
    * <B>方法名称：updateTableInformation</B>

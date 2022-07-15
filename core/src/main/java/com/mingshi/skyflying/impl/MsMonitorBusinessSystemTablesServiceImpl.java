@@ -6,11 +6,14 @@ import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsMonitorBusinessSystemTablesService;
 import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <B>方法名称：MsMonitorBusinessSystemTablesServiceImpl</B>
@@ -38,13 +41,38 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
    * @Param []
    **/
   @Override
-  public ServerResponse<String> getAllTables() {
+  public ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress, Integer pageNo, Integer pageSize) {
     log.info(" 开始执行 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 获取所有的表。");
-    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAll();
+    Map<String, Object> queryMap = new HashMap<>();
+    if (StringUtil.isNotBlank(tableName)) {
+      queryMap.put("tableName", tableName);
+    }
+    if (StringUtil.isNotBlank(dbName)) {
+      queryMap.put("dbName", dbName);
+    }
+    if (StringUtil.isNotBlank(dbAddress)) {
+      queryMap.put("dbAddress", dbAddress);
+    }
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
+
+    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAllByQueryMap(queryMap);
+
+    Integer count = msMonitorBusinessSystemTablesMapper.selectAllByQueryMapCount(queryMap);
+    Map<String, Object> context = new HashMap<>();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
-      bySuccess.setData(JsonUtil.obj2String(msMonitorBusinessSystemTablesDos));
+      context.put("rows", JsonUtil.obj2String(msMonitorBusinessSystemTablesDos));
     }
+    context.put("total", count);
+    bySuccess.setData(JsonUtil.obj2String(context));
+
     log.info(" 执行完毕 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 获取所有的表。");
     return bySuccess;
   }

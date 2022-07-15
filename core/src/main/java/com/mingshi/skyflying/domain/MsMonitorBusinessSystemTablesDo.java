@@ -17,4 +17,8 @@ public class MsMonitorBusinessSystemTablesDo {
     private String systemName;
 
     private String tableName;
+
+    private String dbName;
+
+    private String dbAddress;
 }

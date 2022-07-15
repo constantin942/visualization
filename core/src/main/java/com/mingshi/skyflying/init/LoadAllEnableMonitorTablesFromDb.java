@@ -41,7 +41,11 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
     List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAll();
     if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
       for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDos) {
-        concurrentHashMap.put(msMonitorBusinessSystemTablesDo.getTableName(), msMonitorBusinessSystemTablesDo.getIsDelete());
+        String dbAddress = msMonitorBusinessSystemTablesDo.getDbAddress();
+        String dbName = msMonitorBusinessSystemTablesDo.getDbName();
+        String tableName = msMonitorBusinessSystemTablesDo.getTableName();
+        String key = dbAddress + "#" + dbName + "#" + tableName;
+        concurrentHashMap.put(key, msMonitorBusinessSystemTablesDo.getIsDelete());
       }
     }
   }
