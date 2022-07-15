@@ -233,11 +233,26 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         String component = String.valueOf(map.get("component"));
         String serviceCode = String.valueOf(map.get("serviceCode"));
         String peer = String.valueOf(map.get("peer"));
+        msSegmentDetailDo.setPeer(peer);
         String endpointName = String.valueOf(map.get("endpointName"));
+        msSegmentDetailDo.setEndpointName(endpointName);
         Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
         String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
         Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
         Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
+        msSegmentDetailDo.setToken(segment.getToken());
+        msSegmentDetailDo.setComponent(component);
+        msSegmentDetailDo.setSpanId(spanId);
+        msSegmentDetailDo.setServiceCode(serviceCode);
+        msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
+        msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
+        msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
+        msSegmentDetailDo.setParentSpanId(parentSpanId);
+        msSegmentDetailDo.setUserName(segment.getUserName());
+        msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+        msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
+        msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+
         String tags = String.valueOf(map.get("tags"));
         String logs = String.valueOf(map.get("logs"));
 
@@ -282,20 +297,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         if (false == isError) {
           // 当没有出现sql异常时，才保存SQL信息；2022-07-01 14:41:31
-          msSegmentDetailDo.setToken(segment.getToken());
-          msSegmentDetailDo.setComponent(component);
-          msSegmentDetailDo.setSpanId(spanId);
-          msSegmentDetailDo.setServiceCode(serviceCode);
-          msSegmentDetailDo.setPeer(peer);
-          msSegmentDetailDo.setEndpointName(endpointName);
-          msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
-          msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
-          msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
-          msSegmentDetailDo.setParentSpanId(parentSpanId);
-          msSegmentDetailDo.setUserName(segment.getUserName());
-          msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
-          msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
-          msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
           segmentDetaiDolList.add(msSegmentDetailDo);
         }
       }
@@ -317,9 +318,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
       String reorganizingSpans = segment.getReorganizingSpans();
       List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
-      if(null != list && 1 == list.size()){
-        LinkedHashMap hashMap = (LinkedHashMap)list.get(0);
-        if(null != hashMap && null != hashMap.get("url")){
+      if (null != list && 1 == list.size()) {
+        LinkedHashMap hashMap = (LinkedHashMap) list.get(0);
+        if (null != hashMap && null != hashMap.get("url")) {
           msSegmentDetailDo.setOperationType("url");
         }
       }
@@ -339,8 +340,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       for (String tableNameTemp : tableNameList) {
         String dbInstance = msSegmentDetailDo.getDbInstance();
         String peer = msSegmentDetailDo.getPeer();
+        String key = mingshiServerUtil.doGetTableName(peer, dbInstance, tableNameTemp.replace("`",""));
         // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(peer + "#" + dbInstance + "#" + tableNameTemp);
+        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
         if (null != tableEnableStatus && 1 == tableEnableStatus) {
           // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
           return null;

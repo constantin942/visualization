@@ -6,6 +6,7 @@ import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsMonitorBusinessSystemTablesService;
 import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
 
   @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
 
   /**
    * <B>方法名称：getAllTables</B>

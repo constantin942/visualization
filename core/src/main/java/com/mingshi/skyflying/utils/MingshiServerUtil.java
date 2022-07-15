@@ -496,6 +496,38 @@ public class MingshiServerUtil {
   }
 
   /**
+   * <B>方法名称：getTableName</B>
+   * <B>概要说明：获取表名</B>
+   * @Author zm
+   * @Date 2022年07月15日 11:07:56
+   * @Param [msMonitorBusinessSystemTablesDo]
+   * @return java.lang.String
+   **/
+  public String getTableName(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo) {
+    String key = "";
+    if (null != msMonitorBusinessSystemTablesDo) {
+      String dbAddress = msMonitorBusinessSystemTablesDo.getDbAddress();
+      String dbName = msMonitorBusinessSystemTablesDo.getDbName();
+      String tableName = msMonitorBusinessSystemTablesDo.getTableName();
+      return doGetTableName(dbAddress,dbName,tableName);
+    }
+    return key;
+  }
+  public String doGetTableName(String dbAddress,String dbName,String tableName) {
+    String key = "";
+    if (StringUtil.isNotBlank(dbAddress)) {
+      key = dbAddress + "#";
+    }
+    if (StringUtil.isNotBlank(dbName)) {
+      key += dbName + "#";
+    }
+    if (StringUtil.isNotBlank(tableName)) {
+      key += tableName;
+    }
+    return key;
+  }
+
+  /**
    * <B>方法名称：insertMonitorTables</B>
    * <B>概要说明：将不存在的表批量插入到数据库中</B>
    *

@@ -2,6 +2,7 @@ package com.mingshi.skyflying.init;
 
 import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
 import com.mingshi.skyflying.domain.MsMonitorBusinessSystemTablesDo;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -23,12 +24,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
   @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
 
   private static volatile Map<String, Integer> concurrentHashMap = new ConcurrentHashMap();
 
   private static volatile Map<String, Integer> isChangedMap = new ConcurrentHashMap();
 
-  public static Map<String, Integer> getIsChangedMap(){
+  public static Map<String, Integer> getIsChangedMap() {
     return isChangedMap;
   }
 
@@ -41,10 +44,7 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
     List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAll();
     if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
       for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDos) {
-        String dbAddress = msMonitorBusinessSystemTablesDo.getDbAddress();
-        String dbName = msMonitorBusinessSystemTablesDo.getDbName();
-        String tableName = msMonitorBusinessSystemTablesDo.getTableName();
-        String key = dbAddress + "#" + dbName + "#" + tableName;
+        String key = mingshiServerUtil.getTableName(msMonitorBusinessSystemTablesDo);
         concurrentHashMap.put(key, msMonitorBusinessSystemTablesDo.getIsDelete());
       }
     }
