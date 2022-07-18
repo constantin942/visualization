@@ -4,16 +4,28 @@ import com.mingshi.skyflying.elasticsearch.dao.MsSegmentDetailEsDao;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -21,6 +33,8 @@ public class MingshiElasticSearchUtil {
 
   @Autowired
   private MsSegmentDetailEsDao msSegmentDetailEsDao;
+  @Qualifier
+  private ElasticsearchRestTemplate restTemplate;
 
   /**
    * 新增
@@ -160,5 +174,77 @@ public class MingshiElasticSearchUtil {
     TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(queryByField, fieldContent);
     Iterable<EsMsSegmentDetailDo> esMsSegmentDetailDos = msSegmentDetailEsDao.search(termQueryBuilder, pageRequest);
     return esMsSegmentDetailDos;
+  }
+  public List<EsMsSegmentDetailDo> termQueryByMap(Map<String, Object> map) throws Exception {
+    List<EsMsSegmentDetailDo> list = new LinkedList<>();
+    String queryByField/* 根据那个字段查询 */;
+    String fieldContent/* 查询字段的内容 */;
+    String sortByField = "startTime";/* 排序字段 */;
+
+    NativeSearchQueryBuilder nativeSearchQueryBuilder =  new NativeSearchQueryBuilder();
+
+    // 2. 构建bool查询；
+    BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+    String userName = String.valueOf(map.get("userName"));
+    if(StringUtil.isNotBlank(userName)){
+      boolQueryBuilder.must(QueryBuilders.termsQuery("userName", "admin"));
+    }
+    String dbType = String.valueOf(map.get("dbType"));
+    if(StringUtil.isNotBlank(dbType)){
+      boolQueryBuilder.must(QueryBuilders.termsQuery(dbType, dbType));
+    }
+    String msTableName = String.valueOf(map.get("msTableName"));
+    if(StringUtil.isNotBlank(msTableName)){
+      boolQueryBuilder.must(QueryBuilders.termsQuery("msTableName", msTableName));
+    }
+    String dbUserName = String.valueOf(map.get("dbUserName"));
+    if(StringUtil.isNotBlank(dbUserName)){
+      boolQueryBuilder.must(QueryBuilders.termsQuery("dbUserName", dbUserName));
+    }
+
+    // 分组查询
+    TermsAggregationBuilder termsAgg = AggregationBuilders.terms("groupByGlobalTraceId").field("globalTraceId");
+
+    String startTime = String.valueOf(map.get("startTime"));
+    String endTime = String.valueOf(map.get("endTime"));
+
+    nativeSearchQueryBuilder.withFilter(boolQueryBuilder);
+    nativeSearchQueryBuilder.addAggregation(termsAgg);
+
+
+    String aggName = "status_bucket";
+
+    nativeSearchQueryBuilder.withPageable(PageRequest.of(0,1));
+
+    nativeSearchQueryBuilder.addAggregation(termsAgg);
+    NativeSearchQuery build = nativeSearchQueryBuilder.build();
+
+    Aggregations aggregations = restTemplate.query(build, SearchResponse::getAggregations);
+    Terms terms = aggregations.get(aggName);
+    List<? extends Terms.Bucket> buckets = terms.getBuckets();
+    HashMap<String,Long> statusRes = new HashMap<>();
+    buckets.forEach(bucket -> {
+      statusRes.put(bucket.getKeyAsString(),bucket.getDocCount());
+    });
+
+
+    Integer pageNo = Integer.parseInt((String) map.get("pageNo"));
+    Integer pageSize = Integer.parseInt((String) map.get("pageSize"));
+
+    //设置查询分页
+    PageRequest pageRequest = null;
+    if (StringUtil.isNotBlank(sortByField)) {
+      //设置排序(排序方式，正序还是倒序，排序的 id)
+      Sort sort = Sort.by(Sort.Direction.DESC, sortByField);
+      //设置查询分页
+      pageRequest = PageRequest.of(pageNo, pageSize, sort);
+    } else {
+      //设置查询分页
+      pageRequest = PageRequest.of(pageNo, pageSize);
+    }
+
+    Page<EsMsSegmentDetailDo> esMsSegmentDetailDos = msSegmentDetailEsDao.search(boolQueryBuilder, pageRequest);
+    List<EsMsSegmentDetailDo> content = esMsSegmentDetailDos.getContent();
+    return content;
   }
 }

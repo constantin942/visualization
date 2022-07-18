@@ -37,8 +37,7 @@ public class EsMsSegmentDetailDo {
    * index : 是否索引(默认:true)
    * Keyword : 短语,不进行分词
    */
-  // @Field(type = FieldType.Text, analyzer = "ik_max_word")
-  @Field(type = FieldType.Keyword, index = true)
+  @Field(type = FieldType.Text, index = true)
   private String userName;
 
   @Field(type = FieldType.Keyword, index = true)
