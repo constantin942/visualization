@@ -134,8 +134,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
   @Override
   public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
-    List<MsThirdPartyTableListDo> list=msSegmentDetailDao.selectAllInstanceTrueName();
-    ServerResponse serverResponse=ServerResponse.createBySuccess();
+    List<MsThirdPartyTableListDo> list = msSegmentDetailDao.selectAllInstanceTrueName();
+    ServerResponse serverResponse = ServerResponse.createBySuccess();
     serverResponse.setData(JsonUtil.obj2String(list));
     return serverResponse;
   }
@@ -183,48 +183,48 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
 
-    List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
+    List<UserCoarseInfo> userCoarseInfos = new ArrayList<>();
 
     //获取所有的用户名
-    List<String> userNames=msSegmentDetailDao.selectAllUserName();
+    List<String> userNames = msSegmentDetailDao.selectAllUserName();
 
-    for(int i=0;i<userNames.size();i++){
-      UserCoarseInfo temp=new UserCoarseInfo();
+    for (int i = 0; i < userNames.size(); i++) {
+      UserCoarseInfo temp = new UserCoarseInfo();
       temp.setUserName(userNames.get(i));
       userCoarseInfos.add(temp);
     }
 
     //根据用户名获取用户对数据的访问次数
-    for(int i=0;i<userCoarseInfos.size();i++){
-      String userName=userCoarseInfos.get(i).getUserName();
+    for (int i = 0; i < userCoarseInfos.size(); i++) {
+      String userName = userCoarseInfos.get(i).getUserName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("userName",userName);
-      Long count=msSegmentDetailDao.selectCountOfOneUser(queryMap);
+      queryMap.put("userName", userName);
+      Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
       userCoarseInfos.get(i).setVisitedCount(count);
     }
 
     // 根据用户名获取用户的最后访问时间
-    for(int i=0;i<userCoarseInfos.size();i++){
-      String userName=userCoarseInfos.get(i).getUserName();
+    for (int i = 0; i < userCoarseInfos.size(); i++) {
+      String userName = userCoarseInfos.get(i).getUserName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("userName",userName);
-      Date lastVisited=msSegmentDetailDao.selectLastVisitedTime(queryMap);
+      queryMap.put("userName", userName);
+      Date lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
       userCoarseInfos.get(i).setLastVisitedDate(lastVisited);
     }
 
-    for(int i=0;i<userCoarseInfos.size();i++){
-      String userName=userCoarseInfos.get(i).getUserName();
+    for (int i = 0; i < userCoarseInfos.size(); i++) {
+      String userName = userCoarseInfos.get(i).getUserName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("userName",userName);
-      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+      queryMap.put("userName", userName);
+      List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
       Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
         @Override
         public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-          if(t1.getVisitedCount()<t2.getVisitedCount()){
+          if (t1.getVisitedCount() < t2.getVisitedCount()) {
             return 1;
-          }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+          } else if (t1.getVisitedCount() == t2.getVisitedCount()) {
             return 0;
-          }else{
+          } else {
             return -1;
           }
         }
@@ -242,29 +242,29 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize) {
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
 
-      UserCoarseInfo userCoarseInfo=new UserCoarseInfo();
-      userCoarseInfo.setUserName(applicationUserName);
-      Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("userName",applicationUserName);
+    UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
+    userCoarseInfo.setUserName(applicationUserName);
+    Map<String, Object> queryMap = new HashMap<>();
+    queryMap.put("userName", applicationUserName);
 
-      Long count=msSegmentDetailDao.selectCountOfOneUser(queryMap);
+    Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
 
-      Date lastVisited=msSegmentDetailDao.selectLastVisitedTime(queryMap);
+    Date lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
 
-      userCoarseInfo.setVisitedCount(count);
-      userCoarseInfo.setLastVisitedDate(lastVisited);
+    userCoarseInfo.setVisitedCount(count);
+    userCoarseInfo.setLastVisitedDate(lastVisited);
 
-      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-      userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
+    List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+    userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
 
-      log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-      List<UserCoarseInfo> userCoarseInfos=new ArrayList<>();
+    log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
+    List<UserCoarseInfo> userCoarseInfos = new ArrayList<>();
 
-      return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
+    return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
   }
 
   @Override
-  public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize)  {
+  public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
 
     log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
     Map<String, Object> map = new HashMap<>();
@@ -291,40 +291,40 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     List<String> DateList = new ArrayList();
 
-    Calendar startTimeCalendar=Calendar.getInstance();
-    Calendar endTimeCalendar=Calendar.getInstance();
+    Calendar startTimeCalendar = Calendar.getInstance();
+    Calendar endTimeCalendar = Calendar.getInstance();
 
-    Date startTimeDate=new Date();
-    Date endTimeDate=new Date();
+    Date startTimeDate = new Date();
+    Date endTimeDate = new Date();
 
     //创建SimpleDateFormat对象实例并定义好转换格式
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    try{
-      startTimeDate=sdf.parse(startTime);
-      endTimeDate=sdf.parse(endTime);
+    try {
+      startTimeDate = sdf.parse(startTime);
+      endTimeDate = sdf.parse(endTime);
       startTimeCalendar.setTime(startTimeDate);
       endTimeCalendar.setTime(endTimeDate);
-    }catch (Exception e){
+    } catch (Exception e) {
 
     }
 
-    while (startTimeCalendar.compareTo(endTimeCalendar)<1){
+    while (startTimeCalendar.compareTo(endTimeCalendar) < 1) {
       String startTimeStr = sdf.format(startTimeCalendar.getTime());
       DateList.add(startTimeStr);
       startTimeCalendar.add(Calendar.DATE, 1);
     }
 
-    if(startTimeCalendar.before(endTimeCalendar)){
-      String endTimeStr=sdf.format(startTimeCalendar.getTime());
+    if (startTimeCalendar.before(endTimeCalendar)) {
+      String endTimeStr = sdf.format(startTimeCalendar.getTime());
       DateList.add(endTimeStr);
     }
 
-    List<Long> returnList=new ArrayList<>();
+    List<Long> returnList = new ArrayList<>();
 
-    for(int i=0;i<DateList.size()-1;i++){
+    for (int i = 0; i < DateList.size() - 1; i++) {
       map.put("startTime", DateList.get(i));
-      map.put("endTime", DateList.get(i+1));
+      map.put("endTime", DateList.get(i + 1));
       Long count = msSegmentDetailDao.selectCountsOfUser(map);
       returnList.add(count);
     }
@@ -339,16 +339,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
 
     Map<String, Object> queryMap = new HashMap<>();
-    queryMap.put("userName",applicationUserName);
-    List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+    queryMap.put("userName", applicationUserName);
+    List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
     Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
       @Override
       public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-        if(t1.getVisitedCount()<t2.getVisitedCount()){
+        if (t1.getVisitedCount() < t2.getVisitedCount()) {
           return 1;
-        }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+        } else if (t1.getVisitedCount() == t2.getVisitedCount()) {
           return 0;
-        }else{
+        } else {
           return -1;
         }
       }
@@ -364,40 +364,40 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     List<String> DateList = new ArrayList();
     Map<String, Object> map = new HashMap<>();
 
-    Calendar startTimeCalendar=Calendar.getInstance();
-    Calendar endTimeCalendar=Calendar.getInstance();
+    Calendar startTimeCalendar = Calendar.getInstance();
+    Calendar endTimeCalendar = Calendar.getInstance();
 
-    Date startTimeDate=new Date();
-    Date endTimeDate=new Date();
+    Date startTimeDate = new Date();
+    Date endTimeDate = new Date();
 
     //创建SimpleDateFormat对象实例并定义好转换格式
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    try{
-      startTimeDate=sdf.parse(startTime);
-      endTimeDate=sdf.parse(endTime);
+    try {
+      startTimeDate = sdf.parse(startTime);
+      endTimeDate = sdf.parse(endTime);
       startTimeCalendar.setTime(startTimeDate);
       endTimeCalendar.setTime(endTimeDate);
-    }catch (Exception e){
+    } catch (Exception e) {
 
     }
 
-    while (startTimeCalendar.compareTo(endTimeCalendar)<1){
+    while (startTimeCalendar.compareTo(endTimeCalendar) < 1) {
       String startTimeStr = sdf.format(startTimeCalendar.getTime());
       DateList.add(startTimeStr);
       startTimeCalendar.add(Calendar.DATE, 1);
     }
 
-    if(startTimeCalendar.before(endTimeCalendar)){
-      String endTimeStr=sdf.format(startTimeCalendar.getTime());
+    if (startTimeCalendar.before(endTimeCalendar)) {
+      String endTimeStr = sdf.format(startTimeCalendar.getTime());
       DateList.add(endTimeStr);
     }
 
-    List<Long> returnList=new ArrayList<>();
+    List<Long> returnList = new ArrayList<>();
 
-    for(int i=0;i<DateList.size()-1;i++){
+    for (int i = 0; i < DateList.size() - 1; i++) {
       map.put("startTime", DateList.get(i));
-      map.put("endTime", DateList.get(i+1));
+      map.put("endTime", DateList.get(i + 1));
       Long count = msSegmentDetailDao.selectCountsOfAllRecentSevenDays(map);
       returnList.add(count);
     }
@@ -409,18 +409,18 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Override
   public ServerResponse<SystemOverview> getOverviewOfSystem() {
     log.info("开始执行 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
-    SystemOverview systemOverview=new SystemOverview();
+    SystemOverview systemOverview = new SystemOverview();
 
-    Long informationCount=msSegmentDetailDao.selectinformationCount();
+    Long informationCount = msSegmentDetailDao.selectinformationCount();
     systemOverview.setVisitedInformation(informationCount);
 
-    Long dbInstanceCount=msSegmentDetailDao.selectDbInstanceCount();
+    Long dbInstanceCount = msSegmentDetailDao.selectDbInstanceCount();
     systemOverview.setDbInstance(dbInstanceCount);
 
-    Long tableCount= msSegmentDetailDao.selectTableCount();
+    Long tableCount = msSegmentDetailDao.selectTableCount();
     systemOverview.setTable(tableCount);
 
-    Long userCount=msSegmentDetailDao.selectUserCount();
+    Long userCount = msSegmentDetailDao.selectUserCount();
     systemOverview.setUser(userCount);
     log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
     return ServerResponse.createBySuccess("获取数据成功！", "success", systemOverview);
@@ -430,57 +430,57 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize) {
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
 
-    List<TableCoarseInfo> tableCoarseInfos=new ArrayList<>();
+    List<TableCoarseInfo> tableCoarseInfos = new ArrayList<>();
 
     //获取所有的数据库表名
-    List<String> tableNames=msSegmentDetailDao.selectAllTableName();
+    List<String> tableNames = msSegmentDetailDao.selectAllTableName();
 
-    for(int i=0;i<tableNames.size();i++){
-      TableCoarseInfo temp=new TableCoarseInfo();
+    for (int i = 0; i < tableNames.size(); i++) {
+      TableCoarseInfo temp = new TableCoarseInfo();
       temp.setTableName(tableNames.get(i));
       tableCoarseInfos.add(temp);
     }
 
     //根据数据库表获取用户对数据的访问次数
-    for(int i=0;i<tableCoarseInfos.size();i++){
-      String tableName=tableCoarseInfos.get(i).getTableName();
+    for (int i = 0; i < tableCoarseInfos.size(); i++) {
+      String tableName = tableCoarseInfos.get(i).getTableName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("tableName",tableName);
-      Long count=msSegmentDetailDao.selectCountOfOneTable(queryMap);
+      queryMap.put("tableName", tableName);
+      Long count = msSegmentDetailDao.selectCountOfOneTable(queryMap);
       tableCoarseInfos.get(i).setVisitedCount(count);
     }
 
     // 根据用户名获取用户的最后访问时间
-    for(int i=0;i<tableCoarseInfos.size();i++){
-      String tableName=tableCoarseInfos.get(i).getTableName();
+    for (int i = 0; i < tableCoarseInfos.size(); i++) {
+      String tableName = tableCoarseInfos.get(i).getTableName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("tableName",tableName);
-      Date lastVisited=msSegmentDetailDao.selectTableLastVisitedTime(queryMap);
+      queryMap.put("tableName", tableName);
+      Date lastVisited = msSegmentDetailDao.selectTableLastVisitedTime(queryMap);
       tableCoarseInfos.get(i).setLastVisitedDate(lastVisited);
     }
 
-    for(int i=0;i<tableCoarseInfos.size();i++){
-      String tableName=tableCoarseInfos.get(i).getTableName();
+    for (int i = 0; i < tableCoarseInfos.size(); i++) {
+      String tableName = tableCoarseInfos.get(i).getTableName();
       Map<String, Object> queryMap = new HashMap<>();
-      queryMap.put("tableName",tableName);
-      List<UserUsualAndUnusualVisitedData> list=msSegmentDetailDao.selectTableUsualAndUnusualData(queryMap);
+      queryMap.put("tableName", tableName);
+      List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(queryMap);
 
       Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
         @Override
         public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-          if(t1.getVisitedCount()<t2.getVisitedCount()){
+          if (t1.getVisitedCount() < t2.getVisitedCount()) {
             return 1;
-          }else if(t1.getVisitedCount()==t2.getVisitedCount()){
+          } else if (t1.getVisitedCount().equals(t2.getVisitedCount())) {
             return 0;
-          }else{
+          } else {
             return -1;
           }
         }
       });
 
-      if(list.size()!=0){
+      if (list.size() != 0) {
         tableCoarseInfos.get(i).setUsualVisitedUser(list.get(0).getUserName());
-      }else{
+      } else {
         tableCoarseInfos.get(i).setUsualVisitedUser("从未有人访问过这张表");
       }
     }
@@ -493,11 +493,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   public ServerResponse<List<AlarmData>> getAlarmData() {
 
     log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData # 获取告警信息。");
-    List<AlarmData> list=msSegmentDetailDao.selectAlarmData();
-    for(int i=0;i<list.size();i++){
-      if(list.get(i).getMatchRuleId()==1){
+    List<AlarmData> list = msSegmentDetailDao.selectAlarmData();
+    for (int i = 0; i < list.size(); i++) {
+      if (list.get(i).getMatchRuleId() == 1) {
         list.get(i).setAlarmName("基于访问时间段的告警规则：即若某用户通常白天访问数据，则夜间为异常；");
-      }else if(list.get(i).getMatchRuleId()==2){
+      } else if (list.get(i).getMatchRuleId() == 2) {
         list.get(i).setAlarmName("基于访问过的表的告警规则：若某用户访问从未访问过的表时，则给出告警；");
       }
     }
@@ -510,16 +510,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
     log.info("开始执行 # SegmentDetailServiceImpl.getUserAlarmData # 获取用户告警信息。");
 
-    List<UserAlarmData> list=msSegmentDetailDao.selectUserAlarmData();
+    List<UserAlarmData> list = msSegmentDetailDao.selectUserAlarmData();
 
     Collections.sort(list, new Comparator<UserAlarmData>() {
       @Override
       public int compare(UserAlarmData t1, UserAlarmData t2) {
-        if(t1.getAlarmCount()<t2.getAlarmCount()){
+        if (t1.getAlarmCount() < t2.getAlarmCount()) {
           return 1;
-        }else if(t1.getAlarmCount()==t2.getAlarmCount()){
+        } else if (t1.getAlarmCount() == t2.getAlarmCount()) {
           return 0;
-        }else{
+        } else {
           return -1;
         }
       }
