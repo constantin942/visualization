@@ -39,6 +39,7 @@ public class Const {
   public static final String ES_SEGMENT_DETAIL_DO_LIST = "esSegmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
   public static final String SEGMENT = "segment";
+  public static final String SPAN = "span";
   // public static final String SEGMENT_LIST = "segmentList";
 
   // 配置表中的配置项

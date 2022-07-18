@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.SpanMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.Span">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+    <result column="segment_id" jdbcType="VARCHAR" property="segmentId" />
+    <result column="span_id" jdbcType="INTEGER" property="spanId" />
+    <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId" />
+    <result column="service_code" jdbcType="VARCHAR" property="serviceCode" />
+    <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName" />
+    <result column="start_time" jdbcType="INTEGER" property="startTime" />
+    <result column="end_time" jdbcType="INTEGER" property="endTime" />
+    <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="peer" jdbcType="VARCHAR" property="peer" />
+    <result column="component" jdbcType="VARCHAR" property="component" />
+<!--    <result column="is_error" jdbcType="VARCHAR" property="isError" />-->
+    <result column="layer" jdbcType="VARCHAR" property="layer" />
+<!--    <result column="is_root" jdbcType="VARCHAR" property="isRoot" />-->
+    <result column="segment_span_id" jdbcType="VARCHAR" property="segmentSpanId" />
+    <result column="segment_parent_span_id" jdbcType="VARCHAR" property="segmentParentSpanId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+<!--    <result column="refs" jdbcType="VARCHAR" property="refs" />-->
+<!--    <result column="tags" jdbcType="VARCHAR" property="tags" />-->
+<!--    <result column="logs" jdbcType="VARCHAR" property="logs" />-->
+    <result column="token" jdbcType="VARCHAR" property="token" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, trace_id, segment_id, span_id, parent_span_id, service_code, service_instance_name,
+    start_time, end_time, endpoint_name, type, peer, component, is_error, layer, is_root,
+    segment_span_id, segment_parent_span_id, user_name, token
+--     segment_span_id, segment_parent_span_id, user_name, tags, logs, token
+--     segment_span_id, segment_parent_span_id, user_name, refs, tags, logs, token
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from span
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <insert id="insertSelectiveBatch" parameterType="java.util.List">
+    insert into span
+    ( trace_id, segment_id, span_id, parent_span_id, service_code, service_instance_name,
+    start_time, end_time, endpoint_name, type, peer, component, is_error, layer, is_root,
+    segment_span_id, segment_parent_span_id, user_name)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      #{item.traceId,jdbcType=VARCHAR},
+      #{item.segmentId,jdbcType=VARCHAR},
+      #{item.spanId,jdbcType=INTEGER},
+      #{item.parentSpanId,jdbcType=INTEGER},
+      #{item.serviceCode,jdbcType=VARCHAR},
+      #{item.serviceInstanceName,jdbcType=VARCHAR},
+      #{item.startTime,jdbcType=INTEGER},
+      #{item.endTime,jdbcType=INTEGER},
+      #{item.endpointName,jdbcType=VARCHAR},
+      #{item.type,jdbcType=VARCHAR},
+      #{item.peer,jdbcType=VARCHAR},
+      #{item.component,jdbcType=VARCHAR},
+      #{item.isError,jdbcType=VARCHAR},
+      #{item.layer,jdbcType=VARCHAR},
+      #{item.isRoot,jdbcType=VARCHAR},
+      #{item.segmentSpanId,jdbcType=VARCHAR},
+      #{item.segmentParentSpanId,jdbcType=VARCHAR},
+      #{item.userName,jdbcType=VARCHAR}
+      )
+    </foreach>
+    on duplicate key update trace_id = values(trace_id)
+  </insert>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.Span">
+    insert into span
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="traceId != null">
+        trace_id,
+      </if>
+      <if test="segmentId != null">
+        segment_id,
+      </if>
+      <if test="spanId != null">
+        span_id,
+      </if>
+      <if test="parentSpanId != null">
+        parent_span_id,
+      </if>
+      <if test="serviceCode != null">
+        service_code,
+      </if>
+      <if test="serviceInstanceName != null">
+        service_instance_name,
+      </if>
+      <if test="startTime != null">
+        start_time,
+      </if>
+      <if test="endTime != null">
+        end_time,
+      </if>
+      <if test="endpointName != null">
+        endpoint_name,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="peer != null">
+        peer,
+      </if>
+      <if test="component != null">
+        component,
+      </if>
+      <if test="isError != null">
+        is_error,
+      </if>
+      <if test="layer != null">
+        layer,
+      </if>
+      <if test="isRoot != null">
+        is_root,
+      </if>
+      <if test="segmentSpanId != null">
+        segment_span_id,
+      </if>
+      <if test="segmentParentSpanId != null">
+        segment_parent_span_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+<!--      <if test="refs != null">-->
+<!--        refs,-->
+<!--      </if>-->
+<!--      <if test="tags != null">-->
+<!--        tags,-->
+<!--      </if>-->
+<!--      <if test="logs != null">-->
+<!--        logs,-->
+<!--      </if>-->
+      <if test="token != null">
+        token,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="traceId != null">
+        #{traceId,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentId != null">
+        #{segmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="spanId != null">
+        #{spanId,jdbcType=INTEGER},
+      </if>
+      <if test="parentSpanId != null">
+        #{parentSpanId,jdbcType=INTEGER},
+      </if>
+      <if test="serviceCode != null">
+        #{serviceCode,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceInstanceName != null">
+        #{serviceInstanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        #{startTime,jdbcType=INTEGER},
+      </if>
+      <if test="endTime != null">
+        #{endTime,jdbcType=INTEGER},
+      </if>
+      <if test="endpointName != null">
+        #{endpointName,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="peer != null">
+        #{peer,jdbcType=VARCHAR},
+      </if>
+      <if test="component != null">
+        #{component,jdbcType=VARCHAR},
+      </if>
+      <if test="isError != null">
+        #{isError,jdbcType=VARCHAR},
+      </if>
+      <if test="layer != null">
+        #{layer,jdbcType=VARCHAR},
+      </if>
+      <if test="isRoot != null">
+        #{isRoot,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentSpanId != null">
+        #{segmentSpanId,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentParentSpanId != null">
+        #{segmentParentSpanId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+<!--      <if test="refs != null">-->
+<!--        #{refs,jdbcType=LONGVARCHAR},-->
+<!--      </if>-->
+<!--      <if test="tags != null">-->
+<!--        #{tags,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="logs != null">-->
+<!--        #{logs,jdbcType=VARCHAR},-->
+<!--      </if>-->
+      <if test="token != null">
+        #{token,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.Span">
+    update span
+    <set>
+      <if test="traceId != null">
+        trace_id = #{traceId,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentId != null">
+        segment_id = #{segmentId,jdbcType=VARCHAR},
+      </if>
+      <if test="spanId != null">
+        span_id = #{spanId,jdbcType=INTEGER},
+      </if>
+      <if test="parentSpanId != null">
+        parent_span_id = #{parentSpanId,jdbcType=INTEGER},
+      </if>
+      <if test="serviceCode != null">
+        service_code = #{serviceCode,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceInstanceName != null">
+        service_instance_name = #{serviceInstanceName,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        start_time = #{startTime,jdbcType=INTEGER},
+      </if>
+      <if test="endTime != null">
+        end_time = #{endTime,jdbcType=INTEGER},
+      </if>
+      <if test="endpointName != null">
+        endpoint_name = #{endpointName,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="peer != null">
+        peer = #{peer,jdbcType=VARCHAR},
+      </if>
+      <if test="component != null">
+        component = #{component,jdbcType=VARCHAR},
+      </if>
+      <if test="isError != null">
+        is_error = #{isError,jdbcType=VARCHAR},
+      </if>
+      <if test="layer != null">
+        layer = #{layer,jdbcType=VARCHAR},
+      </if>
+      <if test="isRoot != null">
+        is_root = #{isRoot,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentSpanId != null">
+        segment_span_id = #{segmentSpanId,jdbcType=VARCHAR},
+      </if>
+      <if test="segmentParentSpanId != null">
+        segment_parent_span_id = #{segmentParentSpanId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+<!--      <if test="refs != null">-->
+<!--        refs = #{refs,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="tags != null">-->
+<!--        tags = #{tags,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="logs != null">-->
+<!--        logs = #{logs,jdbcType=VARCHAR},-->
+<!--      </if>-->
+      <if test="token != null">
+        token = #{token,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -93,7 +93,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 获取探针的名称；2022-06-28 14:25:46
       skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
-      List<Span> spanList = buildSpanList(segmentObject);
+      List<Span> spanList = buildSpanList(segmentObject, segment);
       if (null != spanList && 0 < spanList.size()) {
         // 组装segment；2022-04-20 16:33:48
         segment = setUserNameAndTokenFromSpan(spanList, segment);
@@ -125,7 +125,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        doEnableReactorModel(spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
 
@@ -134,6 +134,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
+        mingshiServerUtil.flushSpansToDB(spanList);
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
@@ -340,7 +342,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       for (String tableNameTemp : tableNameList) {
         String dbInstance = msSegmentDetailDo.getDbInstance();
         String peer = msSegmentDetailDo.getPeer();
-        String key = mingshiServerUtil.doGetTableName(peer, dbInstance, tableNameTemp.replace("`",""));
+        String key = mingshiServerUtil.doGetTableName(peer, dbInstance, tableNameTemp.replace("`", ""));
         // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
         Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
         if (null != tableEnableStatus && 1 == tableEnableStatus) {
@@ -406,7 +408,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
+  private void doEnableReactorModel(List<Span> spanList,
+                                    LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
                                     LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
@@ -414,12 +417,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     try {
       LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil, esMsSegmentDetailUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
-      if (null != segmentDo) {
-        jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-      }
+      // if (null != segmentDo) {
+      //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
+      // }
       if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
         jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
       }
+      // if (null != spanList && 0 < spanList.size()) {
+      //   jsonObject.put(Const.SPAN, JsonUtil.obj2String(spanList));
+      // }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
@@ -582,6 +588,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private String getRef(SegmentObject segmentObject, SegmentDo segment) {
     try {
+      segment.setServiceCode(segmentObject.getService());
+      segment.setServiceInstanceName(segmentObject.getServiceInstance());
       segment.setCurrentSegmentId(segmentObject.getTraceSegmentId());
       segment.setGlobalTraceId(segmentObject.getTraceId());
       String ref = segmentObject.getRef();
@@ -1248,10 +1256,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
   }
 
-  private List<Span> buildSpanList(SegmentObject segmentObject) {
+  private List<Span> buildSpanList(SegmentObject segmentObject, SegmentDo segmentDo) {
     List<Span> spans = new ArrayList<>();
 
     List<SpanObject> spansList = segmentObject.getSpansList();
+    if (null != spansList && 0 < spansList.size()) {
+      segmentDo.setSpans(spansList.toString());
+    }
     for (SpanObject spanObject : spansList) {
       String operationName = spanObject.getOperationName();
 

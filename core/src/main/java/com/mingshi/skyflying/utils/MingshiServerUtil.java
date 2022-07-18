@@ -39,6 +39,8 @@ public class MingshiServerUtil {
   @Resource
   private MsAgentInformationMapper msAgentInformationMapper;
   @Resource
+  private SpanMapper spanMapper;
+  @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
   @Resource
   private MsAuditLogDao msAuditLogDao;
@@ -491,6 +493,27 @@ public class MingshiServerUtil {
         segmentDetailDoList.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushSpansToDB</B>
+   * <B>概要说明：将Spans实例信息插入到表中</B>
+   * @Author zm
+   * @Date 2022年07月18日 09:07:06
+   * @Param [spansList]
+   * @return void
+   **/
+  public void flushSpansToDB(List<Span> spansList) {
+    if (null != spansList && 0 < spansList.size()) {
+      try {
+        Instant now = Instant.now();
+        spanMapper.insertSelectiveBatch(spansList);
+        log.info("#SegmentConsumeServiceImpl.flushSpansToDB()# 将Spans实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", spansList.size(), DateTimeUtil.getTimeMillis(now));
+        spansList.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSpansToDB() # 将Spans实例信息批量插入到MySQL中出现了异常。", e);
       }
     }
   }

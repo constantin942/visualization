@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.domain.MsAlarmInformationDo;
-import com.mingshi.skyflying.domain.MsAuditLogDo;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.SegmentDo;
+import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
@@ -40,6 +37,7 @@ public class IoThread extends Thread {
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
+  private LinkedList<Span> spanList = null;
   private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
@@ -52,6 +50,7 @@ public class IoThread extends Thread {
     segmentList = new LinkedList();
     auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
+    spanList = new LinkedList();
     esSegmentDetailDoList = new LinkedList();
     msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
@@ -86,6 +85,9 @@ public class IoThread extends Thread {
 
             // 从json实例中获取esSegmentDetail实例的信息
             getEsSegmentDetailFromJSONObject(jsonObject);
+
+            // 从json实例中获取Span实例的信息
+            getSpanFromJSONObject(jsonObject);
 
             // 从json实例中获取异常信息
             getAbnormalFromJSONObject(jsonObject);
@@ -208,6 +210,25 @@ public class IoThread extends Thread {
    * @Date 2022年06月02日 11:06:40
    * @Param [jsonObject]
    **/
+  private void getSpanFromJSONObject(ObjectNode jsonObject) {
+    try {
+      String listString = null;
+      try {
+        JsonNode jsonNode = jsonObject.get(Const.SPAN);
+        if (null != jsonNode) {
+          listString = jsonNode.asText();
+        }
+      } catch (Exception e) {
+        log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
+      }
+      if (StringUtil.isNotBlank(listString)) {
+        LinkedList<Span> spanLinkedList = JsonUtil.string2Obj(listString, LinkedList.class, Span.class);
+        spanList.addAll(spanLinkedList);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
+    }
+  }
   private void getSegmentDetailFromJSONObject(ObjectNode jsonObject) {
     try {
       String listString = null;
@@ -295,6 +316,9 @@ public class IoThread extends Thread {
 
         // 将QPS信息刷入Redis中；2022-06-27 13:42:13
         // mingshiServerUtil.flushQpsToRedis();
+
+        // 将Span信息刷入MySQL数据库中;
+        mingshiServerUtil.flushSpansToDB(spanList);
 
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);

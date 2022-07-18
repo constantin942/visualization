@@ -36,4 +36,8 @@ public class SegmentDo {
 
     // 基于访问过的表维度的用户画像；
     private Integer userPortraitFlagByVisitedTable;
+
+    private String serviceCode;
+
+    private String serviceInstanceName;
 }
