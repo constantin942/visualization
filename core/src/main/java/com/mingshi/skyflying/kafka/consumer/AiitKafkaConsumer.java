@@ -9,7 +9,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -28,9 +27,7 @@ public class AiitKafkaConsumer {
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
 
-  // TODO: 2022/6/17 将本地内存中的数据更新到用户访问过表的时候，访问类型字段出现了异常。
-  // todo：skywalking探针发送数据时，要确认是否可以批量发送？这样单条发送吞吐量上不来；2022-06-06 16:55:51
-  @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
+  // @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
   public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());
     if (message.isPresent()) {
