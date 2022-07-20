@@ -756,7 +756,7 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：getCoarseCountsOfTableName/B>
-   * <B>概要说明：获取数据库的粗粒度信息</B>
+   * <B>概要说明：获取数据库的粗粒度信息；信息概况 -> 数据访问行为</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author lhx
@@ -768,10 +768,7 @@ public class SkyflyingController {
   @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
   public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-
-
     return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
-
   }
 
   /**

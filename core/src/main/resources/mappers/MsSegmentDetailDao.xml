@@ -365,24 +365,20 @@
   <select id="selectCountOfOneTable" resultType="java.lang.Long" parameterType="java.lang.String">
     select count(*)
     from ms_segment_detail
-    where ms_table_name = #{tableName}
-      and user_name is not null
+    where ms_table_name = #{tableName} and user_name is not null
   </select>
 
   <select id="selectTableLastVisitedTime" resultType="java.util.Date" parameterType="java.lang.String">
     SELECT start_time
     from ms_segment_detail
-    where ms_table_name = #{tableName}
-      and user_name is not null
+    where ms_table_name = #{tableName} and user_name is not null
     order by start_time desc limit 1
   </select>
 
-  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData"
-          parameterType="java.lang.String">
+  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData" parameterType="java.lang.String">
     select ms_table_name as visited_data, count(*) as visited_count, user_name
     from ms_segment_detail
-    where ms_table_name = #{tableName}
-      and user_name is not null
+    where ms_table_name = #{tableName} and user_name is not null
     group by user_name
     order by count(*) desc limit 1;
   </select>

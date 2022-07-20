@@ -78,6 +78,9 @@
     <include refid="Base_Column_List"/>
     from ms_monitor_business_system_tables
     where is_delete = 0
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
   </select>
   <select id="selectAllNotEnable" resultMap="BaseResultMap">
     select

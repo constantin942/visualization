@@ -66,10 +66,8 @@ public class IoThread extends Thread {
     this.esMsSegmentDetailUtil = esMsSegmentDetailUtil;
   }
 
-  // todo: 1. 前端查询时，不再根据 user_token 表关联 segment 表来获取数据，而是直接根据 segment 表来查询数据，因为 user_token 表里已经有了 用户名 、token、全局追踪id了。
   // user_token 表存在的意义是：将 segment 表中的全局追踪id与用户名或 token 关联起来。
   // 当前端查询 segment 表中的数据时，若是碰到了 用户名或者 token 为空，此时就去 user_token 表中根据全局追踪id查询对应的用户名或者 token。
-  // todo: 2. 项目启动时，从 user_token 表中把用户名和 对应的 token 加载到内存中，方便后续的 url 操作匹配用户名和token。2022-05-24 18:37:48
   @Override
   public void run() {
     try {

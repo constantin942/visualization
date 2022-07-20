@@ -533,36 +533,18 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     List<TableCoarseInfo> tableCoarseInfos = new ArrayList<>();
 
-    // LinkedList<MsMonitorBusinessSystemTablesDo> tempList = new LinkedList<>();
-    // List<Map<String, String>> mapList = msSegmentDetailDao.selectAllMsTableNameDbInstancePeer();
-    // for (Map<String, String> map : mapList) {
-    //   String dbInstance = map.get("dbInstance");
-    //   String msTableName = map.get("msTableName");
-    //   String peer = map.get("peer");
-    //   msTableName = msTableName.replace("`","");
-    //   if(msTableName.contains(",")){
-    //     String[] splits = msTableName.split(",");
-    //     for (String split : splits) {
-    //       MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
-    //       msMonitorBusinessSystemTablesDo.setTableName(split);
-    //       msMonitorBusinessSystemTablesDo.setDbName(dbInstance);
-    //       msMonitorBusinessSystemTablesDo.setDbAddress(peer);
-    //       tempList.add(msMonitorBusinessSystemTablesDo);
-    //     }
-    //   }else{
-    //     MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
-    //     msMonitorBusinessSystemTablesDo.setTableName(msTableName);
-    //     msMonitorBusinessSystemTablesDo.setDbName(dbInstance);
-    //     msMonitorBusinessSystemTablesDo.setDbAddress(peer);
-    //     tempList.add(msMonitorBusinessSystemTablesDo);
-    //   }
-    //
-    // }
-    // msMonitorBusinessSystemTablesMapper.insertSelectiveBatch(tempList);
-
+    Map<String, Object> queryMap = new HashMap<>();
+    if (null == pageNo) {
+      pageNo = 1;
+    }
+    if (null == pageSize) {
+      pageSize = 10;
+    }
+    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    queryMap.put("pageSize", pageSize);
 
     //获取所有的数据库表名
-    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoList = msMonitorBusinessSystemTablesMapper.selectAllEnable();
+    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoList = msMonitorBusinessSystemTablesMapper.selectAllEnable(queryMap);
     Integer countTp = 0;
     for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDoList) {
       Instant nowTp = Instant.now();
@@ -589,49 +571,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       tableCoarseInfos.add(tableCoarseInfo);
       // System.out.println("第 " + (++countTp) + " 次循环用时 " + DateTimeUtil.getTimeMillis(nowTp) + " 毫秒。");
     }
-
-    //根据数据库表获取用户对数据的访问次数
-    // for (int i = 0; i < tableCoarseInfos.size(); i++) {
-    //   String tableName = tableCoarseInfos.get(i).getTableName();
-    //   Long count = msSegmentDetailDao.selectCountOfOneTable(tableName);
-    //   tableCoarseInfos.get(i).setVisitedCount(count);
-    // }
-
-    // 根据用户名获取用户的最后访问时间
-    // for (int i = 0; i < tableCoarseInfos.size(); i++) {
-    //   String tableName = tableCoarseInfos.get(i).getTableName();
-    //   Map<String, Object> queryMap = new HashMap<>();
-    //   queryMap.put("tableName", tableName);
-    //   Date lastVisited = msSegmentDetailDao.selectTableLastVisitedTime(tableName);
-    //   tableCoarseInfos.get(i).setLastVisitedDate(lastVisited);
-    // }
-
-    // 对访问次数进行按照从大到小进行排序；2022-07-18 14:53:17
-    // for (int i = 0; i < tableCoarseInfos.size(); i++) {
-    //
-    //   // 获取所有访问这个表的用户及其对应的访问次数；
-    //   String tableName = tableCoarseInfos.get(i).getTableName();
-    //   List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(tableName);
-    //
-    //   Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
-    //     @Override
-    //     public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-    //       if (t1.getVisitedCount() < t2.getVisitedCount()) {
-    //         return 1;
-    //       } else if (t1.getVisitedCount().equals(t2.getVisitedCount())) {
-    //         return 0;
-    //       } else {
-    //         return -1;
-    //       }
-    //     }
-    //   });
-    //
-    //   if (list.size() != 0) {
-    //     tableCoarseInfos.get(i).setUsualVisitedUser(list.get(0).getUserName());
-    //   } else {
-    //     tableCoarseInfos.get(i).setUsualVisitedUser("从未有人访问过这张表");
-    //   }
-    // }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息，用时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
     return ServerResponse.createBySuccess("获取数据成功！", "success", tableCoarseInfos);
