@@ -386,7 +386,7 @@ public class MingshiServerUtil {
         String key = iterator.next();
         Integer value = map.get(key);
         // 更新每天采集情况；
-        redisPoolUtil.hsetIncrBy(Const.ALL_RECENT_SEVEN_DAYS_MS_SEGMENT_DETAIL_STATISTICS, key, value.longValue());
+        redisPoolUtil.hsetIncrBy(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, key, value.longValue());
         // 更新总的采集情况；
         redisPoolUtil.incr(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS, value.longValue());
       }

@@ -460,7 +460,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       Date date = DateTimeUtil.strToDate(value);
       String dateToStrYYYYMMDD = DateTimeUtil.DateToStrYYYYMMDD(date);
       Long countFromRedis = 0L;
-      Object hget = redisPoolUtil.hget(Const.ALL_RECENT_SEVEN_DAYS_MS_SEGMENT_DETAIL_STATISTICS, dateToStrYYYYMMDD);
+      Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYYYYMMDD);
       if (null != hget) {
         countFromRedis = Long.valueOf(String.valueOf(hget));
       }

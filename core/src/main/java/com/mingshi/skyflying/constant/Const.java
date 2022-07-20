@@ -20,6 +20,28 @@ package com.mingshi.skyflying.constant;
 
 public class Const {
 
+  // 目前在缓存里，缓存的数据有：
+  // 记录每一天采集到多少条信息；2022-07-18 16:41:53  AllRecentSevenDays
+  public static final String HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS = "hash_everyday_ms_segment_detail_how_many_records";
+  /*
+   * 信息概览页面 ->用户访问行为；2022-07-19 08:52:11
+   */
+  // 统计每一个用户对数据库总的访问次数；
+  public static final String STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES = "string_user_access_behavior_all_visited_times#user_name:";
+  // 记录用户对数据库最后的访问时间；
+  public static final String STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME = "string_user_access_behavior_latest_visited_time#user_name:";
+  // 有序集合：存放的是用户对访问过的表的次数；2022-07-20 14:27:34
+  public static final String ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES = "zset_user_access_behavior_all_visited_tables#user_name#";
+  /*
+   * 信息概览页面 -> 数据统计情况；2022-07-19 08:52:11
+   */
+  // 目前已收集到多少条 MsSegmentDetail 信息；
+  public static final String STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS = "string_data_statistics_how_many_ms_segment_detail_records";
+  // 将所有的用户放入到set集合中；
+  public static final String SET_DATA_STATISTICS_HOW_MANY_USERS = "set_data_statistics_how_many_users";
+
+
+  
   public static final String LOGIN_FISH_EASIER = "login/fish/easier";
   public static final String ES_INDEX_SEGMENT_DETAIL = "segment_detail";
 
@@ -31,30 +53,6 @@ public class Const {
 
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
-
-  // 将信息概况页面中的数据访问行为存储到Redis中；2022-07-18 16:15:07
-
-  // 近七天信息采集情况；2022-07-18 16:41:53  AllRecentSevenDays
-  public static final String ALL_RECENT_SEVEN_DAYS_MS_SEGMENT_DETAIL_STATISTICS = "all_recent_seven_days_ms_segment_detail_statistics";
-
-  /*
-   * 信息概览页面 ->用户访问行为；2022-07-19 08:52:11
-   */
-  // 统计每一个用户对数据库总的访问次数；
-  public static final String STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES = "string_user_access_behavior_all_visited_times#user_name:";
-  // 记录用户对数据库最后的访问时间；
-  public static final String STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME = "string_user_access_behavior_latest_visited_time#user_name:";
-
-  // 有序集合：存放的是用户对访问过的表的次数；2022-07-20 14:27:34
-  public static final String ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES = "zset_user_access_behavior_all_visited_tables#user_name#";
-
-  /*
-   * 信息概览页面 -> 数据统计情况；2022-07-19 08:52:11
-   */
-  // 目前已收集到多少条 MsSegmentDetail 信息；
-  public static final String STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS = "string_data_statistics_how_many_ms_segment_detail_records";
-  // 将所有的用户放入到set集合中；
-  public static final String SET_DATA_STATISTICS_HOW_MANY_USERS = "set_data_statistics_how_many_users";
 
   public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "string_skywalking_agent_heart_beat";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
@@ -68,7 +66,6 @@ public class Const {
   public static final String AK = "ak";
   public static final String SK = "sk";
   public static final String RETCH_AUDIT_LOG_BY_DMS_SUCCESS_RESULT = "sucess";
-  public static final String RETCH_AUDIT_LOG_BY_DMS_FAILURE_RESULT = "failure";
 
   public static final String SQL = "sql";
   public static final String SQL_SOURCE_DMS = "dms";
