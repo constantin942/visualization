@@ -351,7 +351,9 @@ public class MingshiServerUtil {
           for (MsSegmentDetailDo msSegmentDetailDo : list) {
             String userName = msSegmentDetailDo.getUserName();
             String tableName = msSegmentDetailDo.getMsTableName();
-            if(StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(tableName)){
+            String dbInstance = msSegmentDetailDo.getDbInstance();
+            String peer = msSegmentDetailDo.getPeer();
+            if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)){
               String startTimeOld = msSegmentDetailDo.getStartTime();
               Date date = DateTimeUtil.strToDate(startTimeOld);
               String startTimeNew = DateTimeUtil.dateToStr(date,DateTimeUtil.DATEFORMAT_STR_002);
@@ -626,6 +628,7 @@ public class MingshiServerUtil {
         Instant now = Instant.now();
         msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
 
+        // todo：待优化的地方：在一次对segmentDetailDoList循环中，把数据都放入Redis中。分别循环来处理，性能不好。2022-07-20 13:33:12
         // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
         flushSegmentDetailCountToRedis(segmentDetailDoList);
         // 信息概况 -> 用户访问行为
