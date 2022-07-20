@@ -190,7 +190,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     List<String> userNames = new LinkedList<>();
     //获取所有的用户名。先从Redis中获取，如果Redis中不存在，那么就从表ms_segment_detail中获取。2022-07-19 10:36:19
-    Set<String> smembers = redisPoolUtil.smembers(Const.DATA_STATISTICS_USER_COUNT);
+    Set<String> smembers = redisPoolUtil.smembers(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
     if (null == smembers || 0 == smembers.size()) {
       userNames = msSegmentDetailDao.selectAllUserName();
     } else {
@@ -201,9 +201,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       String userName = userNames.get(i);
       userCoarseInfo.setUserName(userName);
 
-      //根据用户名获取用户对数据的访问次数
-      String userNameVisitedCountKey = Const.USER_ACCESS_BEHAVIOR_USER_NAME_VISITED_COUNT + userName;
-      Object obj = redisPoolUtil.get(userNameVisitedCountKey);
+      // 根据用户名获取用户对数据库总的访问次数；
+      Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName);
       Long countFromRedis = 0L;
       Long countFromMySql = 0L;
       if (null != obj) {
@@ -218,9 +217,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         log.error("# SegmentDetailServiceImpl.getCoarseCountsOfUser() #  根据用户名在Redis中获取用户对数据的访问次数【{}】与在MySQL中获取次数【{}】不一致。", countFromRedis, countFromMySql);
       }
 
-      // 根据用户名获取用户的最后访问时间
-      String userNameLatestVisitedTimeKey = Const.USER_ACCESS_BEHAVIOR_USER_NAME_LATEST_VISITED_TIME + userName;
-      String latestVisitedTime = (String) redisPoolUtil.get(userNameLatestVisitedTimeKey);
+      // 获取用户对数据库最后的访问时间；
+      String latestVisitedTime = (String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName);
       Date lastVisited = null;
       if (StringUtil.isBlank(latestVisitedTime)) {
         lastVisited = msSegmentDetailDao.selectLastVisitedTimeByUserName(userName);
@@ -229,8 +227,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       }
       userCoarseInfo.setLastVisitedDate(lastVisited);
 
-      String zsetKey = Const.ZSET_USER_ACCESS_BEHAVIOR_USER_NAME + userName;
-      Set<String> set = redisPoolUtil.reverseRange(zsetKey, 0L, 0L);
+      // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
+      Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, 0L, 0L);
       if (null == set || 0 == set.size()) {
         // 从数据库中获取用户名；
         String tableName = getTableNameFromDb(userName);
@@ -484,7 +482,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     // 获取ms_segment_detail表中元素的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
     Long informationCountFromRedis = 0L;
-    Object hget = redisPoolUtil.get(Const.DATA_STATISTICS_ALL_MS_SEGMENT_DETAIL);
+    Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
     if (null != hget) {
       informationCountFromRedis = Long.parseLong(String.valueOf(hget));
       if (null == informationCountFromRedis) {
@@ -512,7 +510,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     systemOverview.setTable(tableCount);
 
     // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-    Long userCountFromRedis = redisPoolUtil.setSize(Const.DATA_STATISTICS_USER_COUNT);
+    Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
     if (null == userCountFromRedis || 0 == userCountFromRedis) {
       userCountFromRedis = msSegmentDetailDao.selectUserCount();
     }

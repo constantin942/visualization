@@ -1350,7 +1350,6 @@ public class DateTimeUtil {
     try {
       sfstr = sf2.format(sf1.parse(str));
     } catch (ParseException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     return sfstr;

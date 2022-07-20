@@ -27,12 +27,10 @@ public class Const {
   public static final Integer IS_DELETE_ONE = 1;
 
   // 心跳间隔15分钟；2022-06-27 14:52:54
-  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_MINUTES = 15;
   public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS = 15 * 60;
 
   // IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01
   public static final Integer IOTREAD_LOG_INTERVAL = 50;
-  // public static final String AUDITLOG_FROM_SKYWALKING_AGENT_LIST = "auditLogFromSkywalkingAgentList";
 
   // 将信息概况页面中的数据访问行为存储到Redis中；2022-07-18 16:15:07
 
@@ -42,35 +40,28 @@ public class Const {
   /*
    * 信息概览页面 ->用户访问行为；2022-07-19 08:52:11
    */
-  // 用户对数据库表总的访问次数；
-  public static final String USER_ACCESS_BEHAVIOR_USER_NAME_VISITED_COUNT = "user_access_behavior_visited_count#user_name:";
-  // 用户对数据库表最后的访问时间；
-  public static final String USER_ACCESS_BEHAVIOR_USER_NAME_LATEST_VISITED_TIME = "user_access_behavior_latest_visited_time#user_name:";
+  // 统计每一个用户对数据库总的访问次数；
+  public static final String STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES = "string_user_access_behavior_all_visited_times#user_name:";
+  // 记录用户对数据库最后的访问时间；
+  public static final String STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME = "string_user_access_behavior_latest_visited_time#user_name:";
 
-  public static final String ZSET_USER_ACCESS_BEHAVIOR_USER_NAME = "zset_user_access_behavior#user_name#";
+  // 有序集合：存放的是用户对访问过的表的次数；2022-07-20 14:27:34
+  public static final String ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES = "zset_user_access_behavior_all_visited_tables#user_name#";
 
   /*
    * 信息概览页面 -> 数据统计情况；2022-07-19 08:52:11
    */
-  // 数据统计在Redis中的哈希表名称；
-  // 已收集信息；
-  public static final String DATA_STATISTICS_ALL_MS_SEGMENT_DETAIL = "data_statistics_all_ms_segment_detail";
-  // 用户人数；
-  public static final String DATA_STATISTICS_USER_COUNT = "data_statistics_user_count";
+  // 目前已收集到多少条 MsSegmentDetail 信息；
+  public static final String STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS = "string_data_statistics_how_many_ms_segment_detail_records";
+  // 将所有的用户放入到set集合中；
+  public static final String SET_DATA_STATISTICS_HOW_MANY_USERS = "set_data_statistics_how_many_users";
 
-
-  public static final String COARSE_STATISTICS_VISITED_TABLE = "coarse_statistics_visited_table";
-  // 每天采集信息统计；2022-07-18 16:16:10
-  public static final String STATISTICS_EVERYDAY_TABLE = "statistics_everyday_table";
-
-  public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "skywalkingAgentHeartBeatDolList";
-  public static final String SKYWALKING_CONSUME_QPS = "skywalkingConsumeQps";
+  public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "string_skywalking_agent_heart_beat";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
   public static final String ES_SEGMENT_DETAIL_DO_LIST = "esSegmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
   public static final String SEGMENT = "segment";
   public static final String SPAN = "span";
-  // public static final String SEGMENT_LIST = "segmentList";
 
   // 配置表中的配置项
   public static final String AK_SK = "akSk";
