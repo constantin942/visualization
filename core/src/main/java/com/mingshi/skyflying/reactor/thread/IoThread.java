@@ -8,6 +8,7 @@ import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
+import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.JsonUtil;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -32,11 +33,12 @@ public class IoThread extends Thread {
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant CURRENT_TIME = null;
 
-  private Integer flushToRocketMQInterval = 5;
+  private Integer flushToRocketMQInterval = 10;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
+  private HashSet<String> userHashSet = null;
   private LinkedList<Span> spanList = null;
   private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
@@ -48,6 +50,7 @@ public class IoThread extends Thread {
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
     segmentList = new LinkedList();
+    userHashSet = new HashSet();
     auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
     spanList = new LinkedList();
@@ -87,7 +90,7 @@ public class IoThread extends Thread {
             getEsSegmentDetailFromJSONObject(jsonObject);
 
             // 从json实例中获取Span实例的信息
-            getSpanFromJSONObject(jsonObject);
+            // getSpanFromJSONObject(jsonObject);
 
             // 从json实例中获取异常信息
             getAbnormalFromJSONObject(jsonObject);
@@ -96,7 +99,7 @@ public class IoThread extends Thread {
             // getAuditLogFromJSONObject(jsonObject);
 
             // 从json实例中获取segment的信息
-            getSegmentFromJSONObject(jsonObject);
+            // getSegmentFromJSONObject(jsonObject);
           }
 
           // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
@@ -242,6 +245,20 @@ public class IoThread extends Thread {
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
+        // 之所将用户名判断放到这里来判断，而不是放到processor线程中判断，原因是为了提高效率。
+        // 如果要放到processor中进行判断，如果该用户不存在，那么需要将其保存到Redis中。
+        // 在保存到Redis中的时候，需要将其加锁。一旦在processor中加锁，就降低了processor线程的性能。
+        for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailList) {
+          String userName = msSegmentDetailDo.getUserName();
+          String tableName = msSegmentDetailDo.getMsTableName();
+          if(StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(tableName)){
+            // 判断用户是否已存在，如果不存在，那么先暂存起来，然后再将其发送到Redis中；2022-07-19 10:03:22
+            Boolean userIsExisted = InformationOverviewSingleton.userIsExisted(userName);
+            if(false == userIsExisted){
+              userHashSet.add(userName);
+            }
+          }
+        }
         segmentDetailDoList.addAll(segmentDetailList);
       }
     } catch (Exception e) {
@@ -308,6 +325,9 @@ public class IoThread extends Thread {
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
         log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】.", flushToRocketMQInterval);
+
+        mingshiServerUtil.flushUserNameToRedis(userHashSet);
+
         mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
 
@@ -324,8 +344,14 @@ public class IoThread extends Thread {
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
         mingshiServerUtil.insertMonitorTables();
-        mingshiServerUtil.updateUserNameByGlobalTraceId();
+
+        // 不能再更新这个了，因为花的时间太久；2022-07-18 17:24:06
+        // 比较好的做法是，把用户名、token、globalTraceId放到Redis中去存储，有一个定时任务，定时去MySQL中根据token和globalTraceId分组查询用户名为空的记录，然后拿着token和globalTraceId
+        // 去Redis缓存中获取。如果获取到了用户名，那么就把用户名更新到MySQL数据库中。
+        // mingshiServerUtil.updateUserNameByGlobalTraceId();
+
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
+
         mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
         CURRENT_TIME = Instant.now();
       } else {

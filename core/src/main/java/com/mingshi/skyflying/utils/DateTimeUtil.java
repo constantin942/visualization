@@ -488,10 +488,11 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：getSecondByDate</B>
    * <B>概要说明：根据字符串类型的时间获取毫秒级时间差</B>
+   *
+   * @return long
    * @Author zm
    * @Date 2022年07月08日 09:07:14
    * @Param [stringDate]
-   * @return long
    **/
   public static long getSecondByDate(String stringDate) {
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
@@ -503,16 +504,55 @@ public class DateTimeUtil {
   /**
    * <B>方法名称：getMilliSecondByDate</B>
    * <B>概要说明：根据字符串类型的时间获取秒级时间差</B>
+   *
+   * @return long
    * @Author zm
    * @Date 2022年07月08日 09:07:14
    * @Param [stringDate]
-   * @return long
    **/
   public static long getMilliSecondByDate(String stringDate) {
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
     long timeEnd = System.currentTimeMillis();
     long interval = Math.abs((timeEnd - timeFrom));
     return interval;
+  }
+
+  /**
+   * <B>方法名称：getDateList</B>
+   * <B>概要说明：根据初识开始时间和初识结束时间，输出中间的每一天的时间</B>
+   * @Author zm
+   * @Date 2022年07月19日 17:07:41
+   * @Param [startTime, endTime]
+   * @return java.util.List<java.lang.String>
+   **/
+  public static List<String> getDateList(String startTime, String endTime) {
+    List<String> DateList = new LinkedList<>();
+    try {
+      Calendar startTimeCalendar = Calendar.getInstance();
+      Calendar endTimeCalendar = Calendar.getInstance();
+
+      //创建SimpleDateFormat对象实例并定义好转换格式
+      SimpleDateFormat sdf = new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT);
+
+      Date startTimeDate = DateTimeUtil.strToDate(startTime);
+      Date endTimeDate = DateTimeUtil.strToDate(endTime);
+      startTimeCalendar.setTime(startTimeDate);
+      endTimeCalendar.setTime(endTimeDate);
+
+      while (startTimeCalendar.compareTo(endTimeCalendar) < 1) {
+        String startTimeStr = sdf.format(startTimeCalendar.getTime());
+        DateList.add(startTimeStr);
+        startTimeCalendar.add(Calendar.DATE, 1);
+      }
+
+      if (startTimeCalendar.before(endTimeCalendar)) {
+        String endTimeStr = sdf.format(startTimeCalendar.getTime());
+        DateList.add(endTimeStr);
+      }
+    } catch (Exception e) {
+      log.error("# DateTimeUtil.getDateList() # 转换时间时，出现了异常。", e);
+    }
+    return DateList;
   }
 
 
@@ -2232,19 +2272,6 @@ public class DateTimeUtil {
     Instant toDate = Instant.now();
     long seconds = ChronoUnit.SECONDS.between(fromDate, toDate);
     return seconds;
-  }
-  public static long getSecond2(Instant fromDate) {
-    Instant toDate = Instant.now();
-    ZonedDateTime zonedDateTimeEnd = Instant.now().atZone(ZoneId.systemDefault());
-    LocalDateTime localDateTimeEnd = zonedDateTimeEnd.toLocalDateTime();
-    // ZonedDateTime zonedDateTimeFrom = fromDate.atZone(ZoneId.systemDefault());
-    // LocalDateTime localDateTimeFrom = zonedDateTimeFrom.toLocalDateTime();
-    // long seconds1 = ChronoUnit.SECONDS.between(localDateTimeFrom, localDateTimeEnd);
-    long seconds2 = ChronoUnit.SECONDS.between(fromDate, localDateTimeEnd);
-    // if(seconds1 != seconds2){
-    //   System.out.println("");
-    // }
-    return seconds2;
   }
 
   /**

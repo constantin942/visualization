@@ -34,7 +34,7 @@ public interface MsSegmentDetailDao {
 
   void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 
-  void updateBatchByToken(List<Map<String,String>> list);
+  void updateBatchByToken(List<Map<String, String>> list);
 
   void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
 
@@ -43,6 +43,8 @@ public interface MsSegmentDetailDao {
   List<String> selectAllUserName();
 
   List<String> selectAllMsTableName();
+
+  List<Map<String, String>> selectAllMsTableNameDbInstancePeer();
 
   List<String> selectAllInstanceName();
 
@@ -54,13 +56,17 @@ public interface MsSegmentDetailDao {
 
   Long selectCountsOfUser(Map<String, Object> map);
 
-
   Long selectCountOfOneUser(Map<String, Object> userName);
+
+  Long selectCountOfOneUserByUserName(String userName);
 
   Date selectLastVisitedTime(Map<String, Object> userName);
 
+  Date selectLastVisitedTimeByUserName(String userName);
 
   List<UserUsualAndUnusualVisitedData> selectUserUsualAndUnusualData(Map<String, Object> queryMap);
+
+  Map<String, String> selectUserUsualAndUnusualDataByUserName(String userName);
 
   Long selectCountsOfAllRecentSevenDays(Map<String, Object> map);
 
@@ -74,11 +80,11 @@ public interface MsSegmentDetailDao {
 
   List<String> selectAllTableName();
 
-  Long selectCountOfOneTable(Map<String, Object> queryMap);
+  Long selectCountOfOneTable(String tableName);
 
-  Date selectTableLastVisitedTime(Map<String, Object> queryMap);
+  Date selectTableLastVisitedTime(String tableName);
 
-  List<UserUsualAndUnusualVisitedData> selectTableUsualAndUnusualData(Map<String, Object> queryMap);
+  List<UserUsualAndUnusualVisitedData> selectTableUsualAndUnusualData(String tableName);
 
   List<AlarmData> selectAlarmData();
 

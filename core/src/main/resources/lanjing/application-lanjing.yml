@@ -110,7 +110,7 @@ spring:
       properties:
         max.poll.interval.ms: 1200000
         #最多拉取1000条数据
-        max.poll.records: 5
+        max.poll.records: 500
     listener:
       # 在侦听器容器中运行的线程数。
       concurrency: 5

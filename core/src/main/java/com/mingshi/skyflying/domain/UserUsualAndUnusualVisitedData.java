@@ -1,17 +1,14 @@
 package com.mingshi.skyflying.domain;
-import lombok.Data;
 
-import java.util.Date;
-import java.util.List;
+import lombok.Data;
 
 @Data
 public class UserUsualAndUnusualVisitedData {
 
+  String userName;
 
-    String userName;
+  String visitedData;
 
-    String visitedData;
-
-    Long visitedCount;
+  Long visitedCount;
 
 }

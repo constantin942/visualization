@@ -25,4 +25,8 @@ public interface MsMonitorBusinessSystemTablesMapper {
     int updateByPrimaryKeySelective(MsMonitorBusinessSystemTablesDo record);
 
     void insertSelectiveBatch(LinkedList<MsMonitorBusinessSystemTablesDo> list);
+
+    Long selectAllDbName();
+
+    Long selectAllTables();
 }

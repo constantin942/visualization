@@ -63,6 +63,16 @@
     </where>
     order by id desc
   </select>
+  <select id="selectAllDbName" resultType="java.lang.Long">
+    select count(distinct db_name)
+    from ms_monitor_business_system_tables
+    where db_name is not null
+  </select>
+  <select id="selectAllTables" resultType="java.lang.Long">
+    select count(distinct table_name)
+    from ms_monitor_business_system_tables
+    where table_name is not null
+  </select>
   <select id="selectAllEnable" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>

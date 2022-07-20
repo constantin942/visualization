@@ -17,6 +17,7 @@ import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
 import com.mingshi.skyflying.reactor.queue.BatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentConsumerService;
+import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.type.KeyValue;
 import com.mingshi.skyflying.type.LogEntity;
 import com.mingshi.skyflying.type.RefType;
@@ -47,6 +48,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   @Resource
+  private InformationOverviewSingleton informationOverviewSingleton;
+  @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
   private SegmentDao segmentDao;
@@ -68,6 +71,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
+    HashSet<String> userHashSet = new HashSet<>();
     // Instant now1 = Instant.now();
     // Instant now = Instant.now();
     SegmentObject segmentObject = null;
@@ -77,11 +81,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       segmentObject = SegmentObject.parseFrom(record.value().get());
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
+      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完81行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+      // now = Instant.now();
 
       // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
-      setUserNameAndTokenFromSegmentObject(segment, segmentObject);
+      setUserNameAndTokenFromSegmentObject(userHashSet, segment, segmentObject);
       // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
       setUserNameTokenGlobalTraceIdToLocalMemory(segment);
+
+      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完89行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+      // now = Instant.now();
 
       // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
       // LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = null;
@@ -94,12 +103,19 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
       List<Span> spanList = buildSpanList(segmentObject, segment);
+
+      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完104行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+      // now = Instant.now();
+
       if (null != spanList && 0 < spanList.size()) {
         // 组装segment；2022-04-20 16:33:48
         segment = setUserNameAndTokenFromSpan(spanList, segment);
 
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
         reorganizingSpans(segment, spanList);
+
+        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完114行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+        // now = Instant.now();
 
         // auditLogFromSkywalkingAgentList = new LinkedList<>();
         // // 重组span数据，返回前端使用；2022-04-20 16:49:02
@@ -118,6 +134,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
 
+        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完134行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+        // now = Instant.now();
+
         AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
       }
@@ -126,6 +145,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
         doEnableReactorModel(spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完144行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
+        // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
 
@@ -136,6 +157,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
 
         mingshiServerUtil.flushSpansToDB(spanList);
+
+        mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
@@ -155,7 +178,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         mingshiServerUtil.insertMonitorTables();
 
         // 插入segment对应的index数据；2022-05-23 10:15:38
-        mingshiServerUtil.updateUserNameByGlobalTraceId();
+        // 不能更新了，太耗时；2022-07-18 17:36:16
+        // mingshiServerUtil.updateUserNameByGlobalTraceId();
 
         // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
         // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
@@ -316,6 +340,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
       msSegmentDetailDo.setOperationName(segment.getOperationName());
       msSegmentDetailDo.setStartTime(segment.getRequestStartTime());
+      msSegmentDetailDo.setEndTime(segment.getRequestStartTime());
       msSegmentDetailDo.setServiceCode(segmentObject.getService());
       msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
       String reorganizingSpans = segment.getReorganizingSpans();
@@ -342,12 +367,28 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       for (String tableNameTemp : tableNameList) {
         String dbInstance = msSegmentDetailDo.getDbInstance();
         String peer = msSegmentDetailDo.getPeer();
-        String key = mingshiServerUtil.doGetTableName(peer, dbInstance, tableNameTemp.replace("`", ""));
-        // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-        Integer tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
-        if (null != tableEnableStatus && 1 == tableEnableStatus) {
-          // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
-          return null;
+        String replaceTableName = tableNameTemp.replace("`", "");
+        String key = null;
+        Integer tableEnableStatus = null;
+        if(replaceTableName.contains(",")){
+          String[] splits = replaceTableName.split(",");
+          for (String splitTableName : splits) {
+            key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
+            // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+            tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
+            if (null != tableEnableStatus && 1 == tableEnableStatus) {
+              // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+              return null;
+            }
+          }
+        }else{
+          key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
+          // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+          tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
+          if (null != tableEnableStatus && 1 == tableEnableStatus) {
+            // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+            return null;
+          }
         }
         if (StringUtil.isBlank(tableName)) {
           tableName = tableNameTemp;
@@ -755,10 +796,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             } else if (key.equals("url")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               url = tag.getValue();
+              flag = true;
+              break;
             } else if (key.equals("http.method")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               flag = true;
-              // break;
+              break;
             } else if (key.equals("db.instance")) {
               msSchemaName = tag.getValue();
             } else if (key.equals("db_user_name")) {
@@ -864,9 +907,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   //             msSchemaName = tag.getValue();
   //           } else if (key.equals("db_user_name")) {
   //             dbUserName = tag.getValue();
-  //             if(StringUtil.isBlank(dbUserName)){
-  //               System.out.println("");
-  //             }
   //           } else if (key.equals("db.statement") && !key.equals("Redis")) {
   //             // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
   //             // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
@@ -1402,7 +1442,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年07月12日 10:07:59
    * @Param [spanList, segment]
    **/
-  private SegmentDo setUserNameAndTokenFromSegmentObject(SegmentDo segment, SegmentObject segmentObject) {
+  private SegmentDo setUserNameAndTokenFromSegmentObject(HashSet<String> userHashSet, SegmentDo segment, SegmentObject segmentObject) {
     try {
       if (null == segment) {
         segment = new SegmentDo();
@@ -1412,6 +1452,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String userName = segmentObject.getUserName();
       if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
+      }
+      if (StringUtil.isNotBlank(userName)) {
+        Boolean userIsExisted = InformationOverviewSingleton.userIsExisted(userName);
+        if (false == userIsExisted) {
+          userHashSet.add(userName);
+        }
       }
       String token = segmentObject.getToken();
       if (StringUtil.isNotBlank(token)) {

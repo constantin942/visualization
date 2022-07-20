@@ -6,9 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -57,6 +55,40 @@ public class RedisPoolUtil {
 
   public boolean hmsetFallbackBatch(String key, Map<String, String> map, Throwable throwable) {
     log.error("hmsetFallbackBatch 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return false;
+  }
+
+  /**
+   * <B>方法名称：hsetIncrBy</B>
+   * <B>概要说明：对哈希表中的某个元素自增指定的数值</B>
+   *
+   * @return boolean
+   * @Author zm
+   * @Date 2022年07月18日 16:07:37
+   * @Param [key, value, incrementCount]
+   **/
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "hsetIncrByFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public boolean hsetIncrBy(String key, String value, Long incrementCount) {
+    try {
+      stringRedisTemplate.opsForHash().increment(key, value, incrementCount);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+  public boolean hsetIncrByFallback(String key, String value, Long incrementCount, Throwable throwable) {
+    log.error("hsetIncrByFallback 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
   }
 
@@ -887,6 +919,36 @@ public class RedisPoolUtil {
 
   /**
    * @Author zhaoming
+   * @Description 往redis的set集合中，放入数据；
+   * @Date 10:53 2020/12/11
+   **/
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "setSizeFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public Long setSize(String setName) {
+    try {
+      Long size = stringRedisTemplate.opsForSet().size(setName);
+      return size;
+    } catch (Exception e) {
+      log.error("# RedisPoolUtil.setSize() # 从Redis的set集合中获取元素个数时，出现了异常。", e);
+      return -1L;
+    }
+  }
+
+  public Long setSizeFallback(String setName, Throwable throwable) {
+    log.error("setSizeFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return null;
+  }
+
+  /**
+   * @Author zhaoming
    * @Description 从redis的set集合中，获取所有的数据；
    * @Date 10:53 2020/12/11
    **/
@@ -896,7 +958,6 @@ public class RedisPoolUtil {
       @HystrixProperty(name = "maxQueueSize", value = "1500"),
       @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
     },
-
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
@@ -1222,9 +1283,56 @@ public class RedisPoolUtil {
    * @param value
    * @param scoure
    */
-  public void zAdd(String key, String value, double scoure) {
-    ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
-    stringStringZSetOperations.add(key, value, scoure);
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "zAddFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public Boolean zAdd(String key, String value, double scoure) {
+    try {
+      ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
+      return stringStringZSetOperations.add(key, value, scoure);
+    } catch (Exception e) {
+      log.error("# RedisPoolUtil.zAdd() # 往有序集合中存放数据时，出现了异常。", e);
+      return false;
+    }
+  }
+
+  public double zAddFallback(String key, String value, double scoure, Throwable throwable) {
+    log.error("zAddFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return -1;
+  }
+
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "zAddBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public Long zAddBatch(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
+    try {
+      ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
+      return stringStringZSetOperations.add(key, tuples);
+    } catch (Exception e) {
+      log.error("# RedisPoolUtil.zAddBatch() # 往有序集合中存放数据时，出现了异常。", e);
+      return -1L;
+    }
+  }
+
+  public double zAddBatchFallback(String key, Set<ZSetOperations.TypedTuple<String>> tuples, Throwable throwable) {
+    log.error("zAddBatchFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return -1;
   }
 
   /**
@@ -1358,5 +1466,4 @@ public class RedisPoolUtil {
     log.error("reverseRangeWithScoresFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
   }
-
 }

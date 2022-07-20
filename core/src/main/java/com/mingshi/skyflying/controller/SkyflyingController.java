@@ -114,11 +114,11 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getAllMonitorTables", method = RequestMethod.GET)
   public ServerResponse<String> getAllMonitorTables(
-                                                    String tableName,
-                                                    String dbName,
-                                                    String dbAddress,
-                                                    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    String tableName,
+    String dbName,
+    String dbAddress,
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.getAllTables(tableName, dbName, dbAddress, pageNo, pageSize);
     return bySuccess;
   }
@@ -739,7 +739,7 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：getCoarseCountsOfUser/B>
-   * <B>概要说明：获取用户对数据的粗粒度信息</B>
+   * <B>概要说明：获取用户对数据的粗粒度信息。信息概况 -> 用户访问行为</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author lhx
@@ -751,10 +751,7 @@ public class SkyflyingController {
   @RequestMapping(value = "/getCoarseCountsOfUser", method = RequestMethod.GET)
   public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-
-
     return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
-
   }
 
   /**
@@ -767,7 +764,6 @@ public class SkyflyingController {
    * @Param
    * @Question：计算数据过慢
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
   public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -778,9 +774,6 @@ public class SkyflyingController {
 
   }
 
-
-
-
   /**
    * <B>方法名称：getCoarseCountsOfOneUser/B>
    * <B>概要说明：获取某一特定用户对数据的粗粒度信息</B>
@@ -790,7 +783,6 @@ public class SkyflyingController {
    * @Date 2022年07月5日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfOneUser", method = RequestMethod.GET)
   public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
@@ -811,7 +803,6 @@ public class SkyflyingController {
    * @Date 2022年07月5日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUser", method = RequestMethod.GET)
   public ServerResponse<Long> getCountsOfUser(String applicationUserName, /* 登录系统的名称 */
@@ -835,7 +826,6 @@ public class SkyflyingController {
    * @Date 2022年07月5日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUserRecentSevenDays", method = RequestMethod.GET)
   public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(String applicationUserName, /* 登录系统的名称 */
@@ -854,14 +844,13 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：getCountsOfAllRecentSevenDays/B>
-   * <B>概要说明：获取用户对数据的详细数据</B>
+   * <B>概要说明：获取"信息概况" -> "近7天信息采集情况"</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author lhx
    * @Date 2022年07月5日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getCountsOfAllRecentSevenDays", method = RequestMethod.GET)
   public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, /* 开始时间 */String endTime /* 结束时间 */) {
@@ -877,7 +866,6 @@ public class SkyflyingController {
    * @Date 2022年07月5日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getOverviewOfSystem", method = RequestMethod.GET)
   public ServerResponse<SystemOverview> getOverviewOfSystem() {
@@ -901,9 +889,6 @@ public class SkyflyingController {
     return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
   }
 
-
-
-
   /**
    * <B>方法名称：getAlarmData/B>
    * <B>概要说明：获取告警数据</B>
@@ -913,7 +898,6 @@ public class SkyflyingController {
    * @Date 2022年07月6日 14:30:19
    * @Param
    **/
-
   @ResponseBody
   @RequestMapping(value = "/getAlarmData", method = RequestMethod.GET)
   public ServerResponse<List<AlarmData>> getAlarmData() {
@@ -933,7 +917,6 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getUserAlarmData", method = RequestMethod.GET)
   public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
-
     return segmentDetailService.getUserAlarmData();
   }
 

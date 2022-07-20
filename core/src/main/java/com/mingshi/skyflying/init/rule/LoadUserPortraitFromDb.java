@@ -90,8 +90,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
     // 设置规则id；
     AnomylyDetectionSingletonByVisitedTableEveryday.setVisitedTableRuleId(ruleId);
 
-    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap =
-      null;
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> userPortraitByVisitedTableEverydayMap = null;
     Instant now = null;
     try {
       userPortraitByVisitedTableEverydayMap = AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();

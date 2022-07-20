@@ -8,9 +8,11 @@ import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.Instant;
@@ -331,6 +333,126 @@ public class MingshiServerUtil {
   }
 
   /**
+   * <B>方法名称：flushSegmentDetailCountToRedis</B>
+   * <B>概要说明：实时segmentDetail数据的统计数量保存到Redis的哈希表中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月18日 16:07:28
+   * @Param [count]
+   **/
+  public void flushSegmentDetailCountToRedis(LinkedList<MsSegmentDetailDo> list) {
+    Instant now = Instant.now();
+    if (null != list) {
+      Integer count = list.size();
+      if (0 < count) {
+        try {
+          Map<String, Integer> map = new HashMap<>();
+          for (MsSegmentDetailDo msSegmentDetailDo : list) {
+            String userName = msSegmentDetailDo.getUserName();
+            String tableName = msSegmentDetailDo.getMsTableName();
+            if(StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(tableName)){
+              String startTimeOld = msSegmentDetailDo.getStartTime();
+              Date date = DateTimeUtil.strToDate(startTimeOld);
+              String startTimeNew = DateTimeUtil.dateToStr(date,DateTimeUtil.DATEFORMAT_STR_002);
+              Integer value = map.get(startTimeNew);
+              if (null == value) {
+                map.put(startTimeNew, 1);
+              } else {
+                map.put(startTimeNew, value + 1);
+              }
+            }
+          }
+
+          Iterator<String> iterator = map.keySet().iterator();
+          while(iterator.hasNext()){
+            String key = iterator.next();
+            Integer value = map.get(key);
+            // 更新每天采集情况；
+            redisPoolUtil.hsetIncrBy(Const.ALL_RECENT_SEVEN_DAYS_MS_SEGMENT_DETAIL_STATISTICS, key, value.longValue());
+            // 更新总的采集情况；
+            redisPoolUtil.incr(Const.DATA_STATISTICS_ALL_MS_SEGMENT_DETAIL, value.longValue());
+          }
+
+          log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+          log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
+        }
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushUserNameToRedis</B>
+   * <B>概要说明：将用户名发送到redis中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月19日 10:07:28
+   * @Param [userHashSet]
+   **/
+  public void flushUserNameToRedis(HashSet<String> userHashSet) {
+    if (null != userHashSet && 0 < userHashSet.size()) {
+      Integer count = userHashSet.size();
+      try {
+        Instant now = Instant.now();
+        for (String userName : userHashSet) {
+          redisPoolUtil.sadd(Const.DATA_STATISTICS_USER_COUNT, userName);
+          // 将用户名放到本地内存中；2022-07-19 10:12:13
+          InformationOverviewSingleton.put(userName);
+        }
+        log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        userHashSet.clear();
+      } catch (Exception e) {
+        log.error("# MingshiServerUtil.flushUserNameToRedis() # 实时将用户名发送到redis中，出现了异常。", e);
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushUserAccessBehaviorToRedis</B>
+   * <B>概要说明：信息概况 -> 用户访问行为</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月19日 11:07:55
+   * @Param []
+   **/
+  public void flushUserAccessBehaviorToRedis(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
+    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+      Integer count = segmentDetailDoList.size();
+      try {
+        Instant now = Instant.now();
+        for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
+          String userName = msSegmentDetailDo.getUserName();
+          String startTime = msSegmentDetailDo.getStartTime();
+          String tableName = msSegmentDetailDo.getMsTableName();
+          String dbInstance = msSegmentDetailDo.getDbInstance();
+          String peer = msSegmentDetailDo.getPeer();
+          if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
+            // 用户访问次数 + 1；
+            String userNameVisitedCountKey = Const.USER_ACCESS_BEHAVIOR_USER_NAME_VISITED_COUNT + userName;
+            redisPoolUtil.incr(userNameVisitedCountKey, 1);
+            // 更新用户最后访问时间；
+            if (StringUtil.isNotBlank(startTime)) {
+              String userNameLatestVisitedTimeKey = Const.USER_ACCESS_BEHAVIOR_USER_NAME_LATEST_VISITED_TIME + userName;
+              redisPoolUtil.set(userNameLatestVisitedTimeKey, startTime);
+            }
+
+            // 累加用户对数据库表资源的访问次数；
+            String zsetVlue = peer + "#" + dbInstance + "#" + tableName;
+            String zsetKey = Const.ZSET_USER_ACCESS_BEHAVIOR_USER_NAME + userName;
+            redisPoolUtil.incrementScore(zsetKey, zsetVlue, 1);
+          }
+        }
+        log.info("# MingshiServerUtil.flushUserAccessBehaviorToRedis() # 实时统计将【{}】条用户访问行为信息发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+      } catch (Exception e) {
+        log.error("# MingshiServerUtil.flushUserAccessBehaviorToRedis() # 实时将用户访问行为信息发送到redis中，出现了异常。", e);
+      }
+    }
+  }
+
+  /**
    * <B>方法名称：flushAuditLogToDB</B>
    * <B>概要说明：将来自探针的SQL语句插入到表中</B>
    *
@@ -396,7 +518,6 @@ public class MingshiServerUtil {
         Iterator<String> iterator = instance.keySet().iterator();
         while (iterator.hasNext()) {
           String key = iterator.next();
-          System.out.println("");
           MsAgentInformationDo msAgentInformationDo = new MsAgentInformationDo();
           msAgentInformationDo.setAgentCode(key);
           list.add(msAgentInformationDo);
@@ -432,6 +553,7 @@ public class MingshiServerUtil {
   //         countMap.put(key,value.intValue());
   //       }
   //       Instant now = Instant.now();
+
   //       redisPoolUtil.hsetBatch2(Const.SKYWALKING_CONSUME_QPS, countMap);
   //       log.info("#SegmentConsumeServiceImpl.flushQpsToRedis()# 将QPS信息【{}条】发送到Redis中耗时【{}】毫秒。", timeCountMap.size(), DateTimeUtil.getTimeMillis(now));
   //     } catch (Exception e) {
@@ -484,11 +606,31 @@ public class MingshiServerUtil {
     }
   }
 
+  public void flushSegmentDetailCountToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
+    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+      try {
+        Instant now = Instant.now();
+        mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
+        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        segmentDetailDoList.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
+      }
+    }
+  }
+
+  @Transactional
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       try {
         Instant now = Instant.now();
         msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+
+        // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
+        flushSegmentDetailCountToRedis(segmentDetailDoList);
+        // 信息概况 -> 用户访问行为
+        flushUserAccessBehaviorToRedis(segmentDetailDoList);
+
         log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
         segmentDetailDoList.clear();
       } catch (Exception e) {
@@ -500,10 +642,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：flushSpansToDB</B>
    * <B>概要说明：将Spans实例信息插入到表中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月18日 09:07:06
    * @Param [spansList]
-   * @return void
    **/
   public void flushSpansToDB(List<Span> spansList) {
     if (null != spansList && 0 < spansList.size()) {
@@ -521,10 +664,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：getTableName</B>
    * <B>概要说明：获取表名</B>
+   *
+   * @return java.lang.String
    * @Author zm
    * @Date 2022年07月15日 11:07:56
    * @Param [msMonitorBusinessSystemTablesDo]
-   * @return java.lang.String
    **/
   public String getTableName(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo) {
     String key = "";
@@ -532,11 +676,12 @@ public class MingshiServerUtil {
       String dbAddress = msMonitorBusinessSystemTablesDo.getDbAddress();
       String dbName = msMonitorBusinessSystemTablesDo.getDbName();
       String tableName = msMonitorBusinessSystemTablesDo.getTableName();
-      return doGetTableName(dbAddress,dbName,tableName);
+      return doGetTableName(dbAddress, dbName, tableName);
     }
     return key;
   }
-  public String doGetTableName(String dbAddress,String dbName,String tableName) {
+
+  public String doGetTableName(String dbAddress, String dbName, String tableName) {
     String key = "";
     if (StringUtil.isNotBlank(dbAddress)) {
       key = dbAddress + "#";
@@ -552,7 +697,7 @@ public class MingshiServerUtil {
 
   /**
    * <B>方法名称：insertMonitorTables</B>
-   * <B>概要说明：将不存在的表批量插入到数据库中</B>
+   * <B>概要说明：将业务系统中不存在的表批量插入到数据库中</B>
    *
    * @return void
    * @Author zm
@@ -567,7 +712,7 @@ public class MingshiServerUtil {
         LinkedList<MsMonitorBusinessSystemTablesDo> list = new LinkedList<>();
         for (String tables : keySet) {
           String[] splits = tables.split("#");
-          if(3 == splits.length){
+          if (3 == splits.length) {
             MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
             msMonitorBusinessSystemTablesDo.setDbAddress(splits[0]);
             msMonitorBusinessSystemTablesDo.setDbName(splits[1]);

@@ -40,6 +40,7 @@ public class BatchInsertByLinkedBlockingQueue {
     SINGLE_CASE_COUNT.incrementAndGet();
     linkedBlockingQueue = new LinkedBlockingQueue(QUEUE_SIZE);
     for (Integer integer = 0; integer < localStatisticsThreadCount; integer++) {
+      log.info("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。",(1 + integer));
       IoThread ioThread = new IoThread(linkedBlockingQueue, flushToRocketMQInterval, mingshiServerUtil, esMsSegmentDetailUtil);
       ioThread.setName("processLocalStatisticsThread_" + integer);
       ioThread.start();

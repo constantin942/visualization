@@ -60,7 +60,7 @@ public class ScheduledTask {
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */3 * * * ?")
+  // @Scheduled(cron = "0 */3 * * * ?")
   // 每隔2小时执行一次；
   // @Scheduled(cron = "0 0 0/2 * * ?")
   public void scheduledUpdateUserNameByToken() {
@@ -196,12 +196,6 @@ public class ScheduledTask {
                 userPortraitByVisitedTableDo.setVisitedTable(tableName);
                 userPortraitByVisitedTableDo.setVisitedCount(visitedCount);
                 userPortraitByVisitedTableDo.setDbType(dbType);
-                if (!dbType.equals(Const.SQL_TYPE_SELECT.toLowerCase()) &&
-                  !dbType.equals(Const.SQL_TYPE_INSERT.toLowerCase()) &&
-                  !dbType.equals(Const.SQL_TYPE_UPDATE.toLowerCase()) &&
-                  !dbType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
-                  System.out.println("");
-                }
                 list.add(userPortraitByVisitedTableDo);
               }
             }

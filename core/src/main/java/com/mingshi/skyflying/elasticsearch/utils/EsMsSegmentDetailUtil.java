@@ -92,9 +92,6 @@ public class EsMsSegmentDetailUtil {
               esMsSegmentDetailDo.setDbInstance(value);
             } else if (key.equals("db_user_name")) {
               esMsSegmentDetailDo.setDbUserName(value);
-              if (StringUtil.isBlank(value)) {
-                System.out.println("");
-              }
             } else if (key.equals("db.statement")) {
               if (isSql.equals("sql")) {
                 if ((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)) {
