@@ -374,7 +374,7 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllAlarmInfoDetailByUserName", method = RequestMethod.GET)
-  public ServerResponse<String> getAllAlarmInfoDetailByUserName(@RequestParam(value = "userName") String userName,
+  public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName,
                                                                 Integer matchRuleId,
                                                                 String originalTime,
                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -766,7 +766,7 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
-  public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+  public ServerResponse<String> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
   }
@@ -856,7 +856,7 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：getOverviewOfSystem/B>
-   * <B>概要说明：获取可视化系统关于、管理信息数量、用户数量的总览信息</B>
+   * <B>概要说明：获取可视化系统关于、管理信息数量、用户数量的总览信息。信息概况 -> 数据统计情况</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author lhx

@@ -14,6 +14,7 @@ import com.mingshi.skyflying.utils.JsonUtil;
 import com.mingshi.skyflying.utils.RedisPoolUtil;
 import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -204,28 +205,19 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       // 根据用户名获取用户对数据库总的访问次数；
       Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName);
       Long countFromRedis = 0L;
-      Long countFromMySql = 0L;
       if (null != obj) {
         countFromRedis = Long.valueOf(String.valueOf(obj));
-      }else{
-        countFromMySql = msSegmentDetailDao.selectCountOfOneUserByUserName(userName);
+      } else {
+        countFromRedis = msSegmentDetailDao.selectCountOfOneUserByUserName(userName);
       }
-      countFromMySql = msSegmentDetailDao.selectCountOfOneUserByUserName(userName);
-
       userCoarseInfo.setVisitedCount(countFromRedis);
-      if (!countFromRedis.equals(countFromMySql)) {
-        log.error("# SegmentDetailServiceImpl.getCoarseCountsOfUser() #  根据用户名在Redis中获取用户对数据的访问次数【{}】与在MySQL中获取次数【{}】不一致。", countFromRedis, countFromMySql);
-      }
 
       // 获取用户对数据库最后的访问时间；
       String latestVisitedTime = (String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName);
-      Date lastVisited = null;
       if (StringUtil.isBlank(latestVisitedTime)) {
-        lastVisited = msSegmentDetailDao.selectLastVisitedTimeByUserName(userName);
-      } else {
-        lastVisited = DateTimeUtil.strToDate(latestVisitedTime);
+        latestVisitedTime = msSegmentDetailDao.selectLastVisitedTimeByUserName(userName);
       }
-      userCoarseInfo.setLastVisitedDate(lastVisited);
+      userCoarseInfo.setLastVisitedDate(latestVisitedTime);
 
       // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
       Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, 0L, 0L);
@@ -240,58 +232,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         Object[] objects = set.toArray();
         String tableNameFromRedis = String.valueOf(objects[0]);
         userCoarseInfo.setUsualVisitedData(tableNameFromRedis);
-
-        String tableNameFromDb = getTableNameFromDb(userName);
-        if (!tableNameFromRedis.equals(tableNameFromDb)) {
-          log.error("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数，根据用户名【{}】从Redis缓存中获取到的访问量最高的表是【{}】，从MySQL数据库中获取到的访问量最高的表是【{}】。", userName, tableNameFromRedis, tableNameFromDb);
-        }
       }
-
       userCoarseInfos.add(userCoarseInfo);
     }
-
-    //根据用户名获取用户对数据的访问次数
-    // for (int i = 0; i < userCoarseInfos.size(); i++) {
-    //   String userName = userCoarseInfos.get(i).getUserName();
-    //   Long count = msSegmentDetailDao.selectCountOfOneUser(userName);
-    //   userCoarseInfos.get(i).setVisitedCount(count);
-    // }
-
-    // 根据用户名获取用户的最后访问时间
-    // for (int i = 0; i < userCoarseInfos.size(); i++) {
-    //   String userName = userCoarseInfos.get(i).getUserName();
-    //   Map<String, Object> queryMap = new HashMap<>();
-    //   queryMap.put("userName", userName);
-    //   Date lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
-    //   userCoarseInfos.get(i).setLastVisitedDate(lastVisited);
-    // }
-
-    // for (int i = 0; i < userCoarseInfos.size(); i++) {
-    //   String userName = userCoarseInfos.get(i).getUserName();
-    //   Map<String, Object> queryMap = new HashMap<>();
-    //   queryMap.put("userName", userName);
-    //   List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-    //   Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
-    //     @Override
-    //     public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-    //       if (t1.getVisitedCount() < t2.getVisitedCount()) {
-    //         return 1;
-    //       } else if (t1.getVisitedCount() == t2.getVisitedCount()) {
-    //         return 0;
-    //       } else {
-    //         return -1;
-    //       }
-    //     }
-    //   });
-    //
-    //   try {
-    //     if(null != list && 0 < list.size()){
-    //       userCoarseInfos.get(i).setUsualVisitedData(list.get(0).getVisitedData());
-    //     }
-    //   } catch (Exception e) {
-    //     e.printStackTrace();
-    //   }
-    // }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfos);
@@ -333,8 +276,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
 
-    Date lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
-
+    String lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
     userCoarseInfo.setVisitedCount(count);
     userCoarseInfo.setLastVisitedDate(lastVisited);
 
@@ -342,8 +284,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-    List<UserCoarseInfo> userCoarseInfos = new ArrayList<>();
-
     return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
   }
 
@@ -456,19 +396,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       String value = DateList.get(i);
       map.put("startTime", value);
       map.put("endTime", DateList.get(i + 1));
-      Long countFromDb = msSegmentDetailDao.selectCountsOfAllRecentSevenDays(map);
       Date date = DateTimeUtil.strToDate(value);
       String dateToStrYYYYMMDD = DateTimeUtil.DateToStrYYYYMMDD(date);
-      Long countFromRedis = 0L;
+      Long count = 0L;
       Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYYYYMMDD);
       if (null != hget) {
-        countFromRedis = Long.valueOf(String.valueOf(hget));
+        count = Long.valueOf(String.valueOf(hget));
+      }else{
+        count = msSegmentDetailDao.selectCountsOfAllRecentSevenDays(map);
       }
-      if (!countFromDb.equals(countFromRedis)) {
-        log.error("# SegmentDetailServiceImpl.getCountsOfAllRecentSevenDays() # 从Redis中获取【{}】天的数据量【{}】与MySQL中获取的数据量【{}】不一致。", value, countFromRedis, countFromDb);
-      }
-
-      returnList.add(countFromDb);
+      returnList.add(count);
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
@@ -480,56 +417,115 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     log.info("开始执行 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
     SystemOverview systemOverview = new SystemOverview();
 
-    // 获取ms_segment_detail表中元素的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
-    Long informationCountFromRedis = 0L;
-    Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
-    if (null != hget) {
-      informationCountFromRedis = Long.parseLong(String.valueOf(hget));
-      if (null == informationCountFromRedis) {
-        informationCountFromRedis = msSegmentDetailDao.selectinformationCount();
-      }
-    }
-    Long informationCountByMyql = msSegmentDetailDao.selectinformationCount();
-    if (!informationCountFromRedis.equals(informationCountByMyql)) {
-      log.error("开始执行 # SegmentDetailServiceImpl.getOverviewOfSystem # 获取用户概览数据。从Redis缓存中获取总的segmentDetail数量【{}】与在MySQL中获取到的数量【{}】不一致。", informationCountFromRedis, informationCountByMyql);
-    }
+    // 获取ms_segment_detail表中记录的数量。
+    getRecordCount(systemOverview);
+    Long size = redisPoolUtil.sizeFromZset(Const.ZSET_HOW_MANY_TABLES);
+    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(Const.ZSET_HOW_MANY_TABLES, 0L, size);
+    // 获取数据库个数；
+    getDbCount(set, systemOverview);
 
-    systemOverview.setVisitedInformation(informationCountFromRedis);
-    // 获取数据库个数。先从表ms_monitor_business_system_tables中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-    Long dbInstanceCount = msMonitorBusinessSystemTablesMapper.selectAllDbName();
-    if (null == dbInstanceCount) {
-      dbInstanceCount = msSegmentDetailDao.selectDbInstanceCount();
-    }
-    systemOverview.setDbInstance(dbInstanceCount);
+    // 获取数据库表个数；
+    getTableCount(set, systemOverview);
 
-    // 获取数据库表个数。先从表ms_monitor_business_system_tables中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-    Long tableCount = msMonitorBusinessSystemTablesMapper.selectAllTables();
-    if (null == tableCount) {
-      tableCount = msSegmentDetailDao.selectTableCount();
-    }
-    systemOverview.setTable(tableCount);
-
-    // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-    Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
-    if (null == userCountFromRedis || 0 == userCountFromRedis) {
-      userCountFromRedis = msSegmentDetailDao.selectUserCount();
-    }
-    Long userCountByMsql = msSegmentDetailDao.selectUserCount();
-    if (!userCountFromRedis.equals(userCountByMsql)) {
-      log.error("开始执行 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据。从Redis缓存中获取总的用户人数数量【{}】与在MySQL中获取到的数量【{}】不一致。", userCountFromRedis, userCountByMsql);
-    }
-    systemOverview.setUser(userCountFromRedis);
+    // 获取用户人数；
+    getUserCount(systemOverview);
 
     log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
     return ServerResponse.createBySuccess("获取数据成功！", "success", systemOverview);
   }
 
+  /**
+   * <B>方法名称：getRecordCount</B>
+   * <B>概要说明：获取ms_segment_detail表中记录的数量</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月21日 10:07:49
+   * @Param [systemOverview]
+   **/
+  private void getRecordCount(SystemOverview systemOverview) {
+    // 获取ms_segment_detail表中记录的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
+    Long informationCount = 0L;
+    Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
+    if (null != hget) {
+      informationCount = Long.parseLong(String.valueOf(hget));
+    }else{
+      informationCount = msSegmentDetailDao.selectinformationCount();
+    }
+    systemOverview.setVisitedInformation(informationCount);
+  }
+
+  /**
+   * <B>方法名称：getUserCount</B>
+   * <B>概要说明：获取用户人数</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月21日 10:07:49
+   * @Param [systemOverview]
+   **/
+  private void getUserCount(SystemOverview systemOverview) {
+    // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
+    Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
+    if (null == userCountFromRedis || 0 == userCountFromRedis) {
+      userCountFromRedis = msSegmentDetailDao.selectUserCount();
+    }
+    systemOverview.setUser(userCountFromRedis);
+  }
+
+  /**
+   * <B>方法名称：getTableCount</B>
+   * <B>概要说明：获取数据库表的个数</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月21日 09:07:32
+   * @Param [set, systemOverview]
+   **/
+  private void getTableCount(Set<ZSetOperations.TypedTuple<String>> set, SystemOverview systemOverview) {
+    // 从缓存里获取数据库表的个数；2022-07-21 09:47:32
+    List<Map<String, String>> listMap = null;
+    if (null == set) {
+      // 获取数据库表个数。先从表ms_monitor_business_system_tables中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
+      listMap = msSegmentDetailDao.selectTableCountGroupByPeerDbinstanceTableName();
+      systemOverview.setTable(Long.valueOf(listMap.size()));
+    } else {
+      systemOverview.setTable(Long.valueOf(set.size()));
+    }
+  }
+
+  /**
+   * <B>方法名称：getDbCount</B>
+   * <B>概要说明：获取数据库的个数</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月21日 09:07:16
+   * @Param [set, systemOverview]
+   **/
+  private void getDbCount(Set<ZSetOperations.TypedTuple<String>> set, SystemOverview systemOverview) {
+    Long dbInstanceCount = 0L;
+    if (null == set || 0 == set.size()) {
+      // 获取数据库个数。先从Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
+      dbInstanceCount = msSegmentDetailDao.selectDbInstanceCount();
+    } else {
+      HashSet<String> dbCountFromRedis = new HashSet<>();
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        String value = next.getValue();
+        String[] split = value.split("#");
+        dbCountFromRedis.add(split[1]);
+      }
+      dbInstanceCount = Long.valueOf(dbCountFromRedis.size());
+    }
+    systemOverview.setDbInstance(dbInstanceCount);
+  }
+
   @Override
-  public ServerResponse<List<TableCoarseInfo>> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize) {
     Instant now = Instant.now();
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
-
-    List<TableCoarseInfo> tableCoarseInfos = new ArrayList<>();
 
     Map<String, Object> queryMap = new HashMap<>();
     if (null == pageNo) {
@@ -538,40 +534,146 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     if (null == pageSize) {
       pageSize = 10;
     }
-    queryMap.put("pageNo", (pageNo - 1) * pageSize);
+    pageNo = (pageNo - 1) * pageSize;
+    queryMap.put("pageNo", pageNo);
     queryMap.put("pageSize", pageSize);
 
+    Integer count = 0;
+    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoListFromMySQL = new LinkedList<>();
+    List<TableCoarseInfo> tableCoarseInfoList = new ArrayList<>();
     //获取所有的数据库表名
-    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoList = msMonitorBusinessSystemTablesMapper.selectAllEnable(queryMap);
-    Integer countTp = 0;
-    for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDoList) {
-      Instant nowTp = Instant.now();
+    Set<ZSetOperations.TypedTuple<String>> keySet = redisPoolUtil.reverseRangeWithScores(Const.ZSET_HOW_MANY_TABLES, Long.valueOf(pageNo), Long.valueOf(pageSize));
+    if (null == keySet || 0 == keySet.size()) {
+      msMonitorBusinessSystemTablesDoListFromMySQL = msMonitorBusinessSystemTablesMapper.selectAllEnable(queryMap);
+    } else {
+      count = keySet.size();
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = keySet.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        String value = next.getValue();
+        String[] split = value.split("#");
+        MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
+        msMonitorBusinessSystemTablesDo.setDbAddress(split[0]);
+        msMonitorBusinessSystemTablesDo.setDbName(split[1]);
+        msMonitorBusinessSystemTablesDo.setTableName(split[2]);
+        msMonitorBusinessSystemTablesDoListFromMySQL.add(msMonitorBusinessSystemTablesDo);
+      }
+    }
+
+    for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDoListFromMySQL) {
       TableCoarseInfo tableCoarseInfo = new TableCoarseInfo();
       String tableName = msMonitorBusinessSystemTablesDo.getTableName();
       tableCoarseInfo.setTableName(tableName);
+      String peer = msMonitorBusinessSystemTablesDo.getDbAddress();
+      String dbName = msMonitorBusinessSystemTablesDo.getDbName();
 
-      //根据数据库表获取用户对数据的访问次数
-      Long count = msSegmentDetailDao.selectCountOfOneTable(tableName);
-      tableCoarseInfo.setVisitedCount(count);
+      // 根据数据库表名获取用户对该表的访问次数
+      getVisitedCountByTableName(tableCoarseInfo, peer, dbName, tableName);
 
-      // 根据用户名获取用户的最后访问时间
-      Date lastVisited = msSegmentDetailDao.selectTableLastVisitedTime(tableName);
-      tableCoarseInfo.setLastVisitedDate(lastVisited);
+      // 根据表名获取最后被访问的时间
+      getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, tableName);
 
-      // 获取所有访问这个表的用户及其对应的访问次数；
-      List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(tableName);
-      if (list.size() != 0) {
-        tableCoarseInfo.setUsualVisitedUser(list.get(0).getUserName());
-      } else {
-        tableCoarseInfo.setUsualVisitedUser("从未有人访问过这张表");
-      }
+      // 获取访问这个表次数最多的用户
+      getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, tableName);
 
-      tableCoarseInfos.add(tableCoarseInfo);
-      // System.out.println("第 " + (++countTp) + " 次循环用时 " + DateTimeUtil.getTimeMillis(nowTp) + " 毫秒。");
+      tableCoarseInfoList.add(tableCoarseInfo);
     }
+    if (0 == count) {
+      count = msMonitorBusinessSystemTablesMapper.selectAllEnableCount(queryMap);
+    }
+    Map<String, Object> context = new HashMap<>();
+    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+    if (null != tableCoarseInfoList && 0 < tableCoarseInfoList.size()) {
+      context.put("rows", JsonUtil.obj2String(tableCoarseInfoList));
+    }
+    context.put("total", count);
+    bySuccess.setData(JsonUtil.obj2String(context));
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息，用时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-    return ServerResponse.createBySuccess("获取数据成功！", "success", tableCoarseInfos);
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：getVisitedTimesMostUserName</B>
+   * <B>概要说明：获取访问这个表次数最多的用户</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月20日 16:07:15
+   * @Param [tableCoarseInfo, peer, dbName, tableName]
+   **/
+  private void getVisitedTimesMostUserName(TableCoarseInfo tableCoarseInfo, String peer, String dbName, String tableName) {
+    String userName = null;
+
+    String zsetVlue = peer + "#" + dbName + "#" + tableName;
+    Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, 0L, 0L);
+    if (null == set || 0 == set.size()) {
+      List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(tableName);
+      if (list.size() != 0) {
+        userName = list.get(0).getUserName();
+      }
+    } else {
+      Iterator<String> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        userName = iterator.next();
+      }
+    }
+
+    if (StringUtil.isNotBlank(userName)) {
+      tableCoarseInfo.setUsualVisitedUser(userName);
+    } else {
+      tableCoarseInfo.setUsualVisitedUser("从未有人访问过这张表");
+    }
+  }
+
+  /**
+   * <B>方法名称：getLatestVisitedTimeByTableName</B>
+   * <B>概要说明：根据表名获取最后被访问的时间</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月20日 16:07:40
+   * @Param [tableCoarseInfo, peer, dbName, tableName]
+   **/
+  private void getLatestVisitedTimeByTableName(TableCoarseInfo tableCoarseInfo, String peer, String dbName, String tableName) {
+    String zsetVlue = peer + "#" + dbName + "#" + tableName;
+    Object object = redisPoolUtil.get(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue);
+    String lastVisited = null;
+    if (null == object) {
+      lastVisited = msSegmentDetailDao.selectTableLastVisitedTime(tableName);
+    }else{
+      lastVisited = String.valueOf(object);
+    }
+    tableCoarseInfo.setLastVisitedDate(lastVisited);
+  }
+
+
+  /**
+   * <B>方法名称：getVisitedCount</B>
+   * <B>概要说明：根据数据库表名获取用户对该表的访问次数</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月20日 15:07:54
+   * @Param [tableCoarseInfo, peer, dbName, tableName]
+   **/
+  private void getVisitedCountByTableName(TableCoarseInfo tableCoarseInfo, String peer, String dbName, String tableName) {
+    String zsetVlue = peer + "#" + dbName + "#" + tableName;
+    String key = Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue;
+    Long size = redisPoolUtil.sizeFromZset(key);
+    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, size);
+    Long countFromRedis = 0L;
+    if (null == set || 0 == set.size()) {
+      countFromRedis = msSegmentDetailDao.selectCountOfOneTable(tableName);
+    } else {
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        Double score = next.getScore();
+        countFromRedis = countFromRedis + score.longValue();
+      }
+    }
+    tableCoarseInfo.setVisitedCount(countFromRedis);
   }
 
   @Override

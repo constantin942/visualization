@@ -40,8 +40,13 @@ public class Const {
   // 将所有的用户放入到set集合中；
   public static final String SET_DATA_STATISTICS_HOW_MANY_USERS = "set_data_statistics_how_many_users";
 
+  // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+  public static final String ZSET_TABLE_BY_HOW_MANY_USER_VISITED = "zset_table_by_how_many_user_visited#";
+  // 记录每一个数据库表最后被访问的时间；
+  public static final String STRING_TABLE_LATEST_VISITED_TIME = "string_table_latest_visited_time#";
+  // 有多少个表
+  public static final String ZSET_HOW_MANY_TABLES = "zset_how_many_tables";
 
-  
   public static final String LOGIN_FISH_EASIER = "login/fish/easier";
   public static final String ES_INDEX_SEGMENT_DETAIL = "segment_detail";
 

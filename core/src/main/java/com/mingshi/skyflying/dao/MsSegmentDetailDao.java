@@ -2,7 +2,6 @@ package com.mingshi.skyflying.dao;
 
 import com.mingshi.skyflying.domain.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -60,9 +59,9 @@ public interface MsSegmentDetailDao {
 
   Long selectCountOfOneUserByUserName(String userName);
 
-  Date selectLastVisitedTime(Map<String, Object> userName);
+  String selectLastVisitedTime(Map<String, Object> userName);
 
-  Date selectLastVisitedTimeByUserName(String userName);
+  String selectLastVisitedTimeByUserName(String userName);
 
   List<UserUsualAndUnusualVisitedData> selectUserUsualAndUnusualData(Map<String, Object> queryMap);
 
@@ -76,13 +75,15 @@ public interface MsSegmentDetailDao {
 
   Long selectTableCount();
 
+  List<Map<String,String>> selectTableCountGroupByPeerDbinstanceTableName();
+
   Long selectUserCount();
 
   List<String> selectAllTableName();
 
   Long selectCountOfOneTable(String tableName);
 
-  Date selectTableLastVisitedTime(String tableName);
+  String selectTableLastVisitedTime(String tableName);
 
   List<UserUsualAndUnusualVisitedData> selectTableUsualAndUnusualData(String tableName);
 

@@ -12,6 +12,8 @@ public interface MsMonitorBusinessSystemTablesMapper {
 
     MsMonitorBusinessSystemTablesDo selectByPrimaryKey(Integer id);
 
+    MsMonitorBusinessSystemTablesDo selectByTableName(String tableName);
+
     List<MsMonitorBusinessSystemTablesDo> selectAll();
 
     List<MsMonitorBusinessSystemTablesDo> selectAllByQueryMap(Map<String, Object> queryMap);
@@ -19,6 +21,8 @@ public interface MsMonitorBusinessSystemTablesMapper {
     Integer selectAllByQueryMapCount(Map<String, Object> queryMap);
 
     List<MsMonitorBusinessSystemTablesDo> selectAllEnable(Map<String, Object> queryMap);
+
+    Integer selectAllEnableCount(Map<String, Object> queryMap);
 
     List<MsMonitorBusinessSystemTablesDo> selectAllNotEnable();
 

@@ -15,6 +15,12 @@
     id
     , is_delete, gmt_create, gmt_modified, system_name, table_name, db_name, db_address
   </sql>
+  <select id="selectByTableName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_monitor_business_system_tables
+    where table_name = #{tableName,jdbcType=VARCHAR}
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
@@ -81,6 +87,12 @@
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>
+  </select>
+  <select id="selectAllEnableCount" resultType="java.lang.Integer">
+    select
+    count(*)
+    from ms_monitor_business_system_tables
+    where is_delete = 0
   </select>
   <select id="selectAllNotEnable" resultMap="BaseResultMap">
     select

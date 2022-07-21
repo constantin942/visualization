@@ -170,7 +170,7 @@ public class MingshiServerUtil {
     } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
       tableNameList = SqlParserUtils.deleteTable(msSql);
     } else {
-      log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+      // log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
     }
     return tableNameList;
   }
@@ -354,7 +354,7 @@ public class MingshiServerUtil {
           String peer = msSegmentDetailDo.getPeer();
           if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
             // 信息概况 -> 用户访问行为
-            doFlushUserAccessBehaviorToRedis(userName, startTime, peer, dbInstance, tableName);
+            flushUserAccessBehaviorToRedis(userName, startTime, peer, dbInstance, tableName);
 
             // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
             statisticVisitedCountByEveryday(msSegmentDetailDo, map);
@@ -374,10 +374,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：updateEverydayStatisticToRedis</B>
    * <B>概要说明：更新每天采集情况和总的采集情况到Redis</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月20日 14:07:45
    * @Param [map]
-   * @return void
    **/
   private void updateEverydayStatisticToRedis(Map<String, Integer> map) {
     try {
@@ -448,15 +449,15 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：doFlushUserAccessBehaviorToRedis</B>
-   * <B>概要说明： 实时将用户访问行为信息发送到redis中 </B>
+   * <B>方法名称：flushUserAccessBehaviorToRedis</B>
+   * <B>概要说明：实时将用户访问行为信息发送到redis中 </B>
    *
    * @return void
    * @Author zm
    * @Date 2022年07月20日 14:07:54
    * @Param [userName, startTime, peer, dbInstance, tableName]
    **/
-  private void doFlushUserAccessBehaviorToRedis(String userName, String startTime, String peer, String dbInstance, String tableName) {
+  private void flushUserAccessBehaviorToRedis(String userName, String startTime, String peer, String dbInstance, String tableName) {
     try {
       // 用户访问次数 + 1；
       redisPoolUtil.incr(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName, 1);
@@ -465,13 +466,57 @@ public class MingshiServerUtil {
         redisPoolUtil.set(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName, startTime);
       }
 
-      // 累加用户对数据库表资源的访问次数；
-      String zsetVlue = peer + "#" + dbInstance + "#" + tableName;
-      // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-      redisPoolUtil.incrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+      // 这里不再区分表名是否由多个组成，因为把表名存到MySQL数据库中就没有区分.这里强行区分的话，会导致Redis和MySQL中数据不一致。2022-07-21 08:49:12
+      // 如果要换成ES查询，那可以将多个表名分开存储；2022-07-21 08:57:27
+      doFlushUserAccessBehaviorToRedis(peer, dbInstance, tableName, userName, startTime);
+      // if (tableName.contains(",")) {
+      //   String[] split = tableName.split(",");
+      //   for (String tableNameSplited : split) {
+      //     doFlushUserAccessBehaviorToRedis(peer, dbInstance, tableNameSplited, userName, startTime);
+      //   }
+      // }else{
+      //   doFlushUserAccessBehaviorToRedis(peer, dbInstance, tableName, userName, startTime);
+      // }
+
     } catch (Exception e) {
       log.error("# MingshiServerUtil.doFlushUserAccessBehaviorToRedis() # 实时将用户访问行为信息发送到redis中，出现了异常。", e);
     }
+  }
+
+  /**
+   * <B>方法名称：doFlushUserAccessBehaviorToRedis</B>
+   * <B>概要说明：实时将用户访问行为信息发送到redis中</B>
+   * @Author zm
+   * @Date 2022年07月20日 17:07:45
+   * @Param [peer, dbInstance, tableName, userName, startTime]
+   * @return void
+   **/
+  private void doFlushUserAccessBehaviorToRedis(String peer, String dbInstance, String tableName, String userName, String startTime) {
+    // 累加用户对数据库表资源的访问次数；
+    String zsetVlue = peer + "#" + dbInstance + "#" + tableName;
+    // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
+    redisPoolUtil.incrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+
+    if(tableName.contains(",")){
+      String[] split = tableName.split(",");
+      for (String tn : split) {
+        // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+        zsetVlue = peer + "#" + dbInstance + "#" + tn;
+        // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+        redisPoolUtil.incrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, userName, 1);
+        // 记录每一个数据库表最后的被访问的时间；
+        redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
+        redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+      }
+    }else{
+      // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+      redisPoolUtil.incrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, userName, 1);
+      // 记录每一个数据库表最后的被访问的时间；
+      redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
+      // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+      redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+    }
+
   }
 
   /**
@@ -648,7 +693,6 @@ public class MingshiServerUtil {
         Instant now = Instant.now();
         msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
 
-        // todo：待优化的地方：在一次对segmentDetailDoList循环中，把数据都放入Redis中。分别循环来处理，性能不好。2022-07-20 13:33:12
         // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
         flushSegmentDetailCountToRedis(segmentDetailDoList);
 

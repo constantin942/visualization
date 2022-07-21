@@ -756,6 +756,62 @@ public class RedisPoolUtil {
     log.error("hgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
   }
+  /**
+   * <B>方法名称：hgetKeys</B>
+   * <B>概要说明：获取hash表中所有的key</B>
+   * @Author zm
+   * @Date 2022年07月20日 16:07:57
+   * @Param [key, item]
+   * @return java.lang.Object
+   **/
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "hgetKeysFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public Set<Object> hgetKeys(String key) {
+    Set<Object> keys = stringRedisTemplate.opsForHash().keys(key);
+    return keys;
+  }
+
+  public Object hgetKeysFallback(String key, Throwable throwable) {
+    log.error("hgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return null;
+  }
+
+  /**
+   * <B>方法名称：hgetSize</B>
+   * <B>概要说明：获取哈希集合中元素的个数</B>
+   * @Author zm
+   * @Date 2022年07月21日 09:07:48
+   * @Param [key]
+   * @return java.lang.Long
+   **/
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "hgetSizeFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  public Long hgetSize(String key) {
+    return stringRedisTemplate.opsForHash().size(key);
+  }
+
+  public Object hgetSizeFallback(String key, Throwable throwable) {
+    log.error("hgetSizeFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
+    return null;
+  }
 
   /**
    * 获取hashKey对应的所有键值

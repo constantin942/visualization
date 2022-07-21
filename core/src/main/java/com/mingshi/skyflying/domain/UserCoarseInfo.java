@@ -2,14 +2,12 @@ package com.mingshi.skyflying.domain;
 
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
 public class UserCoarseInfo {
 
     private String userName;
 
-    private Date lastVisitedDate;
+    private String lastVisitedDate;
 
     private Long visitedCount;
 
