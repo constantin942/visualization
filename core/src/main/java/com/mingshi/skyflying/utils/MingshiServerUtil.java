@@ -493,7 +493,7 @@ public class MingshiServerUtil {
    **/
   private void doFlushUserAccessBehaviorToRedis(String peer, String dbInstance, String tableName, String userName, String startTime) {
     // 累加用户对数据库表资源的访问次数；
-    String zsetVlue = peer + "#" + dbInstance + "#" + tableName;
+    String zsetVlue = doGetTableName(peer, dbInstance, tableName);
     // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
     redisPoolUtil.incrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
 
@@ -501,12 +501,13 @@ public class MingshiServerUtil {
       String[] split = tableName.split(",");
       for (String tn : split) {
         // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
-        zsetVlue = peer + "#" + dbInstance + "#" + tn;
+        zsetVlue = doGetTableName(peer, dbInstance, tn);
         // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
         redisPoolUtil.incrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, userName, 1);
         // 记录每一个数据库表最后的被访问的时间；
         redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-        redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+        // redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+        LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
       }
     }else{
       // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
@@ -514,7 +515,8 @@ public class MingshiServerUtil {
       // 记录每一个数据库表最后的被访问的时间；
       redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
       // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
-      redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+      // redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+      LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
     }
 
   }

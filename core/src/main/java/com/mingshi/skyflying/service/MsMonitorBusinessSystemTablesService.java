@@ -14,7 +14,7 @@ public interface MsMonitorBusinessSystemTablesService extends ParentService<MsMo
    * @Date 2022年07月13日 10:07:54
    * @Param []
    **/
-  ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress,Integer pageNo, Integer pageSize);
+  ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress, Integer pageNo, Integer pageSize);
 
   /**
    * <B>方法名称：updateTableInformation</B>
@@ -26,5 +26,15 @@ public interface MsMonitorBusinessSystemTablesService extends ParentService<MsMo
    * @Param []
    **/
   ServerResponse<String> updateTableInformation(Integer tableId, Integer isDelete);
+
+  /**
+   * <B>方法名称：updateTableDesc</B>
+   * <B>概要说明：更新表的描述信息</B>
+   * @Author zm
+   * @Date 2022年07月21日 17:07:02
+   * @Param [id, tableDesc]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  ServerResponse<String> updateTableDesc(Integer id, String tableDesc);
 
 }

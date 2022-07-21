@@ -113,4 +113,37 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
     LoadAllEnableMonitorTablesFromDb.put(msMonitorBusinessSystemTablesDo.getTableName(), isDelete);
     return bySuccess;
   }
+
+  /**
+   * <B>方法名称：updateTableDesc</B>
+   * <B>概要说明：更新表的描述信息</B>
+   *
+   * @param id
+   * @param tableDesc
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年07月21日 17:07:02
+   * @Param [id, tableDesc]
+   */
+  @Override
+  public ServerResponse<String> updateTableDesc(Integer id, String tableDesc) {
+    try {
+      MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = msMonitorBusinessSystemTablesMapper.selectByPrimaryKey(id);
+      if (null == msMonitorBusinessSystemTablesDo) {
+        return ServerResponse.createByErrorMessage("表id不存在", "");
+      }
+
+      // 更新数据库中表的描述信息；
+      msMonitorBusinessSystemTablesDo.setTableDesc(tableDesc);
+      msMonitorBusinessSystemTablesMapper.updateByPrimaryKeySelective(msMonitorBusinessSystemTablesDo);
+
+      // 更新本地内存中的表的描述信息；2022-07-21 17:20:53
+      String tableName = mingshiServerUtil.getTableName(msMonitorBusinessSystemTablesDo);
+      LoadAllEnableMonitorTablesFromDb.setTableDesc(tableName, tableDesc);
+    } catch (Exception e) {
+      log.error("# MsMonitorBusinessSystemTablesServiceImpl.updateTableDesc() # 根据id = 【{}】更新表的描述信息【{}】时，出现了异常。", id, tableDesc, e);
+      return ServerResponse.createByErrorMessage("更新失败", "");
+    }
+    return ServerResponse.createBySuccess();
+  }
 }

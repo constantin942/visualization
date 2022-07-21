@@ -18,9 +18,15 @@ public interface MsMonitorBusinessSystemTablesMapper {
 
     List<MsMonitorBusinessSystemTablesDo> selectAllByQueryMap(Map<String, Object> queryMap);
 
+    MsMonitorBusinessSystemTablesDo selectByQueryMap(Map<String, Object> queryMap);
+
     Integer selectAllByQueryMapCount(Map<String, Object> queryMap);
 
     List<MsMonitorBusinessSystemTablesDo> selectAllEnable(Map<String, Object> queryMap);
+
+    Integer selectAllEnableDbCount();
+
+    Integer selectAllEnableTableCount();
 
     Integer selectAllEnableCount(Map<String, Object> queryMap);
 

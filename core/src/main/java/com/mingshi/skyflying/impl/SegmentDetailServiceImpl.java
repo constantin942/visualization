@@ -7,12 +7,10 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
+import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.RedisPoolUtil;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -45,6 +43,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
   @Resource
   private MsThirdPartyTableListMapper msThirdPartyTableListMapper;
   @Resource
@@ -218,26 +218,48 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         latestVisitedTime = msSegmentDetailDao.selectLastVisitedTimeByUserName(userName);
       }
       userCoarseInfo.setLastVisitedDate(latestVisitedTime);
-
+      String tableName = null;
       // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
       Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, 0L, 0L);
       if (null == set || 0 == set.size()) {
         // 从数据库中获取用户名；
-        String tableName = getTableNameFromDb(userName);
+        tableName = getTableNameFromDb(userName);
         if (StringUtil.isBlank(tableName)) {
           continue;
         }
-        userCoarseInfo.setUsualVisitedData(tableName);
+        // 获取表对应的中文描述信息；2022-07-21 16:55:47
+        String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+        doUsualVisitedData(tableName, userCoarseInfo, tableDesc);
       } else {
         Object[] objects = set.toArray();
-        String tableNameFromRedis = String.valueOf(objects[0]);
-        userCoarseInfo.setUsualVisitedData(tableNameFromRedis);
+        tableName = String.valueOf(objects[0]);
+        // 获取表对应的中文描述信息；2022-07-21 16:55:47
+        String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+        doUsualVisitedData(tableName, userCoarseInfo, tableDesc);
       }
       userCoarseInfos.add(userCoarseInfo);
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfos);
+  }
+
+  /**
+   * <B>方法名称：doUsualVisitedData</B>
+   * <B>概要说明：给实例UserCoarseInfo赋值</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月21日 17:07:27
+   * @Param [tableName, userCoarseInfo, tableDesc]
+   **/
+  private void doUsualVisitedData(String tableName, UserCoarseInfo userCoarseInfo, String tableDesc) {
+    String[] split = tableName.split("#");
+    ObjectNode jsonObject = JsonUtil.createJSONObject();
+    jsonObject.put("dbAddress", split[0]);
+    jsonObject.put("dbName", split[1]);
+    jsonObject.put("tableName", StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
+    userCoarseInfo.setUsualVisitedData(jsonObject.toString());
   }
 
   /**
@@ -402,7 +424,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYYYYMMDD);
       if (null != hget) {
         count = Long.valueOf(String.valueOf(hget));
-      }else{
+      } else {
         count = msSegmentDetailDao.selectCountsOfAllRecentSevenDays(map);
       }
       returnList.add(count);
@@ -419,13 +441,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     // 获取ms_segment_detail表中记录的数量。
     getRecordCount(systemOverview);
-    Long size = redisPoolUtil.sizeFromZset(Const.ZSET_HOW_MANY_TABLES);
-    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(Const.ZSET_HOW_MANY_TABLES, 0L, size);
     // 获取数据库个数；
-    getDbCount(set, systemOverview);
+    getDbCount(systemOverview);
 
     // 获取数据库表个数；
-    getTableCount(set, systemOverview);
+    getTableCount(systemOverview);
 
     // 获取用户人数；
     getUserCount(systemOverview);
@@ -449,7 +469,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
     if (null != hget) {
       informationCount = Long.parseLong(String.valueOf(hget));
-    }else{
+    } else {
       informationCount = msSegmentDetailDao.selectinformationCount();
     }
     systemOverview.setVisitedInformation(informationCount);
@@ -482,16 +502,13 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Date 2022年07月21日 09:07:32
    * @Param [set, systemOverview]
    **/
-  private void getTableCount(Set<ZSetOperations.TypedTuple<String>> set, SystemOverview systemOverview) {
+  private void getTableCount(SystemOverview systemOverview) {
     // 从缓存里获取数据库表的个数；2022-07-21 09:47:32
-    List<Map<String, String>> listMap = null;
-    if (null == set) {
-      // 获取数据库表个数。先从表ms_monitor_business_system_tables中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-      listMap = msSegmentDetailDao.selectTableCountGroupByPeerDbinstanceTableName();
-      systemOverview.setTable(Long.valueOf(listMap.size()));
-    } else {
-      systemOverview.setTable(Long.valueOf(set.size()));
+    Integer tableCount = msMonitorBusinessSystemTablesMapper.selectAllEnableTableCount();
+    if (null == tableCount) {
+      tableCount = 0;
     }
+    systemOverview.setTable(Long.valueOf(tableCount));
   }
 
   /**
@@ -503,23 +520,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Date 2022年07月21日 09:07:16
    * @Param [set, systemOverview]
    **/
-  private void getDbCount(Set<ZSetOperations.TypedTuple<String>> set, SystemOverview systemOverview) {
-    Long dbInstanceCount = 0L;
-    if (null == set || 0 == set.size()) {
-      // 获取数据库个数。先从Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-      dbInstanceCount = msSegmentDetailDao.selectDbInstanceCount();
-    } else {
-      HashSet<String> dbCountFromRedis = new HashSet<>();
-      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
-      while (iterator.hasNext()) {
-        ZSetOperations.TypedTuple<String> next = iterator.next();
-        String value = next.getValue();
-        String[] split = value.split("#");
-        dbCountFromRedis.add(split[1]);
-      }
-      dbInstanceCount = Long.valueOf(dbCountFromRedis.size());
+  private void getDbCount(SystemOverview systemOverview) {
+    Integer dbInstanceCount = msMonitorBusinessSystemTablesMapper.selectAllEnableDbCount();
+    if (null == dbInstanceCount) {
+      dbInstanceCount = 0;
     }
-    systemOverview.setDbInstance(dbInstanceCount);
+    systemOverview.setDbInstance(Long.valueOf(dbInstanceCount));
   }
 
   @Override
@@ -538,37 +544,22 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     queryMap.put("pageNo", pageNo);
     queryMap.put("pageSize", pageSize);
 
-    Integer count = 0;
-    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoListFromMySQL = new LinkedList<>();
     List<TableCoarseInfo> tableCoarseInfoList = new ArrayList<>();
     //获取所有的数据库表名
-    Set<ZSetOperations.TypedTuple<String>> keySet = redisPoolUtil.reverseRangeWithScores(Const.ZSET_HOW_MANY_TABLES, Long.valueOf(pageNo), Long.valueOf(pageSize));
-    if (null == keySet || 0 == keySet.size()) {
-      msMonitorBusinessSystemTablesDoListFromMySQL = msMonitorBusinessSystemTablesMapper.selectAllEnable(queryMap);
-    } else {
-      count = keySet.size();
-      Iterator<ZSetOperations.TypedTuple<String>> iterator = keySet.iterator();
-      while (iterator.hasNext()) {
-        ZSetOperations.TypedTuple<String> next = iterator.next();
-        String value = next.getValue();
-        String[] split = value.split("#");
-        MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
-        msMonitorBusinessSystemTablesDo.setDbAddress(split[0]);
-        msMonitorBusinessSystemTablesDo.setDbName(split[1]);
-        msMonitorBusinessSystemTablesDo.setTableName(split[2]);
-        msMonitorBusinessSystemTablesDoListFromMySQL.add(msMonitorBusinessSystemTablesDo);
-      }
-    }
+    List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDoListFromMySQL = msMonitorBusinessSystemTablesMapper.selectAllEnable(queryMap);
 
     for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDoListFromMySQL) {
       TableCoarseInfo tableCoarseInfo = new TableCoarseInfo();
       String tableName = msMonitorBusinessSystemTablesDo.getTableName();
-      tableCoarseInfo.setTableName(tableName);
       String peer = msMonitorBusinessSystemTablesDo.getDbAddress();
       String dbName = msMonitorBusinessSystemTablesDo.getDbName();
 
+      // 获取表对应的中文描述信息；2022-07-21 16:55:47
+      String getTableName = mingshiServerUtil.doGetTableName(peer, dbName, tableName);
+      String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
       // 根据数据库表名获取用户对该表的访问次数
       getVisitedCountByTableName(tableCoarseInfo, peer, dbName, tableName);
+      tableCoarseInfo.setTableName(StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
 
       // 根据表名获取最后被访问的时间
       getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, tableName);
@@ -578,9 +569,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
       tableCoarseInfoList.add(tableCoarseInfo);
     }
-    if (0 == count) {
-      count = msMonitorBusinessSystemTablesMapper.selectAllEnableCount(queryMap);
-    }
+    Integer count = msMonitorBusinessSystemTablesMapper.selectAllEnableCount(queryMap);
     Map<String, Object> context = new HashMap<>();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     if (null != tableCoarseInfoList && 0 < tableCoarseInfoList.size()) {
@@ -641,7 +630,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     String lastVisited = null;
     if (null == object) {
       lastVisited = msSegmentDetailDao.selectTableLastVisitedTime(tableName);
-    }else{
+    } else {
       lastVisited = String.valueOf(object);
     }
     tableCoarseInfo.setLastVisitedDate(lastVisited);
@@ -815,13 +804,28 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
               detailJson.put("dbUserName", msSegmentDetailDo.getDbUserName());
               detailJson.put("dbStatement", msSegmentDetailDo.getDbStatement());
               String tableName = msSegmentDetailDo.getMsTableName();
+              String peer = msSegmentDetailDo.getPeer();
+              String dbInstance = msSegmentDetailDo.getDbInstance();
+
               detailJson.put("dbTableName", tableName);
               // 根据表名，去数据库中查找这个表里是存储的什么数据；2022-06-22 09:32:12
               // 正常来说，应该在本地缓存里存储表的信息，每次根据表名获取表的信息时，从本地内存中直接获取即可；2022-06-22 09:36:34
               if (StringUtil.isNotBlank(tableName)) {
-                MsThirdPartyTableListDo msThirdPartyTableListDo = msThirdPartyTableListMapper.selectByTableName(tableName);
-                if (null != msThirdPartyTableListDo && StringUtil.isNotBlank(msThirdPartyTableListDo.getTableDesc())) {
-                  detailJson.put("function", msThirdPartyTableListDo.getTableDesc());
+                Map<String, Object> queryMap = new HashMap<>();
+                queryMap.put("tableName", tableName);
+                queryMap.put("dbName", dbInstance);
+                queryMap.put("dbAddress", peer);
+                String getTableName = mingshiServerUtil.doGetTableName(peer, dbInstance, tableName);
+                String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
+                if (StringUtil.isBlank(tableDesc)) {
+                  MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = msMonitorBusinessSystemTablesMapper.selectByQueryMap(queryMap);
+                  if (null != msMonitorBusinessSystemTablesDo && StringUtil.isNotBlank(msMonitorBusinessSystemTablesDo.getTableDesc())) {
+                    detailJson.put("function", msMonitorBusinessSystemTablesDo.getTableDesc());
+                    // 设置表的描述信息到本地内存；2022-07-21 16:52:07
+                    LoadAllEnableMonitorTablesFromDb.setTableDesc(getTableName, msMonitorBusinessSystemTablesDo.getTableDesc());
+                  }
+                } else {
+                  detailJson.put("function", tableDesc);
                 }
               }
               everyBodylinkedList.add(detailJson);

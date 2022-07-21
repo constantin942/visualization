@@ -123,6 +123,13 @@ public class SkyflyingController {
     return bySuccess;
   }
 
+  @ResponseBody
+  @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.GET)
+  public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc) {
+    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
+    return bySuccess;
+  }
+
   /**
    * <B>方法名称：updateMonitorTable</B>
    * <B>概要说明：更新监管的表状态</B>
@@ -767,7 +774,7 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
   public ServerResponse<String> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
   }
 
