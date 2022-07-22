@@ -167,7 +167,7 @@ public class SkyflyingController {
 
   /**
    * <B>方法名称：getAllSkywalkingAgent</B>
-   * <B>概要说明：从数据库中获取所有的探针信息</B>
+   * <B>概要说明：探针管理---从数据库中获取所有的探针信息</B>
    *
    * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
    * @Author zm

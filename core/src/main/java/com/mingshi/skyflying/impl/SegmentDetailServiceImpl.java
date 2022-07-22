@@ -3,6 +3,7 @@ package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
@@ -381,24 +382,49 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName) {
-
-
+  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String userName) {
     Map<String, Object> queryMap = new HashMap<>();
-    queryMap.put("userName", applicationUserName);
-    List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
+    queryMap.put("userName", userName);
+    List<UserUsualAndUnusualVisitedData> list = new LinkedList<>();
+    list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
     Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
       @Override
       public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
         if (t1.getVisitedCount() < t2.getVisitedCount()) {
           return 1;
-        } else if (t1.getVisitedCount() == t2.getVisitedCount()) {
+        } else if (t1.getVisitedCount().equals(t2.getVisitedCount())) {
           return 0;
         } else {
           return -1;
         }
       }
     });
+
+    String key = Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName;
+    Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
+    // 从有序集合zset中获取最频繁访问的数据表；2022-07-22 10:01:52
+    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
+    if (null != set && 0 < set.size()) {
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        Double score = next.getScore();
+        String value = next.getValue();
+        UserUsualAndUnusualVisitedData userUsualAndUnusualVisitedData = new UserUsualAndUnusualVisitedData();
+        userUsualAndUnusualVisitedData.setUserName(userName);
+        userUsualAndUnusualVisitedData.setVisitedCount(score.longValue());
+        String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(value);
+        if (value.contains("#")) {
+          String[] split = value.split("#");
+          if (StringUtil.isNotBlank(tableDesc)) {
+            value = split[0] + "#" + split[1] + "#" + tableDesc;
+          }
+        }
+        userUsualAndUnusualVisitedData.setVisitedData(value);
+        list.add(userUsualAndUnusualVisitedData);
+      }
+    }
+
 
     return ServerResponse.createBySuccess("获取数据成功！", "success", list);
   }
@@ -609,6 +635,13 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     if (StringUtil.isNotBlank(userName)) {
+      if (userName.contains(Const.DOLLAR)) {
+        String[] split = userName.split("\\" + Const.DOLLAR);
+        String serviceCodeName = AgentInformationSingleton.get(split[0]);
+        if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
+          userName = serviceCodeName + Const.DOLLAR + split[1];
+        }
+      }
       tableCoarseInfo.setUsualVisitedUser(userName);
     } else {
       tableCoarseInfo.setUsualVisitedUser("从未有人访问过这张表");

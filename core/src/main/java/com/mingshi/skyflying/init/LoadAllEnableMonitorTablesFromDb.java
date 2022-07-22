@@ -88,7 +88,6 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
     }else{
       return concurrentHashMapTableDesc.get(key);
     }
-
   }
 
   /**

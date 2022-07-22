@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.agent;
 
+import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.utils.StringUtil;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 
@@ -43,8 +44,11 @@ public class AgentInformationSingleton {
   }
 
   public static void putIfAbsent(String key, String value) {
+    if(StringUtil.isBlank(key) || StringUtil.isBlank(value)){
+      return;
+    }
     String ifAbsent = getInstance().putIfAbsent(key, value);
-    if(StringUtil.isBlank(ifAbsent)){
+    if(StringUtil.isBlank(ifAbsent) || ifAbsent.equals(Const.DOLLAR)){
       atomicBoolean.set(true);
     }
   }

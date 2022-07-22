@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.MsAgentInformationMapper;
 import com.mingshi.skyflying.domain.MsAgentInformationDo;
@@ -80,6 +81,8 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
     if (1 != updateResult) {
       return ServerResponse.createByErrorMessage("更新失败。", "");
     }
+    String agentCode = msAgentInformationDo.getAgentCode();
+    AgentInformationSingleton.putIfAbsent(agentCode, agentName);
     return ServerResponse.createBySuccess();
   }
 
