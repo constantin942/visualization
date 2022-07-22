@@ -48,7 +48,7 @@ public class InitAgentInformationFromDb implements ApplicationRunner {
         if (StringUtil.isBlank(agentName)) {
           agentName = Const.DOLLAR;
         }
-        AgentInformationSingleton.putIfAbsent(agentCode, agentName);
+        AgentInformationSingleton.put(agentCode, agentName);
       }
       AgentInformationSingleton.setAtomicBooleanToFalse();
     }

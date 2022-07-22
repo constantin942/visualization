@@ -121,6 +121,10 @@ public class ServerResponse<T> implements Serializable {
     }
 
 
+  public static <T> ServerResponse<T> createByErrorMessage(String msgCn, String msgEn,T data) {
+    return new ServerResponse<T>(AiitExceptionCode.FAILURE.getCode(), msgCn, msgEn,data);
+  }
+
     public static <T> ServerResponse<T> createByErrorMessage(String errorMessage, String msgCn, String msgEn) {
         return new ServerResponse<T>(AiitExceptionCode.FAILURE.getCode(), msgCn, msgEn, (T) errorMessage);
     }

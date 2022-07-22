@@ -74,15 +74,19 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
     if (StringUtil.isBlank(agentName)) {
       return ServerResponse.createByErrorMessage("规则别名不能为空。", "");
     }
-    MsAgentInformationDo msAgentInformationDo = new MsAgentInformationDo();
+    MsAgentInformationDo msAgentInformationDo = msAgentInformationMapper.selectByPrimaryKey(id);
+    if(null == msAgentInformationDo){
+      return ServerResponse.createByErrorMessage("数据不存在。", "");
+    }
     msAgentInformationDo.setAgentName(agentName);
-    msAgentInformationDo.setId(id);
     int updateResult = msAgentInformationMapper.updateByPrimaryKeySelective(msAgentInformationDo);
     if (1 != updateResult) {
       return ServerResponse.createByErrorMessage("更新失败。", "");
     }
     String agentCode = msAgentInformationDo.getAgentCode();
-    AgentInformationSingleton.putIfAbsent(agentCode, agentName);
+    if(StringUtil.isNotBlank(agentCode)){
+      AgentInformationSingleton.put(agentCode, agentName);
+    }
     return ServerResponse.createBySuccess();
   }
 

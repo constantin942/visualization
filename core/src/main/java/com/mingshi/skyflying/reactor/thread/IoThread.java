@@ -161,7 +161,7 @@ public class IoThread extends Thread {
         for (String set : stringSet) {
           Map<String, String> map = JsonUtil.string2Obj(set, Map.class);
           String serviceCode = map.get("serviceCode");
-          AgentInformationSingleton.putIfAbsent(serviceCode, Const.DOLLAR);
+          AgentInformationSingleton.put(serviceCode, Const.DOLLAR);
         }
         skywalkingAgentHeartBeatMap.putAll(skywalkingAgentTimeMap);
       }

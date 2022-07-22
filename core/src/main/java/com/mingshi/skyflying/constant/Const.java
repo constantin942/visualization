@@ -32,6 +32,12 @@ public class Const {
   public static final String STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME = "string_user_access_behavior_latest_visited_time#user_name:";
   // 有序集合：存放的是用户对访问过的表的次数；2022-07-20 14:27:34
   public static final String ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES = "zset_user_access_behavior_all_visited_tables#user_name#";
+  // hash集合：存放的是每个表每天被访问的次数；2022-07-22 10:35:52
+  public static final String HASH_TABLE_EVERYDAY_VISITED_TIMES = "hash_table_everyday_visited_times#table_name#";
+  // 有序集合：统计每个表操作类型次数；2022-07-22 15:47:48
+  public static final String ZSET_TABLE_OPERATION_TYPE = "zset_table_operation_type#table_name#";
+  // 有序集合：统计每个用户操作类型次数；2022-07-22 15:47:48
+  public static final String ZSET_USER_OPERATION_TYPE = "zset_user_operation_type#user_name#";
   /*
    * 信息概览页面 -> 数据统计情况；2022-07-19 08:52:11
    */

@@ -17,7 +17,6 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -148,40 +147,103 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<Long> getCountsOfUser(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
-    log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser # 获取用户的访问次数。");
+  public ServerResponse<List<String>> getCountsOfUser(String msTableName) {
+    List<String> list = new LinkedList<>();
+    log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
     Map<String, Object> map = new HashMap<>();
-    if (StringUtil.isNotBlank(applicationUserName)) {
-      map.put("userName", applicationUserName);
+    if (msTableName.contains("#")) {
+      try {
+        String[] split = msTableName.split("#");
+        String peer = split[0];
+        String dbInstance = split[1];
+        String tableName = split[2];
+        map.put("peer", peer);
+        map.put("dbInstance", dbInstance);
+        map.put("msTableName", tableName);
+      } catch (Exception e) {
+        log.error("# SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数时，出现了异常。", msTableName, e);
+        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", list);
+      }
+    } else {
+      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", list);
     }
-    if (StringUtil.isNotBlank(dbType)) {
-      map.put("dbType", dbType);
-    }
-    if (StringUtil.isNotBlank(msTableName)) {
-      map.put("msTableName", msTableName);
-    }
-    if (StringUtil.isNotBlank(startTime)) {
-      map.put("startTime", startTime);
-    }
-    if (StringUtil.isNotBlank(endTime)) {
-      map.put("endTime", endTime);
-    }
-    if (StringUtil.isNotBlank(dbUserName)) {
-      map.put("dbUserName", dbUserName);
-    }
-    if (null == pageNo) {
-      pageNo = 1;
-    }
-    if (null == pageSize) {
-      pageSize = 10;
-    }
-    map.put("pageNo", (pageNo - 1) * pageSize);
-    map.put("pageSize", pageSize);
 
-    Long count = msSegmentDetailDao.selectCountsOfUser(map);
-    log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUser # 获取用户的访问次数。");
+    String key = Const.ZSET_TABLE_OPERATION_TYPE + msTableName;
+    Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
+    // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
+    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
+    if (null != set && 0 < set.size()) {
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        Double score = next.getScore();
+        String operationType = next.getValue();
+        ObjectNode jsonObject = JsonUtil.createJSONObject();
+        jsonObject.put("dbType", operationType);
+        jsonObject.put("dbTypeTimes", score);
+        list.add(jsonObject.toString());
+      }
+    } else {
+      String[] operationTypeArray = new String[]{"select", "update", "delete", "insert"};
+      for (String ot : operationTypeArray) {
+        map.put("dbType", ot);
+        Long count = msSegmentDetailDao.selectCountsOfUser(map);
+        if(null != count && 0L < count){
+          ObjectNode jsonObject = JsonUtil.createJSONObject();
+          jsonObject.put("dbType", ot);
+          jsonObject.put("dbTypeTimes", count);
+          list.add(jsonObject.toString());
+        }
+      }
+    }
+    log.info("执行完毕 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
+    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+  }
 
-    return ServerResponse.createBySuccess("获取数据成功！", "success", count);
+  /**
+   * <B>方法名称：getUserOperationTypeCount</B>
+   * <B>概要说明：获取用户操作类型次数</B>
+   * @Author zm
+   * @Date 2022年07月22日 17:07:46
+   * @Param [userName]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List<java.lang.String>>
+   **/
+  @Override
+  public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
+    List<String> list = new LinkedList<>();
+    List<String> list1 = new LinkedList<>();
+    Map<String, Object> map = new HashMap<>();
+    String key = Const.ZSET_USER_OPERATION_TYPE + userName;
+    Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
+    // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
+    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
+    if (null != set && 0 < set.size()) {
+      Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        ZSetOperations.TypedTuple<String> next = iterator.next();
+        Double score = next.getScore();
+        String operationType = next.getValue();
+        ObjectNode jsonObject = JsonUtil.createJSONObject();
+        jsonObject.put("dbType", operationType);
+        jsonObject.put("dbTypeTimes", score);
+        list.add(jsonObject.toString());
+      }
+    } else {
+      String[] operationTypeArray = new String[]{"select", "update", "delete", "insert"};
+      map.put("userName",userName);
+      for (String ot : operationTypeArray) {
+        map.put("dbType", ot);
+        Long count = msSegmentDetailDao.selectCountsOfUser(map);
+        if(null != count && 0L < count){
+          ObjectNode jsonObject = JsonUtil.createJSONObject();
+          jsonObject.put("dbType", ot);
+          jsonObject.put("dbTypeTimes", count);
+          list.add(jsonObject.toString());
+        }
+      }
+    }
+
+    return ServerResponse.createBySuccess(list);
   }
 
   @Override
@@ -255,11 +317,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Param [tableName, userCoarseInfo, tableDesc]
    **/
   private void doUsualVisitedData(String tableName, UserCoarseInfo userCoarseInfo, String tableDesc) {
-    String[] split = tableName.split("#");
+    // String[] split = tableName.split("#");
     ObjectNode jsonObject = JsonUtil.createJSONObject();
-    jsonObject.put("dbAddress", split[0]);
-    jsonObject.put("dbName", split[1]);
-    jsonObject.put("tableName", StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
+    // jsonObject.put("dbAddress", split[0]);
+    // jsonObject.put("dbName", split[1]);
+    jsonObject.put("tableName", tableName);
+    jsonObject.put("tableNameDesc", StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
     userCoarseInfo.setUsualVisitedData(jsonObject.toString());
   }
 
@@ -311,21 +374,26 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
-
+  public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
+    List<Long> returnList = new ArrayList<>();
     log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
     Map<String, Object> map = new HashMap<>();
-    if (StringUtil.isNotBlank(applicationUserName)) {
-      map.put("userName", applicationUserName);
-    }
-    if (StringUtil.isNotBlank(dbType)) {
-      map.put("dbType", dbType);
-    }
-    if (StringUtil.isNotBlank(msTableName)) {
-      map.put("msTableName", msTableName);
-    }
-    if (StringUtil.isNotBlank(dbUserName)) {
-      map.put("dbUserName", dbUserName);
+    // todo:这里不能传中文的表名称，要传完整版的数据地址+数据库名称+英文表名；2022-07-22 10:33:26
+    if (msTableName.contains("#")) {
+      try {
+        String[] split = msTableName.split("#");
+        String peer = split[0];
+        String dbInstance = split[1];
+        String tableName = split[2];
+        map.put("peer", peer);
+        map.put("dbInstance", dbInstance);
+        map.put("msTableName", tableName);
+      } catch (Exception e) {
+        log.error("# SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays() # 获取用户近七天的访问次数时，出现了异常。", e);
+        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", returnList);
+      }
+    } else {
+      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", returnList);
     }
     if (null == pageNo) {
       pageNo = 1;
@@ -336,46 +404,22 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     map.put("pageNo", (pageNo - 1) * pageSize);
     map.put("pageSize", pageSize);
 
-    List<String> DateList = new ArrayList();
-
-    Calendar startTimeCalendar = Calendar.getInstance();
-    Calendar endTimeCalendar = Calendar.getInstance();
-
-    Date startTimeDate = new Date();
-    Date endTimeDate = new Date();
-
-    //创建SimpleDateFormat对象实例并定义好转换格式
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    try {
-      startTimeDate = sdf.parse(startTime);
-      endTimeDate = sdf.parse(endTime);
-      startTimeCalendar.setTime(startTimeDate);
-      endTimeCalendar.setTime(endTimeDate);
-    } catch (Exception e) {
-
-    }
-
-    while (startTimeCalendar.compareTo(endTimeCalendar) < 1) {
-      String startTimeStr = sdf.format(startTimeCalendar.getTime());
-      DateList.add(startTimeStr);
-      startTimeCalendar.add(Calendar.DATE, 1);
-    }
-
-    if (startTimeCalendar.before(endTimeCalendar)) {
-      String endTimeStr = sdf.format(startTimeCalendar.getTime());
-      DateList.add(endTimeStr);
-    }
-
-    List<Long> returnList = new ArrayList<>();
-
+    List<String> DateList = DateTimeUtil.getDateList(startTime, endTime);
     for (int i = 0; i < DateList.size() - 1; i++) {
-      map.put("startTime", DateList.get(i));
+      String value = DateList.get(i);
+      map.put("startTime", value);
       map.put("endTime", DateList.get(i + 1));
-      Long count = msSegmentDetailDao.selectCountsOfUser(map);
+      Date date = DateTimeUtil.strToDate(value);
+      String dateToStrYYYYMMDD = DateTimeUtil.DateToStrYYYYMMDD(date);
+      Long count = 0L;
+      Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYYYYMMDD);
+      if (null != hget) {
+        count = Long.valueOf(String.valueOf(hget));
+      } else {
+        count = msSegmentDetailDao.selectCountsOfUserByPeerAndDbInstanceAndTableName(map);
+      }
       returnList.add(count);
     }
-
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
@@ -386,20 +430,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Map<String, Object> queryMap = new HashMap<>();
     queryMap.put("userName", userName);
     List<UserUsualAndUnusualVisitedData> list = new LinkedList<>();
-    list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-    Collections.sort(list, new Comparator<UserUsualAndUnusualVisitedData>() {
-      @Override
-      public int compare(UserUsualAndUnusualVisitedData t1, UserUsualAndUnusualVisitedData t2) {
-        if (t1.getVisitedCount() < t2.getVisitedCount()) {
-          return 1;
-        } else if (t1.getVisitedCount().equals(t2.getVisitedCount())) {
-          return 0;
-        } else {
-          return -1;
-        }
-      }
-    });
-
     String key = Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName;
     Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
     // 从有序集合zset中获取最频繁访问的数据表；2022-07-22 10:01:52
@@ -424,22 +454,15 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         list.add(userUsualAndUnusualVisitedData);
       }
     }
-
-
     return ServerResponse.createBySuccess("获取数据成功！", "success", list);
   }
 
   @Override
   public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, String endTime) {
-
     log.info("开始执行 # SegmentDetailServiceImpl. getCountsOfAllRecentSevenDays # 获取用户近七天的访问次数。");
-
     Map<String, Object> map = new HashMap<>();
-
-    List<String> DateList = DateTimeUtil.getDateList(startTime, endTime);
-
     List<Long> returnList = new ArrayList<>();
-
+    List<String> DateList = DateTimeUtil.getDateList(startTime, endTime);
     for (int i = 0; i < DateList.size() - 1; i++) {
       String value = DateList.get(i);
       map.put("startTime", value);
@@ -585,7 +608,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
       // 根据数据库表名获取用户对该表的访问次数
       getVisitedCountByTableName(tableCoarseInfo, peer, dbName, tableName);
-      tableCoarseInfo.setTableName(StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
+      tableCoarseInfo.setTableName(getTableName);
+      tableCoarseInfo.setTableNameDesc(StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
 
       // 根据表名获取最后被访问的时间
       getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, tableName);

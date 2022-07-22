@@ -809,21 +809,27 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUser", method = RequestMethod.GET)
-  public ServerResponse<Long> getCountsOfUser(String applicationUserName, /* 登录系统的名称 */
-                                              String dbUserName, /* 访问数据库的用户名 */
-                                              String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
-                                              String msTableName, /* 数据库表名 */
-                                              String startTime, /* 开始时间 */
-                                              String endTime, /* 结束时间 */
-                                              @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                              @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<List<String>> getCountsOfUser(@RequestParam(value = "tableName") String tableName /* 数据库表名 */) {
+    return segmentDetailService.getCountsOfUser(tableName);
+  }
 
-    return segmentDetailService.getCountsOfUser(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+  /**
+   * <B>方法名称：getUserOperationTypeCount</B>
+   * <B>概要说明：获取用户操作类型次数</B>
+   * @Author zm
+   * @Date 2022年07月22日 17:07:46
+   * @Param [userName]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List<java.lang.String>>
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/getUserOperationTypeCount", method = RequestMethod.GET)
+  public ServerResponse<List<String>> getUserOperationTypeCount(@RequestParam(value = "userName") String userName) {
+    return segmentDetailService.getUserOperationTypeCount(userName);
   }
 
   /**
    * <B>方法名称：getCountsOfUserRecentSevenDays/B>
-   * <B>概要说明：获取用户对数据的详细数据</B>
+   * <B>概要说明：数据分布 --> 详情 --> 近七天数据访问统计；获取用户对数据的详细数据</B>
    *
    * @return ServerResponse<SysOperator>
    * @Author lhx
@@ -832,17 +838,12 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getCountsOfUserRecentSevenDays", method = RequestMethod.GET)
-  public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(String applicationUserName, /* 登录系统的名称 */
-                                                                   String dbUserName, /* 访问数据库的用户名 */
-                                                                   String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
-                                                                   String msTableName, /* 数据库表名 */
-                                                                   String startTime, /* 开始时间 */
-                                                                   String endTime, /* 结束时间 */
+  public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(@RequestParam(value = "tableName") String tableName, /* 数据库表名 */
+                                                                   @RequestParam(value = "startTime") String startTime, /* 开始时间 */
+                                                                   @RequestParam(value = "endTime") String endTime, /* 结束时间 */
                                                                    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) throws ParseException {
-
-
-    return segmentDetailService.getCountsOfUserUserRecentSevenDays(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+    return segmentDetailService.getCountsOfUserUserRecentSevenDays(tableName, startTime, endTime, pageNo, pageSize);
   }
 
 
@@ -857,7 +858,8 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getCountsOfAllRecentSevenDays", method = RequestMethod.GET)
-  public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, /* 开始时间 */String endTime /* 结束时间 */) {
+  public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(@RequestParam(value = "startTime") String startTime, /* 开始时间 */
+                                                                  @RequestParam(value = "endTime") String endTime /* 结束时间 */) {
     return segmentDetailService.getCountsOfAllRecentSevenDays(startTime, endTime);
   }
 
