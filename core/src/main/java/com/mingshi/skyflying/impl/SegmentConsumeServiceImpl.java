@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
@@ -46,7 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Service("SegmentConsumerService")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
-
   @Resource
   private InformationOverviewSingleton informationOverviewSingleton;
   @Resource
@@ -64,26 +64,29 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
-    doConsume(record, enableReactorModelFlag);
+    SegmentObject segmentObject = null;
+    try {
+      segmentObject = SegmentObject.parseFrom(record.value().get());
+      doConsume(segmentObject, enableReactorModelFlag);
+    } catch (InvalidProtocolBufferException e) {
+      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+    }
     // 统计QPS；2022-06-24 10:34:24
     StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
-  private void doConsume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
+  private void doConsume(SegmentObject segmentObject, Boolean enableReactorModelFlag) {
     HashSet<String> userHashSet = new HashSet<>();
     // Instant now1 = Instant.now();
     // Instant now = Instant.now();
-    SegmentObject segmentObject = null;
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
       SegmentDo segment = new SegmentDo();
-      segmentObject = SegmentObject.parseFrom(record.value().get());
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
       // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完81行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
       // now = Instant.now();
-
       // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
       setUserNameAndTokenFromSegmentObject(userHashSet, segment, segmentObject);
       // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
@@ -370,7 +373,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         String replaceTableName = tableNameTemp.replace("`", "");
         String key = null;
         Integer tableEnableStatus = null;
-        if(replaceTableName.contains(",")){
+        if (replaceTableName.contains(",")) {
           String[] splits = replaceTableName.split(",");
           for (String splitTableName : splits) {
             key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
@@ -381,7 +384,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               return null;
             }
           }
-        }else{
+        } else {
           key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
           // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
           tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key, false);
