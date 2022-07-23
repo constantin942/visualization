@@ -149,6 +149,7 @@ elasticsearch:
 
 reactor:
   processor:
-    enable: false
+    enable: true
+    disruptor: true
     thread:
-      count: 1
+      count: 6

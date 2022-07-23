@@ -30,8 +30,6 @@ public class ReactorUtil {
   }
 
   public static void useReactorModelByLinkedBlockingQueue(ConsumerRecord<String, Bytes> record) {
-    // 等待创建processor线程；2022-06-01 09:20:19
-    waitingCreateProcessorsThread();
     // 将拉取到的消息放入到processor线程对应的队列里；2022-06-01 09:24:47
     putRecordIntoBlockingQueue(record);
   }
@@ -45,6 +43,8 @@ public class ReactorUtil {
    * @return void
    **/
   private static void putRecordIntoBlockingQueue(ConsumerRecord<String, Bytes> record) {
+    // 等待创建processor线程；2022-06-01 09:20:19
+    waitingCreateProcessorsThread();
     try {
       boolean offerResult = false;
       while (false == offerResult) {
@@ -78,4 +78,5 @@ public class ReactorUtil {
       log.error("在消费者程序中，等待创建processor线程完毕时，出现了异常。", e);
     }
   }
+
 }

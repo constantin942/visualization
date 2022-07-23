@@ -140,5 +140,6 @@ es:
 reactor:
   processor:
     enable: true
+    disruptor: true
     thread:
       count: 4

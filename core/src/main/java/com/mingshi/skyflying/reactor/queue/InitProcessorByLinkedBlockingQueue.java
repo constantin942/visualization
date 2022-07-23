@@ -26,6 +26,9 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
 
+  @Value("${reactor.processor.disruptor}")
+  private boolean reactorProcessorByDisruptor;
+
   @Resource
   private SegmentConsumerService segmentConsumerService;
 
@@ -49,7 +52,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   }
 
   private void doRun() {
-    if(true == reactorProcessorEnable){
+    if(true == reactorProcessorEnable && false == reactorProcessorByDisruptor){
       if(null == reactorProcessorThreadCount || 0 > reactorProcessorThreadCount){
         // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
         reactorProcessorThreadCount = 4;

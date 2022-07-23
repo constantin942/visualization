@@ -10,6 +10,7 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
+import com.mingshi.skyflying.disruptor.SegmentByByte;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
@@ -67,6 +68,20 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     SegmentObject segmentObject = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
+      doConsume(segmentObject, enableReactorModelFlag);
+    } catch (InvalidProtocolBufferException e) {
+      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+    }
+    // 统计QPS；2022-06-24 10:34:24
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    return null;
+  }
+
+  @Override
+  public ServerResponse<String> consumeByDisruptor(SegmentByByte record, Boolean enableReactorModelFlag) {
+    SegmentObject segmentObject = null;
+    try {
+      segmentObject = SegmentObject.parseFrom(record.getData());
       doConsume(segmentObject, enableReactorModelFlag);
     } catch (InvalidProtocolBufferException e) {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
@@ -459,7 +474,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(2, 5, mingshiServerUtil, esMsSegmentDetailUtil);
+      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(3, 10, mingshiServerUtil, esMsSegmentDetailUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       // if (null != segmentDo) {
       //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));

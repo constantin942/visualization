@@ -671,7 +671,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}】【{}条】批量插入到Redis中耗时【{}】毫秒。", JsonUtil.obj2String(map), map.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
         map.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);

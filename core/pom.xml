@@ -16,6 +16,13 @@
 <!--    </dependency>-->
 
     <dependency>
+      <groupId>com.lmax.mysourcecode</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>3.3.10</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.mingshi</groupId>
       <artifactId>network</artifactId>
       <version>0.0.1-SNAPSHOT</version>

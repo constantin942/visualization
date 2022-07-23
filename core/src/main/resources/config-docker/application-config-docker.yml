@@ -88,5 +88,6 @@ es:
 reactor:
   processor:
     enable: false
+    disruptor: false
     thread:
       count: 4
