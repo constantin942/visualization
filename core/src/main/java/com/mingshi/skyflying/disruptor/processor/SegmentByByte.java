@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.disruptor;
+package com.mingshi.skyflying.disruptor.processor;
 
 import lombok.Data;
 

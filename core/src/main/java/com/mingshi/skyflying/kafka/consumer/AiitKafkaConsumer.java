@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.kafka.consumer;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.mingshi.skyflying.disruptor.ProcessorByDisruptor;
+import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.utils.ReactorUtil;
@@ -10,7 +10,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class AiitKafkaConsumer {
 
   @Value("${reactor.processor.enable}")
@@ -35,7 +36,7 @@ public class AiitKafkaConsumer {
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
 
-  @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
+  // @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
   public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());
     if (message.isPresent()) {

@@ -1,8 +1,8 @@
-package com.mingshi.skyflying.disruptor;
+package com.mingshi.skyflying.disruptor.processor;
 
 
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 @Slf4j
 @Component
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class ProcessorByDisruptor implements ApplicationRunner {
   // 是否开启reactor模式的开关；2022-06-01 09:28:28
   @Value("${reactor.processor.enable}")
@@ -72,7 +74,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   public RingBuffer<SegmentByByte> messageModelRingBuffer(Integer queueSize, Boolean enableBatch) {
     // RingBuffer是一个数组，数组中的每个位置都存放一个对象/实例。
     // 下面这行代码，就是要指定创建对象/实例的工厂。这行代码会在RingBuffer创建完毕之后，给每个位置存放对象/实例时用到。2022-07-17 10:45:23
-    ConsumerFactory factory = new ConsumerFactory();
+    ConsumerProcessorFactory factory = new ConsumerProcessorFactory();
 
     // 创建线程的工厂。2022-07-17 10:45:42
     ThreadFactory producerFactory = Executors.defaultThreadFactory();
@@ -80,16 +82,16 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     Disruptor<SegmentByByte> disruptor = null;
     if (true == enableBatch) {
       // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
-      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new YieldingWaitStrategy());
+      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
     } else {
       // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
-      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
+      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
     }
     for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
-      // 创建一个消费对象/实例的handler；2022-07-17 18:54:04
-      ConsumerByEventHandler consumerByEventHandler = new ConsumerByEventHandler(segmentConsumerService, applicationName + integer);
+      // 使用多消费者模式；
+      ConsumerProcessorByWrokHandler consumerProcessorByWrokHandler = new ConsumerProcessorByWrokHandler(segmentConsumerService);
       // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-      disruptor.handleEventsWith(consumerByEventHandler);
+      disruptor.handleEventsWithWorkerPool(consumerProcessorByWrokHandler);
     }
 
     // 启动disruptor线程

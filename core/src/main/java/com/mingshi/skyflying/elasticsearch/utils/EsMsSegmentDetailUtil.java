@@ -10,6 +10,7 @@ import com.mingshi.skyflying.utils.MingshiServerUtil;
 import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,6 +29,7 @@ import java.util.List;
  **/
 @Slf4j
 @Component
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class EsMsSegmentDetailUtil {
   // es启用状态；2022-07-13 08:22:04
   @Value("${es.enable}")

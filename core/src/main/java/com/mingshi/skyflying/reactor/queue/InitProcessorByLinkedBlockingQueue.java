@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -16,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
 
   // 在开启reactor模式的情况下，创建processor线程的数量；2022-06-01 09:28:57

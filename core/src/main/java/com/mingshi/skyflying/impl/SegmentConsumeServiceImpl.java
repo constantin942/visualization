@@ -10,13 +10,14 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
-import com.mingshi.skyflying.disruptor.SegmentByByte;
+import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
+import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
-import com.mingshi.skyflying.reactor.queue.BatchInsertByLinkedBlockingQueue;
+import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
@@ -29,6 +30,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -47,9 +50,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 @Slf4j
 @Service("SegmentConsumerService")
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
+  // 是否开启reactor模式的开关；2022-06-01 09:28:28
+  @Value("${reactor.processor.enable}")
+  private boolean reactorProcessorEnable;
+
+  @Value("${reactor.iothread.disruptor}")
+  private boolean reactorIoThreadByDisruptor;
+
+  // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
+  @Value("${reactor.iothread.thread.count}")
+  private Integer reactorIoThreadThreadCount = 1;
+
   @Resource
-  private InformationOverviewSingleton informationOverviewSingleton;
+  private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
@@ -81,8 +96,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   public ServerResponse<String> consumeByDisruptor(SegmentByByte record, Boolean enableReactorModelFlag) {
     SegmentObject segmentObject = null;
     try {
-      segmentObject = SegmentObject.parseFrom(record.getData());
-      doConsume(segmentObject, enableReactorModelFlag);
+      if(null != record){
+        segmentObject = SegmentObject.parseFrom(record.getData());
+        doConsume(segmentObject, enableReactorModelFlag);
+      }
     } catch (InvalidProtocolBufferException e) {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
@@ -159,10 +176,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
       }
 
+      HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>();
+      statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
+
+      HashMap<String, Integer> statisticsIoThreadQueueSizeMap = new HashMap<>();
+      // statisticsIoThreadQueueSize(statisticsIoThreadQueueSizeMap);
+
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        doEnableReactorModel(statisticsIoThreadQueueSizeMap, statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完144行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
         // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
@@ -173,6 +196,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
+        // 统计processor线程的QPS；2022-07-23 11:26:40
+        mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
 
         mingshiServerUtil.flushSpansToDB(spanList);
 
@@ -467,18 +493,26 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(List<Span> spanList,
+  private void doEnableReactorModel(HashMap<String, Integer> statisticsIoThreadQueueSizeMap,
+                                    HashMap<String, Map<String, Integer>> map,
+                                    List<Span> spanList,
                                     LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
                                     LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(3, 10, mingshiServerUtil, esMsSegmentDetailUtil);
       ObjectNode jsonObject = JsonUtil.createJSONObject();
       // if (null != segmentDo) {
       //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
       // }
+
+      // 统计当前线程的QPS；2022-07-23 11:05:16
+      jsonObject.put(Const.ZSET_PROCESSOR_THREAD_QPS, JsonUtil.obj2String(map));
+
+      // 统计IoThread队列的大小；2022-07-23 12:41:42
+      jsonObject.put(Const.ZSET_IO_THREAD_QUEUE_SIZE, JsonUtil.obj2String(statisticsIoThreadQueueSizeMap));
+
       if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
         jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
       }
@@ -494,21 +528,62 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
         jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
       }
-      if (linkedBlockingQueue.size() == BatchInsertByLinkedBlockingQueue.getQueueSize()) {
-        // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
-      }
-      // if (0 == atomicInteger.incrementAndGet() % 5000) {
-      //   // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-      //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
-      // }
+
       if (null != jsonObject && 0 < jsonObject.size()) {
-        linkedBlockingQueue.put(jsonObject);
+        if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
+          ioThreadByDisruptor.disruptorInitDone();
+          // 使用Disruptor无锁高性能队列；
+          ioThreadByDisruptor.offer(jsonObject);
+        }else{
+          LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+          if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()) {
+            // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+            log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize());
+          }
+          // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
+          linkedBlockingQueue.put(jsonObject);
+        }
       }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
     }
   }
+
+  /**
+   * <B>方法名称：statisticsProcessorThreadQps</B>
+   * <B>概要说明：组装QPS数据</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月23日 11:07:33
+   * @Param [jsonObject]
+   **/
+  private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
+    HashMap<String, Integer> hashMap = new HashMap<>();
+    hashMap.put(DateTimeUtil.dateToStr(new Date()), 1);
+    map.put(Const.ZSET_PROCESSOR_THREAD_QPS + Thread.currentThread().getName(), hashMap);
+  }
+
+  /**
+   * <B>方法名称：statisticsIoThreadQueueSize</B>
+   * <B>概要说明：统计IoThread队列的大小</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月23日 12:07:45
+   * @Param [hashMap]
+   **/
+  private void statisticsIoThreadQueueSize(HashMap<String, Integer> hashMap) {
+    if(0 == atomicInteger.incrementAndGet() % 10 * 100){
+      if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
+        Long queueSize = ioThreadByDisruptor.getQueueSize();
+        hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName(), queueSize.intValue());
+      }else{
+        hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize());
+      }
+    }
+  }
+
   // private void doEnableReactorModel(SegmentDo segmentDo,
   //                                   LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList,
   //                                   LinkedList<MsSegmentDetailDo> segmentDetaiDolList,

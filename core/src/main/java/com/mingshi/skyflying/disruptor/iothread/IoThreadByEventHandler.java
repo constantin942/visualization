@@ -1,7 +1,9 @@
-package com.mingshi.skyflying.reactor.thread;
+package com.mingshi.skyflying.disruptor.iothread;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.WorkHandler;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.domain.*;
@@ -17,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Author zhaoming
@@ -28,15 +28,13 @@ import java.util.concurrent.TimeUnit;
  * @return
  **/
 @Slf4j
-public class IoThread extends Thread {
-  // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
-  private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
-  private Instant CURRENT_TIME = null;
+public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
 
+  private Instant CURRENT_TIME = null;
   private Integer flushToRocketMQInterval = 10;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */,Integer/* 消费的数量 */>> processorThreadQpsMap = null;
-  // private HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> ioThreadQueueSet = null;
+  private HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> ioThreadQueueSet = null;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
@@ -47,12 +45,14 @@ public class IoThread extends Thread {
   private MingshiServerUtil mingshiServerUtil;
   private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
-  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
+  private RingBuffer<IoThreadObjectNode> ringBuffer;
+
+  public IoThreadByEventHandler(Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil, RingBuffer<IoThreadObjectNode> ringBuffer) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
     processorThreadQpsMap = new HashMap<>();
-    // ioThreadQueueSet = new HashSet<>();
+    ioThreadQueueSet = new HashSet<>();
     segmentList = new LinkedList();
     userHashSet = new HashSet();
     auditLogList = new LinkedList();
@@ -64,63 +64,47 @@ public class IoThread extends Thread {
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
       this.flushToRocketMQInterval = 5;
     }
-    this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
     this.esSegmentDetailDoList = esSegmentDetailDoList;
     this.esMsSegmentDetailUtil = esMsSegmentDetailUtil;
+    this.ringBuffer = ringBuffer;
   }
 
-  // user_token 表存在的意义是：将 segment 表中的全局追踪id与用户名或 token 关联起来。
-  // 当前端查询 segment 表中的数据时，若是碰到了 用户名或者 token 为空，此时就去 user_token 表中根据全局追踪id查询对应的用户名或者 token。
+  // 单线程的情况下使用；2021-12-23 07:53:11
   @Override
-  public void run() {
+  public void onEvent(IoThreadObjectNode ioThreadObjectNode) {
     try {
-      while (true) {
-        // while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
-        try {
-          ObjectNode jsonObject = linkedBlockingQueue.poll();
-          if (null == jsonObject) {
-            TimeUnit.MILLISECONDS.sleep(10);
-          } else {
-            // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
-            getSkywalkingAgentNameFromJSONObject(jsonObject);
+      ObjectNode jsonObject = ioThreadObjectNode.getData();
+      // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
+      getSkywalkingAgentNameFromJSONObject(jsonObject);
 
-            // 统计processorThread线程的QPS；2022-07-23 11:15:29
-            getProcessorThreadQpsFromJSONObject(jsonObject);
+      // 统计processorThread线程的QPS；2022-07-23 11:15:29
+      getProcessorThreadQpsFromJSONObject(jsonObject);
 
-            // getIoThreadQueueFromJSONObject(jsonObject);
+      getIoThreadQueueFromJSONObject(jsonObject);
 
-            // 从json实例中获取segmentDetail实例的信息
-            getSegmentDetailFromJSONObject(jsonObject);
+      // 从json实例中获取segmentDetail实例的信息
+      getSegmentDetailFromJSONObject(jsonObject);
 
-            // 从json实例中获取esSegmentDetail实例的信息
-            getEsSegmentDetailFromJSONObject(jsonObject);
+      // 从json实例中获取esSegmentDetail实例的信息
+      getEsSegmentDetailFromJSONObject(jsonObject);
 
-            // 从json实例中获取Span实例的信息
-            // getSpanFromJSONObject(jsonObject);
+      // 从json实例中获取Span实例的信息
+      // getSpanFromJSONObject(jsonObject);
 
-            // 从json实例中获取异常信息
-            getAbnormalFromJSONObject(jsonObject);
+      // 从json实例中获取异常信息
+      getAbnormalFromJSONObject(jsonObject);
 
-            // 从json实例中获取审计日志的信息
-            // getAuditLogFromJSONObject(jsonObject);
+      // 从json实例中获取审计日志的信息
+      // getAuditLogFromJSONObject(jsonObject);
 
-            // 从json实例中获取segment的信息
-            // getSegmentFromJSONObject(jsonObject);
-          }
+      // 从json实例中获取segment的信息
+      // getSegmentFromJSONObject(jsonObject);
 
-          // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
-          insertSegmentAndIndexAndAuditLog();
-        } catch (Throwable e) {
-          log.error("# IoThread.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
-        }
-      }
-    } finally {
-      // 当IoThread线程退出时，要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:32:43
+      // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
       insertSegmentAndIndexAndAuditLog();
-      log.error("# IoThread.run() # IoThread线程要退出了。此时jvm关闭的标志位 = 【{}】，该线程对应的队列中元素的个数 = 【{}】。",
-        InitProcessorByLinkedBlockingQueue.getShutdown(),
-        linkedBlockingQueue.size());
+    } catch (Throwable e) {
+      log.error("# IoThreadByEventHandler.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
     }
   }
 
@@ -144,7 +128,7 @@ public class IoThread extends Thread {
         }
       }
     } catch (Exception e) {
-      log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
     }
   }
 
@@ -175,7 +159,7 @@ public class IoThread extends Thread {
         skywalkingAgentHeartBeatMap.putAll(skywalkingAgentTimeMap);
       }
     } catch (Exception e) {
-      log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
     }
   }
 
@@ -229,27 +213,27 @@ public class IoThread extends Thread {
         }
       }
     } catch (Exception e) {
-      log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
     }
   }
 
-  // private void getIoThreadQueueFromJSONObject(ObjectNode jsonObject) {
-  //   try {
-  //     String listString = null;
-  //     JsonNode jsonNode = jsonObject.get(Const.ZSET_IO_THREAD_QUEUE_SIZE);
-  //     if (null != jsonNode) {
-  //       listString = jsonNode.asText();
-  //     }
-  //     if (StringUtil.isNotBlank(listString)) {
-  //       HashMap<String, Integer> map = JsonUtil.string2Obj(listString, HashMap.class);
-  //       if(null != map && 0 < map.size()){
-  //         ioThreadQueueSet.add(map);
-  //       }
-  //     }
-  //   } catch (Exception e) {
-  //     log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
-  //   }
-  // }
+  private void getIoThreadQueueFromJSONObject(ObjectNode jsonObject) {
+    try {
+      String listString = null;
+      JsonNode jsonNode = jsonObject.get(Const.ZSET_IO_THREAD_QUEUE_SIZE);
+      if (null != jsonNode) {
+        listString = jsonNode.asText();
+      }
+      if (StringUtil.isNotBlank(listString)) {
+        HashMap<String, Integer> map = JsonUtil.string2Obj(listString, HashMap.class);
+        if(null != map && 0 < map.size()){
+          ioThreadQueueSet.add(map);
+        }
+      }
+    } catch (Exception e) {
+      log.error("# IoThreadByEventHandler.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
+    }
+  }
 
   /**
    * <B>方法名称：getEsSegmentDetailFromJSONObject</B>
@@ -272,14 +256,14 @@ public class IoThread extends Thread {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
-        log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+        log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<EsMsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, EsMsSegmentDetailDo.class);
         esSegmentDetailDoList.addAll(segmentDetailList);
       }
     } catch (Exception e) {
-      log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
     }
   }
 
@@ -301,14 +285,14 @@ public class IoThread extends Thread {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
-        log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
+        log.error("# IoThreadByEventHandler.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<Span> spanLinkedList = JsonUtil.string2Obj(listString, LinkedList.class, Span.class);
         spanList.addAll(spanLinkedList);
       }
     } catch (Exception e) {
-      log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
     }
   }
   private void getSegmentDetailFromJSONObject(ObjectNode jsonObject) {
@@ -320,7 +304,7 @@ public class IoThread extends Thread {
           listString = jsonNode.asText();
         }
       } catch (Exception e) {
-        log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+        log.error("# IoThreadByEventHandler.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
       }
       if (StringUtil.isNotBlank(listString)) {
         LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
@@ -341,7 +325,7 @@ public class IoThread extends Thread {
         segmentDetailDoList.addAll(segmentDetailList);
       }
     } catch (Exception e) {
-      log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
     }
   }
 
@@ -362,7 +346,7 @@ public class IoThread extends Thread {
   //       auditLogList.addAll(auditLogFromSkywalkingAgentList);
   //     }
   //   } catch (Exception e) {
-  //     log.error("# IoThread.getAuditLogFromJSONObject() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
+  //     log.error("# IoThreadByEventHandler.getAuditLogFromJSONObject() # 将来自skywalking探针的审计日志放入到 auditLogList 表中出现了异常。", e);
   //   }
   // }
 
@@ -384,7 +368,7 @@ public class IoThread extends Thread {
         segmentList.add(segmentDo);
       }
     } catch (Exception e) {
-      log.error("# IoThread.getSegmentFromJSONObject() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.getSegmentFromJSONObject() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
     }
   }
 
@@ -403,7 +387,7 @@ public class IoThread extends Thread {
       long isShouldFlush = DateTimeUtil.getSecond(CURRENT_TIME) - flushToRocketMQInterval;
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-        log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】秒.", flushToRocketMQInterval);
+        log.info("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】秒.", flushToRocketMQInterval);
 
         mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
@@ -411,8 +395,7 @@ public class IoThread extends Thread {
         mingshiServerUtil.flushProcessorThreadQpsToRedis(processorThreadQpsMap);
 
         // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
-        // mingshiServerUtil.flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(ioThreadQueueSet);
-        mingshiServerUtil.statisticsIoThreadQueueSize();
+        mingshiServerUtil.flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(ioThreadQueueSet);
 
         mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);
@@ -443,11 +426,12 @@ public class IoThread extends Thread {
       } else {
         // 减少log日志输出；2021-10-20 15:49:59
         if (Const.IOTREAD_LOG_INTERVAL <= DateTimeUtil.getSecond(now)) {
-          log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 当前IoThread统计线程离下次刷盘时间还有 = 【{}】秒。", isShouldFlush);
+          log.info("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 当前IoThread统计线程离下次刷盘时间还有 = 【{}】秒。", isShouldFlush);
         }
       }
     } catch (Exception e) {
-      log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
+      log.error("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
     }
   }
+
 }

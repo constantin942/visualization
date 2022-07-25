@@ -663,7 +663,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         String[] split = userName.split("\\" + Const.DOLLAR);
         String serviceCodeName = AgentInformationSingleton.get(split[0]);
         if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
-          userName = serviceCodeName + Const.DOLLAR + split[1];
+          userName = split[1] + "（" + serviceCodeName + "）";
+          // userName = serviceCodeName + Const.DOLLAR + split[1];
         }
       }
       tableCoarseInfo.setUsualVisitedUser(userName);

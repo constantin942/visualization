@@ -16,10 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Version 1.0
  **/
 @Slf4j
-public class BatchInsertByLinkedBlockingQueue {
+public class IoThreadBatchInsertByLinkedBlockingQueue {
 
   // 阻塞队列中，元素的个数；2021-06-09 16:30:20
-  private final static Integer QUEUE_SIZE = 2000;
+  private final static Integer QUEUE_SIZE = 10000;
   // private final static Integer QUEUE_SIZE = 500;
   private volatile static LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = null;
   // 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
@@ -31,7 +31,7 @@ public class BatchInsertByLinkedBlockingQueue {
   }
 
   // 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
-  public BatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
+  public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     log.info("开始执行方法OperatorRedisFailureBuffer（）。");
     if (0 < SINGLE_CASE_COUNT.get()) {
       log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
@@ -50,10 +50,10 @@ public class BatchInsertByLinkedBlockingQueue {
   // 获取单例；2021-06-23 10:50:06
   public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     if (null == linkedBlockingQueue) {
-      synchronized (BatchInsertByLinkedBlockingQueue.class) {
+      synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
         if (null == linkedBlockingQueue) {
           log.info("获取单例LinkedBlockingQueue。");
-          new BatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, flushToRocketMQInterval, mingshiServerUtil, esMsSegmentDetailUtil);
+          new IoThreadBatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, flushToRocketMQInterval, mingshiServerUtil, esMsSegmentDetailUtil);
         }
       }
     }

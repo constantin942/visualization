@@ -4,13 +4,16 @@ import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Component
 public class MingshiServerUtil {
+  @Value("${reactor.processor.enable}")
+  private boolean reactorProcessorEnable;
+
+  @Value("${reactor.iothread.disruptor}")
+  private boolean reactorIoThreadByDisruptor;
+
+  @Resource
+  private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
   private RedisPoolUtil redisPoolUtil;
   @Resource
@@ -820,6 +831,89 @@ public class MingshiServerUtil {
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.insertMonitorTables() # 将监管表中不存在的表插入到监管表中，出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：flushProcessorThreadQpsToRedis</B>
+   * <B>概要说明：将每一个processor线程的QPS发送到Redis中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月23日 11:07:52
+   * @Param [processorThreadQpsMap]
+   **/
+  public void flushProcessorThreadQpsToRedis(Map<String, Map<String, Integer>> processorThreadQpsMap) {
+    try {
+      if (null == processorThreadQpsMap || 0 == processorThreadQpsMap.size()) {
+        return;
+      }
+
+      Iterator<String> iterator = processorThreadQpsMap.keySet().iterator();
+      while (iterator.hasNext()) {
+        String threadName = iterator.next();
+        Map<String, Integer> map = processorThreadQpsMap.get(threadName);
+        if (null == map || 0 == map.size()) {
+          continue;
+        }
+        Iterator<String> iterator1 = map.keySet().iterator();
+        while (iterator1.hasNext()) {
+          String time = iterator1.next();
+          Integer count = map.get(time);
+          redisPoolUtil.incrementScore(threadName, time, Long.valueOf(count));
+        }
+      }
+      processorThreadQpsMap.clear();
+    } catch (Exception e) {
+      log.error("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中的时候，出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis</B>
+   * <B>概要说明：统计公共队列有多少个元素没有被消费</B>
+   * @Author zm
+   * @Date 2022年07月23日 11:07:42
+   * @Param []
+   * @return void
+   **/
+  public void flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> set) {
+    try {
+      if(null == set || 0 == set.size()){
+        return;
+      }
+      Iterator<Map<String/* 时间 */,Integer/* 队列的大小 */>> iterator = set.iterator();
+      while(iterator.hasNext()){
+        Map<String/* 时间 */,Integer/* 队列的大小 */> map = iterator.next();
+        if(null == map || 0 == map.size()){
+          continue;
+        }
+        Iterator<String> iterator1 = map.keySet().iterator();
+        while(iterator1.hasNext()){
+          String time = iterator1.next();
+          Integer count = map.get(time);
+          redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, time, Long.valueOf(count));
+        }
+      }
+    } catch (Exception e) {
+      log.error("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中的时候，出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：statisticsIoThreadQueueSize</B>
+   * <B>概要说明：将当前队列的大小发送到Redis中</B>
+   * @Author zm
+   * @Date 2022年07月25日 09:07:39
+   * @Param []
+   * @return void
+   **/
+  public void statisticsIoThreadQueueSize() {
+    String key = DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName();
+    if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
+      redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+    }else{
+      redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
     }
   }
 }
