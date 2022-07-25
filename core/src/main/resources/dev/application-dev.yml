@@ -152,4 +152,8 @@ reactor:
     enable: true
     disruptor: true
     thread:
-      count: 6
+      count: 4
+  iothread:
+    disruptor: false
+    thread:
+      count: 4
