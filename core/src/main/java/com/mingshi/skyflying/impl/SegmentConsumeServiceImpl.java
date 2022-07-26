@@ -160,9 +160,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // now = Instant.now();
 
         // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
-        if (true == esMsSegmentDetailUtil.getEsEnable()) {
-          esSegmentDetaiDolList = esMsSegmentDetailUtil.getEsSegmentDetaiDolList(segment);
-        }
+        // if (true == esMsSegmentDetailUtil.getEsEnable()) {
+        //   esSegmentDetaiDolList = esMsSegmentDetailUtil.getEsSegmentDetaiDolList(segment);
+        // }
         segmentDetaiDolList = getSegmentDetaiDolList(segment, segmentObject);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完100行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
 
@@ -227,9 +227,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
         // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
-        if (true == esMsSegmentDetailUtil.getEsEnable()) {
-          mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
-        }
+        // if (true == esMsSegmentDetailUtil.getEsEnable()) {
+        //   mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
+        // }
 
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
 
@@ -496,7 +496,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void doEnableReactorModel(HashMap<String, Integer> statisticsIoThreadQueueSizeMap,
                                     HashMap<String, Map<String, Integer>> map,
                                     List<Span> spanList,
-                                    // LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
+                                    LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
                                     LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,

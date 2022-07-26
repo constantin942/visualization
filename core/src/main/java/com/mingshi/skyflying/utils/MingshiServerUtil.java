@@ -8,6 +8,7 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
 import com.mingshi.skyflying.domain.*;
+import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
@@ -769,31 +770,31 @@ public class MingshiServerUtil {
    * @Date 2022年06月02日 11:06:24
    * @Param [segmentDetaiDolList]
    **/
-  public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
-    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-      try {
-        Instant now = Instant.now();
-        mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
-        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-        segmentDetailDoList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
-      }
-    }
-  }
+  // public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
+  //   if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+  //     try {
+  //       Instant now = Instant.now();
+  //       mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
+  //       log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+  //       segmentDetailDoList.clear();
+  //     } catch (Exception e) {
+  //       log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
+  //     }
+  //   }
+  // }
 
-  public void flushSegmentDetailCountToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
-    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-      try {
-        Instant now = Instant.now();
-        mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
-        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-        segmentDetailDoList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
-      }
-    }
-  }
+  // public void flushSegmentDetailCountToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
+  //   if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+  //     try {
+  //       Instant now = Instant.now();
+  //       mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
+  //       log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+  //       segmentDetailDoList.clear();
+  //     } catch (Exception e) {
+  //       log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
+  //     }
+  //   }
+  // }
 
   @Transactional
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
