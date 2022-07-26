@@ -424,6 +424,28 @@ public class SkyflyingController {
   }
 
   /**
+   * <B>方法名称：updateAnomalyDetectionInfo</B>
+   * <B>概要说明：删除告警信息或更新画像</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年07月25日 13:07:16
+   * @Param [pageNo, pageSize]
+   **/
+  @ResponseBody
+  @RequestMapping(value = "/updateAnomalyDetectionInfo", method = RequestMethod.GET)
+  public ServerResponse<String> updateAnomalyDetectionInfo(
+    @RequestParam(value = "id") Integer id,
+    @RequestParam(value = "matchRuleId") Integer matchRuleId,
+    @RequestParam(value = "originalTime") String originalTime,
+    @RequestParam(value = "userName") String userName,
+    @RequestParam(value = "alarmContent") String alarmContent,
+    @RequestParam(value = "flag") String flag
+  ) {
+    return msAlarmInformationService.updateAnomalyDetectionInfo(id, matchRuleId, originalTime, userName, alarmContent, flag);
+  }
+
+  /**
    * <B>方法名称：getAllUserNamePortraitByVisitedTime</B>
    * <B>概要说明：获取所有的用户</B>
    *
@@ -816,10 +838,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：getUserOperationTypeCount</B>
    * <B>概要说明：获取用户操作类型次数</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List < java.lang.String>>
    * @Author zm
    * @Date 2022年07月22日 17:07:46
    * @Param [userName]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List<java.lang.String>>
    **/
   @ResponseBody
   @RequestMapping(value = "/getUserOperationTypeCount", method = RequestMethod.GET)

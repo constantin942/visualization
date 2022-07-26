@@ -9,7 +9,7 @@ public class MsAlarmInformationDo {
 
     private Integer matchRuleId;
 
-    private Byte isDelete;
+    private Integer isDelete;
 
     private Date gmtCreate;
 

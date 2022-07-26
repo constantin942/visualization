@@ -16,8 +16,8 @@ public class AnomylyDetectionSingletonByVisitedTime {
   // 规则在数据库表里的id；
   private static volatile Integer visitedTimeRuleId = null;
 
-  public static void setVisitedTimeRuleId(Integer visitedTimeRuleId){
-    visitedTimeRuleId = visitedTimeRuleId;
+  public static void setVisitedTimeRuleId(Integer vTimeRId){
+    visitedTimeRuleId = vTimeRId;
   }
 
   public static Integer getVisitedTimeRuleId(){

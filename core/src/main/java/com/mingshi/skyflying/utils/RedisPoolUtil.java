@@ -6,15 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -756,13 +756,15 @@ public class RedisPoolUtil {
     log.error("hgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
   }
+
   /**
    * <B>方法名称：hgetKeys</B>
    * <B>概要说明：获取hash表中所有的key</B>
+   *
+   * @return java.lang.Object
    * @Author zm
    * @Date 2022年07月20日 16:07:57
    * @Param [key, item]
-   * @return java.lang.Object
    **/
   @HystrixCommand(
     threadPoolProperties = {
@@ -788,10 +790,11 @@ public class RedisPoolUtil {
   /**
    * <B>方法名称：hgetSize</B>
    * <B>概要说明：获取哈希集合中元素的个数</B>
+   *
+   * @return java.lang.Long
    * @Author zm
    * @Date 2022年07月21日 09:07:48
    * @Param [key]
-   * @return java.lang.Long
    **/
   @HystrixCommand(
     threadPoolProperties = {
@@ -1404,7 +1407,6 @@ public class RedisPoolUtil {
       @HystrixProperty(name = "maxQueueSize", value = "1500"),
       @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
     },
-
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
@@ -1421,6 +1423,31 @@ public class RedisPoolUtil {
   public void incrementScoreFallback(String key, String value, double scoure, Throwable throwable) {
     log.error("incrementScoreFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return;
+  }
+
+  /**
+   * <B>方法名称：incrementScoreByBatch</B>
+   * <B>概要说明：批量插入到Redis的Zset集合中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 18:07:47
+   * @Param [list, redisCacheKey]
+   **/
+  public void incrementScoreByBatch(String redisCacheKey, List<HashMap<String, Double>> list) {
+    Set<ZSetOperations.TypedTuple<String>> dataSet = new HashSet<>();
+    for (HashMap<String, Double> data : list) {
+      Iterator<String> iterator = data.keySet().iterator();
+      while (iterator.hasNext()) {
+        String key = iterator.next();
+        Double value = data.get(key);
+        ZSetOperations.TypedTuple<String> typedTuple = new DefaultTypedTuple<>(key, value);
+        dataSet.add(typedTuple);
+      }
+    }
+    if (null != dataSet && dataSet.size() > 0) {
+      stringRedisTemplate.opsForZSet().add(redisCacheKey, dataSet);
+    }
   }
 
   /**

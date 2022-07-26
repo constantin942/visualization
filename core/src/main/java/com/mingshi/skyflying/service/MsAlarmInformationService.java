@@ -11,4 +11,14 @@ public interface MsAlarmInformationService extends ParentService<MsAlarmInformat
   ServerResponse<String> getUserNameAnomalyDetectionInfo();
 
   ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(Integer pageNo, Integer pageSize);
+
+  /**
+   * <B>方法名称：updateAnomalyDetectionInfo</B>
+   * <B>概要说明：处置告警异常信息</B>
+   * @Author zm
+   * @Date 2022年07月25日 13:07:17
+   * @Param [userName, matchRuleId, originalTime]
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   **/
+  ServerResponse<String> updateAnomalyDetectionInfo(Integer id, Integer matchRuleId, String originalTime, String userName, String alarmContent, String flag);
 }

@@ -47,7 +47,11 @@
     from user_portrait_by_visited_table_everyday
     group by user_name
   </select>
-
+  <select id="selectByUserNameAndTime" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo" resultMap="BaseResultMap">
+    select *
+    from user_portrait_by_visited_table_everyday
+    where user_name = #{userName} and visited_date = #{visitedDate} and visited_table = #{visitedTable} and db_type = #{dbType}
+  </select>
   <select id="selectAllVisitedTable" resultType="com.mingshi.skyflying.domain.InstanceTable">
     select distinct visited_db_instance,visited_table
     from user_portrait_by_visited_table_everyday

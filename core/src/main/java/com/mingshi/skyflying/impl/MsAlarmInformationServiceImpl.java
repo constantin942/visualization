@@ -1,15 +1,24 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.MsAlarmInformationMapper;
+import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
+import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.domain.MsAlarmInformationDo;
+import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
+import com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo;
+import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsAlarmInformationService;
+import com.mingshi.skyflying.utils.DateTimeUtil;
 import com.mingshi.skyflying.utils.JsonUtil;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +37,12 @@ import java.util.Map;
 public class MsAlarmInformationServiceImpl implements MsAlarmInformationService {
   @Resource
   private MsAlarmInformationMapper msAlarmInformationMapper;
+  @Resource
+  private UserPortraitByVisitedTimeMapper userPortraitByVisitedTimeMapper;
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
+  @Resource
+  private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   @Override
   public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
@@ -124,4 +139,191 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     bySuccess.setData(JsonUtil.obj2String(context));
     return bySuccess;
   }
+
+  /**
+   * <B>方法名称：updateAnomalyDetectionInfo</B>
+   * <B>概要说明：处置告警异常信息</B>
+   *
+   * @param userName
+   * @param matchRuleId
+   * @param originalTime
+   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年07月25日 13:07:17
+   * @Param [userName, matchRuleId, originalTime]
+   */
+  @Override
+  public ServerResponse<String> updateAnomalyDetectionInfo(Integer id, Integer matchRuleId, String originalTime, String userName, String alarmContent, String flag) {
+    if (null == id) {
+      return ServerResponse.createByErrorMessage("id字段必传", "");
+    }
+    if (null == matchRuleId) {
+      return ServerResponse.createByErrorMessage("命中规则字段必传", "");
+    }
+    if (StringUtil.isBlank("originalTime")) {
+      return ServerResponse.createByErrorMessage("告警时间必传", "");
+    }
+    if (StringUtil.isBlank("userName")) {
+      return ServerResponse.createByErrorMessage("用户名字段必传", "");
+    }
+    if (StringUtil.isBlank("alarmContent")) {
+      return ServerResponse.createByErrorMessage("告警内容字段必传", "");
+    }
+    if (StringUtil.isBlank("flag")) {
+      return ServerResponse.createByErrorMessage("处置字段必传", "");
+    }
+    if (!flag.equals(Const.ANOMALY_DETECTION_INFO_DELETE) && !flag.equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
+      return ServerResponse.createByErrorMessage("处置字段非法，处置字段要么是delete，要么是update", "");
+    }
+
+    // 仅仅删除这条规则；2022-07-25 14:16:26
+    if (flag.equals(Const.ANOMALY_DETECTION_INFO_DELETE)) {
+      deleteAnomalyDetection(id);
+    } else if (flag.equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
+      // 更新用户画像，同时逻辑删除告警信息；
+      if (StringUtil.isBlank("matchRuleId")) {
+        return ServerResponse.createByErrorMessage("命中的告警规则字段必传", "");
+      }
+      updateAnomalyDetection(matchRuleId, originalTime, userName, alarmContent);
+      deleteAnomalyDetection(id);
+    }
+
+    return ServerResponse.createBySuccess();
+  }
+
+  /**
+   * <B>方法名称：updateAnomalyDetection</B>
+   * <B>概要说明：更新用户画像信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 14:07:58
+   * @Param [userName, originalTime, matchRuleId]
+   **/
+  private void updateAnomalyDetection(Integer matchRuleId, String originalTime, String userName, String alarmContent) {
+    if (matchRuleId.equals(1)) {
+      // 处理基于访问时间的用户画像信息；2022-07-25 17:36:01
+      updateOrInsertUserPortraitByVisitedTime(userName, originalTime);
+    } else if (matchRuleId.equals(2)) {
+      // 处理基于访问过的表的用户画像信息
+      updateOrInsertUserPortraitByVisitedTable(originalTime, userName, alarmContent);
+    }
+  }
+
+  /**
+   * <B>方法名称：updateOrInsertUserPortraitByVisitedTable</B>
+   * <B>概要说明：处理基于访问过的表的用户画像信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 17:07:28
+   * @Param [userName, originalTime]
+   **/
+  private void updateOrInsertUserPortraitByVisitedTable(String originalTime, String userName, String alarmContent) {
+    // 用户 jiaojiangjg 首次访问了数据库表：hy_company。
+    String[] split = alarmContent.split("：")[1].split("。");
+    String[] tablesAndDbType = split[0].split("-");
+    String tables = tablesAndDbType[0];
+    String dbType = tablesAndDbType[1];
+
+    UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo = new UserPortraitByVisitedTableEverydayDo();
+    userPortraitByVisitedTableEverydayDo.setUserName(userName);
+    userPortraitByVisitedTableEverydayDo.setVisitedTable(tables);
+    Date startTime = DateTimeUtil.strToDate(originalTime, DateTimeUtil.DATEFORMAT_STR_001);
+    String strToDateToStr = DateTimeUtil.dateToStr(startTime, DateTimeUtil.DATEFORMAT_STR_002);
+
+    userPortraitByVisitedTableEverydayDo.setVisitedDate(strToDateToStr);
+    userPortraitByVisitedTableEverydayDo.setDbType(dbType);
+
+    UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo1 = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndTime(userPortraitByVisitedTableEverydayDo);
+    if (null == userPortraitByVisitedTableEverydayDo1) {
+      userPortraitByVisitedTableEverydayDo.setVisitedCount(1);
+      userPortraitByVisitedTableEverydayMapper.insertSelective(userPortraitByVisitedTableEverydayDo);
+    } else {
+      Integer visitedCount = userPortraitByVisitedTableEverydayDo1.getVisitedCount();
+      userPortraitByVisitedTableEverydayDo1.setVisitedCount(null == visitedCount ? 0 + 1 : visitedCount + 1);
+      userPortraitByVisitedTableEverydayDo.setVisitedCount(userPortraitByVisitedTableEverydayDo1.getVisitedCount());
+      userPortraitByVisitedTableEverydayMapper.updateByPrimaryKeySelective(userPortraitByVisitedTableEverydayDo1);
+    }
+    // 将数据更新到本地内存中；2022-07-25 17:20:44
+    mingshiServerUtil.synchronizationUserPortraitByVisitedTableToLocalMemory(userPortraitByVisitedTableEverydayDo);
+  }
+
+  /**
+   * <B>方法名称：updateOrInsertUserPortraitByVisitedTime</B>
+   * <B>概要说明：处理基于访问时间的用户画像信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 17:07:28
+   * @Param [userName, originalTime]
+   **/
+  private void updateOrInsertUserPortraitByVisitedTime(String userName, String originalTime) {
+    Map<String, Object> queryMap = new HashMap<>();
+    queryMap.put("userName", userName);
+    List<UserPortraitByVisitedTimeDo> userPortraitByVisitedTimeDoList = userPortraitByVisitedTimeMapper.selectByUserName(queryMap);
+    UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo = null;
+    if (null == userPortraitByVisitedTimeDoList || 0 == userPortraitByVisitedTimeDoList.size()) {
+      userPortraitByVisitedTimeDo = new UserPortraitByVisitedTimeDo();
+      createUserPortraitByVisitedTimeDo(userPortraitByVisitedTimeDo, originalTime);
+      userPortraitByVisitedTimeMapper.insertSelective(userPortraitByVisitedTimeDo);
+    } else {
+      userPortraitByVisitedTimeDo = userPortraitByVisitedTimeDoList.get(0);
+      createUserPortraitByVisitedTimeDo(userPortraitByVisitedTimeDo, originalTime);
+      userPortraitByVisitedTimeMapper.updateByPrimaryKeySelective(userPortraitByVisitedTimeDo);
+    }
+    // 将数据更新到本地内存中；2022-07-25 17:20:44
+    mingshiServerUtil.synchronizationUserPortraitByVisitedTimeToLocalMemory(userPortraitByVisitedTimeDo);
+  }
+
+  /**
+   * <B>方法名称：createUserPortraitByVisitedTimeDo</B>
+   * <B>概要说明：赋值</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 17:07:06
+   * @Param [userPortraitByVisitedTimeDo, originalTime]
+   **/
+  public void createUserPortraitByVisitedTimeDo(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo, String originalTime) {
+    Date date = DateTimeUtil.strToDate(originalTime);
+    String currHourTime = DateTimeUtil.judgmentTime(date);
+    if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
+      Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
+      userPortraitByVisitedTimeDo.setNightCount(null == forenoonCount ? 1 : forenoonCount + 1);
+    } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode())) {
+      Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
+      userPortraitByVisitedTimeDo.setAfternoonCount(null == afternoonCount ? 1 : afternoonCount + 1);
+    } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_NIGHT.getCode())) {
+      Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
+      userPortraitByVisitedTimeDo.setNightCount(null == nightCount ? 1 : nightCount + 1);
+    }
+  }
+
+  /**
+   * <B>方法名称：deleteAnomalyDetection</B>
+   * <B>概要说明：逻辑删除告警信息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 14:07:08
+   * @Param [userName, originalTime, matchRuleId]
+   **/
+  private void deleteAnomalyDetection(Integer id) {
+    MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
+    msAlarmInformationDo.setId(id);
+    msAlarmInformationDo.setIsDelete(1);
+    msAlarmInformationMapper.updateByPrimaryKeySelective(msAlarmInformationDo);
+  }
+
+  // private void deleteAnomalyDetection(String userName, String originalTime, Integer matchRuleId) {
+  //   MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
+  //   msAlarmInformationDo.setUserName(userName);
+  //   msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(originalTime));
+  //   if (null != matchRuleId) {
+  //     msAlarmInformationDo.setMatchRuleId(matchRuleId);
+  //   }
+  //   msAlarmInformationDo.setIsDelete(1);
+  //   msAlarmInformationMapper.updateByUserNameAndOriginalTime(msAlarmInformationDo);
+  // }
 }

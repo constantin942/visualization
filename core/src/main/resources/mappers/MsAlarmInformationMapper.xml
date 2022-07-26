@@ -67,8 +67,9 @@
       group by user_name,match_rule_id,original_time ) as t1
   </select>
   <select id="selectAllByGroupByUserName" parameterType="java.util.Map" resultType="java.util.Map">
-    select user_name as userName,match_rule_id as matchRuleId,original_time as originalTime, count(user_name) as matchCount
+    select user_name as userName,match_rule_id as matchRuleId, original_time as originalTime, count(user_name) as matchCount
     from ms_alarm_information
+    where is_delete = 0
     group by user_name,match_rule_id,original_time
     order by user_name,count(user_name) desc
     <if test="pageNo != null and  pageSize != null   ">
@@ -161,7 +162,7 @@
   </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_alarm_information
-    ( user_name, alarm_content, global_trace_id,original_time,match_rule_id )
+    ( user_name, alarm_content, global_trace_id, original_time, match_rule_id )
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -172,6 +173,7 @@
       #{item.matchRuleId,jdbcType=INTEGER}
       )
     </foreach>
+    ON DUPLICATE KEY UPDATE original_time=values(original_time)
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
     update ms_alarm_information
@@ -202,5 +204,14 @@
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByUserNameAndOriginalTime" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
+    update ms_alarm_information
+    set is_delete = #{isDelete,jdbcType=TINYINT}
+    where user_name = #{userName,jdbcType=VARCHAR} and
+          original_time = #{originalTime,jdbcType=TIMESTAMP}
+          <if test="matchRuleId != null">
+            and match_rule_id = #{matchRuleId,jdbcType=INTEGER}
+          </if>
   </update>
 </mapper>

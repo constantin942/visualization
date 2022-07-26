@@ -1,13 +1,14 @@
 package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
+import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
 import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
-import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
+import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -61,6 +63,73 @@ public class MingshiServerUtil {
   private SegmentDao segmentDao;
   @Resource
   private UserTokenDao userTokenDao;
+
+  /**
+   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
+   * <B>概要说明：同步用户访问过的表到本地内存</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 17:07:11
+   * @Param [userPortraitByVisitedTimeDo]
+   **/
+  public void synchronizationUserPortraitByVisitedTableToLocalMemory(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
+    String userName = userPortraitByVisitedTableEverydayDo.getUserName();
+    String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
+    String tables = userPortraitByVisitedTableEverydayDo.getVisitedTable();
+    String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
+    Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
+    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap =
+      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
+    if (null != userPortraitByVisitedTableMap) {
+      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>> stringMapMap = userPortraitByVisitedTableMap.get(userName);
+      if (null == stringMapMap) {
+        stringMapMap = new ConcurrentHashMap<>();
+        userPortraitByVisitedTableMap.put(userName, stringMapMap);
+      }
+      Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>> tablesMap = stringMapMap.get(tables);
+      if (null == tablesMap) {
+        tablesMap = new ConcurrentHashMap<>();
+        stringMapMap.put(tables, tablesMap);
+      }
+      Map<String, Integer> originalTimeMap = tablesMap.get(visitedDate);
+      if (null == originalTimeMap) {
+        originalTimeMap = new ConcurrentHashMap<>();
+        tablesMap.put(visitedDate, originalTimeMap);
+      }
+      originalTimeMap.put(dbType, visitedCount);
+    }
+  }
+  /**
+   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
+   * <B>概要说明：同步用户访问过的时间到本地内存</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月25日 17:07:11
+   * @Param [userPortraitByVisitedTimeDo]
+   **/
+  public void synchronizationUserPortraitByVisitedTimeToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+    String userName = userPortraitByVisitedTimeDo.getUserName();
+    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
+    Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */> map = userPortraitByVisitedTimeMap.get(userName);
+    Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
+    Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
+    Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
+    if (null == map) {
+      map = new ConcurrentHashMap<>();
+      userPortraitByVisitedTimeMap.put(userName, map);
+    }
+    if (null != forenoonCount) {
+      map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), forenoonCount);
+    }
+    if (null != afternoonCount) {
+      map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), afternoonCount);
+    }
+    if (null != nightCount) {
+      map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), nightCount);
+    }
+  }
 
   /**
    * <B>方法名称：getSqlType</B>
@@ -592,6 +661,7 @@ public class MingshiServerUtil {
         Instant now = Instant.now();
         msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
         log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+        msAlarmInformationDoLinkedListist.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
       }
@@ -872,24 +942,25 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis</B>
    * <B>概要说明：统计公共队列有多少个元素没有被消费</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月23日 11:07:42
    * @Param []
-   * @return void
    **/
-  public void flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> set) {
+  public void flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(HashSet<Map<String/* 时间 */, Integer/* 队列的大小 */>> set) {
     try {
-      if(null == set || 0 == set.size()){
+      if (null == set || 0 == set.size()) {
         return;
       }
-      Iterator<Map<String/* 时间 */,Integer/* 队列的大小 */>> iterator = set.iterator();
-      while(iterator.hasNext()){
-        Map<String/* 时间 */,Integer/* 队列的大小 */> map = iterator.next();
-        if(null == map || 0 == map.size()){
+      Iterator<Map<String/* 时间 */, Integer/* 队列的大小 */>> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        Map<String/* 时间 */, Integer/* 队列的大小 */> map = iterator.next();
+        if (null == map || 0 == map.size()) {
           continue;
         }
         Iterator<String> iterator1 = map.keySet().iterator();
-        while(iterator1.hasNext()){
+        while (iterator1.hasNext()) {
           String time = iterator1.next();
           Integer count = map.get(time);
           redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, time, Long.valueOf(count));
@@ -903,16 +974,17 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：statisticsIoThreadQueueSize</B>
    * <B>概要说明：将当前队列的大小发送到Redis中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月25日 09:07:39
    * @Param []
-   * @return void
    **/
   public void statisticsIoThreadQueueSize() {
     String key = DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName();
-    if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
+    if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
       redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-    }else{
+    } else {
       redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
     }
   }

@@ -64,6 +64,7 @@ public class AnomalyDetectionUtil {
     if (null == map) {
       log.error("# LoadUserPortraitFromDb.urlIsAbnormal() # 出现了一条告警信息。该用户从来没有出现过。", userName);
       msAlarmInformationDo.setUserName(userName);
+      msAlarmInformationDo.setMatchRuleId(AnomylyDetectionSingletonByVisitedTime.getVisitedTimeRuleId());
       msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
       msAlarmInformationDo.setGlobalTraceId(globalTraceId);
       msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次出现。");
@@ -92,10 +93,11 @@ public class AnomalyDetectionUtil {
         log.error("# LoadUserPortraitFromDb.urlIsAbnormal() # 用户【{}】访问时间【{}】既不是上午、下午，也不是晚上。这是不对的，要排查下原因。", userName, startTimeStr);
       }
       if (null == count || 0 == count) {
+        msAlarmInformationDo.setMatchRuleId(AnomylyDetectionSingletonByVisitedTime.getVisitedTimeRuleId());
         msAlarmInformationDo.setUserName(userName);
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
         msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-        msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次在这个时间段 " + content + " 访问系统。");
+        msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次在这个时间段【" + content + "】访问了系统。");
         msAlarmInformationDoList.add(msAlarmInformationDo);
       } else {
         // 设置变更标记；2022-06-08 10:53:05
@@ -150,9 +152,10 @@ public class AnomalyDetectionUtil {
         if (null == visitedTableDateCountMap || null == visitedTableDateCountMap.get(tableName)) {
           log.error("# LoadUserPortraitFromDb.userVisitedTableIsAbnormal() # 出现了一条告警信息。该用户从来没有出现过。", userName);
           msAlarmInformationDo.setUserName(userName);
+          msAlarmInformationDo.setMatchRuleId(AnomylyDetectionSingletonByVisitedTableEveryday.getVisitedTableRuleId());
           msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(msSegmentDetailDo.getStartTime()));
           msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-          msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次访问这个表：" + tableName + "-" + dbType + "。");
+          msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次访问了数据库表：" + tableName + "-" + dbType + "。");
           msAlarmInformationDoList.add(msAlarmInformationDo);
         } else {
           Map<String/* 访问日期，以天为单位 */,

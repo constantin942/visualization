@@ -16,8 +16,8 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
   // 规则在数据库表里的id；
   private static volatile Integer visitedTableRuleId = null;
 
-  public static void setVisitedTableRuleId(Integer visitedTableRuleId){
-    visitedTableRuleId = visitedTableRuleId;
+  public static void setVisitedTableRuleId(Integer vTRId){
+    visitedTableRuleId = vTRId;
   }
 
   public static Integer getVisitedTableRuleId(){

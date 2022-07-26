@@ -20,6 +20,11 @@ package com.mingshi.skyflying.constant;
 
 public class Const {
 
+  // 告警信息删除；
+  public static final String ANOMALY_DETECTION_INFO_DELETE = "delete";
+  // 更新用户画像；
+  public static final String ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT = "update";
+
   // 目前在缓存里，缓存的数据有：
   // 记录每一天采集到多少条信息；2022-07-18 16:41:53  AllRecentSevenDays
   public static final String HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS = "hash_everyday_ms_segment_detail_how_many_records";

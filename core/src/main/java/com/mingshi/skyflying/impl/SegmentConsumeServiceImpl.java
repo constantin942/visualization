@@ -496,7 +496,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void doEnableReactorModel(HashMap<String, Integer> statisticsIoThreadQueueSizeMap,
                                     HashMap<String, Map<String, Integer>> map,
                                     List<Span> spanList,
-                                    LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
+                                    // LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
                                     LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
                                     LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,

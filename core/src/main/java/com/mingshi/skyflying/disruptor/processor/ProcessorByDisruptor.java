@@ -48,7 +48,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
 
   // private Integer queueSize = 4;
   private Integer queueSize = 1024;
-  private RingBuffer<SegmentByByte> ringBuffer;
+  private RingBuffer<SegmentByByte> acceptorRingBuffer;
   private String applicationName;
 
   private volatile Boolean createProcessorsFinishedFlag = false;
@@ -58,7 +58,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
 
   private void init(String applicationName) {
     this.applicationName = applicationName;
-    this.ringBuffer = messageModelRingBuffer(queueSize, true);
+    this.acceptorRingBuffer = messageModelRingBuffer(queueSize, true);
     createProcessorsFinishedFlag = true;
   }
 
@@ -114,10 +114,10 @@ public class ProcessorByDisruptor implements ApplicationRunner {
    **/
   public boolean offer(byte[] data) {
     // 获取待存放元素的数组下标；2022-07-17 10:34:41
-    long sequence = ringBuffer.next();
+    long sequence = acceptorRingBuffer.next();
     try {
       // 根据下标，从数组中获取该下标位置的对象/实例；2022-07-17 10:36:01
-      SegmentByByte segmentByByte = ringBuffer.get(sequence);
+      SegmentByByte segmentByByte = acceptorRingBuffer.get(sequence);
       // 给获取到的对象/实例赋值；2022-07-17 10:36:34
       segmentByByte.setData(data);
       return true;
@@ -126,21 +126,21 @@ public class ProcessorByDisruptor implements ApplicationRunner {
       return false;
     } finally {
       // 将该下标位置的对象发布出去。也就是告诉消费者，队列里有数据了，可以来消费了。2022-07-17 10:37:00
-      ringBuffer.publish(sequence);
+      acceptorRingBuffer.publish(sequence);
 
       // 间隔输出日志；2022-07-22 21:33:52
       Integer incrementAndGet = atomicInteger.incrementAndGet();
       int i = incrementAndGet & (1024 * 2 - 1);
       if(0 == i){
         log.info("当前线程【{}】将没有处理前的流量放入到FlowsMatchRingBuffer中，当前该队列可用容量【{}】，总容量【{}】。",
-          Thread.currentThread().getName(), ringBuffer.remainingCapacity(), queueSize);
+          Thread.currentThread().getName(), acceptorRingBuffer.remainingCapacity(), queueSize);
       }
     }
   }
 
   // 获取队列中还可以容纳元素的个数；2021-10-20 15:22:55
   public long getQueueSize() {
-    return ringBuffer.remainingCapacity();
+    return acceptorRingBuffer.remainingCapacity();
   }
 
 }

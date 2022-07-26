@@ -29,4 +29,6 @@ public interface UserPortraitByVisitedTableEverydayMapper {
     List<String> selectAllUserName();
 
     List<InstanceTable> selectAllVisitedTable();
+
+    UserPortraitByVisitedTableEverydayDo selectByUserNameAndTime(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo);
 }

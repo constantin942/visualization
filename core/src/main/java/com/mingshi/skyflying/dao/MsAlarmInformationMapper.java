@@ -13,6 +13,8 @@ public interface MsAlarmInformationMapper {
 
     int updateByPrimaryKeySelective(MsAlarmInformationDo record);
 
+    int updateByUserNameAndOriginalTime(MsAlarmInformationDo record);
+
     void insertSelectiveBatch(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist);
 
 		List<MsAlarmInformationDo> selectAll(Map<String, Object> queryMap);

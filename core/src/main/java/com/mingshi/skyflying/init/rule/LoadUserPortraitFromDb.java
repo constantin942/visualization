@@ -181,7 +181,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
         String userName = userPortraitByVisitedTimeDo.getUserName();
         Map<String, Integer> map = userPortraitByVisitedTimeMap.get(userName);
         if (null == map) {
-          map = new HashMap<>();
+          map = new ConcurrentHashMap<>();
           userPortraitByVisitedTimeMap.put(userName, map);
         }
         if (null != forenoonCount) {
