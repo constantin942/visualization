@@ -66,25 +66,25 @@ public class AnomalyDetectionUtil {
       msAlarmInformationDo.setUserName(userName);
       msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
       msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-      msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有出现过。");
+      msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次出现。");
       msAlarmInformationDoList.add(msAlarmInformationDo);
     } else {
       String content = null;
       if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_FORENOON.getCode());
-        if(null != count && 0 < count){
+        if (null != count && 0 < count) {
           map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), 1 + count);
         }
         content = ConstantsCode.USER_PORTRAIT_FORENOON.getDesc();
       } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode());
-        if(null != count && 0 < count){
+        if (null != count && 0 < count) {
           map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), 1 + count);
         }
         content = ConstantsCode.USER_PORTRAIT_AFTERNOON.getDesc();
       } else if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_NIGHT.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_NIGHT.getCode());
-        if(null != count && 0 < count){
+        if (null != count && 0 < count) {
           map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), 1 + count);
         }
         content = ConstantsCode.USER_PORTRAIT_NIGHT.getDesc();
@@ -95,7 +95,7 @@ public class AnomalyDetectionUtil {
         msAlarmInformationDo.setUserName(userName);
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDo.getRequestStartTime()));
         msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-        msAlarmInformationDo.setAlarmContent("用户 " + userName + " 在之前从来没有在 " + content + " 访问过系统。");
+        msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次在这个时间段 " + content + " 访问系统。");
         msAlarmInformationDoList.add(msAlarmInformationDo);
       } else {
         // 设置变更标记；2022-06-08 10:53:05
@@ -152,7 +152,7 @@ public class AnomalyDetectionUtil {
           msAlarmInformationDo.setUserName(userName);
           msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(msSegmentDetailDo.getStartTime()));
           msAlarmInformationDo.setGlobalTraceId(globalTraceId);
-          msAlarmInformationDo.setAlarmContent("用户[" + userName + "]在之前从来没有访问过这个表 " + tableName + "。");
+          msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次访问这个表：" + tableName + "-" + dbType + "。");
           msAlarmInformationDoList.add(msAlarmInformationDo);
         } else {
           Map<String/* 访问日期，以天为单位 */,
