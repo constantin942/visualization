@@ -7,7 +7,6 @@ import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
@@ -46,9 +45,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
-  private MsThirdPartyTableListMapper msThirdPartyTableListMapper;
-  @Resource
-  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
+  private UserPortraitRulesMapper userPortraitRulesMapper;
 
   @Override
   public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
@@ -726,15 +723,30 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
   @Override
   public ServerResponse<List<AlarmData>> getAlarmData() {
-
     log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData # 获取告警信息。");
     List<AlarmData> list = msSegmentDetailDao.selectAlarmData();
     for (int i = 0; i < list.size(); i++) {
-      if (list.get(i).getMatchRuleId() == 1) {
-        list.get(i).setAlarmName("基于访问时间段的告警规则：即若某用户通常白天访问数据，则夜间为异常；");
-      } else if (list.get(i).getMatchRuleId() == 2) {
-        list.get(i).setAlarmName("基于访问过的表的告警规则：若某用户访问从未访问过的表时，则给出告警；");
+      UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(list.get(i).getMatchRuleId());
+      if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
+        list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
+      }else{
+        list.get(i).setAlarmName("异常告警");
       }
+      // if (list.get(i).getMatchRuleId() == 1) {
+      //   UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(1);
+      //   if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
+      //     list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
+      //   }else{
+      //     list.get(i).setAlarmName("基于访问时间段的异常告警");
+      //   }
+      // } else if (list.get(i).getMatchRuleId() == 2) {
+      //   UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(2);
+      //   if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
+      //     list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
+      //   }else{
+      //     list.get(i).setAlarmName("基于访问数据库表的异常告警");
+      //   }
+      // }
     }
     log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取告警信息。");
     return ServerResponse.createBySuccess("获取数据成功！", "success", list);
@@ -752,7 +764,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       public int compare(UserAlarmData t1, UserAlarmData t2) {
         if (t1.getAlarmCount() < t2.getAlarmCount()) {
           return 1;
-        } else if (t1.getAlarmCount() == t2.getAlarmCount()) {
+        } else if (t1.getAlarmCount().equals(t2.getAlarmCount())) {
           return 0;
         } else {
           return -1;

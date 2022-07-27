@@ -49,22 +49,21 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   // private Integer queueSize = 4;
   private Integer queueSize = 1024;
   private RingBuffer<SegmentByByte> acceptorRingBuffer;
-  private String applicationName;
 
   private volatile Boolean createProcessorsFinishedFlag = false;
+
   public Boolean getCreateProcessorsFinishedFlag() {
     return createProcessorsFinishedFlag;
   }
 
   private void init(String applicationName) {
-    this.applicationName = applicationName;
-    this.acceptorRingBuffer = messageModelRingBuffer(queueSize, true);
+    this.acceptorRingBuffer = messageModelRingBuffer(queueSize, 1 == reactorProcessorThreadCount ? true : false);
     createProcessorsFinishedFlag = true;
   }
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    if(true == reactorProcessorEnable && true == reactorProcessorByDisruptor){
+    if (true == reactorProcessorEnable && true == reactorProcessorByDisruptor) {
       log.info("开始执行 # ProcessorByDisruptor.run() # 项目启动，开始构造Disruptor实例。");
       init("acceptor_");
       log.info("执行完毕 # ProcessorByDisruptor.run() # 项目启动，构造Disruptor实例完毕。");
@@ -81,9 +80,11 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     // 指定ringbuffer大小，必须为2的N次方（能将求模运算转为位运算提高效率），否则将影响效率
     Disruptor<SegmentByByte> disruptor = null;
     if (true == enableBatch) {
+      log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
       // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
     } else {
+      log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。", reactorProcessorThreadCount);
       // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
     }
@@ -129,12 +130,12 @@ public class ProcessorByDisruptor implements ApplicationRunner {
       acceptorRingBuffer.publish(sequence);
 
       // 间隔输出日志；2022-07-22 21:33:52
-      Integer incrementAndGet = atomicInteger.incrementAndGet();
-      int i = incrementAndGet & (1024 * 2 - 1);
-      if(0 == i){
-        log.info("当前线程【{}】将没有处理前的流量放入到FlowsMatchRingBuffer中，当前该队列可用容量【{}】，总容量【{}】。",
-          Thread.currentThread().getName(), acceptorRingBuffer.remainingCapacity(), queueSize);
-      }
+      // Integer incrementAndGet = atomicInteger.incrementAndGet();
+      // int i = incrementAndGet & (1024 * 2 - 1);
+      // if (0 == i) {
+      //   log.info("当前线程【{}】将没有处理前的流量放入到FlowsMatchRingBuffer中，当前队列中元素个数【{}】，总容量【{}】。",
+      //     Thread.currentThread().getName(), getQueueSize(), queueSize);
+      // }
     }
   }
 

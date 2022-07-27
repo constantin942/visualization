@@ -8,9 +8,10 @@
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
     <result column="rule_desc" jdbcType="VARCHAR" property="ruleDesc" />
+    <result column="rule_desc_detail" jdbcType="VARCHAR" property="ruleDescDetail" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, rule_name, rule_desc
+    id, is_delete, gmt_create, gmt_modified, rule_name, rule_desc, rule_desc_detail
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -58,6 +59,9 @@
       <if test="ruleDesc != null">
         rule_desc,
       </if>
+      <if test="ruleDescDetail != null">
+        rule_desc_detail,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -78,6 +82,9 @@
       <if test="ruleDesc != null">
         #{ruleDesc,jdbcType=VARCHAR},
       </if>
+      <if test="ruleDescDetail != null">
+        #{ruleDescDetail,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserPortraitRulesDo">
@@ -97,6 +104,9 @@
       </if>
       <if test="ruleDesc != null">
         rule_desc = #{ruleDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="ruleDescDetail != null">
+        rule_desc_detail = #{ruleDescDetail,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

@@ -2297,6 +2297,13 @@ public class DateTimeUtil {
     return str;
   }
 
+  public static Long DateToStrYYYYMMDDHHMMSS2(Date date) {
+    SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_yyyyMMddHHmmssSSS);
+    String str = format.format(date);
+    Long aLong = Long.valueOf(str);
+    return aLong;
+  }
+
   public static String DateToStrYYYYMMDD(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_yyyyMMdd);
     String str = format.format(date);

@@ -15,7 +15,6 @@ import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -107,6 +106,7 @@ public class MingshiServerUtil {
       originalTimeMap.put(dbType, visitedCount);
     }
   }
+
   /**
    * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
    * <B>概要说明：同步用户访问过的时间到本地内存</B>
@@ -347,7 +347,7 @@ public class MingshiServerUtil {
       if (0 < setmentDetailDoList.size()) {
         Instant now = Instant.now();
         msSegmentDetailDao.updateBatch(setmentDetailDoList);
-        log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# IoThread.batchUpdateMsSegmentDetail # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
@@ -368,7 +368,7 @@ public class MingshiServerUtil {
       if (0 < auditLogDoList.size()) {
         Instant now = Instant.now();
         msAuditLogDao.updateBatch(auditLogDoList);
-        log.info("# IoThread.batchUpdateMsAuditLog # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", auditLogDoList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("# IoThread.batchUpdateMsAuditLog # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", auditLogDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
@@ -389,7 +389,7 @@ public class MingshiServerUtil {
       if (0 < userTokenDoList.size()) {
         Instant now = Instant.now();
         userTokenDao.insertSelectiveBatch(userTokenDoList);
-        log.info("当前线程【{}】将segment数据对应的索引（{}条）插入到表中，耗时【{}】毫秒。", Thread.currentThread().getName(), userTokenDoList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("当前线程【{}】将segment数据对应的索引（{}条）插入到表中，耗时【{}】毫秒。", Thread.currentThread().getName(), userTokenDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("将索引存储到数据库中出现了异常。", e);
@@ -410,7 +410,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         segmentDao.insertSelectiveBatch(segmentList);
-        log.info("将【{}】条segment数据插入到表中，耗时【{}】毫秒。", segmentList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("将【{}】条segment数据插入到表中，耗时【{}】毫秒。", segmentList.size(), DateTimeUtil.getTimeMillis(now));
         segmentList.clear();
       } catch (Exception e) {
         log.error("将segment数据批量插入到数据库中的时候，出现了异常。", e);
@@ -453,7 +453,7 @@ public class MingshiServerUtil {
         // 更新每天采集情况和总的采集情况到Redis；2022-07-20 14:17:03
         updateEverydayStatisticToRedis(map);
 
-        log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        // log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
       } catch (Exception e) {
         log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
       }
@@ -530,7 +530,7 @@ public class MingshiServerUtil {
           // 将用户名放到本地内存中；2022-07-19 10:12:13
           InformationOverviewSingleton.put(userName);
         }
-        log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        // log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
         userHashSet.clear();
       } catch (Exception e) {
         log.error("# MingshiServerUtil.flushUserNameToRedis() # 实时将用户名发送到redis中，出现了异常。", e);
@@ -645,7 +645,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         msAuditLogDao.insertSelectiveBatch(auditLogList);
-        log.info("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的【{}】条SQL语句插入到表中耗时【{}】毫秒。", auditLogList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的【{}】条SQL语句插入到表中耗时【{}】毫秒。", auditLogList.size(), DateTimeUtil.getTimeMillis(now));
         auditLogList.clear();
       } catch (Exception e) {
         log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
@@ -667,7 +667,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
-        log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
         msAlarmInformationDoLinkedListist.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
@@ -708,7 +708,7 @@ public class MingshiServerUtil {
         msAgentInformationMapper.insertBatch(list);
         // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
         AgentInformationSingleton.setAtomicBooleanToFalse();
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
@@ -759,7 +759,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
         map.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
@@ -801,7 +801,6 @@ public class MingshiServerUtil {
   //     }
   //   }
   // }
-
   @Transactional
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
@@ -812,7 +811,7 @@ public class MingshiServerUtil {
         // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
         flushSegmentDetailCountToRedis(segmentDetailDoList);
 
-        log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
         segmentDetailDoList.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
@@ -834,7 +833,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         spanMapper.insertSelectiveBatch(spansList);
-        log.info("#SegmentConsumeServiceImpl.flushSpansToDB()# 将Spans实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", spansList.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushSpansToDB()# 将Spans实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", spansList.size(), DateTimeUtil.getTimeMillis(now));
         spansList.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSpansToDB() # 将Spans实例信息批量插入到MySQL中出现了异常。", e);
@@ -937,7 +936,10 @@ public class MingshiServerUtil {
         while (iterator1.hasNext()) {
           String time = iterator1.next();
           Integer count = map.get(time);
+          // 统计每个Processor线程自己的QPS；2022-07-27 10:16:09
           redisPoolUtil.incrementScore(threadName, time, Long.valueOf(count));
+          // 统计所有Processor线程总的QPS；2022-07-27 10:16:30
+          redisPoolUtil.incrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
         }
       }
       processorThreadQpsMap.clear();
@@ -947,59 +949,35 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis</B>
-   * <B>概要说明：统计公共队列有多少个元素没有被消费</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月23日 11:07:42
-   * @Param []
-   **/
-  public void flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(HashSet<Map<String/* 时间 */, Integer/* 队列的大小 */>> set) {
-    try {
-      if (null == set || 0 == set.size()) {
-        return;
-      }
-      Iterator<Map<String/* 时间 */, Integer/* 队列的大小 */>> iterator = set.iterator();
-      while (iterator.hasNext()) {
-        Map<String/* 时间 */, Integer/* 队列的大小 */> map = iterator.next();
-        if (null == map || 0 == map.size()) {
-          continue;
-        }
-        Iterator<String> iterator1 = map.keySet().iterator();
-        while (iterator1.hasNext()) {
-          String time = iterator1.next();
-          Integer count = map.get(time);
-          redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, time, Long.valueOf(count));
-        }
-      }
-    } catch (Exception e) {
-      log.error("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中的时候，出现了异常。", e);
-    }
-  }
-
-  /**
-   * <B>方法名称：statisticsIoThreadQueueSize</B>
-   * <B>概要说明：将当前队列的大小发送到Redis中</B>
+   * <B>方法名称：statisticsProcessorAndIoThreadQueueSize</B>
+   * <B>概要说明：将Processor线程和IoThread线程对应的队列大小发送到Redis中进行统计</B>
    *
    * @return void
    * @Author zm
    * @Date 2022年07月25日 09:07:39
    * @Param []
    **/
-  public void statisticsIoThreadQueueSize() {
+  public void statisticsProcessorAndIoThreadQueueSize() {
     String name = Thread.currentThread().getName();
-    if(name.equals("processLocalStatisticsThread_0") || name.equals("processLocalStatisticsThread_1") || name.equals("processLocalStatisticsThread_2") ){
+    // if (name.equals("processLocalStatisticsThread_0") || name.equals("processLocalStatisticsThread_1") || name.equals("processLocalStatisticsThread_2")) {
       // 只让线程0来发送消息到Redis中；2022-07-26 17:41:54
-      String key = DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName() + "-" + RandomUtils.nextInt();
-      if (true == reactorProcessorDisruptor){
-        redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
+      String key = DateTimeUtil.dateToStr(new Date()) + "-" + name;
+      if (true == reactorProcessorDisruptor) {
+        // 统计
+        // redisPoolUtil.incrementScore(Const.FIRST_QUEUE_SIZE_ZSET, String.valueOf(processorByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+        // redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
+        long queueSize = processorByDisruptor.getQueueSize();
+        redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET, key, Long.valueOf(queueSize));
       }
       if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-        redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+        redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
       } else {
-        redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+        redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
       }
-    }
+    // }
   }
 }

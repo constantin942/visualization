@@ -190,7 +190,7 @@ public class IoThread extends Thread {
   private void getProcessorThreadQpsFromJSONObject(ObjectNode jsonObject) {
     try {
       String listString = null;
-      JsonNode jsonNode = jsonObject.get(Const.ZSET_PROCESSOR_THREAD_QPS);
+      JsonNode jsonNode = jsonObject.get(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD);
       if (null != jsonNode) {
         listString = jsonNode.asText();
       }
@@ -403,16 +403,16 @@ public class IoThread extends Thread {
       long isShouldFlush = DateTimeUtil.getSecond(CURRENT_TIME) - flushToRocketMQInterval;
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-        log.info("# IoThread.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】秒.", flushToRocketMQInterval);
+        // log.info("# IoThread.insertSegmentAn
+        // dIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】秒.", flushToRocketMQInterval);
 
         mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
-        // 将processor线程发送到Redis中；2022-07-23 11:22:13
+        // 将processor线程的QPS发送到Redis中；2022-07-23 11:22:13
         mingshiServerUtil.flushProcessorThreadQpsToRedis(processorThreadQpsMap);
 
         // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
-        // mingshiServerUtil.flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(ioThreadQueueSet);
-        mingshiServerUtil.statisticsIoThreadQueueSize();
+        mingshiServerUtil.statisticsProcessorAndIoThreadQueueSize();
 
         mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);

@@ -3,7 +3,6 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -88,7 +87,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -104,7 +103,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -508,7 +507,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // }
 
       // 统计当前线程的QPS；2022-07-23 11:05:16
-      jsonObject.put(Const.ZSET_PROCESSOR_THREAD_QPS, JsonUtil.obj2String(map));
+      jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
 
       // 统计IoThread队列的大小；2022-07-23 12:41:42
       jsonObject.put(Const.ZSET_IO_THREAD_QUEUE_SIZE, JsonUtil.obj2String(statisticsIoThreadQueueSizeMap));
@@ -561,27 +560,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
     HashMap<String, Integer> hashMap = new HashMap<>();
     hashMap.put(DateTimeUtil.dateToStr(new Date()), 1);
-    map.put(Const.ZSET_PROCESSOR_THREAD_QPS + Thread.currentThread().getName(), hashMap);
-  }
-
-  /**
-   * <B>方法名称：statisticsIoThreadQueueSize</B>
-   * <B>概要说明：统计IoThread队列的大小</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月23日 12:07:45
-   * @Param [hashMap]
-   **/
-  private void statisticsIoThreadQueueSize(HashMap<String, Integer> hashMap) {
-    if(0 == atomicInteger.incrementAndGet() % 10 * 100){
-      if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
-        Long queueSize = ioThreadByDisruptor.getQueueSize();
-        hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName(), queueSize.intValue());
-      }else{
-        hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize());
-      }
-    }
+    map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
   }
 
   // private void doEnableReactorModel(SegmentDo segmentDo,

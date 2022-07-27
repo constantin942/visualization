@@ -34,7 +34,6 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
   private Integer flushToRocketMQInterval = 10;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */,Integer/* 消费的数量 */>> processorThreadQpsMap = null;
-  private HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> ioThreadQueueSet = null;
   private LinkedList<SegmentDo> segmentList = null;
   private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
@@ -52,7 +51,6 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
     processorThreadQpsMap = new HashMap<>();
-    ioThreadQueueSet = new HashSet<>();
     segmentList = new LinkedList();
     userHashSet = new HashSet();
     auditLogList = new LinkedList();
@@ -80,8 +78,6 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
 
       // 统计processorThread线程的QPS；2022-07-23 11:15:29
       getProcessorThreadQpsFromJSONObject(jsonObject);
-
-      getIoThreadQueueFromJSONObject(jsonObject);
 
       // 从json实例中获取segmentDetail实例的信息
       getSegmentDetailFromJSONObject(jsonObject);
@@ -174,7 +170,7 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
   private void getProcessorThreadQpsFromJSONObject(ObjectNode jsonObject) {
     try {
       String listString = null;
-      JsonNode jsonNode = jsonObject.get(Const.ZSET_PROCESSOR_THREAD_QPS);
+      JsonNode jsonNode = jsonObject.get(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD);
       if (null != jsonNode) {
         listString = jsonNode.asText();
       }
@@ -210,24 +206,6 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
               }
             }
           }
-        }
-      }
-    } catch (Exception e) {
-      log.error("# IoThreadByEventHandler.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
-    }
-  }
-
-  private void getIoThreadQueueFromJSONObject(ObjectNode jsonObject) {
-    try {
-      String listString = null;
-      JsonNode jsonNode = jsonObject.get(Const.ZSET_IO_THREAD_QUEUE_SIZE);
-      if (null != jsonNode) {
-        listString = jsonNode.asText();
-      }
-      if (StringUtil.isNotBlank(listString)) {
-        HashMap<String, Integer> map = JsonUtil.string2Obj(listString, HashMap.class);
-        if(null != map && 0 < map.size()){
-          ioThreadQueueSet.add(map);
         }
       }
     } catch (Exception e) {
@@ -393,9 +371,6 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
 
         // 将processor线程发送到Redis中；2022-07-23 11:22:13
         mingshiServerUtil.flushProcessorThreadQpsToRedis(processorThreadQpsMap);
-
-        // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
-        mingshiServerUtil.flushIoThreadBatchInsertLinkedBlockingQueueSizeToRedis(ioThreadQueueSet);
 
         mingshiServerUtil.flushSegmentToDB(segmentList);
         // mingshiServerUtil.flushAuditLogToDB(auditLogList);

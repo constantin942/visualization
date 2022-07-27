@@ -103,7 +103,7 @@ public class IoThreadByDisruptor implements ApplicationRunner {
    **/
   private void init(String applicationName) {
     this.applicationName = applicationName;
-    this.ringBuffer = messageModelRingBuffer(queueSize, false);
+    this.ringBuffer = messageModelRingBuffer(queueSize, 1 == reactorIoThreadThreadCount ? true : false);
     createIoThreadsFinishedFlag = true;
   }
 
@@ -126,9 +126,11 @@ public class IoThreadByDisruptor implements ApplicationRunner {
     // 指定ringbuffer大小，必须为2的N次方（能将求模运算转为位运算提高效率），否则将影响效率
     Disruptor<IoThreadObjectNode> disruptor = null;
     if (true == singleProducer) {
+      log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建单消费者线程。", reactorIoThreadThreadCount);
       // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new YieldingWaitStrategy());
     } else {
+      log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建单消费者线程。", reactorIoThreadThreadCount);
       // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
     }

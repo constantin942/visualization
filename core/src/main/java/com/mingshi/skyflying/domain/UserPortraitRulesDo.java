@@ -17,4 +17,6 @@ public class UserPortraitRulesDo {
     private String ruleName;
 
     private String ruleDesc;
+
+    private String ruleDescDetail;
 }
