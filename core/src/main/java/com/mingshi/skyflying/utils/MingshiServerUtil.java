@@ -980,4 +980,49 @@ public class MingshiServerUtil {
       }
     // }
   }
+
+  /**
+   * <B>方法名称：doInsertSegmentDetailIntoMySQLAndRedis</B>
+   * <B>概要说明：将数据持久化到MySQL和Redis中</B>
+   * @Author zm
+   * @Date 2022年07月27日 15:07:45
+   * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
+   * @return void
+   **/
+  public void doInsertSegmentDetailIntoMySQLAndRedis(HashSet<String> userHashSet, Map<String, Map<String, Integer>> processorThreadQpsMap, LinkedList<SegmentDo> segmentList, LinkedList<Span> spanList, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetailDoList, List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
+
+    flushUserNameToRedis(userHashSet);
+
+    // 将processor线程的QPS发送到Redis中；2022-07-23 11:22:13
+    flushProcessorThreadQpsToRedis(processorThreadQpsMap);
+
+    // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
+    statisticsProcessorAndIoThreadQueueSize();
+
+    flushSegmentToDB(segmentList);
+    // flushAuditLogToDB(auditLogList);
+
+    // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+    flushSkywalkingAgentInformationToDb();
+
+    // 将QPS信息刷入Redis中；2022-06-27 13:42:13
+    // flushQpsToRedis();
+
+    // 将Span信息刷入MySQL数据库中;
+    flushSpansToDB(spanList);
+
+    // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
+    flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+
+    insertMonitorTables();
+
+    // 不能再更新这个了，因为花的时间太久；2022-07-18 17:24:06
+    // 比较好的做法是，把用户名、token、globalTraceId放到Redis中去存储，有一个定时任务，定时去MySQL中根据token和globalTraceId分组查询用户名为空的记录，然后拿着token和globalTraceId
+    // 去Redis缓存中获取。如果获取到了用户名，那么就把用户名更新到MySQL数据库中。
+    // updateUserNameByGlobalTraceId();
+
+    flushSegmentDetailToDB(segmentDetailDoList);
+
+    flushAbnormalToDB(msAlarmInformationDoLinkedListist);
+  }
 }

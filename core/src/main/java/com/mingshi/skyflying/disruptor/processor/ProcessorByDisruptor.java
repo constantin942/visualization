@@ -83,16 +83,20 @@ public class ProcessorByDisruptor implements ApplicationRunner {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
       // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+      // 使用单消费者模式；
+      ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
+      // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+      disruptor.handleEventsWith(processorConsumerByEventHandler);
     } else {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。", reactorProcessorThreadCount);
       // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
-    }
-    for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
-      // 使用多消费者模式；
-      ConsumerProcessorByWrokHandler consumerProcessorByWrokHandler = new ConsumerProcessorByWrokHandler(segmentConsumerService);
-      // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-      disruptor.handleEventsWithWorkerPool(consumerProcessorByWrokHandler);
+      for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
+        // 使用多消费者模式；
+        ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
+        // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+        disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
+      }
     }
 
     // 启动disruptor线程

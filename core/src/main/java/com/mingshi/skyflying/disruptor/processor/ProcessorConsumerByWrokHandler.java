@@ -8,15 +8,15 @@ import lombok.extern.slf4j.Slf4j;
  * @author Alienware
  */
 @Slf4j
-public class ConsumerProcessorByWrokHandler implements WorkHandler<SegmentByByte> {
+public class ProcessorConsumerByWrokHandler implements WorkHandler<SegmentByByte> {
 
   private SegmentConsumerService segmentConsumerService;
 
-  public ConsumerProcessorByWrokHandler(SegmentConsumerService segmentConsumerService) {
+  public ProcessorConsumerByWrokHandler(SegmentConsumerService segmentConsumerService) {
     this.segmentConsumerService = segmentConsumerService;
   }
 
-  // 在在消费者的情况下使用。每个消费者只会消费其中一个消息。2021-12-23 07:53:11
+  // 在多消费者的情况下使用。每个消费者只会消费其中一个消息。2021-12-23 07:53:11
   @Override
   public void onEvent(SegmentByByte data) {
     try {

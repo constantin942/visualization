@@ -129,16 +129,20 @@ public class IoThreadByDisruptor implements ApplicationRunner {
       log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建单消费者线程。", reactorIoThreadThreadCount);
       // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new YieldingWaitStrategy());
+      // 使用单消费者模式；
+      IoThreadConsumerByEventHandler ioThreadConsumerByEventHandler = new IoThreadConsumerByEventHandler(10, mingshiServerUtil, esMsSegmentDetailUtil, ringBuffer);
+      // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+      disruptor.handleEventsWith(ioThreadConsumerByEventHandler);
     } else {
       log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建单消费者线程。", reactorIoThreadThreadCount);
       // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
       disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
-    }
-    for (Integer integer = 0; integer < reactorIoThreadThreadCount; integer++) {
-      // 使用多消费者模式；
-      IoThreadByEventHandler ioThreadByEventHandler = new IoThreadByEventHandler(10, mingshiServerUtil, esMsSegmentDetailUtil, ringBuffer);
-      // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-      disruptor.handleEventsWithWorkerPool(ioThreadByEventHandler);
+      for (Integer integer = 0; integer < reactorIoThreadThreadCount; integer++) {
+        // 使用多消费者模式；
+        IoThreadConsumerByWorkHandler ioThreadConsumerByWorkHandler = new IoThreadConsumerByWorkHandler(10, mingshiServerUtil, esMsSegmentDetailUtil, ringBuffer);
+        // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+        disruptor.handleEventsWithWorkerPool(ioThreadConsumerByWorkHandler);
+      }
     }
 
     // 启动disruptor线程

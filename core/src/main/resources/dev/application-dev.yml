@@ -12,10 +12,11 @@ spring:
     username: root
     password: Aiit@123
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    url: jdbc:mysql://10.0.107.46:3306/es_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.102.64:3306/skywalking_mingshi?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/es_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/zm_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-#    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/lanjing?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   jpa:
     show-sql: true
@@ -28,8 +29,10 @@ spring:
     # Redis服务器连接密码
     password: Aiit@123
     # Redis服务器地址
+#    host: 10.0.102.64
     host: 10.0.107.46
     # Redis服务器连接端口
+#    port: 6379
     port: 6380
     jedis:
       #连接池中最大连接数，默认为 8。
@@ -152,8 +155,8 @@ reactor:
     enable: true
     disruptor: true
     thread:
-      count: 4
+      count: 1
   iothread:
     disruptor: false
     thread:
-      count: 4
+      count: 10

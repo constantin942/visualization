@@ -30,7 +30,7 @@ import java.util.*;
  * @return
  **/
 @Slf4j
-public class IoThreadConsumerByEventHandler implements WorkHandler<IoThreadObjectNode>{
+public class IoThreadConsumerByWorkHandler implements WorkHandler<IoThreadObjectNode>{
 
   private Instant CURRENT_TIME = null;
   private Integer flushToRocketMQInterval = 10;
@@ -48,7 +48,7 @@ public class IoThreadConsumerByEventHandler implements WorkHandler<IoThreadObjec
 
   private RingBuffer<IoThreadObjectNode> ringBuffer;
 
-  public IoThreadConsumerByEventHandler(Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil, RingBuffer<IoThreadObjectNode> ringBuffer) {
+  public IoThreadConsumerByWorkHandler(Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil, RingBuffer<IoThreadObjectNode> ringBuffer) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
@@ -70,40 +70,44 @@ public class IoThreadConsumerByEventHandler implements WorkHandler<IoThreadObjec
     this.ringBuffer = ringBuffer;
   }
 
-  // 单线程的情况下使用；2021-12-23 07:53:11
+  // 多线程的情况下使用；2021-12-23 07:53:11
   @Override
   public void onEvent(IoThreadObjectNode ioThreadObjectNode) {
     try {
-      ObjectNode jsonObject = ioThreadObjectNode.getData();
-      // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
-      getSkywalkingAgentNameFromJSONObject(jsonObject);
-
-      // 统计processorThread线程的QPS；2022-07-23 11:15:29
-      getProcessorThreadQpsFromJSONObject(jsonObject);
-
-      // getIoThreadQueueFromJSONObject(jsonObject);
-
-      // 从json实例中获取segmentDetail实例的信息
-      getSegmentDetailFromJSONObject(jsonObject);
-
-      // 从json实例中获取esSegmentDetail实例的信息
-      // getEsSegmentDetailFromJSONObject(jsonObject);
-
-      // 从json实例中获取Span实例的信息
-      // getSpanFromJSONObject(jsonObject);
-
-      // 从json实例中获取异常信息
-      getAbnormalFromJSONObject(jsonObject);
-
-      // 从json实例中获取审计日志的信息
-      // getAuditLogFromJSONObject(jsonObject);
-
-      // 从json实例中获取segment的信息
-      // getSegmentFromJSONObject(jsonObject);
-      insertSegmentDetailIntoMySQLAndRedis();
+      doOnEvent(ioThreadObjectNode);
     } catch (Throwable e) {
       log.error("# IoThreadByEventHandler.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
     }
+  }
+
+  private void doOnEvent(IoThreadObjectNode ioThreadObjectNode) {
+    ObjectNode jsonObject = ioThreadObjectNode.getData();
+    // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
+    getSkywalkingAgentNameFromJSONObject(jsonObject);
+
+    // 统计processorThread线程的QPS；2022-07-23 11:15:29
+    getProcessorThreadQpsFromJSONObject(jsonObject);
+
+    // getIoThreadQueueFromJSONObject(jsonObject);
+
+    // 从json实例中获取segmentDetail实例的信息
+    getSegmentDetailFromJSONObject(jsonObject);
+
+    // 从json实例中获取esSegmentDetail实例的信息
+    // getEsSegmentDetailFromJSONObject(jsonObject);
+
+    // 从json实例中获取Span实例的信息
+    // getSpanFromJSONObject(jsonObject);
+
+    // 从json实例中获取异常信息
+    getAbnormalFromJSONObject(jsonObject);
+
+    // 从json实例中获取审计日志的信息
+    // getAuditLogFromJSONObject(jsonObject);
+
+    // 从json实例中获取segment的信息
+    // getSegmentFromJSONObject(jsonObject);
+    insertSegmentDetailIntoMySQLAndRedis();
   }
 
   /**
