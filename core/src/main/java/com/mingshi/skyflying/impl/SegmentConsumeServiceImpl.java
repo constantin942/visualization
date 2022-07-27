@@ -3,6 +3,7 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -60,7 +61,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
   @Value("${reactor.iothread.thread.count}")
-  private Integer reactorIoThreadThreadCount = 1;
+  private Integer reactorIoThreadThreadCount;
 
   @Resource
   private IoThreadByDisruptor ioThreadByDisruptor;
@@ -87,7 +88,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -103,7 +104,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 

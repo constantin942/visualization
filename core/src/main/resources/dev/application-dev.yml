@@ -157,6 +157,6 @@ reactor:
     thread:
       count: 1
   iothread:
-    disruptor: false
+    disruptor: true
     thread:
-      count: 10
+      count: 2

@@ -44,7 +44,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   private SegmentConsumerService segmentConsumerService;
   // 在开启reactor模式的情况下，创建processor线程的数量；2022-06-01 09:28:57
   @Value("${reactor.processor.thread.count}")
-  private Integer reactorProcessorThreadCount = 1;
+  private Integer reactorProcessorThreadCount;
 
   // private Integer queueSize = 4;
   private Integer queueSize = 1024;

@@ -54,7 +54,7 @@ public class IoThreadByDisruptor implements ApplicationRunner {
   private SegmentConsumerService segmentConsumerService;
   // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
   @Value("${reactor.iothread.thread.count}")
-  private Integer reactorIoThreadThreadCount = 1;
+  private Integer reactorIoThreadThreadCount;
 
   // private Integer queueSize = 4;
   private Integer queueSize = 4096;
@@ -180,11 +180,11 @@ public class IoThreadByDisruptor implements ApplicationRunner {
       ringBuffer.publish(sequence);
 
       // 间隔输出日志；2022-07-22 21:33:52
-      Integer incrementAndGet = atomicInteger.incrementAndGet();
-      int i = incrementAndGet & (1024 * 2 - 1);
-      if (0 == i) {
-        log.info("当前线程【{}】将处理后的流量放入到IoThreadObjectNodeRingBuffer中，当前该队列可用容量【{}】，总容量【{}】。", Thread.currentThread().getName(), ringBuffer.remainingCapacity(), queueSize);
-      }
+      // Integer incrementAndGet = atomicInteger.incrementAndGet();
+      // int i = incrementAndGet & (1024 * 2 - 1);
+      // if (0 == i) {
+      //   log.info("当前线程【{}】将处理后的流量放入到IoThreadObjectNodeRingBuffer中，当前该队列可用容量【{}】，总容量【{}】。", Thread.currentThread().getName(), ringBuffer.remainingCapacity(), queueSize);
+      // }
     }
   }
 

@@ -182,40 +182,40 @@ public class IoThreadConsumerByWorkHandler implements WorkHandler<IoThreadObject
       }
       if (StringUtil.isNotBlank(listString)) {
         HashMap<String, Map<String, Integer>> map = JsonUtil.string2Obj(listString, HashMap.class);
-        if(0 == processorThreadQpsMap.size()){
-          if(null != map && 0 < map.size()){
+        if (0 == processorThreadQpsMap.size()) {
+          if (null != map && 0 < map.size()) {
             processorThreadQpsMap.putAll(map);
           }
-        }else{
+        } else {
           Iterator<String> iterator = map.keySet().iterator();
-          while(iterator.hasNext()){
+          while (iterator.hasNext()) {
             String threadName = iterator.next();
             Map<String, Integer> timeCountMap = map.get(threadName);
-            if(null == timeCountMap || 0 == timeCountMap.size()){
+            if (null == timeCountMap || 0 == timeCountMap.size()) {
               continue;
             }
             Map<String, Integer> map1 = processorThreadQpsMap.get(threadName);
-            if(null == map1){
-              processorThreadQpsMap.put(threadName,timeCountMap);
+            if (null == map1) {
+              processorThreadQpsMap.put(threadName, timeCountMap);
               continue;
             }
 
             Iterator<String> iterator1 = timeCountMap.keySet().iterator();
-            while(iterator1.hasNext()){
+            while (iterator1.hasNext()) {
               String time = iterator1.next();
               Integer count = timeCountMap.get(time);
               Integer integer = map1.get(time);
-              if(null == integer){
-                map1.put(time,count);
-              }else{
-                map1.put(time,count + integer);
+              if (null == integer) {
+                map1.put(time, count);
+              } else {
+                map1.put(time, count + integer);
               }
             }
           }
         }
       }
     } catch (Exception e) {
-      log.error("# IoThreadByEventHandler.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
+      log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
     }
   }
 
