@@ -6,8 +6,10 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.WorkHandler;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
+import com.mingshi.skyflying.domain.MsAlarmInformationDo;
+import com.mingshi.skyflying.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.domain.SegmentDo;
+import com.mingshi.skyflying.domain.Span;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
@@ -28,42 +30,42 @@ import java.util.*;
  * @return
  **/
 @Slf4j
-public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
+public class IoThreadConsumerByEventHandler implements WorkHandler<IoThreadObjectNode>{
 
   private Instant CURRENT_TIME = null;
   private Integer flushToRocketMQInterval = 10;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */,Integer/* 消费的数量 */>> processorThreadQpsMap = null;
   private LinkedList<SegmentDo> segmentList = null;
-  private LinkedList<MsAuditLogDo> auditLogList = null;
+  // private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
   private HashSet<String> userHashSet = null;
   private LinkedList<Span> spanList = null;
-  private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
+  // private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
   private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
   private RingBuffer<IoThreadObjectNode> ringBuffer;
 
-  public IoThreadByEventHandler(Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil, RingBuffer<IoThreadObjectNode> ringBuffer) {
+  public IoThreadConsumerByEventHandler(Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil, RingBuffer<IoThreadObjectNode> ringBuffer) {
     CURRENT_TIME = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>();
     processorThreadQpsMap = new HashMap<>();
     segmentList = new LinkedList();
     userHashSet = new HashSet();
-    auditLogList = new LinkedList();
+    // auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
     spanList = new LinkedList();
-    esSegmentDetailDoList = new LinkedList();
+    // esSegmentDetailDoList = new LinkedList();
     msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMQInterval || flushToRocketMQInterval < 0) {
       this.flushToRocketMQInterval = 5;
     }
     this.mingshiServerUtil = mingshiServerUtil;
-    this.esSegmentDetailDoList = esSegmentDetailDoList;
+    // this.esSegmentDetailDoList = esSegmentDetailDoList;
     this.esMsSegmentDetailUtil = esMsSegmentDetailUtil;
     this.ringBuffer = ringBuffer;
   }
@@ -79,11 +81,13 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
       // 统计processorThread线程的QPS；2022-07-23 11:15:29
       getProcessorThreadQpsFromJSONObject(jsonObject);
 
+      // getIoThreadQueueFromJSONObject(jsonObject);
+
       // 从json实例中获取segmentDetail实例的信息
       getSegmentDetailFromJSONObject(jsonObject);
 
       // 从json实例中获取esSegmentDetail实例的信息
-      getEsSegmentDetailFromJSONObject(jsonObject);
+      // getEsSegmentDetailFromJSONObject(jsonObject);
 
       // 从json实例中获取Span实例的信息
       // getSpanFromJSONObject(jsonObject);
@@ -96,9 +100,7 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
 
       // 从json实例中获取segment的信息
       // getSegmentFromJSONObject(jsonObject);
-
-      // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
-      insertSegmentAndIndexAndAuditLog();
+      insertSegmentDetailIntoMySQLAndRedis();
     } catch (Throwable e) {
       log.error("# IoThreadByEventHandler.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
     }
@@ -222,28 +224,28 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
    * @Date 2022年07月13日 08:07:22
    * @Param [jsonObject]
    **/
-  private void getEsSegmentDetailFromJSONObject(ObjectNode jsonObject) {
-    if(null == esMsSegmentDetailUtil && false == esMsSegmentDetailUtil.getEsEnable()){
-      return;
-    }
-    try {
-      String listString = null;
-      try {
-        JsonNode jsonNode = jsonObject.get(Const.ES_SEGMENT_DETAIL_DO_LIST);
-        if (null != jsonNode) {
-          listString = jsonNode.asText();
-        }
-      } catch (Exception e) {
-        log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
-      }
-      if (StringUtil.isNotBlank(listString)) {
-        LinkedList<EsMsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, EsMsSegmentDetailDo.class);
-        esSegmentDetailDoList.addAll(segmentDetailList);
-      }
-    } catch (Exception e) {
-      log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
-    }
-  }
+  // private void getEsSegmentDetailFromJSONObject(ObjectNode jsonObject) {
+  //   if(null == esMsSegmentDetailUtil && false == esMsSegmentDetailUtil.getEsEnable()){
+  //     return;
+  //   }
+  //   try {
+  //     String listString = null;
+  //     try {
+  //       JsonNode jsonNode = jsonObject.get(Const.ES_SEGMENT_DETAIL_DO_LIST);
+  //       if (null != jsonNode) {
+  //         listString = jsonNode.asText();
+  //       }
+  //     } catch (Exception e) {
+  //       log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+  //     }
+  //     if (StringUtil.isNotBlank(listString)) {
+  //       LinkedList<EsMsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, EsMsSegmentDetailDo.class);
+  //       esSegmentDetailDoList.addAll(segmentDetailList);
+  //     }
+  //   } catch (Exception e) {
+  //     log.error("# IoThreadByEventHandler.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
+  //   }
+  // }
 
   /**
    * <B>方法名称：getSegmentDetailFromJSONObject</B>
@@ -351,58 +353,22 @@ public class IoThreadByEventHandler implements WorkHandler<IoThreadObjectNode>{
   }
 
   /**
-   * <B>方法名称：insertSegment</B>
-   * <B>概要说明：将来自skywalking的segment信息、索引信息和数据库操作SQL插入到表中</B>
+   * <B>方法名称：insertSegmentDetailIntoMySQLAndRedis</B>
+   * <B>概要说明：将来自skywalking的segmentDetail信息保存到MySQL数据库和Redis分布式缓存中</B>
    *
    * @return void
    * @Author zm
    * @Date 2022年05月30日 17:05:27
    * @Param [jsonObject]
    **/
-  private void insertSegmentAndIndexAndAuditLog() {
+  private void insertSegmentDetailIntoMySQLAndRedis() {
     try {
-      Instant now = Instant.now();
       long isShouldFlush = DateTimeUtil.getSecond(CURRENT_TIME) - flushToRocketMQInterval;
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-        log.info("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 发送本地统计消息的时间间隔 = 【{}】秒.", flushToRocketMQInterval);
-
-        mingshiServerUtil.flushUserNameToRedis(userHashSet);
-
-        // 将processor线程发送到Redis中；2022-07-23 11:22:13
-        mingshiServerUtil.flushProcessorThreadQpsToRedis(processorThreadQpsMap);
-
-        mingshiServerUtil.flushSegmentToDB(segmentList);
-        // mingshiServerUtil.flushAuditLogToDB(auditLogList);
-
-        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
-
-        // 将QPS信息刷入Redis中；2022-06-27 13:42:13
-        // mingshiServerUtil.flushQpsToRedis();
-
-        // 将Span信息刷入MySQL数据库中;
-        mingshiServerUtil.flushSpansToDB(spanList);
-
-        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
-
-        mingshiServerUtil.insertMonitorTables();
-
-        // 不能再更新这个了，因为花的时间太久；2022-07-18 17:24:06
-        // 比较好的做法是，把用户名、token、globalTraceId放到Redis中去存储，有一个定时任务，定时去MySQL中根据token和globalTraceId分组查询用户名为空的记录，然后拿着token和globalTraceId
-        // 去Redis缓存中获取。如果获取到了用户名，那么就把用户名更新到MySQL数据库中。
-        // mingshiServerUtil.updateUserNameByGlobalTraceId();
-
-        mingshiServerUtil.flushSegmentDetailToDB(segmentDetailDoList);
-
-        mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
+        mingshiServerUtil.doInsertSegmentDetailIntoMySQLAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist);
         CURRENT_TIME = Instant.now();
-      } else {
-        // 减少log日志输出；2021-10-20 15:49:59
-        if (Const.IOTREAD_LOG_INTERVAL <= DateTimeUtil.getSecond(now)) {
-          log.info("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 当前IoThread统计线程离下次刷盘时间还有 = 【{}】秒。", isShouldFlush);
-        }
+        log.info("# IoThreadByEventHandler.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), DateTimeUtil.getTimeMillis(Instant.now()));
       }
     } catch (Exception e) {
       log.error("# IoThreadByEventHandler.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
