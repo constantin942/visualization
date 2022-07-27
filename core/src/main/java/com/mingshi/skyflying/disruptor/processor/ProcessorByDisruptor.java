@@ -138,9 +138,9 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     }
   }
 
-  // 获取队列中还可以容纳元素的个数；2021-10-20 15:22:55
+  // 获取队列中元素的个数；2021-10-20 15:22:55
   public long getQueueSize() {
-    return acceptorRingBuffer.remainingCapacity();
+    return queueSize - acceptorRingBuffer.remainingCapacity();
   }
 
 }

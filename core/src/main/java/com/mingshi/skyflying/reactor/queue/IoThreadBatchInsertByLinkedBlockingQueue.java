@@ -25,9 +25,14 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
   // 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
   private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(0);
 
-  // 获取队列的大小；2021-11-17 14:35:19
-  public static Integer getQueueSize() {
+  // 获取队列的容量；2021-11-17 14:35:19
+  public static Integer getQueueAllSize() {
     return QUEUE_SIZE;
+  }
+
+  // 获取队列中元素的个数；2022-07-26 17:27:02
+  public static Integer getQueueSize() {
+    return linkedBlockingQueue.size();
   }
 
   // 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
@@ -59,5 +64,4 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
     }
     return linkedBlockingQueue;
   }
-
 }

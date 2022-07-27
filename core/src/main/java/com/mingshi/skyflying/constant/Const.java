@@ -76,8 +76,10 @@ public class Const {
   public static final String ZSET_PROCESSOR_THREAD_QPS = "zset_processor_thread_qps_";
   // 统计IoThread队列的大小；2022-07-23 12:41:17
   public static final String ZSET_IO_THREAD_QUEUE_SIZE = "zset_io_thread_queue_size";
-  // 统计公共队列当前有多少元素；2022-07-23 11:32:15
+  // 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
   public static final String ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE = "zset_io_thread_batch_insert_linked_blocking_queue_size";
+  // 统计第一层队列当前有多少个元素；2022-07-26 17:21:20
+  public static final String ZSET_ACCEPTOR_THREAD_QUEUE_ZISE = "zset_acceptor_thread_queue_size";
   public static final String SEGMENT = "segment";
   public static final String SPAN = "span";
 

@@ -536,9 +536,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           ioThreadByDisruptor.offer(jsonObject);
         }else{
           LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
-          if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()) {
+          if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
             // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-            log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize());
+            log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
           }
           // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
           linkedBlockingQueue.put(jsonObject);

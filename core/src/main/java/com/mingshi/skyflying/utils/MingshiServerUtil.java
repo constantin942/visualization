@@ -7,6 +7,7 @@ import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
+import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.enums.ConstantsCode;
@@ -14,6 +15,7 @@ import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -38,10 +40,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MingshiServerUtil {
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
+  @Value("${reactor.processor.disruptor}")
+  private boolean reactorProcessorDisruptor;
 
   @Value("${reactor.iothread.disruptor}")
   private boolean reactorIoThreadByDisruptor;
 
+  @Resource
+  private ProcessorByDisruptor processorByDisruptor;
   @Resource
   private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
@@ -982,11 +988,18 @@ public class MingshiServerUtil {
    * @Param []
    **/
   public void statisticsIoThreadQueueSize() {
-    String key = DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName();
-    if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-      redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-    } else {
-      redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+    String name = Thread.currentThread().getName();
+    if(name.equals("processLocalStatisticsThread_0") || name.equals("processLocalStatisticsThread_1") || name.equals("processLocalStatisticsThread_2") ){
+      // 只让线程0来发送消息到Redis中；2022-07-26 17:41:54
+      String key = DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()) + Thread.currentThread().getName() + "-" + RandomUtils.nextInt();
+      if (true == reactorProcessorDisruptor){
+        redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
+      }
+      if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
+        redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+      } else {
+        redisPoolUtil.incrementScore(Const.ZSET_IO_THREAD_BATCH_INSERT_LINKED_BLOCKING_QUEUE_ZISE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+      }
     }
   }
 }

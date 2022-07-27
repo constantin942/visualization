@@ -188,7 +188,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       for (String ot : operationTypeArray) {
         map.put("dbType", ot);
         Long count = msSegmentDetailDao.selectCountsOfUser(map);
-        if(null != count && 0L < count){
+        if (null != count && 0L < count) {
           ObjectNode jsonObject = JsonUtil.createJSONObject();
           jsonObject.put("dbType", ot);
           jsonObject.put("dbTypeTimes", count);
@@ -203,10 +203,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   /**
    * <B>方法名称：getUserOperationTypeCount</B>
    * <B>概要说明：获取用户操作类型次数</B>
+   *
+   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List < java.lang.String>>
    * @Author zm
    * @Date 2022年07月22日 17:07:46
    * @Param [userName]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List<java.lang.String>>
    **/
   @Override
   public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
@@ -230,11 +231,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       }
     } else {
       String[] operationTypeArray = new String[]{"select", "update", "delete", "insert"};
-      map.put("userName",userName);
+      map.put("userName", userName);
       for (String ot : operationTypeArray) {
         map.put("dbType", ot);
         Long count = msSegmentDetailDao.selectCountsOfUser(map);
-        if(null != count && 0L < count){
+        if (null != count && 0L < count) {
           ObjectNode jsonObject = JsonUtil.createJSONObject();
           jsonObject.put("dbType", ot);
           jsonObject.put("dbTypeTimes", count);
@@ -878,7 +879,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 if (StringUtil.isBlank(tableDesc)) {
                   MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = msMonitorBusinessSystemTablesMapper.selectByQueryMap(queryMap);
                   if (null != msMonitorBusinessSystemTablesDo && StringUtil.isNotBlank(msMonitorBusinessSystemTablesDo.getTableDesc())) {
-                    detailJson.put("function", msMonitorBusinessSystemTablesDo.getTableDesc());
+                    String tableDesc1 = msMonitorBusinessSystemTablesDo.getTableDesc();
+                    detailJson.put("function", StringUtil.isBlank(tableDesc1) ? getTableName : tableDesc1);
                     // 设置表的描述信息到本地内存；2022-07-21 16:52:07
                     LoadAllEnableMonitorTablesFromDb.setTableDesc(getTableName, msMonitorBusinessSystemTablesDo.getTableDesc());
                   }

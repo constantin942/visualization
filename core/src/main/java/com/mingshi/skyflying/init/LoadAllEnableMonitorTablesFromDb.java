@@ -80,7 +80,12 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
               tableDesc = str;
             }
           }else{
-            tableDesc = tableDesc + "," + concurrentHashMapTableDesc.get(newTableName);
+            String tableNameDesc = concurrentHashMapTableDesc.get(newTableName);
+            if(StringUtil.isBlank(tableNameDesc)){
+              tableDesc = tableDesc + "," + str;
+            }else{
+              tableDesc = tableDesc + "," + tableNameDesc;
+            }
           }
         }
       }
