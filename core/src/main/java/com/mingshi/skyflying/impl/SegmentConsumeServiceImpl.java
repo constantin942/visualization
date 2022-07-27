@@ -179,13 +179,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>();
       statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
 
-      HashMap<String, Integer> statisticsIoThreadQueueSizeMap = new HashMap<>();
-      // statisticsIoThreadQueueSize(statisticsIoThreadQueueSizeMap);
-
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(statisticsIoThreadQueueSizeMap, statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完144行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
         // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
@@ -493,8 +490,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(HashMap<String, Integer> statisticsIoThreadQueueSizeMap,
-                                    HashMap<String, Map<String, Integer>> map,
+  private void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
                                     List<Span> spanList,
                                     LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
@@ -509,9 +505,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
       // 统计当前线程的QPS；2022-07-23 11:05:16
       jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
-
-      // 统计IoThread队列的大小；2022-07-23 12:41:42
-      jsonObject.put(Const.ZSET_IO_THREAD_QUEUE_SIZE, JsonUtil.obj2String(statisticsIoThreadQueueSizeMap));
 
       if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
         jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
@@ -560,49 +553,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
     HashMap<String, Integer> hashMap = new HashMap<>();
-    hashMap.put(DateTimeUtil.dateToStr(new Date()), 1);
+    hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()), 1);
     map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
   }
-
-  // private void doEnableReactorModel(SegmentDo segmentDo,
-  //                                   LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList,
-  //                                   LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
-  //                                   LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
-  //                                   Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
-  //   try {
-  //     LinkedBlockingQueue linkedBlockingQueue = BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(1, 5, mingshiServerUtil);
-  //     ObjectNode jsonObject = JsonUtil.createJSONObject();
-  //     if (null != segmentDo) {
-  //       jsonObject.put(Const.SEGMENT_LIST, JsonUtil.obj2String(segmentDo));
-  //     }
-  //     // if (null != auditLogFromSkywalkingAgentList && 0 < auditLogFromSkywalkingAgentList.size()) {
-  //     //   jsonObject.put(Const.AUDITLOG_FROM_SKYWALKING_AGENT_LIST, JsonUtil.obj2String(auditLogFromSkywalkingAgentList));
-  //     // }
-  //     if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
-  //       jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
-  //     }
-  //     if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
-  //       jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
-  //     }
-  //     if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
-  //       jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
-  //     }
-  //     if (linkedBlockingQueue.size() == BatchInsertByLinkedBlockingQueue.getQueueSize()) {
-  //       // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-  //       log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
-  //     }
-  //     // if (0 == atomicInteger.incrementAndGet() % 5000) {
-  //     //   // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-  //     //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), BatchInsertByLinkedBlockingQueue.getQueueSize());
-  //     // }
-  //     if (null != jsonObject && 0 < jsonObject.size()) {
-  //       linkedBlockingQueue.put(jsonObject);
-  //     }
-  //   } catch (Exception e) {
-  //     log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
-  //   }
-  // }
-
 
   /**
    * <B>方法名称：saveGlobalTraceIdAndSegmentIds</B>
