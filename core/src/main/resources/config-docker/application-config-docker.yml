@@ -149,6 +149,6 @@ reactor:
     thread:
       count: ${reactor_processor_thread_count}
   iothread:
-    disruptor: ${reactor_iothread_disruptor}
+#    disruptor: ${reactor_iothread_disruptor}
     thread:
       count: ${reactor_iothread_thread_count}

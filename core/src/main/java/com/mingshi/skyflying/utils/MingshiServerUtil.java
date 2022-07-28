@@ -43,8 +43,8 @@ public class MingshiServerUtil {
   @Value("${reactor.processor.disruptor}")
   private boolean reactorProcessorDisruptor;
 
-  @Value("${reactor.iothread.disruptor}")
-  private boolean reactorIoThreadByDisruptor;
+  // @Value("${reactor.iothread.disruptor}")
+  // private boolean reactorIoThreadByDisruptor;
 
   @Resource
   private ProcessorByDisruptor processorByDisruptor;

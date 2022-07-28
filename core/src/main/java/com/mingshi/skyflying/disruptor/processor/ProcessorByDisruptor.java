@@ -81,19 +81,24 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     Disruptor<SegmentByByte> disruptor = null;
 
     // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
+    // 这里使用单生产者还是多生产者，取决于kafka的消费者线程的数量。2022-07-28 16:35:59
     // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
 
     // 使用多生产者；2022-07-28 14:42:07
+    // 消费者使用yield等待策略，在实测中，并不能提高QPS。同时会导致CPU一直飙高到100%，就算没有消息要消费，CPU也会一直飙升到100%。不建议使用.2022-07-28 16:31:52
+    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
+    // 消费者使用blocking阻塞策略，在实测中，比较温和，在有消息要处理的情况下，CPU一般占据70%。推荐使用。2022-07-28 16:32:54
     disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
 
     if (null != reactorProcessorThreadCount && 1 == reactorProcessorThreadCount) {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
-      // 使用单消费者模式；
+      // 使用单消费者模式。这个消费者消费队列中所有的消息。类似于RocketMQ中广播消息模式。
+      // 注意：如果创建多个ProcessorConsumerByEventHandler，那么每条消息都会被所有的消费者消费。2022-07-28 16:35:10
       ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
       // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
       disruptor.handleEventsWith(processorConsumerByEventHandler);
     } else {
-      // 使用多消费者模式；
+      // 使用多消费者模式.每个消费者只消费队列中一部分消息。类似于RocketMQ中集群消费模式。
       for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
         log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】消费者线程。", reactorProcessorThreadCount, (integer + 1));
         ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
@@ -101,27 +106,6 @@ public class ProcessorByDisruptor implements ApplicationRunner {
         disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
       }
     }
-
-
-    // if (true == enableBatch) {
-    //   log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
-    //   // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
-    //   disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
-    //   // 使用单消费者模式；
-    //   ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
-    //   // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-    //   disruptor.handleEventsWith(processorConsumerByEventHandler);
-    // } else {
-    //   log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。", reactorProcessorThreadCount);
-    //   // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
-    //   disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
-    //   for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
-    //     // 使用多消费者模式；
-    //     ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
-    //     // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-    //     disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
-    //   }
-    // }
 
     // 启动disruptor线程
     disruptor.start();

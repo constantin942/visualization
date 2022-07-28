@@ -53,8 +53,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
 
-  @Value("${reactor.iothread.disruptor}")
-  private boolean reactorIoThreadByDisruptor;
+  // @Value("${reactor.iothread.disruptor}")
+  // private boolean reactorIoThreadByDisruptor;
 
   // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
   @Value("${reactor.iothread.thread.count}")
