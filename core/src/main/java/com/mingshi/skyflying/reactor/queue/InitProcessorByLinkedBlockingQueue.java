@@ -48,6 +48,10 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     return shutdown;
   }
 
+  public static List<ProcessorHandlerByLinkedBlockingQueue> getProcessorHandlerByLinkedBlockingQueueList(){
+    return processorHandlerByLinkedBlockingQueueList;
+  }
+
   @Override
   public void run(ApplicationArguments args) throws Exception {
     doRun();
@@ -104,5 +108,4 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);
     return processorHandlerByLinkedBlockingQueueList.get(index);
   }
-
 }

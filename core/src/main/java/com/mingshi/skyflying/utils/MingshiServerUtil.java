@@ -12,7 +12,9 @@ import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
+import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
@@ -959,35 +961,41 @@ public class MingshiServerUtil {
    **/
   public void statisticsProcessorAndIoThreadQueueSize() {
     String name = Thread.currentThread().getName();
-    // if (name.equals("processLocalStatisticsThread_0") || name.equals("processLocalStatisticsThread_1") || name.equals("processLocalStatisticsThread_2")) {
-      // 只让线程0来发送消息到Redis中；2022-07-26 17:41:54
-      String key = DateTimeUtil.dateToStr(new Date()) + "-" + name;
-      if (true == reactorProcessorDisruptor) {
-        // 统计
-        // redisPoolUtil.incrementScore(Const.FIRST_QUEUE_SIZE_ZSET, String.valueOf(processorByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-        // redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
-        long queueSize = processorByDisruptor.getQueueSize();
-        redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET, key, Long.valueOf(queueSize));
+    String key = DateTimeUtil.dateToStr(new Date()) + "-" + name;
+    if (true == reactorProcessorDisruptor) {
+      // 统计
+      // redisPoolUtil.incrementScore(Const.FIRST_QUEUE_SIZE_ZSET, String.valueOf(processorByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+      // redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
+      long queueSize = processorByDisruptor.getQueueSize();
+      redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+    } else {
+      List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
+      if (null != processorHandlerByLinkedBlockingQueueList && 0 < processorHandlerByLinkedBlockingQueueList.size()) {
+        for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
+          Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
+          redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + i, key, Long.valueOf(queueSize));
+        }
       }
-      if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-        redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-      } else {
-        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-        // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-        redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-      }
-    // }
+    }
+    if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
+      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+      redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+    } else {
+      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+      redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+    }
   }
 
   /**
    * <B>方法名称：doInsertSegmentDetailIntoMySQLAndRedis</B>
    * <B>概要说明：将数据持久化到MySQL和Redis中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月27日 15:07:45
    * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
-   * @return void
    **/
   public void doInsertSegmentDetailIntoMySQLAndRedis(HashSet<String> userHashSet, Map<String, Map<String, Integer>> processorThreadQpsMap, LinkedList<SegmentDo> segmentList, LinkedList<Span> spanList, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetailDoList, List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
 
