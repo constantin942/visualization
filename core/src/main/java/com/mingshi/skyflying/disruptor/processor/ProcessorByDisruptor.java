@@ -81,7 +81,10 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     Disruptor<SegmentByByte> disruptor = null;
 
     // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
-    disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+
+    // 使用多生产者；2022-07-28 14:42:07
+    disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
 
     if (null != reactorProcessorThreadCount && 1 == reactorProcessorThreadCount) {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);

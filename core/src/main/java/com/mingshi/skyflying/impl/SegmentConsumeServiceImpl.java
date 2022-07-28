@@ -3,7 +3,6 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -37,7 +36,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>方法名称：SegmentConsumeServiceImpl</B>
@@ -76,7 +74,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Resource
   private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
-  private AtomicInteger atomicInteger = new AtomicInteger(0);
+  private volatile Integer count = 0;
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
@@ -88,7 +86,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -96,7 +94,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   public ServerResponse<String> consumeByDisruptor(SegmentByByte record, Boolean enableReactorModelFlag) {
     SegmentObject segmentObject = null;
     try {
-      if(null != record){
+      if (null != record) {
         segmentObject = SegmentObject.parseFrom(record.getData());
         doConsume(segmentObject, enableReactorModelFlag);
       }
@@ -104,7 +102,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -523,16 +521,20 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
 
       if (null != jsonObject && 0 < jsonObject.size()) {
-        if(true == reactorProcessorEnable && true == reactorIoThreadByDisruptor){
+        if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
           ioThreadByDisruptor.disruptorInitDone();
           // 使用Disruptor无锁高性能队列；
           ioThreadByDisruptor.offer(jsonObject);
-        }else{
+        } else {
           LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
           if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
             // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
             log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
           }
+          // else if (++count >= 50000) {
+          //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+          //   count = 0;
+          // }
           // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
           linkedBlockingQueue.put(jsonObject);
         }

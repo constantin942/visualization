@@ -76,6 +76,8 @@ public class Const {
   public static final String QPS_ZSET_EVERY_PROCESSOR_THREAD = "qps_zset_every_processor_thread_";
   // 统计所有Pocessor线程总的QPS；2022-07-27 10:15:21
   public static final String QPS_ZSET_ALL_PROCESSOR_THREAD = "qps_zset_all_processor_thread";
+  // 统计kafka消费者每秒钟拿到多少消息；2022-07-28 14:00:38
+  public static final String QPS_ZSET_KAFKA_CONSUMER_RECORDS_THREAD = "qps_zset_kafka_consumer_records_";
   // 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
   public static final String SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR = "second_queue_size_zset_by_disruptor";
   public static final String SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "second_queue_size_zset_by_linked_blocking_queue";

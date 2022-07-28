@@ -153,10 +153,10 @@ elasticsearch:
 reactor:
   processor:
     enable: true
-    disruptor: true
+    disruptor: false
     thread:
-      count: 1
+      count: 2
   iothread:
-    disruptor: true
+    disruptor: false
     thread:
       count: 2

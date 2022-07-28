@@ -11,12 +11,16 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Slf4j
@@ -36,20 +40,30 @@ public class AiitKafkaConsumer {
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
 
-  // @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
+  // private volatile Integer count = 0;
+
+  // private Instant now = Instant.now();
+
+  private static Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 消息数量 */>> map = new ConcurrentHashMap<>();
+
+  @KafkaListener(topics = "skywalking-segments", groupId = "skyflying-consumer-group")
   public void onMessage(ConsumerRecord<String, Bytes> record, Acknowledgment ack) {
     Optional message = Optional.ofNullable(record.value());
     if (message.isPresent()) {
-      if(true == reactorProcessorEnable){
+      // 统计每秒钟kafka消费者能够拿到多少消息
+      // statisticsRecordCount();
+      if (true == reactorProcessorEnable) {
         // 使用Reactor模式；
-        if(true == reactorProcessorByDisruptor){
+        if (true == reactorProcessorByDisruptor) {
           // 使用Disruptor无锁高性能队列；2022-07-22 20:57:02
           useReactorModelByDisruptor(record);
-        }else{
+          // printLog(true);
+        } else {
           // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
           useReactorModelByLinkedBlockingQueue(record);
+          // printLog(false);
         }
-      }else{
+      } else {
         // 不使用Reactor模式；
         useNoReactorModel(record);
       }
@@ -57,13 +71,59 @@ public class AiitKafkaConsumer {
     }
   }
 
+
+  // public static Map<String, Map<String, AtomicInteger>> getMap() {
+  //   return map;
+  // }
+
+  /**
+   * <B>方法名称：statisticsRecordCount</B>
+   * <B>概要说明：统计每秒钟kafka消费者能够拿到多少消息</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月28日 13:07:24
+   * @Param []
+   **/
+  // private void statisticsRecordCount() {
+  //   String currentTime = DateTimeUtil.dateToStr(new Date());
+  //   String threadName = Thread.currentThread().getName();
+  //   Map<String, AtomicInteger> stringAtomicIntegerMap = map.get(threadName);
+  //   if (null == stringAtomicIntegerMap) {
+  //     ConcurrentHashMap<String, AtomicInteger> timeCountMap = new ConcurrentHashMap<>();
+  //     map.put(threadName, timeCountMap);
+  //     timeCountMap.put(currentTime, new AtomicInteger(1));
+  //   } else {
+  //     AtomicInteger count = stringAtomicIntegerMap.get(currentTime);
+  //     if (null == count) {
+  //       stringAtomicIntegerMap.put(currentTime, new AtomicInteger(1));
+  //     } else {
+  //       count.incrementAndGet();
+  //       stringAtomicIntegerMap.put(currentTime, count);
+  //     }
+  //   }
+  // }
+
+  // private void printLog(Boolean isDisruptor) {
+  //   if (++count >= 10 * 10000) {
+  //     if (true == isDisruptor) {
+  //       log.info(" # AiitKafkaConsumer.onMessage() # 将【{}】条消息放入到Disruptor队列中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+  //     } else {
+  //       log.info(" # AiitKafkaConsumer.onMessage() # 将【{}】条消息放入到LinkedBlockingQueue队列中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+  //     }
+  //     now = Instant.now();
+  //     count = 0;
+  //   }
+  // }
+
   /**
    * <B>方法名称：recordForwarding</B>
    * <B>概要说明：将蓝景kafka服务器上的消息转发到我们内网测试环境中的kafka上</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月24日 09:06:35
    * @Param [record]
-   * @return void
    **/
   private void recordForwarding(ConsumerRecord<String, Bytes> record) {
     try {
@@ -108,10 +168,11 @@ public class AiitKafkaConsumer {
   /**
    * <B>方法名称：useReactorModelByDisruptor</B>
    * <B>概要说明：使用Disruptor无锁高性能队列</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年07月22日 20:07:28
    * @Param [record]
-   * @return void
    **/
   private void useReactorModelByDisruptor(ConsumerRecord<String, Bytes> record) {
     try {

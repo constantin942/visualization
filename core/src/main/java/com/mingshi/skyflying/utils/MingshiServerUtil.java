@@ -939,7 +939,7 @@ public class MingshiServerUtil {
           String time = iterator1.next();
           Integer count = map.get(time);
           // 统计每个Processor线程自己的QPS；2022-07-27 10:16:09
-          redisPoolUtil.incrementScore(threadName, time, Long.valueOf(count));
+          // redisPoolUtil.incrementScore(threadName, time, Long.valueOf(count));
           // 统计所有Processor线程总的QPS；2022-07-27 10:16:30
           redisPoolUtil.incrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
         }
@@ -1007,6 +1007,9 @@ public class MingshiServerUtil {
     // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
     statisticsProcessorAndIoThreadQueueSize();
 
+    // 统计kafka消费者每秒拿到多少消息；2022-07-28 13:57:05
+    // statisticsKafkaConsumerRecords();
+
     flushSegmentToDB(segmentList);
     // flushAuditLogToDB(auditLogList);
 
@@ -1033,4 +1036,33 @@ public class MingshiServerUtil {
 
     flushAbnormalToDB(msAlarmInformationDoLinkedListist);
   }
+
+  /**
+   * <B>方法名称：statisticsKafkaConsumerRecords</B>
+   * <B>概要说明：统计kafka消费者每秒拿到多少消息；</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年07月28日 14:07:23
+   * @Param []
+   **/
+  // private void statisticsKafkaConsumerRecords() {
+  //   String name = Thread.currentThread().getName();
+  //   if (name.equals("processLocalStatisticsThread_0")) {
+  //     Map<String, Map<String, AtomicInteger>> map = AiitKafkaConsumer.getMap();
+  //     Iterator<String> iterator = map.keySet().iterator();
+  //     while (iterator.hasNext()) {
+  //       String key = iterator.next();
+  //       Map<String, AtomicInteger> stringAtomicIntegerMap1 = map.get(key);
+  //       Iterator<String> iterator1 = stringAtomicIntegerMap1.keySet().iterator();
+  //       while (iterator1.hasNext()) {
+  //         String next = iterator1.next();
+  //         AtomicInteger atomicInteger = stringAtomicIntegerMap1.get(next);
+  //         Integer scoure = atomicInteger.get();
+  //         redisPoolUtil.incrementScore(Const.QPS_ZSET_KAFKA_CONSUMER_RECORDS_THREAD + key, next, scoure.doubleValue());
+  //       }
+  //     }
+  //     map.clear();
+  //   }
+  // }
 }
