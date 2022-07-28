@@ -9,7 +9,6 @@ import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
-import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
@@ -61,8 +60,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Value("${reactor.iothread.thread.count}")
   private Integer reactorIoThreadThreadCount;
 
+  // @Resource
+  // private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
-  private IoThreadByDisruptor ioThreadByDisruptor;
+  private RedisPoolUtil redisPoolUtil;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
@@ -521,23 +522,40 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
 
       if (null != jsonObject && 0 < jsonObject.size()) {
-        if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-          ioThreadByDisruptor.disruptorInitDone();
-          // 使用Disruptor无锁高性能队列；
-          ioThreadByDisruptor.offer(jsonObject);
-        } else {
-          LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
-          if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-            // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-            log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-          }
-          // else if (++count >= 50000) {
-          //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-          //   count = 0;
-          // }
-          // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
-          linkedBlockingQueue.put(jsonObject);
+        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+        if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
+          // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+          log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+          String key = DateTimeUtil.dateToStr(new Date());
+          redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
         }
+        // else if (++count >= 50000) {
+        //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //   count = 0;
+        // }
+        // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
+        linkedBlockingQueue.put(jsonObject);
+
+
+        // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
+        //   ioThreadByDisruptor.disruptorInitDone();
+        //   // 使用Disruptor无锁高性能队列；
+        //   ioThreadByDisruptor.offer(jsonObject);
+        // } else {
+        //   LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+        //   if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
+        //     // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+        //     log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //     String key = DateTimeUtil.dateToStr(new Date());
+        //     redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+        //   }
+        //   // else if (++count >= 50000) {
+        //   //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //   //   count = 0;
+        //   // }
+        //   // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
+        //   linkedBlockingQueue.put(jsonObject);
+        // }
       }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);

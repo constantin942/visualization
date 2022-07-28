@@ -6,7 +6,6 @@ import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSinglet
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
-import com.mingshi.skyflying.disruptor.iothread.IoThreadByDisruptor;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
@@ -49,8 +48,8 @@ public class MingshiServerUtil {
 
   @Resource
   private ProcessorByDisruptor processorByDisruptor;
-  @Resource
-  private IoThreadByDisruptor ioThreadByDisruptor;
+  // @Resource
+  // private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
   private RedisPoolUtil redisPoolUtil;
   @Resource
@@ -963,9 +962,6 @@ public class MingshiServerUtil {
     String name = Thread.currentThread().getName();
     String key = DateTimeUtil.dateToStr(new Date()) + "-" + name;
     if (true == reactorProcessorDisruptor) {
-      // 统计
-      // redisPoolUtil.incrementScore(Const.FIRST_QUEUE_SIZE_ZSET, String.valueOf(processorByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-      // redisPoolUtil.incrementScore(Const.ZSET_ACCEPTOR_THREAD_QUEUE_ZISE, key, Long.valueOf(processorByDisruptor.getQueueSize()));
       long queueSize = processorByDisruptor.getQueueSize();
       redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
     } else {
@@ -977,15 +973,18 @@ public class MingshiServerUtil {
         }
       }
     }
-    if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-      redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-    } else {
-      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-      // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+    if (true == reactorProcessorEnable) {
       redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
     }
+    // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
+    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+    //   redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
+    // } else {
+    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
+    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+    //   redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+    // }
   }
 
   /**
