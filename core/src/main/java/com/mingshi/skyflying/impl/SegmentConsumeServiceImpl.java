@@ -553,7 +553,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
     HashMap<String, Integer> hashMap = new HashMap<>();
-    hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()), 1);
+    hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
+    // hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()), 1);
     map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
   }
 

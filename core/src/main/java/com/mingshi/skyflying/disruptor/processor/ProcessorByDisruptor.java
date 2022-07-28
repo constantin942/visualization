@@ -57,7 +57,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   }
 
   private void init(String applicationName) {
-    this.acceptorRingBuffer = messageModelRingBuffer(queueSize, 1 == reactorProcessorThreadCount ? true : false);
+    this.acceptorRingBuffer = messageModelRingBuffer(queueSize);
     createProcessorsFinishedFlag = true;
   }
 
@@ -70,7 +70,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     }
   }
 
-  public RingBuffer<SegmentByByte> messageModelRingBuffer(Integer queueSize, Boolean enableBatch) {
+  public RingBuffer<SegmentByByte> messageModelRingBuffer(Integer queueSize) {
     // RingBuffer是一个数组，数组中的每个位置都存放一个对象/实例。
     // 下面这行代码，就是要指定创建对象/实例的工厂。这行代码会在RingBuffer创建完毕之后，给每个位置存放对象/实例时用到。2022-07-17 10:45:23
     ConsumerProcessorFactory factory = new ConsumerProcessorFactory();
@@ -79,25 +79,46 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     ThreadFactory producerFactory = Executors.defaultThreadFactory();
     // 指定ringbuffer大小，必须为2的N次方（能将求模运算转为位运算提高效率），否则将影响效率
     Disruptor<SegmentByByte> disruptor = null;
-    if (true == enableBatch) {
+
+    // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
+    disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+
+    if (null != reactorProcessorThreadCount && 1 == reactorProcessorThreadCount) {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
-      // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
-      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
       // 使用单消费者模式；
       ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
       // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
       disruptor.handleEventsWith(processorConsumerByEventHandler);
     } else {
-      log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。", reactorProcessorThreadCount);
-      // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
-      disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
+      // 使用多消费者模式；
       for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
-        // 使用多消费者模式；
+        log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】消费者线程。", reactorProcessorThreadCount, (integer + 1));
         ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
         // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
         disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
       }
     }
+
+
+    // if (true == enableBatch) {
+    //   log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
+    //   // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
+    //   disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+    //   // 使用单消费者模式；
+    //   ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
+    //   // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+    //   disruptor.handleEventsWith(processorConsumerByEventHandler);
+    // } else {
+    //   log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。", reactorProcessorThreadCount);
+    //   // 在非批处理的情况下，使用多生产者；2021-12-23 08:30:54
+    //   disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
+    //   for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
+    //     // 使用多消费者模式；
+    //     ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
+    //     // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+    //     disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
+    //   }
+    // }
 
     // 启动disruptor线程
     disruptor.start();
