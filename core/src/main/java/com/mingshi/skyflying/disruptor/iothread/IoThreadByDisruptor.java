@@ -6,6 +6,7 @@
 // import com.lmax.disruptor.RingBuffer;
 // import com.lmax.disruptor.dsl.Disruptor;
 // import com.lmax.disruptor.dsl.ProducerType;
+// import com.mingshi.skyflying.disruptor.processor.ProcessorConsumerByWrokHandler;
 // import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 // import com.mingshi.skyflying.utils.MingshiServerUtil;
 // import lombok.extern.slf4j.Slf4j;
@@ -139,13 +140,22 @@
 //       disruptor.handleEventsWith(ioThreadConsumerByEventHandler);
 //     }else{
 //       log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建多消费者线程。", reactorIoThreadThreadCount);
-//       for (Integer integer = 0; integer < reactorIoThreadThreadCount; integer++) {
-//         log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】线程。", reactorIoThreadThreadCount, (integer + 1));
-//         // 使用多消费者模式；
-//         IoThreadConsumerByWorkHandler ioThreadConsumerByWorkHandler = new IoThreadConsumerByWorkHandler(10, mingshiServerUtil, esMsSegmentDetailUtil, ringBuffer);
-//         // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-//         disruptor.handleEventsWithWorkerPool(ioThreadConsumerByWorkHandler);
+//       // 使用多消费者模式.每个消费者只消费队列中一部分消息。类似于RocketMQ中集群消费模式。
+//       IoThreadConsumerByWorkHandler[] ioThreadConsumerByWorkHandlerArray = new IoThreadConsumerByWorkHandler[reactorProcessorThreadCount];
+//       for (int i = 0; i < reactorProcessorThreadCount; i++) {
+//         log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】线程。", reactorIoThreadThreadCount, (i + 1));
+//         ioThreadConsumerByWorkHandlerArray[i] = new IoThreadConsumerByWorkHandler(segmentConsumerService);
 //       }
+//       disruptor.handleEventsWithWorkerPool(ioThreadConsumerByWorkHandlerArray);
+//
+//       // 这种用法有很大的问题；2022-07-29 13:50:36
+//       // for (Integer integer = 0; integer < reactorIoThreadThreadCount; integer++) {
+//       //   log.info("# IoThreadByDisruptor.messageModelRingBuffer() # 根据配置文件设置的IoThread线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】线程。", reactorIoThreadThreadCount, (integer + 1));
+//       //   // 使用多消费者模式；
+//       //   IoThreadConsumerByWorkHandler ioThreadConsumerByWorkHandler = new IoThreadConsumerByWorkHandler(10, mingshiServerUtil, esMsSegmentDetailUtil, ringBuffer);
+//       //   // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
+//       //   disruptor.handleEventsWithWorkerPool(ioThreadConsumerByWorkHandler);
+//       // }
 //     }
 //
 //     // 启动disruptor线程

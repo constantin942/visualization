@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>类名称：ProcessorByDisruptor</B>
@@ -38,7 +37,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   @Value("${reactor.processor.disruptor}")
   private boolean reactorProcessorByDisruptor;
 
-  private AtomicInteger atomicInteger = new AtomicInteger(0);
+  // private AtomicInteger atomicInteger = new AtomicInteger(0);
 
   @Resource
   private SegmentConsumerService segmentConsumerService;
@@ -46,8 +45,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   @Value("${reactor.processor.thread.count}")
   private Integer reactorProcessorThreadCount;
 
-  // private Integer queueSize = 4;
-  private Integer queueSize = 1024;
+  private Integer queueSize = 8192;
   private RingBuffer<SegmentByByte> acceptorRingBuffer;
 
   private volatile Boolean createProcessorsFinishedFlag = false;
@@ -82,13 +80,14 @@ public class ProcessorByDisruptor implements ApplicationRunner {
 
     // 在批处理的情况下，使用单生产者；2021-12-23 08:30:33
     // 这里使用单生产者还是多生产者，取决于kafka的消费者线程的数量。2022-07-28 16:35:59
-    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
+    // 通过集成原生Kafka的消费端代码，手动创建了一个消费线程，从Kafka服务端拉取消息。所以这里可以指定使用单生产者模式。2022-07-28 17:44:13
+    disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
 
     // 使用多生产者；2022-07-28 14:42:07
     // 消费者使用yield等待策略，在实测中，并不能提高QPS。同时会导致CPU一直飙高到100%，就算没有消息要消费，CPU也会一直飙升到100%。不建议使用.2022-07-28 16:31:52
     // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
     // 消费者使用blocking阻塞策略，在实测中，比较温和，在有消息要处理的情况下，CPU一般占据70%。推荐使用。2022-07-28 16:32:54
-    disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
+    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
 
     if (null != reactorProcessorThreadCount && 1 == reactorProcessorThreadCount) {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
@@ -99,12 +98,12 @@ public class ProcessorByDisruptor implements ApplicationRunner {
       disruptor.handleEventsWith(processorConsumerByEventHandler);
     } else {
       // 使用多消费者模式.每个消费者只消费队列中一部分消息。类似于RocketMQ中集群消费模式。
-      for (Integer integer = 0; integer < reactorProcessorThreadCount; integer++) {
-        log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】消费者线程。", reactorProcessorThreadCount, (integer + 1));
-        ProcessorConsumerByWrokHandler processorConsumerByWrokHandler = new ProcessorConsumerByWrokHandler(segmentConsumerService);
-        // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
-        disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandler);
+      ProcessorConsumerByWrokHandler[] processorConsumerByWrokHandlerArray = new ProcessorConsumerByWrokHandler[reactorProcessorThreadCount];
+      for (int i = 0; i < reactorProcessorThreadCount; i++) {
+        log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建多消费者线程。开始创建第【{}】消费者线程。", reactorProcessorThreadCount, (i + 1));
+        processorConsumerByWrokHandlerArray[i] = new ProcessorConsumerByWrokHandler(segmentConsumerService);
       }
+      disruptor.handleEventsWithWorkerPool(processorConsumerByWrokHandlerArray);
     }
 
     // 启动disruptor线程
