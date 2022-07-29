@@ -56,7 +56,7 @@ public class ReactorUtil {
         }
       }
     } catch (Throwable e) {
-      log.error("# ReactorUtil.useReactorModelByLinkedBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);
+      log.error("# ReactorUtil.putRecordIntoBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);
     }
   }
 
