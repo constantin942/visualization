@@ -5,6 +5,13 @@
   <modelVersion>4.0.0</modelVersion>
   <dependencies>
 
+    <!-- https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>3.1.1</version>
+    </dependency>
+
     <dependency>
       <groupId>com.lmax.mysourcecode</groupId>
       <artifactId>disruptor</artifactId>
