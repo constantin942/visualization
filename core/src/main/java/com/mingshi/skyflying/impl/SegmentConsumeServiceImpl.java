@@ -3,6 +3,7 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
@@ -14,7 +15,7 @@ import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumer;
+import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -25,6 +26,7 @@ import com.mingshi.skyflying.type.RefType;
 import com.mingshi.skyflying.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
@@ -103,7 +105,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -595,9 +597,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String traceSegmentId = segmentObject.getTraceSegmentId();
       String globalTraceId = segmentObject.getTraceId();
 
-      // 在这里之所以加独占锁，是因为测试的时候，发现Kafka的消费者竟然由单线程编程多线程的了？为了保证插入和更新操作的线程安全问题，这里加独占锁。
+      // 在这里之所以加独占锁，是因为测试的时候，发现Kafka的消费者竟然由单线程变成多线程的了？为了保证插入和更新操作的线程安全问题，这里加独占锁。
       // 注意：这里加独占锁只适合于单实例部署的情况。如果是多实例部署的话，需要将独占锁改成分布式独占锁，比如使用Redission的lock锁。
-      synchronized (AiitKafkaConsumer.class) {
+      synchronized (KafkaConsumer.class) {
+      // synchronized (AiitKafkaConsumer.class) {
         try {
           Map<String, Object> map = new HashMap<>();
           map.put("globalTraceId", globalTraceId);
