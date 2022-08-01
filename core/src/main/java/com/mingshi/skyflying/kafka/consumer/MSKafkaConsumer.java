@@ -21,8 +21,10 @@ public class MSKafkaConsumer extends Thread {
 
   private String bootstrapServers;
 
-  private final static String TOPIC = "skywalking-segments";
-  private final static String GROUP = "skyflying-consumer-group";
+  private final static String TOPIC = "test-skywalking-segments";
+  private final static String GROUP = "test-skyflying-consumer-group";
+  // private final static String TOPIC = "skywalking-segments";
+  // private final static String GROUP = "skyflying-consumer-group";
 
   // 初始化完成的标志；2022-07-28 17:12:32
   private AtomicBoolean isInitDone = new AtomicBoolean(false);
