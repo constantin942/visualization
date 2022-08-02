@@ -3,11 +3,9 @@ package com.mingshi.skyflying.task;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.dao.MsScheduledTaskDao;
-import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
-import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
+import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.rule.LoadUserPortraitFromDb;
@@ -40,6 +38,8 @@ public class ScheduledTask {
   @Resource
   private MsScheduledTaskDao msScheduledTaskDao;
   @Resource
+  private MsSegmentDetailUsernameIsNullMapper msSegmentDetailUsernameIsNullMapper;
+  @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private LoadUserPortraitFromDb loadUserPortraitFromDb;
@@ -51,57 +51,195 @@ public class ScheduledTask {
   private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   /**
+   * <B>方法名称：scheduledGetSegmentDetailDo</B>
+   * <B>概要说明：定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月01日 15:08:37
+   * @Param []
+   **/
+  // 每隔30分钟执行一次：
+  @Scheduled(cron = "0 */3 * * * ?")
+  // 每隔2小时执行一次；
+  // @Scheduled(cron = "0 0 0/2 * * ?")
+  public void scheduledGetSegmentDetailDo() {
+    Instant now = Instant.now();
+    log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetSegmentDetailDo()# 定时基于token更新用户名。");
+    try {
+      // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
+      List<MsSegmentDetailDo> tokenList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+      while(null != tokenList && 0 < tokenList.size()){
+        // 将从表 ms_segment_detail_username_is_null 获取到用户名不为空的记录，放入到公共队列中，让其IoThread线程进行持久化操作（在Redis中统计以及保存到MySQL中）；2022-08-01 15:50:47
+        mingshiServerUtil.doEnableReactorModel(null, null, null, null, tokenList, null, null, null);
+        // 从表 ms_segment_detail_username_is_null 将用户名不为空的记录删除。这里有个丢数据的场景：当数据放入到公共队列后 ，此时当前服务宕机了，那么在队列里还没来得及进行持久化的数据就丢失了。2022-08-01 15:59:12
+        msSegmentDetailUsernameIsNullMapper.deleteByIds(tokenList);
+        tokenList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+      }
+    } catch (Exception e) {
+      log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
+    }
+    log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+  }
+
+  /**
    * <B>方法名称：scheduledUpdateUserNameByToken</B>
    * <B>概要说明：定时基于token更新用户名</B>
    *
    * @return void
    * @Author zm
-   * @Date 2022年06月28日 15:06:34
+   * @Date 2022年08月01日 15:08:36
    * @Param []
    **/
   // 每隔30分钟执行一次：
-  // @Scheduled(cron = "0 */3 * * * ?")
+  @Scheduled(cron = "0 */3 * * * ?")
   // 每隔2小时执行一次；
   // @Scheduled(cron = "0 0 0/2 * * ?")
   public void scheduledUpdateUserNameByToken() {
-    Instant now1 = Instant.now();
     Instant now = Instant.now();
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。");
-    List<Integer> resultList = new LinkedList<>();
     try {
-      resultList = msSegmentDetailDao.selectAllId();
-      if (null != resultList && 0 < resultList.size()) {
-        Integer stepLength = 2000;
-        Integer end = 0;
-        for (int i = 0; i < resultList.size(); i = i + stepLength) {
-          if (stepLength >= resultList.size()) {
-            List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(resultList);
-            if (null != userNameTokenList && 0 < userNameTokenList.size()) {
-              msSegmentDetailDao.updateBatchByToken(userNameTokenList);
-              break;
-            }
-          } else {
-            if (i + stepLength > resultList.size()) {
-              end = resultList.size();
-            } else {
-              end = i + stepLength;
-            }
-            List<Integer> list = resultList.subList(i, end);
-            List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(list);
-            if (null != userNameTokenList && 0 < userNameTokenList.size()) {
-              msSegmentDetailDao.updateBatchByToken(userNameTokenList);
-              log.info(" #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。更新【{}】条记录，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
-              now = Instant.now();
-            }
+      // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
+      List<String> tokenList = msSegmentDetailUsernameIsNullMapper.selectAllTokenUserNameIsNull();
+      for (String token : tokenList) {
+        // 先从本地缓存Caffeine中根据token获取用户名；
+        String userName = null;
+        userName = MsCaffeine.getUserNameByToken(token);
+        if (StringUtil.isNotBlank(userName)) {
+          updateUserNameIsNullByToken(userName, token);
+        } else {
+          // 当本地缓存中不存在时，那么从表 ms_segment_detail 中获取；2022-08-01 15:24:34
+          userName = msSegmentDetailDao.selectUserNameByToken(token);
+          if (StringUtil.isNotBlank(userName)) {
+            updateUserNameIsNullByToken(userName, token);
+            MsCaffeine.putUserNameByToken(token, userName);
           }
         }
       }
     } catch (Exception e) {
       log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
     }
-    log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now1));
     log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
   }
+
+  /**
+   * <B>方法名称：scheduledUpdateUserNameByGlobalTraceId</B>
+   * <B>概要说明：定时基于globalTraceId更新用户名</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月01日 15:08:36
+   * @Param []
+   **/
+  // 每隔30分钟执行一次：
+  @Scheduled(cron = "0 */3 * * * ?")
+  // 每隔2小时执行一次；
+  // @Scheduled(cron = "0 0 0/2 * * ?")
+  public void scheduledUpdateUserNameByGlobalTraceId() {
+    Instant now = Instant.now();
+    log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于globalTraceId更新用户名。");
+    try {
+      // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
+      List<String> tokenList = msSegmentDetailUsernameIsNullMapper.selectAllGlobalTraceIdUserNameIsNull();
+      for (String globalTraceId : tokenList) {
+        // 先从本地缓存Caffeine中根据token获取用户名；
+        String userName = null;
+        userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
+        if (StringUtil.isNotBlank(userName)) {
+          updateUserNameIsNullByGlobalTraceId(userName, globalTraceId);
+        } else {
+          // 当本地缓存中不存在时，那么从表 ms_segment_detail 中获取；2022-08-01 15:24:34
+          userName = msSegmentDetailDao.selectUserNameByGlobalTraceId(globalTraceId);
+          if (StringUtil.isNotBlank(userName)) {
+            updateUserNameIsNullByGlobalTraceId(userName, globalTraceId);
+            MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于 globalTraceId 更新用户名时，出现了异常。#", e);
+    }
+    log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于 globalTraceId 更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+  }
+
+  /**
+   * <B>方法名称：updateUserNameIsNullByToken</B>
+   * <B>概要说明：根据token更新用户名为空的记录</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月01日 15:08:12
+   * @Param [userNameByToken, token]
+   **/
+  private void updateUserNameIsNullByToken(String userNameByToken, String token) {
+    try {
+      HashMap<String, String> map = new HashMap<>();
+      map.put("userName", userNameByToken);
+      map.put("token", token);
+      msSegmentDetailUsernameIsNullMapper.updateUserNameByToken(map);
+    } catch (Exception e) {
+      log.error("# scheduledGetDmsAuditLog.updateUserNameIsNull() # 根据token更新用户名到表 ms_segment_detail_username_is_null 时，出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：updateUserNameIsNullByGlobalTraceId</B>
+   * <B>概要说明：根据token更新用户名为空的记录</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月01日 15:08:12
+   * @Param [userNameByToken, token]
+   **/
+  private void updateUserNameIsNullByGlobalTraceId(String userNameByToken, String globalTraceId) {
+    try {
+      HashMap<String, String> map = new HashMap<>();
+      map.put("userName", userNameByToken);
+      map.put("globalTraceId", globalTraceId);
+      msSegmentDetailUsernameIsNullMapper.updateUserNameByGlobalTraceId(map);
+    } catch (Exception e) {
+      log.error("# scheduledGetDmsAuditLog.updateUserNameIsNull() # 根据token更新用户名到表 ms_segment_detail_username_is_null 时，出现了异常。", e);
+    }
+  }
+  // public void scheduledUpdateUserNameByToken() {
+  //   Instant now1 = Instant.now();
+  //   Instant now = Instant.now();
+  //   log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。");
+  //   List<Integer> resultList = new LinkedList<>();
+  //   try {
+  //     resultList = msSegmentDetailDao.selectAllId();
+  //     if (null != resultList && 0 < resultList.size()) {
+  //       Integer stepLength = 2000;
+  //       Integer end = 0;
+  //       for (int i = 0; i < resultList.size(); i = i + stepLength) {
+  //         if (stepLength >= resultList.size()) {
+  //           List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(resultList);
+  //           if (null != userNameTokenList && 0 < userNameTokenList.size()) {
+  //             msSegmentDetailDao.updateBatchByToken(userNameTokenList);
+  //             break;
+  //           }
+  //         } else {
+  //           if (i + stepLength > resultList.size()) {
+  //             end = resultList.size();
+  //           } else {
+  //             end = i + stepLength;
+  //           }
+  //           List<Integer> list = resultList.subList(i, end);
+  //           List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(list);
+  //           if (null != userNameTokenList && 0 < userNameTokenList.size()) {
+  //             msSegmentDetailDao.updateBatchByToken(userNameTokenList);
+  //             log.info(" #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。更新【{}】条记录，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
+  //             now = Instant.now();
+  //           }
+  //         }
+  //       }
+  //     }
+  //   } catch (Exception e) {
+  //     log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
+  //   }
+  //   log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now1));
+  //   log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+  // }
 
   /**
    * <B>方法名称：scheduledUpdateUserPortraitByVisitedTime</B>

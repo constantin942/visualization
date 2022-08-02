@@ -168,6 +168,28 @@ public class DateTimeUtil {
   public static final String DATEFORMAT_STR_023 = "MM月dd日 hh:mm";
 
   /**
+   * <B>方法名称：removeDays</B>
+   * <B>概要说明：日期减天数</B>
+   * @Author zm
+   * @Date 2022年08月01日 14:08:25
+   * @Param [oldDate, n]
+   * @return java.util.Date
+   **/
+  public static Date removeDays(Date oldDate, int n) {
+
+    Date newDate = null;
+    Calendar calOld = Calendar.getInstance();
+    calOld.setTime(oldDate);
+    int day = calOld.get(Calendar.DAY_OF_YEAR);
+    Calendar calNew = Calendar.getInstance();
+    calNew.setTime(oldDate);
+    calNew.set(Calendar.DAY_OF_YEAR, day - n);
+    newDate = calNew.getTime();
+    return newDate;
+
+  }
+
+  /**
    * <B>方法名称：instantToString</B>
    * <B>概要说明：将Instant类型的时间转换成String类型的时间，使用默认的时间格式 </B>
    *

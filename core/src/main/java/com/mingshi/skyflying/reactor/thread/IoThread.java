@@ -42,6 +42,7 @@ public class IoThread extends Thread {
   private LinkedList<SegmentDo> segmentList = null;
   // private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
+  private LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList = null;
   private HashSet<String> userHashSet = null;
   private LinkedList<Span> spanList = null;
   // private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
@@ -59,6 +60,7 @@ public class IoThread extends Thread {
     userHashSet = new HashSet();
     // auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
+    segmentDetailUserNameIsNullDoList = new LinkedList();
     spanList = new LinkedList();
     // esSegmentDetailDoList = new LinkedList();
     msAlarmInformationDoLinkedListist = new LinkedList();
@@ -94,6 +96,9 @@ public class IoThread extends Thread {
 
             // 从json实例中获取segmentDetail实例的信息
             getSegmentDetailFromJSONObject(jsonObject);
+
+            // 从json实例中获取用户名为空的segmentDetail实例信息
+            getSegmentDetailUserNameIsNullFromJSONObject(jsonObject);
 
             // 从json实例中获取esSegmentDetail实例的信息
             // getEsSegmentDetailFromJSONObject(jsonObject);
@@ -331,6 +336,26 @@ public class IoThread extends Thread {
     }
   }
 
+  private void getSegmentDetailUserNameIsNullFromJSONObject(ObjectNode jsonObject) {
+    try {
+      String listString = null;
+      try {
+        JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST);
+        if (null != jsonNode) {
+          listString = jsonNode.asText();
+        }
+      } catch (Exception e) {
+        log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+      }
+      if (StringUtil.isNotBlank(listString)) {
+        LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
+        segmentDetailUserNameIsNullDoList.addAll(segmentDetailList);
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+    }
+  }
+
   /**
    * <B>方法名称：getSegmentFromJSONObject</B>
    * <B>概要说明：从json实例中获取segment的信息</B>
@@ -368,7 +393,7 @@ public class IoThread extends Thread {
       long isShouldFlush = DateTimeUtil.getSecond(CURRENT_TIME) - flushToRocketMQInterval;
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-        mingshiServerUtil.doInsertSegmentDetailIntoMySQLAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist);
+        mingshiServerUtil.doInsertSegmentDetailIntoMySQLAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
         CURRENT_TIME = Instant.now();
         log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), DateTimeUtil.getTimeMillis(now));
       }

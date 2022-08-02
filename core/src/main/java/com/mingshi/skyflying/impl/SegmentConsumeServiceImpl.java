@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
+import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.component.ComponentsDefine;
-import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
@@ -13,10 +13,7 @@ import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
-import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
-import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
@@ -36,7 +33,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * <B>方法名称：SegmentConsumeServiceImpl</B>
@@ -58,14 +54,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   // @Value("${reactor.iothread.disruptor}")
   // private boolean reactorIoThreadByDisruptor;
 
-  // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
-  @Value("${reactor.iothread.thread.count}")
-  private Integer reactorIoThreadThreadCount;
-
   // @Resource
   // private IoThreadByDisruptor ioThreadByDisruptor;
-  @Resource
-  private RedisPoolUtil redisPoolUtil;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
@@ -74,10 +64,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private SegmentRelationDao segmentRelationDao;
   @Resource
   private UserTokenDao userTokenDao;
-  @Resource
-  private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
-
-  private volatile Integer count = 0;
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
@@ -135,6 +121,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
       LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList = null;
       LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+      LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList = null;
       // 获取探针的名称；2022-06-28 14:25:46
       skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
@@ -164,7 +151,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // if (true == esMsSegmentDetailUtil.getEsEnable()) {
         //   esSegmentDetaiDolList = esMsSegmentDetailUtil.getEsSegmentDetaiDolList(segment);
         // }
-        segmentDetaiDolList = getSegmentDetaiDolList(segment, segmentObject);
+        segmentDetaiDolList = new LinkedList<>();
+        segmentDetaiUserNameIsNullDolList = new LinkedList<>();
+        getSegmentDetaiDolList(segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完100行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
 
         // 判断是否是异常信息；2022-06-07 18:00:13
@@ -183,7 +172,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
         // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完144行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
         // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
@@ -231,6 +220,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
 
+        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDB(segmentDetaiUserNameIsNullDolList);
+
         // 将异常信息插入到MySQL中；2022-06-07 18:16:44
         LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
         if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
@@ -270,19 +261,20 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return skywalkingAgentHeartBeatMap;
   }
 
-  private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(SegmentDo segment, SegmentObject segmentObject) {
-    LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+  private void getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
+                                      LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
+                                      SegmentDo segment,
+                                      SegmentObject segmentObject) {
     try {
-      segmentDetaiDolList = new LinkedList<>();
       String reorganizingSpans = segment.getReorganizingSpans();
       if (StringUtil.isBlank(reorganizingSpans)) {
-        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentObject);
-        return segmentDetaiDolList;
+        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+        return;
       }
       List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
       if (null == list || 0 == list.size() || 1 == list.size()) {
-        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentObject);
-        return segmentDetaiDolList;
+        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+        return;
       }
       LinkedHashMap map1 = list.get(0);
       Object url = map1.get("url");
@@ -365,16 +357,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         if (false == isError) {
           // 当没有出现sql异常时，才保存SQL信息；2022-07-01 14:41:31
-          segmentDetaiDolList.add(msSegmentDetailDo);
+          if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
+            segmentDetaiDolList.add(msSegmentDetailDo);
+          } else {
+            // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
+            if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken())) {
+              segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+            } else {
+              log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));
+            }
+          }
         }
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
     }
-    return segmentDetaiDolList;
   }
 
-  private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, SegmentObject segmentObject) {
+  private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
     if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
       MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
       msSegmentDetailDo.setUserName(segment.getUserName());
@@ -393,7 +393,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           msSegmentDetailDo.setOperationType("url");
         }
       }
-      segmentDetaiDolList.add(msSegmentDetailDo);
+      if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
+        // 用户名不为空；
+        segmentDetaiDolList.add(msSegmentDetailDo);
+      } else {
+        // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
+        if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken())) {
+          segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+        } else {
+          log.error("# SegmentConsumeServiceImpl.putSegmentDetailDoIntoList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));
+        }
+      }
+
     }
   }
 
@@ -491,79 +502,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return false;
   }
 
-  private void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
-                                    List<Span> spanList,
-                                    LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList,
-                                    SegmentDo segmentDo,
-                                    LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
-                                    LinkedList<MsAlarmInformationDo> msAlarmInformationDoList,
-                                    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
-    try {
-      ObjectNode jsonObject = JsonUtil.createJSONObject();
-      // if (null != segmentDo) {
-      //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-      // }
-
-      // 统计当前线程的QPS；2022-07-23 11:05:16
-      jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
-
-      if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
-        jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
-      }
-      // if (null != spanList && 0 < spanList.size()) {
-      //   jsonObject.put(Const.SPAN, JsonUtil.obj2String(spanList));
-      // }
-      if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
-        jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
-      }
-      if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
-        jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
-      }
-      if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
-        jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
-      }
-
-      if (null != jsonObject && 0 < jsonObject.size()) {
-        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
-        if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-          // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-          log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-          String key = DateTimeUtil.dateToStr(new Date());
-          redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-        }
-        // else if (++count >= 50000) {
-        //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //   count = 0;
-        // }
-        // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
-        linkedBlockingQueue.put(jsonObject);
-
-
-        // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-        //   ioThreadByDisruptor.disruptorInitDone();
-        //   // 使用Disruptor无锁高性能队列；
-        //   ioThreadByDisruptor.offer(jsonObject);
-        // } else {
-        //   LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
-        //   if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-        //     // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        //     log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //     String key = DateTimeUtil.dateToStr(new Date());
-        //     redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-        //   }
-        //   // else if (++count >= 50000) {
-        //   //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //   //   count = 0;
-        //   // }
-        //   // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
-        //   linkedBlockingQueue.put(jsonObject);
-        // }
-      }
-    } catch (Exception e) {
-      log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
-    }
-  }
-
   /**
    * <B>方法名称：statisticsProcessorThreadQps</B>
    * <B>概要说明：组装QPS数据</B>
@@ -600,7 +538,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 在这里之所以加独占锁，是因为测试的时候，发现Kafka的消费者竟然由单线程变成多线程的了？为了保证插入和更新操作的线程安全问题，这里加独占锁。
       // 注意：这里加独占锁只适合于单实例部署的情况。如果是多实例部署的话，需要将独占锁改成分布式独占锁，比如使用Redission的lock锁。
       synchronized (KafkaConsumer.class) {
-      // synchronized (AiitKafkaConsumer.class) {
+        // synchronized (AiitKafkaConsumer.class) {
         try {
           Map<String, Object> map = new HashMap<>();
           map.put("globalTraceId", globalTraceId);
@@ -1084,9 +1022,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [segment]
    **/
   private void setUserNameTokenGlobalTraceIdToLocalMemory(SegmentDo segment) {
-    Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
-    Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
-    Map<String/* token */, String/* userName */> tokenAndUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
+    // Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
+    // Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
+    // Map<String/* token */, String/* userName */> tokenAndUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
 
     String globalTraceId = segment.getGlobalTraceId();
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
@@ -1096,54 +1034,107 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     if (StringUtil.isBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
       // 当用户名和token都为null，但全局追踪id不为空；
       // 首先根据globalTraceId获取userName；
-      userName = globalTraceIdAndUserNameMap.get(globalTraceId);
+      userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
       if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
         segment.setUserName(userName);
-        SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
       }
 
       // 首先根据globalTraceId获取token；
-      String token = globalTraceIdAndTokenMap.get(globalTraceId);
+      String token = MsCaffeine.getTokenByGlobalTraceId(globalTraceId);
       if (StringUtil.isNotBlank(token)) {
         // 首先根据 token 获取 userName；
-        userName = tokenAndUserNameMap.get(token);
+        userName = MsCaffeine.getUserNameByToken(token);
         if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
           segment.setUserName(userName);
-          SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-          globalTraceIdAndUserNameMap.put(globalTraceId, userName);
+          MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
         }
       }
     } else if (StringUtil.isBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-      globalTraceIdAndTokenMap.put(globalTraceId, segmentToken);
+      MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
       // 当用户名为null，但token和全局追踪id不为空；
-      userName = globalTraceIdAndUserNameMap.get(globalTraceId);
+      userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
       if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-        tokenAndUserNameMap.put(segmentToken, userName);
+        MsCaffeine.putUserNameByToken(segmentToken, userName);
         segment.setUserName(userName);
       } else {
-        userName = tokenAndUserNameMap.get(segmentToken);
+        userName = MsCaffeine.getUserNameByToken(segmentToken);
         if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
           segment.setUserName(userName);
-          SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-          globalTraceIdAndUserNameMap.put(globalTraceId, userName);
-          SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+          MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
         }
       }
     } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
       // 当用户名、token和全局追踪id都不为空；这时候，就可以把三个map补全了。2022-05-24 15:48:15
-      SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-      globalTraceIdAndUserNameMap.put(globalTraceId, segmentUserName);
-      globalTraceIdAndTokenMap.put(globalTraceId, segmentToken);
-      tokenAndUserNameMap.put(segmentToken, segmentUserName);
+      MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
+      MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
+      MsCaffeine.putUserNameByToken(segmentToken, segmentUserName);
     } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
-      globalTraceIdAndUserNameMap.put(globalTraceId, segmentUserName);
+      MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
     } else {
       log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() # 出现异常情况了。用户名、token和全局追踪id都为空。");
     }
   }
+  // private void setUserNameTokenGlobalTraceIdToLocalMemory(SegmentDo segment) {
+  //   Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
+  //   Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
+  //   Map<String/* token */, String/* userName */> tokenAndUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
+  //
+  //   String globalTraceId = segment.getGlobalTraceId();
+  //   // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
+  //   String segmentUserName = segment.getUserName();
+  //   String segmentToken = segment.getToken();
+  //   String userName = null;
+  //   if (StringUtil.isBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+  //     // 当用户名和token都为null，但全局追踪id不为空；
+  //     // 首先根据globalTraceId获取userName；
+  //     userName = globalTraceIdAndUserNameMap.get(globalTraceId);
+  //     if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+  //       segment.setUserName(userName);
+  //       SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //     }
+  //
+  //     // 首先根据globalTraceId获取token；
+  //     String token = globalTraceIdAndTokenMap.get(globalTraceId);
+  //     if (StringUtil.isNotBlank(token)) {
+  //       // 首先根据 token 获取 userName；
+  //       userName = tokenAndUserNameMap.get(token);
+  //       if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+  //         segment.setUserName(userName);
+  //         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //         globalTraceIdAndUserNameMap.put(globalTraceId, userName);
+  //       }
+  //     }
+  //   } else if (StringUtil.isBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+  //     SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //     globalTraceIdAndTokenMap.put(globalTraceId, segmentToken);
+  //     // 当用户名为null，但token和全局追踪id不为空；
+  //     userName = globalTraceIdAndUserNameMap.get(globalTraceId);
+  //     if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+  //       SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //       tokenAndUserNameMap.put(segmentToken, userName);
+  //       segment.setUserName(userName);
+  //     } else {
+  //       userName = tokenAndUserNameMap.get(segmentToken);
+  //       if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+  //         segment.setUserName(userName);
+  //         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //         globalTraceIdAndUserNameMap.put(globalTraceId, userName);
+  //         SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //       }
+  //     }
+  //   } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+  //     // 当用户名、token和全局追踪id都不为空；这时候，就可以把三个map补全了。2022-05-24 15:48:15
+  //     SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //     globalTraceIdAndUserNameMap.put(globalTraceId, segmentUserName);
+  //     globalTraceIdAndTokenMap.put(globalTraceId, segmentToken);
+  //     tokenAndUserNameMap.put(segmentToken, segmentUserName);
+  //   } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+  //     SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(true);
+  //     globalTraceIdAndUserNameMap.put(globalTraceId, segmentUserName);
+  //   } else {
+  //     log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() # 出现异常情况了。用户名、token和全局追踪id都为空。");
+  //   }
+  // }
 
   private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52

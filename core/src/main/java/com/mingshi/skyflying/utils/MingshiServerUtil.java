@@ -1,13 +1,15 @@
 package com.mingshi.skyflying.utils;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
-import com.mingshi.skyflying.config.SingletonLocalStatisticsMap;
 import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.domain.*;
+import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
+import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
@@ -25,6 +27,7 @@ import javax.annotation.Resource;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,6 +45,9 @@ public class MingshiServerUtil {
   private boolean reactorProcessorEnable;
   @Value("${reactor.processor.disruptor}")
   private boolean reactorProcessorDisruptor;
+  // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
+  @Value("${reactor.iothread.thread.count}")
+  private Integer reactorIoThreadThreadCount;
 
   // @Value("${reactor.iothread.disruptor}")
   // private boolean reactorIoThreadByDisruptor;
@@ -57,6 +63,8 @@ public class MingshiServerUtil {
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
+  private MsSegmentDetailUsernameIsNullMapper msSegmentDetailUsernameIsNullMapper;
+  @Resource
   private MsAlarmInformationMapper msAlarmInformationMapper;
   @Resource
   private MsAgentInformationMapper msAgentInformationMapper;
@@ -70,6 +78,98 @@ public class MingshiServerUtil {
   private SegmentDao segmentDao;
   @Resource
   private UserTokenDao userTokenDao;
+  @Resource
+  private MingshiServerUtil mingshiServerUtil;
+  @Resource
+  private SegmentRelationDao segmentRelationDao;
+  @Resource
+  private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
+
+  /**
+   * <B>方法名称：doEnableReactorModel</B>
+   * <B>概要说明：将数据组装一下，然后放入到公共队列中</B>
+   * @Author zm
+   * @Date 2022年08月01日 15:08:05
+   * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
+   * @return void
+   **/
+  public void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
+                                    List<Span> spanList,
+                                    List<EsMsSegmentDetailDo> esSegmentDetaiDolList,
+                                    SegmentDo segmentDo,
+                                    List<MsSegmentDetailDo> segmentDetaiDolList,
+                                    List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
+                                    List<MsAlarmInformationDo> msAlarmInformationDoList,
+                                    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
+    try {
+      ObjectNode jsonObject = JsonUtil.createJSONObject();
+      // if (null != segmentDo) {
+      //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
+      // }
+
+      // 统计当前线程的QPS；2022-07-23 11:05:16
+      if(null != map && 0 < map.size()){
+        jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
+      }
+
+      if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
+        jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
+      }
+      // if (null != spanList && 0 < spanList.size()) {
+      //   jsonObject.put(Const.SPAN, JsonUtil.obj2String(spanList));
+      // }
+      if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
+        jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
+      }
+      if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
+        jsonObject.put(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST, JsonUtil.obj2String(segmentDetaiUserNameIsNullDolList));
+      }
+      if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+        jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
+      }
+      if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
+        jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
+      }
+
+      if (null != jsonObject && 0 < jsonObject.size()) {
+        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+        if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
+          // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+          log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+          String key = DateTimeUtil.dateToStr(new Date());
+          redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+        }
+        // else if (++count >= 50000) {
+        //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //   count = 0;
+        // }
+        // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
+        linkedBlockingQueue.put(jsonObject);
+
+        // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
+        //   ioThreadByDisruptor.disruptorInitDone();
+        //   // 使用Disruptor无锁高性能队列；
+        //   ioThreadByDisruptor.offer(jsonObject);
+        // } else {
+        //   LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+        //   if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
+        //     // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+        //     log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //     String key = DateTimeUtil.dateToStr(new Date());
+        //     redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+        //   }
+        //   // else if (++count >= 50000) {
+        //   //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+        //   //   count = 0;
+        //   // }
+        //   // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
+        //   linkedBlockingQueue.put(jsonObject);
+        // }
+      }
+    } catch (Exception e) {
+      log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
+    }
+  }
 
   /**
    * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
@@ -271,68 +371,69 @@ public class MingshiServerUtil {
    * @Author zm
    * @Date 2022年05月24日 11:05:07
    * @Param [now]
+   * 不能这样更新了，因为当数据库表中数据量上百万甚至上千万之后，这样更新就会有性能问题。2022-08-01 14:22:38
    **/
-  public void updateUserNameByGlobalTraceId() {
-    Boolean atomicBoolean = SingletonLocalStatisticsMap.getAtomicBooleanIsChanged();
-    if (false == atomicBoolean) {
-      // 只有当索引有变动的时候，才把数据更新到数据库中；2022-05-24 17:15:55
-      return;
-    }
-
-    Boolean booleanIsUpdatingData = SingletonLocalStatisticsMap.getAtomicBooleanIsUpdatingData();
-    if (true == booleanIsUpdatingData) {
-      // 只有其他线程没有执行刷新操作时，本线程才执行；2022-05-24 17:15:55
-      return;
-    }
-    // 这里应该加个正在执行更新的标志；考虑这样一种场景：在同一个jvm进程内，有多个 IoThread 线程在执行，在同一时间应该只有一个 IoThread 线程执行更新操作。
-    // 2022-05-24 17:17:55
-    Map<String/* token */, String/* userName */> tokenUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
-    Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
-    Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
-    Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
-    // List<UserTokenDo> userTokenDoList = new LinkedList<>();
-    // List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
-    List<MsSegmentDetailDo> setmentDetailDoList = new LinkedList<>();
-    while (iterator.hasNext()) {
-      String globalTraceId = iterator.next();
-      String userName = globalTraceIdAndUserNameMap.get(globalTraceId);
-      String token = globalTraceIdTokenMap.get(globalTraceId);
-      if (StringUtil.isBlank(userName)) {
-        userName = tokenUserNameMap.get(token);
-      }
-      if (StringUtil.isBlank(userName)) {
-        log.error("# IoThread.updateUserNameByGlobalTraceId # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
-        continue;
-      }
-
-      // UserTokenDo userTokenDo = new UserTokenDo();
-      // userTokenDo.setUserName(userName);
-      // userTokenDo.setGlobalTraceId(globalTraceId);
-      // userTokenDo.setToken(token);
-      // userTokenDoList.add(userTokenDo);
-
-      MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-      msSegmentDetailDo.setGlobalTraceId(globalTraceId);
-      msSegmentDetailDo.setUserName(userName);
-      setmentDetailDoList.add(msSegmentDetailDo);
-
-      // MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-      // msAuditLogDo.setGlobalTraceId(globalTraceId);
-      // msAuditLogDo.setApplicationUserName(userName);
-      // auditLogDoList.add(msAuditLogDo);
-    }
-    // 批量插入用户名、token、global信息
-    // batchInsertUserToken(userTokenDoList);
-
-    // 批量更新审计日志的用户名和globalTraceId信息；
-    // batchUpdateMsAuditLog(auditLogDoList);
-
-    // 批量更新segmentDetail信息的用户名和globalTraceId信息；
-    batchUpdateMsSegmentDetail(setmentDetailDoList);
-
-    SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
-    SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
-  }
+  // public void updateUserNameByGlobalTraceId() {
+  //   Boolean atomicBoolean = SingletonLocalStatisticsMap.getAtomicBooleanIsChanged();
+  //   if (false == atomicBoolean) {
+  //     // 只有当索引有变动的时候，才把数据更新到数据库中；2022-05-24 17:15:55
+  //     return;
+  //   }
+  //
+  //   Boolean booleanIsUpdatingData = SingletonLocalStatisticsMap.getAtomicBooleanIsUpdatingData();
+  //   if (true == booleanIsUpdatingData) {
+  //     // 只有其他线程没有执行刷新操作时，本线程才执行；2022-05-24 17:15:55
+  //     return;
+  //   }
+  //   // 这里应该加个正在执行更新的标志；考虑这样一种场景：在同一个jvm进程内，有多个 IoThread 线程在执行，在同一时间应该只有一个 IoThread 线程执行更新操作。
+  //   // 2022-05-24 17:17:55
+  //   Map<String/* token */, String/* userName */> tokenUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
+  //   Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
+  //   Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
+  //   Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
+  //   // List<UserTokenDo> userTokenDoList = new LinkedList<>();
+  //   // List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
+  //   List<MsSegmentDetailDo> setmentDetailDoList = new LinkedList<>();
+  //   while (iterator.hasNext()) {
+  //     String globalTraceId = iterator.next();
+  //     String userName = globalTraceIdAndUserNameMap.get(globalTraceId);
+  //     String token = globalTraceIdTokenMap.get(globalTraceId);
+  //     if (StringUtil.isBlank(userName)) {
+  //       userName = tokenUserNameMap.get(token);
+  //     }
+  //     if (StringUtil.isBlank(userName)) {
+  //       log.error("# IoThread.updateUserNameByGlobalTraceId # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
+  //       continue;
+  //     }
+  //
+  //     // UserTokenDo userTokenDo = new UserTokenDo();
+  //     // userTokenDo.setUserName(userName);
+  //     // userTokenDo.setGlobalTraceId(globalTraceId);
+  //     // userTokenDo.setToken(token);
+  //     // userTokenDoList.add(userTokenDo);
+  //
+  //     MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+  //     msSegmentDetailDo.setGlobalTraceId(globalTraceId);
+  //     msSegmentDetailDo.setUserName(userName);
+  //     setmentDetailDoList.add(msSegmentDetailDo);
+  //
+  //     // MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
+  //     // msAuditLogDo.setGlobalTraceId(globalTraceId);
+  //     // msAuditLogDo.setApplicationUserName(userName);
+  //     // auditLogDoList.add(msAuditLogDo);
+  //   }
+  //   // 批量插入用户名、token、global信息
+  //   // batchInsertUserToken(userTokenDoList);
+  //
+  //   // 批量更新审计日志的用户名和globalTraceId信息；
+  //   // batchUpdateMsAuditLog(auditLogDoList);
+  //
+  //   // 批量更新segmentDetail信息的用户名和globalTraceId信息；
+  //   batchUpdateMsSegmentDetail(setmentDetailDoList);
+  //
+  //   SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
+  //   SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
+  // }
 
   /**
    * <B>方法名称：batchUpdateMsAuditLog</B>
@@ -806,7 +907,7 @@ public class MingshiServerUtil {
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       try {
-        Instant now = Instant.now();
+        // Instant now = Instant.now();
         msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
 
         // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
@@ -814,6 +915,26 @@ public class MingshiServerUtil {
 
         // log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
         segmentDetailDoList.clear();
+      } catch (Exception e) {
+        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
+      }
+    }
+  }
+
+  /**
+   * <B>方法名称：flushSegmentDetailUserNameIsNullToDB</B>
+   * <B>概要说明：将用户名为空的记录，保存到表中</B>
+   * @Author zm
+   * @Date 2022年08月01日 14:08:28
+   * @Param [segmentDetaiUserNameIsNullDolList]
+   * @return void
+   **/
+  @Transactional
+  public void flushSegmentDetailUserNameIsNullToDB(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
+    if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
+      try {
+        msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
+        segmentDetaiUserNameIsNullDolList.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
       }
@@ -996,7 +1117,14 @@ public class MingshiServerUtil {
    * @Date 2022年07月27日 15:07:45
    * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
    **/
-  public void doInsertSegmentDetailIntoMySQLAndRedis(HashSet<String> userHashSet, Map<String, Map<String, Integer>> processorThreadQpsMap, LinkedList<SegmentDo> segmentList, LinkedList<Span> spanList, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetailDoList, List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
+  public void doInsertSegmentDetailIntoMySQLAndRedis(HashSet<String> userHashSet,
+                                                     Map<String, Map<String, Integer>> processorThreadQpsMap,
+                                                     LinkedList<SegmentDo> segmentList,
+                                                     LinkedList<Span> spanList,
+                                                     Map<String, String> skywalkingAgentHeartBeatMap,
+                                                     LinkedList<MsSegmentDetailDo> segmentDetailDoList,
+                                                     LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList,
+                                                     List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
 
     flushUserNameToRedis(userHashSet);
 
@@ -1032,6 +1160,8 @@ public class MingshiServerUtil {
     // updateUserNameByGlobalTraceId();
 
     flushSegmentDetailToDB(segmentDetailDoList);
+
+    flushSegmentDetailUserNameIsNullToDB(segmentDetailUserNameIsNullDoList);
 
     flushAbnormalToDB(msAlarmInformationDoLinkedListist);
   }

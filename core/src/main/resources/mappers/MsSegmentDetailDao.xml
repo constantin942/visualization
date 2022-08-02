@@ -66,6 +66,7 @@
     where token is not null
       and user_name is not null
       and global_trace_id is not null
+      and start_time <![CDATA[ >= ]]> #{startTime}
   </select>
   <select id="selectCountAll" parameterType="java.util.Map" resultType="java.lang.Long">
     select count(*)
@@ -392,6 +393,18 @@
     select count(*)
     from ms_segment_detail
     where ms_table_name = #{tableName} and user_name is not null
+  </select>
+
+  <select id="selectUserNameByToken" resultType="java.lang.String" parameterType="java.lang.String">
+    select user_name
+    from ms_segment_detail
+    where token = #{token} and user_name is not null order by id asc limit 1
+  </select>
+
+  <select id="selectUserNameByGlobalTraceId" resultType="java.lang.String" parameterType="java.lang.String">
+    select user_name
+    from ms_segment_detail
+    where global_trace_id = #{globalTraceId} and user_name is not null order by id asc limit 1
   </select>
 
   <select id="selectTableLastVisitedTime" resultType="java.lang.String" parameterType="java.lang.String">

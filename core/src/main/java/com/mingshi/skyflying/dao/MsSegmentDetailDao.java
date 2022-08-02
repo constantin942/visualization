@@ -47,7 +47,7 @@ public interface MsSegmentDetailDao {
 
   List<String> selectAllInstanceName();
 
-  List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull();
+  List<MsSegmentDetailDo> selectByTokenUserNameGlobalTraceIdIsNotNull(String startTime);
 
   List<InstanceTable> selectAllInstanceAndTableName();
 
@@ -93,4 +93,7 @@ public interface MsSegmentDetailDao {
 
   List<UserAlarmData> selectUserAlarmData();
 
+  String selectUserNameByToken(String token);
+
+  String selectUserNameByGlobalTraceId(String globalTraceId);
 }
