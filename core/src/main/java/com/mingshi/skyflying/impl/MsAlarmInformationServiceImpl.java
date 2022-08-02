@@ -185,7 +185,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         return ServerResponse.createByErrorMessage("命中的告警规则字段必传", "");
       }
       updateAnomalyDetection(matchRuleId, originalTime, userName, alarmContent);
-      deleteAnomalyDetection(id);
+      updateAnomalyDetection(id);
     }
 
     return ServerResponse.createBySuccess();
@@ -316,6 +316,21 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
     msAlarmInformationDo.setId(id);
     msAlarmInformationDo.setIsDelete(1);
+    msAlarmInformationMapper.updateByPrimaryKeySelective(msAlarmInformationDo);
+  }
+
+  /**
+   * <B>方法名称：updateAnomalyDetection</B>
+   * <B>概要说明：将告警信息设置为更新画像</B>
+   * @Author zm
+   * @Date 2022年08月02日 17:08:29
+   * @Param [id]
+   * @return void
+   **/
+  private void updateAnomalyDetection(Integer id) {
+    MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
+    msAlarmInformationDo.setId(id);
+    msAlarmInformationDo.setUpdateUserPortrait(1);
     msAlarmInformationMapper.updateByPrimaryKeySelective(msAlarmInformationDo);
   }
 

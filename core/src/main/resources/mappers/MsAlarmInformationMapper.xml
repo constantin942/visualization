@@ -5,6 +5,7 @@
     <id column="id" jdbcType="INTEGER" property="id" />
     <id column="match_rule_id" jdbcType="INTEGER" property="matchRuleId" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="update_user_portrait" jdbcType="TINYINT" property="updateUserPortrait" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="original_time" jdbcType="TIMESTAMP" property="originalTime" />
@@ -13,7 +14,7 @@
     <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, user_name, alarm_content, global_trace_id, original_time, match_rule_id
+    id, is_delete, update_user_portrait, gmt_create, gmt_modified, user_name, alarm_content, global_trace_id, original_time, match_rule_id
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -45,7 +46,7 @@
   </select>
   <select id="selectAll" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
-    id, user_name, alarm_content, global_trace_id, original_time, match_rule_id
+    id, is_delete, user_name, alarm_content, global_trace_id, original_time, match_rule_id, update_user_portrait
     from ms_alarm_information
     <where>
       <if test="userName != null and  userName != null   ">
@@ -111,6 +112,9 @@
       <if test="isDelete != null">
         is_delete,
       </if>
+      <if test="updateUserPortrait != null">
+        update_user_portrait,
+      </if>
       <if test="gmtCreate != null">
         gmt_create,
       </if>
@@ -139,6 +143,9 @@
       </if>
       <if test="isDelete != null">
         #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="updateUserPortrait != null">
+        #{updateUserPortrait,jdbcType=TINYINT},
       </if>
       <if test="gmtCreate != null">
         #{gmtCreate,jdbcType=TIMESTAMP},
@@ -180,6 +187,9 @@
     <set>
       <if test="isDelete != null">
         is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="updateUserPortrait != null">
+        update_user_portrait = #{updateUserPortrait,jdbcType=TINYINT},
       </if>
       <if test="matchRuleId != null">
         match_rule_id = #{matchRuleId,jdbcType=INTEGER},

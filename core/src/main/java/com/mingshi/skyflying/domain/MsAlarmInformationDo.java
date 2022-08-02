@@ -11,6 +11,8 @@ public class MsAlarmInformationDo {
 
     private Integer isDelete;
 
+    private Integer updateUserPortrait;
+
     private Date gmtCreate;
 
     private Date gmtModified;
