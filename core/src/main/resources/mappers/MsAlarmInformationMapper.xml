@@ -32,9 +32,9 @@
     select
     count(*)
     from ms_alarm_information
-    <where>
+    where update_user_portrait = 0
       <if test="userName != null and  userName != null   ">
-        user_name = #{userName}
+        and user_name = #{userName}
       </if>
       <if test="matchRuleId != null and  matchRuleId != null   ">
         and match_rule_id = #{matchRuleId}
@@ -42,15 +42,14 @@
       <if test="originalTime != null and  originalTime != null   ">
         and original_time = #{originalTime}
       </if>
-    </where>
   </select>
   <select id="selectAll" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
     id, is_delete, user_name, alarm_content, global_trace_id, original_time, match_rule_id, update_user_portrait
     from ms_alarm_information
-    <where>
+    where update_user_portrait = 0
       <if test="userName != null and  userName != null   ">
-       user_name = #{userName}
+       and user_name = #{userName}
       </if>
       <if test="matchRuleId != null and  matchRuleId != null   ">
         and match_rule_id = #{matchRuleId}
@@ -58,7 +57,6 @@
       <if test="originalTime != null and  originalTime != null   ">
         and original_time = #{originalTime}
       </if>
-    </where>
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>
