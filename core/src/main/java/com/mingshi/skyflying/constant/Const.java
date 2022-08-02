@@ -20,6 +20,12 @@ package com.mingshi.skyflying.constant;
 
 public class Const {
 
+
+  public static final String OPERATION_TYPE_SELECT = "select";
+  public static final String OPERATION_TYPE_UPDATE = "update";
+  public static final String OPERATION_TYPE_DELETE = "delete";
+  public static final String OPERATION_TYPE_INSERT = "insert";
+
   // 告警信息删除；
   public static final String ANOMALY_DETECTION_INFO_DELETE = "delete";
   // 更新用户画像；

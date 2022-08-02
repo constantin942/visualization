@@ -224,7 +224,10 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     String[] split = alarmContent.split("：")[1].split("。");
     String[] tablesAndDbType = split[0].split("-");
     String tables = tablesAndDbType[0];
-    String dbType = tablesAndDbType[1];
+    String dbType = Const.OPERATION_TYPE_SELECT;
+    if(1 < tablesAndDbType.length){
+      dbType = tablesAndDbType[1];
+    }
 
     UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo = new UserPortraitByVisitedTableEverydayDo();
     userPortraitByVisitedTableEverydayDo.setUserName(userName);
