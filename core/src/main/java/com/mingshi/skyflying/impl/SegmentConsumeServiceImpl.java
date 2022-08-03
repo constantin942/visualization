@@ -3,7 +3,7 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.constant.Const;
@@ -47,7 +47,9 @@ import java.util.*;
 @Service("SegmentConsumerService")
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
-  // 是否开启reactor模式的开关；2022-06-01 09:28:28
+  /**
+   * 是否开启reactor模式的开关；2022-06-01 09:28:28
+   */
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
 
@@ -91,7 +93,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
     // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
+    StatisticsConsumeProcessorThreadQps.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 

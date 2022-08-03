@@ -15,25 +15,28 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-public class MSKafkaConsumer extends Thread {
+public class MsKafkaConsumer extends Thread {
 
-  private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
-
+  private String consumerTopic;
+  private String consumerGroup;
   private String bootstrapServers;
+  private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
 
   // private final static String TOPIC = "test-skywalking-segments";
   // private final static String GROUP = "test-skyflying-consumer-group";
-  private final static String TOPIC = "skywalking-segments";
-  private final static String GROUP = "skyflying-consumer-group";
+  // private final static String TOPIC = "skywalking-segments";
+  // private final static String GROUP = "skyflying-consumer-group";
 
   // 初始化完成的标志；2022-07-28 17:12:32
   private AtomicBoolean isInitDone = new AtomicBoolean(false);
 
   org.apache.kafka.clients.consumer.KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-  public MSKafkaConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers) {
+  public MsKafkaConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
     this.aiitKafkaConsumerUtil = aiitKafkaConsumerUtil;
     this.bootstrapServers = bootstrapServers;
+    this.consumerTopic = consumerTopic;
+    this.consumerGroup = consumerGroup;
   }
 
   /**
@@ -49,7 +52,7 @@ public class MSKafkaConsumer extends Thread {
     Properties properties = new Properties();
     properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     // 消费分组名
-    properties.put(ConsumerConfig.GROUP_ID_CONFIG, GROUP);
+    properties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
     // 是否自动提交offset，默认就是true
 //		properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
     // 自动提交offset的间隔时间, 每1000毫秒提交一次
@@ -65,7 +68,9 @@ public class MSKafkaConsumer extends Thread {
     // broker接收不到一个consumer的心跳, 持续该时间, 就认为故障了，会将其踢出消费组，对应的Partition也会被重新分配给其他consumer，默认是10秒
     properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30 * 1000);
     // 一次poll最大拉取消息的条数，如果消费者处理速度很快，可以设置大点，如果处理速度一般，可以设置小点
-    properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
+    // properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
+    properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10);
+    // properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
     // 如果两次poll操作间隔超过了这个时间，broker就会认为这个consumer处理能力太弱，会将其踢出消费组，将分区分配给别的consumer消费
     properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 30 * 1000);
     // 把消息的key从字节数组反序列化为字符串
@@ -76,18 +81,18 @@ public class MSKafkaConsumer extends Thread {
     aiitKafkaConsumer = new org.apache.kafka.clients.consumer.KafkaConsumer<>(properties);
 
     // 订阅主题
-    aiitKafkaConsumer.subscribe(Collections.singletonList(TOPIC));
+    aiitKafkaConsumer.subscribe(Collections.singletonList(consumerTopic));
     isInitDone.set(true);
   }
 
   @Override
   public void run() {
-    // init();
-    // if (false == isInitDone.get()) {
-    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-    //   return;
-    // }
-    // doRun();
+    init();
+    if (false == isInitDone.get()) {
+      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+      return;
+    }
+    doRun();
   }
 
   private void doRun() {

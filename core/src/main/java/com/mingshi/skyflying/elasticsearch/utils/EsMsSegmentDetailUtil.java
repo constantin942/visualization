@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 /**
  * <B>主类名称: EsMsSegmentDetailUtil</B>
  * <B>概要说明：</B>
- * Author zm
+ * @Author zm
  * Date 2022/7/13 08:06
  *
  * @Version 1.0

@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <B>主类名称: ScheduledTask</B>
  * <B>概要说明：</B>
- * Author zm
+ * @Author zm
  * Date 2022/5/26 17:25
  *
  * @Version 1.0
@@ -59,9 +59,13 @@ public class ScheduledTask {
    * @Date 2022年08月01日 15:08:37
    * @Param []
    **/
-  // 每隔30分钟执行一次：
+  /**
+   * 每隔30分钟执行一次：
+   */
   @Scheduled(cron = "0 */3 * * * ?")
-  // 每隔2小时执行一次；
+  /**
+   * 每隔2小时执行一次；
+   */
   // @Scheduled(cron = "0 0 0/2 * * ?")
   public void scheduledGetSegmentDetailDo() {
     Instant now = Instant.now();
@@ -251,7 +255,9 @@ public class ScheduledTask {
    * @Date 2022年06月08日 10:06:01
    * @Param []
    **/
-  // 每隔30分钟执行一次：
+  /**
+   * 每隔30分钟执行一次：
+   */
   // @Scheduled(cron = "0 */1 * * * ?")
   @Scheduled(cron = "0 0 0/3 * * ?")
   public void scheduledUpdateUserPortrait() {
@@ -442,7 +448,9 @@ public class ScheduledTask {
    * @Date 2022年06月08日 09:06:58
    * @Param []
    **/
-  // 每隔30分钟执行一次：
+  /**
+   * 每隔30分钟执行一次：
+   */
   // @Scheduled(cron = "0 */1 * * * ?")
   @Scheduled(cron = "0 0 0/4 * * ?")
   public void scheduledGetNoCheckAbnormalRecord() {
@@ -550,7 +558,9 @@ public class ScheduledTask {
    * @Date 2022年05月26日 17:05:44
    * @Param []
    **/
-  // 每隔30分钟执行一次：
+  /**
+   * 每隔30分钟执行一次：
+   */
   // @Scheduled(cron = "0 */30 * * * ?")
   public void scheduledGetDmsAuditLog() {
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。");

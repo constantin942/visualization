@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * <B>主类名称: AiitKafkaConsumerUtil</B>
  * <B>概要说明：</B>
- * Author zm
+ * @Author zm
  * Date 2022/7/28 17:02
  *
  * @Version 1.0

@@ -40,7 +40,9 @@ public class RedisPoolUtil {
       @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
     },
     commandProperties = {
-      //命令执行超时时间300毫秒
+      /**
+       * 命令执行超时时间300毫秒
+       */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
     }, fallbackMethod = "hmsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public boolean hsetBatch(String key, Map<String, String> map) {
@@ -74,7 +76,9 @@ public class RedisPoolUtil {
       @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
     },
     commandProperties = {
-      //命令执行超时时间300毫秒
+      /**
+       * 命令执行超时时间300毫秒
+       */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
     }, fallbackMethod = "hsetIncrByFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public boolean hsetIncrBy(String key, String value, Long incrementCount) {
@@ -99,7 +103,9 @@ public class RedisPoolUtil {
       @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
     },
     commandProperties = {
-      //命令执行超时时间300毫秒
+      /**
+       * 命令执行超时时间300毫秒
+       */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
     }, fallbackMethod = "hmsetFallback2")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public boolean hsetBatch2(String key, Map<String, Integer> map) {

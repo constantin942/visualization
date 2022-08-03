@@ -60,8 +60,8 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
                                               Integer pageSize);
 
   ServerResponse<String> getAllUserNameFromDMS();
-  
+
   ServerResponse<String> getAllSqlTypeFromDMS();
-  
+
   ServerResponse<String> getAllTableNameFromDMS();
 }

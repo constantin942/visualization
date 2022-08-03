@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * <B>主类名称: AiitKafkaConsumerRunner</B>
  * <B>概要说明：启动kafka的消费者线程</B>
- * Author zm
- * Date 2022/7/28 17:25
  *
+ * @Author zm
+ * Date 2022/7/28 17:25
  * @Version 1.0
  **/
 @Component
@@ -22,21 +22,26 @@ import java.util.concurrent.TimeUnit;
 public class AiitKafkaConsumerRunner implements ApplicationRunner {
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers;
+  @Value("${spring.kafka.consumer.topic}")
+  private String consumerTopic;
+  @Value("${spring.kafka.consumer.group}")
+  private String consumerGroup;
+
   @Resource
   private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
     try {
-      while(true){
-        if(null != aiitKafkaConsumerUtil){
+      while (true) {
+        if (null != aiitKafkaConsumerUtil) {
           break;
-        }else{
+        } else {
           TimeUnit.MILLISECONDS.sleep(50);
           log.error("# AiitKafkaConsumerRunner.run() # 项目启动，创建并启动Kafka消费者时，暂时还没有获取到 AiitKafkaConsumerUtil 实例信息。循环等待50毫秒。");
         }
       }
-      MSKafkaConsumer MSKafkaConsumer = new MSKafkaConsumer(aiitKafkaConsumerUtil, bootstrapServers);
+      MsKafkaConsumer MSKafkaConsumer = new MsKafkaConsumer(aiitKafkaConsumerUtil, bootstrapServers, consumerTopic, consumerGroup);
       MSKafkaConsumer.setName("aiit_kafka_consumer");
       MSKafkaConsumer.start();
     } catch (Exception e) {

@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * <B>主类名称: MapUtil</B>
  * <B>概要说明：map类对应的util</B>
- * Author zm
+ * @Author zm
  * Date 2022/5/23 11:24
  *
  * @Version 1.0

@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <B>主类名称: mingshiServerUtil</B>
  * <B>概要说明：</B>
- * Author zm
+ * @Author zm
  * Date 2022/5/30 20:46
  *
  * @Version 1.0
@@ -54,8 +54,6 @@ public class MingshiServerUtil {
 
   @Resource
   private ProcessorByDisruptor processorByDisruptor;
-  // @Resource
-  // private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
   private RedisPoolUtil redisPoolUtil;
   @Resource
@@ -107,7 +105,9 @@ public class MingshiServerUtil {
       //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
       // }
 
-      // 统计当前线程的QPS；2022-07-23 11:05:16
+      /**
+       * 统计当前线程的QPS；2022-07-23 11:05:16
+       */
       if(null != map && 0 < map.size()){
         jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
       }
@@ -906,18 +906,14 @@ public class MingshiServerUtil {
   @Transactional
   public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-      try {
-        // Instant now = Instant.now();
-        msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+      // Instant now = Instant.now();
+      msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
 
-        // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
-        flushSegmentDetailCountToRedis(segmentDetailDoList);
+      // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
+      flushSegmentDetailCountToRedis(segmentDetailDoList);
 
-        // log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-        segmentDetailDoList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
-      }
+      // log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+      segmentDetailDoList.clear();
     }
   }
 
@@ -932,12 +928,8 @@ public class MingshiServerUtil {
   @Transactional
   public void flushSegmentDetailUserNameIsNullToDB(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
     if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
-      try {
-        msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
-        segmentDetaiUserNameIsNullDolList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到MySQL中出现了异常。", e);
-      }
+      msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
+      segmentDetaiUserNameIsNullDolList.clear();
     }
   }
 

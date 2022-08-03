@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * <B>接口名称: MsThirdPartyTableFieldsService</B>
  * <B>概要说明：获取一个表中所有的字段信息</B>
- * Author zm
+ * @Author zm
  * Date 2022/6/20 14:32
  *
  * @Version 1.0

@@ -577,29 +577,6 @@ public class DateTimeUtil {
     return DateList;
   }
 
-
-  public void LeaveSignIn() {
-    try {
-      SimpleDateFormat df = new SimpleDateFormat("HH:mm");//设置日期格式
-      Date nowTime = df.parse(df.format(new Date()));
-      // 规定白天时间为早上6点到晚上10点；2022-06-07 15:36:10
-      Date amBeginTime = df.parse("06:00");
-      Date pmEndTime = df.parse("22:00");
-      //调用判断方法是否在规定时间段内
-      boolean isTime = timeCalendar(nowTime, amBeginTime, pmEndTime);
-
-      if (isTime) {
-        //处于规定的时间段内
-        System.out.println(isTime);
-      } else {
-        //不处于规定的时间段内
-        System.out.println(isTime);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
   /**
    * <B>方法名称：timeCalendar</B>
    * <B>概要说明：判断是否在规定的时间内签到 nowTime 当前时间 beginTime规定开始时间 endTime规定结束时间</B>
@@ -641,37 +618,14 @@ public class DateTimeUtil {
     String str = df.format(date);
     int a = Integer.parseInt(str);
     if ((a >= 0 && a <= 6) || (a > 18 && a <= 24)) {
-      // System.out.println("晚上");
       return ConstantsCode.USER_PORTRAIT_NIGHT.getCode();
     }
     if (a > 6 && a <= 12) {
-      // System.out.println("上午");
       return ConstantsCode.USER_PORTRAIT_FORENOON.getCode();
     }
     if (a > 12 && a <= 18) {
-      // System.out.println("下午");
       return ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode();
     }
-    // if (a >= 0 && a <= 6) {
-    //   // System.out.println("凌晨");
-    //   return "beforeDawn";
-    // }
-    // if (a > 6 && a <= 12) {
-    //   // System.out.println("上午");
-    //   return "forenoon";
-    // }
-    // if (a > 12 && a <= 13) {
-    //   // System.out.println("中午");
-    //   return "noon";
-    // }
-    // if (a > 13 && a <= 18) {
-    //   // System.out.println("下午");
-    //   return "afternoon";
-    // }
-    // if (a > 18 && a <= 24) {
-    //   // System.out.println("晚上");
-    //   return "night";
-    // }
     return null;
   }
 
@@ -685,7 +639,6 @@ public class DateTimeUtil {
     Calendar cal = GregorianCalendar.getInstance();
     cal.setTime(date);
 
-    // cal.set(Calendar.HOUR_OF_DAY, 0);
     cal.set(Calendar.MINUTE, 0);
     cal.set(Calendar.SECOND, 0);
     cal.set(Calendar.MILLISECOND, 0);
@@ -1556,7 +1509,6 @@ public class DateTimeUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus + 6);
     Date monday = currentDate.getTime();
 
-    //DateFormat df = DateFormat.getDateInstance();
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     String preMonday = df.format(monday);
     return preMonday;
@@ -1583,7 +1535,6 @@ public class DateTimeUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus);
     Date monday = currentDate.getTime();
 
-    //DateFormat df = DateFormat.getDateInstance();
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     String preMonday = df.format(monday);
     return preMonday;

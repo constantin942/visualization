@@ -99,7 +99,6 @@ public class JsonUtil {
     try {
       return obj instanceof String ? (String) obj : objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
     } catch (Exception e) {
-      // log.warn("Parse Object to String error", e);
       try {
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
       } catch (JsonProcessingException ex) {
@@ -126,7 +125,6 @@ public class JsonUtil {
     try {
       return clazz.equals(String.class) ? (T) str : objectMapper.readValue(str, clazz);
     } catch (Exception e) {
-      // log.warn("Parse String to Object error", e);
       return string2Object(str, clazz);
     }
   }

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <B>主类名称: LoadAllEnableMonitorTablesFromDb</B>
  * <B>概要说明：项目启动，从数据库中加载所有处于禁用状态被监管的表</B>
- * Author zm
+ * @Author zm
  * Date 2022/7/13 10:42
  *
  * @Version 1.0

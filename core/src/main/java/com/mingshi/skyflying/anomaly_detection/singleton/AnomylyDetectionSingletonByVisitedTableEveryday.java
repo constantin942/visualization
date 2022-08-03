@@ -7,13 +7,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <B>主类名称: AnomylyDetectionSingletonByVisitedTable</B>
  * <B>概要说明：基于访问过的表的异常检测单例</B>
- * Author zm
+ * @Author zm
  * Date 2022/6/9 15:15
  *
  * @Version 1.0
  **/
 public class AnomylyDetectionSingletonByVisitedTableEveryday {
-  // 规则在数据库表里的id；
+  /**
+   * 规则在数据库表里的id；
+   */
   private static volatile Integer visitedTableRuleId = null;
 
   public static void setVisitedTableRuleId(Integer vTRId){
@@ -25,7 +27,9 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
   }
 
 
-  // 存放用户基于访问过的表的告警规则；2022-06-08 17:08:05
+  /**
+   * 存放用户基于访问过的表的告警规则；2022-06-08 17:08:05
+   */
   private static volatile Map<String/* 用户名 */,
     Map<String/* 访问过的表 */,
       Map<String/* 访问日期，以天为单位 */,
@@ -42,7 +46,9 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
     userPortraitByVisitedTableEverydayIsChanged.set(flag);
   }
 
-  // 禁启用标志；
+  /**
+   * 禁启用标志；
+   */
   private static volatile AtomicBoolean userPortraitByVisitedTableEverydayEnable = new AtomicBoolean(false);
 
   public static Boolean getUserPortraitByVisitedTableEnable() {

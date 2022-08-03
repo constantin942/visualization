@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <B>主类名称: AgentInformationSingleton</B>
  * <B>概要说明：存储探针信息的单例</B>
- * Author zm
+ * @Author zm
  * Date 2022/6/28 16:52
  *
  * @Version 1.0

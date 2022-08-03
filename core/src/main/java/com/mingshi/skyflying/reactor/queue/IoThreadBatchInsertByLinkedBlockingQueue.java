@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @ClassName OperatorRedisFailure
- * @Description Author apple
+ * @Description @Author apple
  * Date 2021/6/9 下午4:25
  * @Version 1.0
  **/

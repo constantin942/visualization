@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQPS;
+import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.exception.AiitExceptionCode;
 import com.mingshi.skyflying.response.ServerResponse;
@@ -66,7 +66,7 @@ public class SkyflyingController {
   public ServerResponse<String> getQps() {
     Map<String/* 时间 */, Integer> countMap1 = new HashMap<>();
     Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
-      StatisticsConsumeProcessorThreadQPS.getStatisticsConsumeProcessorThreadQPSMap();
+      StatisticsConsumeProcessorThreadQps.getStatisticsConsumeProcessorThreadQPSMap();
 
     Integer maxValue1 = -1;
     if (null != threadNameTimeCountMap && 0 < threadNameTimeCountMap.size()) {

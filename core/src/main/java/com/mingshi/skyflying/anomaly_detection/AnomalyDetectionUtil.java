@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <B>主类名称: AnomalyDetectionUtil</B>
  * <B>概要说明：异常检测的工具类</B>
- * Author zm
+ * @Author zm
  * Date 2022/6/9 17:16
  *
  * @Version 1.0

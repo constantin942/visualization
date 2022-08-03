@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * <B>主类名称: CaffeineRemovalGlobalTraceIdTokenListener</B>
  * <B>概要说明：使用Caffeine实例时，移除元素的监听者类</B>
- * Author zm
+ * @Author zm
  * Date 2022/8/1 10:32
  *
  * @Version 1.0

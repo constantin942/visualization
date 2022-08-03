@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * <B>主类名称: MsCaffeine</B>
  * <B>概要说明：</B>
- * Author zm
+ * @Author zm
  * Date 2022/8/1 10:25
  *
  * @Version 1.0
@@ -187,10 +187,10 @@ public class MsCaffeine implements ApplicationRunner {
   private void createGlobalTraceIdUserNameCaffeine() {
     globalTraceIdUserNameCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
-      .initialCapacity(500)
+      .initialCapacity(100)
       // 缓存的最大条数
       .maximumSize(5000)
-      .expireAfterAccess(3, TimeUnit.DAYS)
+      .expireAfterAccess(1, TimeUnit.DAYS)
       .recordStats()
       //设置缓存的移除通知
       .removalListener(new CaffeineRemovalGlobalTraceIdUserNameListener())
@@ -224,29 +224,14 @@ public class MsCaffeine implements ApplicationRunner {
   private void createGlobalTraceIdTokenCaffeine() {
     globalTraceIdTokenCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
-      .initialCapacity(1000)
+      .initialCapacity(100)
       // 缓存的最大条数
-      .maximumSize(10000)
-      .expireAfterAccess(3, TimeUnit.DAYS)
+      .maximumSize(5000)
+      .expireAfterAccess(1, TimeUnit.DAYS)
       .recordStats()
       //设置缓存的移除通知
       .removalListener(new CaffeineRemovalGlobalTraceIdTokenListener())
       .build();
-
-    // 参数说明：
-    // initialCapacity 初始的缓存空间大小
-    // maximumSize 缓存的最大条数
-    // maximumWeight 缓存的最大权重
-    // expireAfterAccess 最后一次写入或访问后，经过固定时间过期
-    // expireAfterWrite 最后一次写入后，经过固定时间过期
-    // refreshAfterWrite 写入后，经过固定时间过期，下次访问返回旧值并触发刷新
-    // weakKeys 打开 key 的弱引用
-    // weakValues 打开 value 的弱引用
-    // softValues 打开 value 的软引用
-    // recordStats 缓存使用统计
-    // expireAfterWrite 和 expireAfterAccess 同时存在时，以 expireAfterWrite 为准。
-    // weakValues 和 softValues 不可以同时使用。
-    // maximumSize 和 maximumWeight 不可以同时使用。
   }
 
   /**
@@ -261,28 +246,14 @@ public class MsCaffeine implements ApplicationRunner {
   private void createTokenUserNameCaffeine() {
     tokenUserNameCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
-      .initialCapacity(1000)
+      .initialCapacity(100)
       // 缓存的最大条数
       .maximumSize(5000)
-      .expireAfterAccess(7, TimeUnit.DAYS)
+      .expireAfterAccess(3, TimeUnit.DAYS)
       .recordStats()
       //设置缓存的移除通知
       .removalListener(new CaffeineRemovalTokenUserNameListener())
       .build();
 
-    // 参数说明：
-    // initialCapacity 初始的缓存空间大小
-    // maximumSize 缓存的最大条数
-    // maximumWeight 缓存的最大权重
-    // expireAfterAccess 最后一次写入或访问后，经过固定时间过期
-    // expireAfterWrite 最后一次写入后，经过固定时间过期
-    // refreshAfterWrite 写入后，经过固定时间过期，下次访问返回旧值并触发刷新
-    // weakKeys 打开 key 的弱引用
-    // weakValues 打开 value 的弱引用
-    // softValues 打开 value 的软引用
-    // recordStats 缓存使用统计
-    // expireAfterWrite 和 expireAfterAccess 同时存在时，以 expireAfterWrite 为准。
-    // weakValues 和 softValues 不可以同时使用。
-    // maximumSize 和 maximumWeight 不可以同时使用。
   }
 }

@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * <B>主类名称: LoadUserPortraitFromDb</B>
  * <B>概要说明：从数据库中加载用户的画像信息</B>
- * Author zm
+ * @Author zm
  * Date 2022/6/7 16:55
  *
  * @Version 1.0

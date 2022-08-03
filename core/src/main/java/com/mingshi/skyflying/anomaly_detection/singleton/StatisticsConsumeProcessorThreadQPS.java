@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @return
  **/
 @Slf4j
-public class StatisticsConsumeProcessorThreadQPS {
+public class StatisticsConsumeProcessorThreadQps {
   private static volatile Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> statisticsConsumeProcessorThreadQPSMap = null;
   // private static volatile Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */> timeCountMap = null;
 
@@ -36,7 +36,7 @@ public class StatisticsConsumeProcessorThreadQPS {
 
   public static Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> getStatisticsConsumeProcessorThreadQPSMap() {
     if (null == statisticsConsumeProcessorThreadQPSMap) {
-      synchronized (StatisticsConsumeProcessorThreadQPS.class) {
+      synchronized (StatisticsConsumeProcessorThreadQps.class) {
         if (null == statisticsConsumeProcessorThreadQPSMap) {
           statisticsConsumeProcessorThreadQPSMap = new ConcurrentHashMap<>();
         }
@@ -45,7 +45,11 @@ public class StatisticsConsumeProcessorThreadQPS {
     return statisticsConsumeProcessorThreadQPSMap;
   }
 
-  // 统计每个processor线程在每秒中的QPS；2022-06-24 10:28:45
+  /**
+   * 统计每个processor线程在每秒中的QPS；2022-06-24 10:28:45
+   * @param threadName
+   * @param time
+   */
   public static void accumulateTimes(String threadName, String time) {
     try {
       // int incrementAndGet = atomicInteger.incrementAndGet();

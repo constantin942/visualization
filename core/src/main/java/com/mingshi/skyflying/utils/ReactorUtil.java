@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName MboleUtil
- * Author apple
+ * @Author apple
  * Date 2021/1/5 下午3:14
  * @Version 1.0
  **/

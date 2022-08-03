@@ -319,7 +319,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         cachedDataList.add(msAuditLogDo);
         if (cachedDataList.size() >= BATCH_COUNT) {
           saveData();
-          // 存储完成清理 list
           cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
         }
       }
