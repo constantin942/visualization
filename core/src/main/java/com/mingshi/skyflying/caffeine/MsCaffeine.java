@@ -226,7 +226,7 @@ public class MsCaffeine implements ApplicationRunner {
       // 初始的缓存空间大小
       .initialCapacity(100)
       // 缓存的最大条数
-      .maximumSize(5000)
+      .maximumSize(500)
       .expireAfterAccess(1, TimeUnit.DAYS)
       .recordStats()
       //设置缓存的移除通知
@@ -248,7 +248,7 @@ public class MsCaffeine implements ApplicationRunner {
       // 初始的缓存空间大小
       .initialCapacity(100)
       // 缓存的最大条数
-      .maximumSize(5000)
+      .maximumSize(500)
       .expireAfterAccess(3, TimeUnit.DAYS)
       .recordStats()
       //设置缓存的移除通知

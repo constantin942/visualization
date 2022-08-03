@@ -32,7 +32,7 @@
     select
     count(*)
     from ms_alarm_information
-    where update_user_portrait = 0
+    where update_user_portrait = 0 and is_delete = 0
       <if test="userName != null and  userName != null   ">
         and user_name = #{userName}
       </if>
@@ -47,7 +47,7 @@
     select
     id, is_delete, user_name, alarm_content, global_trace_id, original_time, match_rule_id, update_user_portrait
     from ms_alarm_information
-    where update_user_portrait = 0
+    where update_user_portrait = 0 and is_delete = 0
       <if test="userName != null and  userName != null   ">
        and user_name = #{userName}
       </if>
@@ -62,15 +62,15 @@
     </if>
   </select>
   <select id="selectAllByGroupByUserNameCount" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from (select user_name from ms_alarm_information
+    select count(*) from (select user_name from ms_alarm_information where update_user_portrait = 0 and is_delete = 0
       group by user_name,match_rule_id,original_time ) as t1
   </select>
   <select id="selectAllByGroupByUserName" parameterType="java.util.Map" resultType="java.util.Map">
-    select user_name as userName,match_rule_id as matchRuleId, original_time as originalTime, count(user_name) as matchCount
+    select user_name as userName,match_rule_id as matchRuleId, original_time as originalTime, count(id) as matchCount
     from ms_alarm_information
-    where is_delete = 0
+    where update_user_portrait = 0  and is_delete = 0
     group by user_name,match_rule_id,original_time
-    order by user_name,count(user_name) desc
+    order by user_name,count(id) desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>

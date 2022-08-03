@@ -425,13 +425,14 @@
   <select id="selectAlarmData" resultType="com.mingshi.skyflying.domain.AlarmData">
     SELECT COUNT(*) as alarm_data, match_rule_id
     FROM ms_alarm_information
-    where match_rule_id is not NULL
+    where match_rule_id is not NULL and update_user_portrait = 0 and is_delete = 0
     GROUP BY match_rule_id
   </select>
 
   <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.domain.UserAlarmData">
     SELECT count(*) as alarm_count, user_name
     from ms_alarm_information
+    where update_user_portrait = 0 and is_delete = 0
     GROUP BY user_name
   </select>
 
