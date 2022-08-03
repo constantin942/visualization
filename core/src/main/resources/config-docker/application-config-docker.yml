@@ -62,8 +62,8 @@ spring:
 
   kafka:
     bootstrap-servers: ${kafka_bootstrap_servers}
-    rule-parsing-success-topic: rule_parsing_success_topic
     producer:
+      topic: ${kafka_producer_topic}
       # 发生错误后，消息重发的次数。
       retries: 5
       #当有多个消息需要被发送到同一个分区时，生产者会把它们放在同一个批次里。该参数指定了一个批次可以使用的内存大小，按照字节数计算。4194304B = 4MB。
@@ -73,7 +73,7 @@ spring:
       # 键的序列化方式
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       # 值的序列化方式
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.BytesSerializer
       # acks=0 ： 生产者在成功写入消息之前不会等待任何来自服务器的响应。
       # acks=1 ： 只要集群的首领节点收到消息，生产者就会收到一个来自服务器成功响应。
       # acks=all ：只有当所有参与复制的节点全部收到消息时，生产者才会收到一个来自服务器的成功响应。
@@ -89,6 +89,8 @@ spring:
         # 每次重试间隔500毫秒；
         retry.backoff.ms: 500
     consumer:
+      topic: ${kafka_consumer_topic}
+      group: ${kafka_consumer_group}
       # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
       auto-commit-interval: 1S
       # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：
