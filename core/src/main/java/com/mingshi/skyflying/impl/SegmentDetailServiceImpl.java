@@ -890,9 +890,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
                 if (StringUtil.isBlank(tableDesc)) {
                   MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = msMonitorBusinessSystemTablesMapper.selectByQueryMap(queryMap);
-                  if (null != msMonitorBusinessSystemTablesDo && StringUtil.isNotBlank(msMonitorBusinessSystemTablesDo.getTableDesc())) {
+                  if (null != msMonitorBusinessSystemTablesDo) {
                     String tableDesc1 = msMonitorBusinessSystemTablesDo.getTableDesc();
-                    detailJson.put("function", StringUtil.isBlank(tableDesc1) ? getTableName : tableDesc1);
+                    detailJson.put("function", StringUtil.isBlank(tableDesc1) ? tableName : tableDesc1);
                     // 设置表的描述信息到本地内存；2022-07-21 16:52:07
                     LoadAllEnableMonitorTablesFromDb.setTableDesc(getTableName, msMonitorBusinessSystemTablesDo.getTableDesc());
                   }
