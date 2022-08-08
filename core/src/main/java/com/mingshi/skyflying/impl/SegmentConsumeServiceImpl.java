@@ -189,7 +189,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 统计processor线程的QPS；2022-07-23 11:26:40
         mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
 
-        mingshiServerUtil.flushSpansToDB(spanList);
+        // mingshiServerUtil.flushSpansToDB(spanList);
 
         mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
@@ -201,11 +201,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 不使用reactor模型；2022-05-30 21:04:16
         // 插入segment数据；2022-05-23 10:15:22
-        LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-        if (null != segment) {
-          segmentDoLinkedList.add(segment);
-          mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
-        }
+        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+        // if (null != segment) {
+        //   segmentDoLinkedList.add(segment);
+        //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+        // }
 
         // 将表名字插入到监管表中；2022-07-13 14:16:57
         mingshiServerUtil.insertMonitorTables();
@@ -786,12 +786,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             } else if (key.equals("url")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               url = tag.getValue();
-              flag = true;
-              break;
+              if(!url.contains("dingtalk")){
+                flag = true;
+                break;
+              }
             } else if (key.equals("http.method")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              flag = true;
-              break;
+              if(!url.contains("dingtalk")){
+                flag = true;
+                break;
+              }
             } else if (key.equals("db.instance")) {
               msSchemaName = tag.getValue();
             } else if (key.equals("db_user_name")) {
