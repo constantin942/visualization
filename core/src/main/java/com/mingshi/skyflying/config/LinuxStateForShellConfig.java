@@ -29,9 +29,9 @@ public class LinuxStateForShellConfig implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    session24 = connect("", "", "");
-    session25 = connect("", "", "");
-    atomicBoolean.set(true);
+    // session24 = connect("", "", "");
+    // session25 = connect("", "", "");
+    // atomicBoolean.set(true);
   }
 
   public static Session getSession24() {
