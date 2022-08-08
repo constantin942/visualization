@@ -1129,7 +1129,7 @@ public class MingshiServerUtil {
     // 统计kafka消费者每秒拿到多少消息；2022-07-28 13:57:05
     // statisticsKafkaConsumerRecords();
 
-    flushSegmentToDB(segmentList);
+    // flushSegmentToDB(segmentList);
     // flushAuditLogToDB(auditLogList);
 
     // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
@@ -1139,7 +1139,7 @@ public class MingshiServerUtil {
     // flushQpsToRedis();
 
     // 将Span信息刷入MySQL数据库中;
-    flushSpansToDB(spanList);
+    // flushSpansToDB(spanList);
 
     // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
     flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
