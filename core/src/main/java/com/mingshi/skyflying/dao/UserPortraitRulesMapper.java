@@ -7,11 +7,11 @@ import java.util.Map;
 
 public interface UserPortraitRulesMapper {
 
-    int insertSelective(UserPortraitRulesDo record);
+    int insertSelective(UserPortraitRulesDo msg);
 
     UserPortraitRulesDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(UserPortraitRulesDo record);
+    int updateByPrimaryKeySelective(UserPortraitRulesDo msg);
 
     List<UserPortraitRulesDo> selectAllRules(Map<String, Object> queryMap);
 

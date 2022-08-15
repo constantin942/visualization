@@ -126,6 +126,15 @@ public class ComponentsDefine {
     componentMap.put(113, "Sentinel");
     componentMap.put(114, "GuavaCache");
 
+    componentMap.put(115, "AlibabaDruid");
+    componentMap.put(116, "HikariCP");
+    componentMap.put(117, "Fastjson");
+    componentMap.put(118, "Jackson");
+    componentMap.put(119, "ClickHouse-jdbc-driver");
+    componentMap.put(121, "apache-kylin-jdbc-driver");
+    componentMap.put(123, "GuavaEventBus");
+    componentMap.put(127, "Apache-ShenYu");
+    componentMap.put(128, "send-email");
   }
 
   public static final OfficialComponent TOMCAT = new OfficialComponent(1, "Tomcat");
@@ -220,4 +229,14 @@ public class ComponentsDefine {
   public static final OfficialComponent NEO4J = new OfficialComponent(112, "Neo4j");
   public static final OfficialComponent SENTINEL = new OfficialComponent(113, "Sentinel");
   public static final OfficialComponent GUAVA_CACHE = new OfficialComponent(114, "GuavaCache");
+
+  public static final OfficialComponent ALIBABA_DRUID = new OfficialComponent(115, "AlibabaDruid");
+  public static final OfficialComponent HIKARI_CP = new OfficialComponent(116, "HikariCP");
+  public static final OfficialComponent FASTJSON = new OfficialComponent(117, "Fastjson");
+  public static final OfficialComponent JACKSON = new OfficialComponent(118, "Jackson");
+  public static final OfficialComponent CLICKHOUSE_JDBC_DRIVER = new OfficialComponent(119, "ClickHouse-jdbc-driver");
+  public static final OfficialComponent APACHE_KYLIN_JDBC_DRIVER = new OfficialComponent(121, "apache-kylin-jdbc-driver");
+  public static final OfficialComponent GUAVA_EVENT_BUS = new OfficialComponent(123, "GuavaEventBus");
+  public static final OfficialComponent APACHE_SHENYU = new OfficialComponent(127, "Apache-ShenYu");
+  public static final OfficialComponent SEND_EMAIL = new OfficialComponent(128, "send-email");
 }

@@ -35,10 +35,6 @@ public class AiitKafkaConsumerUtil {
   @Resource
   private SegmentConsumerService segmentConsumerService;
 
-  // private volatile Integer count = 0;
-  // private Instant now = Instant.now();
-  // private static Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 消息数量 */>> map = new ConcurrentHashMap<>();
-
   /**
    * <B>方法名称：useReactorModelByDisruptor</B>
    * <B>概要说明：使用Disruptor无锁高性能队列</B>
@@ -48,16 +44,16 @@ public class AiitKafkaConsumerUtil {
    * @Date 2022年07月22日 20:07:28
    * @Param [record]
    **/
-  public void useReactorModelByDisruptor(ConsumerRecord<String, Bytes> record) {
+  public void useReactorModelByDisruptor(ConsumerRecord<String, Bytes> msg) {
     try {
-      while (false == processorByDisruptor.getCreateProcessorsFinishedFlag()) {
+      while (Boolean.FALSE.equals(processorByDisruptor.getCreateProcessorsFinishedFlag())) {
         log.error("Disruptor还没有创建完毕，等待一会。");
         TimeUnit.SECONDS.sleep(50);
       }
     } catch (Exception e) {
       log.error("在等待创建Disruptor完毕时，出现了异常。", e);
     }
-    processorByDisruptor.offer(record.value().get());
+    processorByDisruptor.offer(msg.value().get());
   }
 
   /**
@@ -77,69 +73,20 @@ public class AiitKafkaConsumerUtil {
     }
   }
 
-  public void doOnMessage(ConsumerRecord<String, Bytes> record) {
+  public void doOnMessage(ConsumerRecord<String, Bytes> msg) {
     // 统计每秒钟kafka消费者能够拿到多少消息
-    // statisticsRecordCount();
-    if (true == reactorProcessorEnable) {
+    if (Boolean.TRUE.equals(reactorProcessorEnable)) {
       // 使用Reactor模式；
-      if (true == reactorProcessorByDisruptor) {
+      if (Boolean.TRUE.equals(reactorProcessorByDisruptor)) {
         // 使用Disruptor无锁高性能队列；2022-07-22 20:57:02
-        useReactorModelByDisruptor(record);
-        // printLog(true);
+        useReactorModelByDisruptor(msg);
       } else {
         // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
-        ReactorUtil.useReactorModelByLinkedBlockingQueue(record);
-        // printLog(false);
+        ReactorUtil.useReactorModelByLinkedBlockingQueue(msg);
       }
     } else {
       // 不使用Reactor模式；
-      useNoReactorModel(record);
+      useNoReactorModel(msg);
     }
   }
-
-
-  // public static Map<String, Map<String, AtomicInteger>> getMap() {
-  //   return map;
-  // }
-
-  /**
-   * <B>方法名称：statisticsRecordCount</B>
-   * <B>概要说明：统计每秒钟kafka消费者能够拿到多少消息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月28日 13:07:24
-   * @Param []
-   **/
-  // private void statisticsRecordCount() {
-  //   String currentTime = DateTimeUtil.dateToStr(new Date());
-  //   String threadName = Thread.currentThread().getName();
-  //   Map<String, AtomicInteger> stringAtomicIntegerMap = map.get(threadName);
-  //   if (null == stringAtomicIntegerMap) {
-  //     ConcurrentHashMap<String, AtomicInteger> timeCountMap = new ConcurrentHashMap<>();
-  //     map.put(threadName, timeCountMap);
-  //     timeCountMap.put(currentTime, new AtomicInteger(1));
-  //   } else {
-  //     AtomicInteger count = stringAtomicIntegerMap.get(currentTime);
-  //     if (null == count) {
-  //       stringAtomicIntegerMap.put(currentTime, new AtomicInteger(1));
-  //     } else {
-  //       count.incrementAndGet();
-  //       stringAtomicIntegerMap.put(currentTime, count);
-  //     }
-  //   }
-  // }
-
-  // private void printLog(Boolean isDisruptor) {
-  //   if (++count >= 10 * 10000) {
-  //     if (true == isDisruptor) {
-  //       log.info(" # AiitKafkaConsumer.onMessage() # 将【{}】条消息放入到Disruptor队列中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
-  //     } else {
-  //       log.info(" # AiitKafkaConsumer.onMessage() # 将【{}】条消息放入到LinkedBlockingQueue队列中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
-  //     }
-  //     now = Instant.now();
-  //     count = 0;
-  //   }
-  // }
-
 }

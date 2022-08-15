@@ -10,11 +10,11 @@ public interface UserPortraitByVisitedTableEverydayMapper {
 
     void insertSelectiveBatch(List<UserPortraitByVisitedTableEverydayDo> list);
 
-    int insertSelective(UserPortraitByVisitedTableEverydayDo record);
+    int insertSelective(UserPortraitByVisitedTableEverydayDo msg);
 
     UserPortraitByVisitedTableEverydayDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(UserPortraitByVisitedTableEverydayDo record);
+    int updateByPrimaryKeySelective(UserPortraitByVisitedTableEverydayDo msg);
 
     List<UserPortraitByVisitedTableEverydayDo> selectAll();
 

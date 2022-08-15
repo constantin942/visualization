@@ -26,8 +26,6 @@ public class AiitKafkaProducer {
   /**
   * 自定义topic
   */
-  // public static final String TOPIC_TEST = "skywalking-segments";
-
   public void send(String topic, String obj) {
     //发送消息
     ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, obj);
@@ -59,7 +57,6 @@ public class AiitKafkaProducer {
       @Override
       public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
         //成功的处理
-        // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", TOPIC_TEST, stringObjectSendResult.toString());
       }
     });
   }

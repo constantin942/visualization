@@ -137,8 +137,6 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    **/
   @Override
   public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
-    //lhx新增：返回值从String变为InstanceTable，即新增了instance的信息。
-    //HashSet<String> hashSet = new HashSet<>();
     HashSet<InstanceTable> hashSet=new HashSet<>();
     List<InstanceTable> visitedTableList = userPortraitByVisitedTableEverydayMapper.selectAllVisitedTable();
 

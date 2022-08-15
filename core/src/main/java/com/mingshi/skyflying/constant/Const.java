@@ -21,6 +21,18 @@ package com.mingshi.skyflying.constant;
 public class Const {
 
 
+  /**
+   * 操作类型
+   */
+  public static final String OPERATION_TYPE_DINGTALK="dingtalk";
+  public static final String OPERATION_TYPE_SQL="sql";
+  public static final String OPERATION_TYPE_URL="url";
+
+  /**
+   * 获取邮件的目的地址和发送内容
+   */
+  public static final String SEND_EMAIL_PARAMS="send-email-params";
+
   public static final String OPERATION_TYPE_SELECT = "select";
   public static final String OPERATION_TYPE_UPDATE = "update";
   public static final String OPERATION_TYPE_DELETE = "delete";

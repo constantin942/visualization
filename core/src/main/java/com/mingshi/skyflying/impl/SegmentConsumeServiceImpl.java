@@ -326,33 +326,43 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           for (KeyValue keyValue : tagsList) {
             String key = keyValue.getKey();
             String value = keyValue.getValue();
-            if (key.equals("db.type")) {
-              isSql = value;
-              msSegmentDetailDo.setOperationType(value);
-            } else if (key.equals("db.instance")) {
-              msSegmentDetailDo.setDbInstance(value);
-            } else if (key.equals("db_user_name")) {
-              msSegmentDetailDo.setDbUserName(value);
-            } else if (key.equals("db.statement")) {
-              if (isSql.equals("sql")) {
-                if ((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)) {
-                  isError = true;
-                  // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
-                  break;
+            if(Const.SEND_EMAIL_PARAMS.equals(key)){
+              msSegmentDetailDo.setDbType(Const.SEND_EMAIL_PARAMS);
+              msSegmentDetailDo.setDbStatement(value);
+              msSegmentDetailDo.setOperationType(Const.SEND_EMAIL_PARAMS);
+            }else{
+              if (key.equals("db.type")) {
+                isSql = value;
+                msSegmentDetailDo.setOperationType(value);
+              } else if (key.equals("db.instance")) {
+                msSegmentDetailDo.setDbInstance(value);
+              } else if (key.equals("db_user_name")) {
+                msSegmentDetailDo.setDbUserName(value);
+              } else if (key.equals("db.statement")) {
+                if (isSql.equals("sql")) {
+                  if ((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)) {
+                    isError = true;
+                    // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                    break;
+                  }
+                  // 获取表名；2022-06-06 14:16:59
+                  String tableName = setTableName(value, msSegmentDetailDo);
+                  if (StringUtil.isBlank(tableName)) {
+                    isError = true;
+                    // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                    break;
+                  }
+                  msSegmentDetailDo.setMsTableName(tableName);
                 }
-                // 获取表名；2022-06-06 14:16:59
-                String tableName = setTableName(value, msSegmentDetailDo);
-                if (StringUtil.isBlank(tableName)) {
-                  isError = true;
-                  // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
-                  break;
+                msSegmentDetailDo.setDbStatement(value);
+              } else if (key.equals(Const.OPERATION_TYPE_URL)) {
+                if (value.contains(Const.OPERATION_TYPE_DINGTALK)) {
+                  msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DINGTALK);
+                } else {
+                  msSegmentDetailDo.setDbType(key);
                 }
-                msSegmentDetailDo.setMsTableName(tableName);
+                msSegmentDetailDo.setDbStatement(value);
               }
-              msSegmentDetailDo.setDbStatement(value);
-            } else if (key.equals("url")) {
-              msSegmentDetailDo.setDbType("url");
-              msSegmentDetailDo.setDbStatement(value);
             }
           }
         }
@@ -786,13 +796,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             } else if (key.equals("url")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               url = tag.getValue();
-              if(!url.contains("dingtalk")){
+              if (!url.contains("dingtalk")) {
                 flag = true;
                 break;
               }
             } else if (key.equals("http.method")) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              if(!url.contains("dingtalk")){
+              if (StringUtil.isNotBlank(url) && !url.contains("dingtalk")) {
                 flag = true;
                 break;
               }
@@ -1516,3 +1526,4 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return segment;
   }
 }
+

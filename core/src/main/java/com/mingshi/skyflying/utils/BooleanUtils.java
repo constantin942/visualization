@@ -23,6 +23,11 @@ public class BooleanUtils {
     public static final int TRUE = 1;
     public static final int FALSE = 0;
 
+    private BooleanUtils() {
+      throw new IllegalStateException("Utility class");
+    }
+
+
     public static boolean valueToBoolean(int value) {
         if (TRUE == value) {
             return true;
@@ -34,7 +39,7 @@ public class BooleanUtils {
     }
 
     public static int booleanToValue(Boolean booleanValue) {
-        if (booleanValue) {
+        if (Boolean.TRUE.equals(booleanValue)) {
             return TRUE;
         } else {
             return FALSE;

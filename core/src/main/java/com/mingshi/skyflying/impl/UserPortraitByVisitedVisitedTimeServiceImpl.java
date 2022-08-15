@@ -20,12 +20,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO：与弘毅讨论下这个异常检测该怎么实现？
-// 2022-06-06 17:02:50
-// 异常检测规则有：
-// 1. 若某用户通常白天访问数据，则夜间为异常；
-// 2. 某用户访问从未访问过的表；
-// 3. 访问频率、访问量激增；
 /**
  * <B>方法名称：UserPortraitByTimeServiceImpl</B>
  * <B>概要说明：根据用户访问系统的时间，来计算其时间维度的画像。</B>
@@ -124,9 +118,6 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
     // 设置规则启用/禁用的状态；2022-06-16 15:20:09
     userPortraitByVisitedTimeDo.setIsDelete(isDelete);
 
-    // TODO: 2022/6/16 这里如果要禁用或者启用一条规则，要同时把本地内存中存储的规则执行相同的操作。
-    // 比如，一条规则之前都是在运行状态，现在要禁用了，那么需要在内存里删除这条规则。
-    // 如果一条规则本来已经禁用了，现在要启用这条规则，那么需要将这条规则从数据库中加载到本地内存中。
     // 更新本地内存；2022-06-16 14:49:29
     ServerResponse<String> response = doUpdateUserPortraitByVisitedTimeRule(userPortraitByVisitedTimeDo, isDelete);
     log.info("执行完毕 # UserPortraitByVisitedVisitedTimeServiceImpl.updateUserPortraitByVisitedTimeRule() # 更新用户访问过的表的画像规则启用状态。 ");
@@ -301,7 +292,6 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
         }
       }
       try {
-        // TODO：不应该放在这里更新，正确的做法是：当统计信息正常插入到数据库中之后，才能更新。否则，会造成这里已经更新成功，但统计信息插入到数据库失败的情况。2022-06-08 16:59:50
         Instant updateNow = Instant.now();
         msSegmentDetailDao.updateBatchById(list);
         log.info("# UserPortraitByTimeServiceImpl.statisticsVistedCount # 批量更新基于访问时间的【{}条】标识耗时 = 【{}】毫秒。",list.size(),DateTimeUtil.getTimeMillis(updateNow));

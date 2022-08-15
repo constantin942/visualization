@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +49,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
       queryMap.put("pageNo", (pageNo - 1) * pageSize);
       queryMap.put("pageSize", pageSize);
 
-      List<UserPortraitRulesDo> userPortraitRulesDoList = new LinkedList<>();
+      List<UserPortraitRulesDo> userPortraitRulesDoList = null;
       userPortraitRulesDoList = userPortraitRulesMapper.selectAllRules(queryMap);
       log.info("执行 # UserPortraitRulesServiceImpl.getAllUserPortraitRules() # 获取所有的规则信息。根据查询条件【{}】获取到的规则信息是【{}】。", JsonUtil.obj2String(queryMap), JsonUtil.obj2String(userPortraitRulesDoList));
 
@@ -88,9 +87,6 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
     // 设置规则启用/禁用的状态；2022-06-16 15:20:09
     userPortraitRulesDo.setIsDelete(isDelete);
 
-    // TODO: 2022/6/16 这里如果要禁用或者启用一条规则，要同时把本地内存中存储的规则执行相同的操作。
-    // 比如，一条规则之前都是在运行状态，现在要禁用了，那么需要在内存里删除这条规则。
-    // 如果一条规则本来已经禁用了，现在要启用这条规则，那么需要将这条规则从数据库中加载到本地内存中。
     // 更新本地内存；2022-06-16 14:49:29
     ServerResponse<String> response = doUpdateUserPortraitRuleRule(userPortraitRulesDo, isDelete);
     log.info("执行完毕 # UserPortraitRulesServiceImpl.updateUserPortraitRule() # 更新用户访问过的表的画像规则启用状态。 ");

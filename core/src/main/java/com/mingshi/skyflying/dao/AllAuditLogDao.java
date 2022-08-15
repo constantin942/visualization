@@ -6,11 +6,11 @@ import com.mingshi.skyflying.domain.MsAuditLogDo;
 import java.util.List;
 
 public interface AllAuditLogDao {
-    int insertSelective(AllAuditLogDo record);
+    int insertSelective(AllAuditLogDo msg);
 
     MsAuditLogDo selectByPrimaryKey(Integer id);
 
     void insertSelectiveBatch(List<AllAuditLogDo> list);
 
-    int updateByPrimaryKeySelective(AllAuditLogDo record);
+    int updateByPrimaryKeySelective(AllAuditLogDo msg);
 }

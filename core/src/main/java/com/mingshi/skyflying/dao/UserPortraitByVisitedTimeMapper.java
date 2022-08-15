@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface UserPortraitByVisitedTimeMapper {
 
-    int insertSelective(UserPortraitByVisitedTimeDo record);
+    int insertSelective(UserPortraitByVisitedTimeDo msg);
 
     UserPortraitByVisitedTimeDo selectByPrimaryKey(Integer id);
 
@@ -21,7 +21,7 @@ public interface UserPortraitByVisitedTimeMapper {
 
     Integer selectByUserNameCount(Map<String, Object> queryMap);
 
-    int updateByPrimaryKeySelective(UserPortraitByVisitedTimeDo record);
+    int updateByPrimaryKeySelective(UserPortraitByVisitedTimeDo msg);
 
     void insertSelectiveBatch(List<UserPortraitByVisitedTimeDo> list);
 

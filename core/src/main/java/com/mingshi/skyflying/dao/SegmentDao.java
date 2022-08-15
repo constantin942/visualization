@@ -7,9 +7,9 @@ import java.util.List;
 public interface SegmentDao {
     int deleteByPrimaryKey(Integer id);
 
-    int insertSelective(SegmentDo record);
+    int insertSelective(SegmentDo segmentDo);
 
-    void insertSelectiveBatch(List<SegmentDo> record);
+    void insertSelectiveBatch(List<SegmentDo> list);
 
     SegmentDo selectByPrimaryKey(Integer id);
 
@@ -19,7 +19,7 @@ public interface SegmentDao {
 
     SegmentDo selectBySegmentId(String segmentId);
 
-    int updateByPrimaryKeySelective(SegmentDo record);
+    int updateByPrimaryKeySelective(SegmentDo segmentDo);
 
     List<SegmentDo> selectAll();
 }

@@ -41,9 +41,9 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
           log.error("# AiitKafkaConsumerRunner.run() # 项目启动，创建并启动Kafka消费者时，暂时还没有获取到 AiitKafkaConsumerUtil 实例信息。循环等待50毫秒。");
         }
       }
-      MsKafkaConsumer MSKafkaConsumer = new MsKafkaConsumer(aiitKafkaConsumerUtil, bootstrapServers, consumerTopic, consumerGroup);
-      MSKafkaConsumer.setName("aiit_kafka_consumer");
-      MSKafkaConsumer.start();
+      MsKafkaConsumer msKafkaConsumer = new MsKafkaConsumer(aiitKafkaConsumerUtil, bootstrapServers, consumerTopic, consumerGroup);
+      msKafkaConsumer.setName("aiit_kafka_consumer");
+      msKafkaConsumer.start();
     } catch (Exception e) {
       log.error("# AiitKafkaConsumerRunner.run() # 创建并启动Kafka消费者出现了异常。", e);
     }

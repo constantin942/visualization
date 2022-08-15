@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface UserPortraitByVisitedTableMapper {
 
-    int insertSelective(UserPortraitByVisitedTableDo record);
+    int insertSelective(UserPortraitByVisitedTableDo msg);
 
     UserPortraitByVisitedTableDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(UserPortraitByVisitedTableDo record);
+    int updateByPrimaryKeySelective(UserPortraitByVisitedTableDo msg);
 
     void insertSelectiveBatch(List<UserPortraitByVisitedTableDo> list);
 
