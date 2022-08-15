@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsSegmentDetailUsernameIsNullMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="user_name" jdbcType="VARCHAR" property="userName"/>
     <result column="service_code" jdbcType="VARCHAR" property="serviceCode"/>
@@ -96,7 +96,7 @@
     from ms_segment_detail_username_is_null
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <delete id="deleteByIds" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <delete id="deleteByIds" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     delete
     from ms_segment_detail_username_is_null
     where id in
@@ -142,7 +142,7 @@
       )
     </foreach>
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     insert into ms_segment_detail_username_is_null
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -311,7 +311,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     update ms_segment_detail_username_is_null
     <set>
       <if test="userName != null">

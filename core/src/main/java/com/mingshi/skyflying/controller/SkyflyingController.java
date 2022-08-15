@@ -2,12 +2,11 @@ package com.mingshi.skyflying.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
-import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.exception.AiitExceptionCode;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.exception.AiitExceptionCode;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.service.*;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,7 +59,7 @@ public class SkyflyingController {
    * <B>方法名称：getQps</B>
    * <B>概要说明：获取消费线程的QPS</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月29日 17:06:41
    * @Param [id, agentName]
@@ -110,7 +109,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllMonitorTables</B>
    * <B>概要说明：获取所有监管的表</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月13日 14:07:42
    * @Param []
@@ -138,7 +137,7 @@ public class SkyflyingController {
    * <B>方法名称：updateMonitorTable</B>
    * <B>概要说明：更新监管的表状态</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月13日 14:07:42
    * @Param []
@@ -155,7 +154,7 @@ public class SkyflyingController {
    * <B>方法名称：updateSkywalkingAgent</B>
    * <B>概要说明：更新探针别名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月29日 14:06:30
    * @Param [agentCode, pageNo, pageSize]
@@ -173,7 +172,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllSkywalkingAgent</B>
    * <B>概要说明：探针管理---从数据库中获取所有的探针信息</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月29日 10:06:11
    * @Param []
@@ -193,7 +192,7 @@ public class SkyflyingController {
    * <B>方法名称：getActiveSkywalkingAgent</B>
    * <B>概要说明：获取存活的探针</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月27日 14:06:57
    * @Param []
@@ -208,7 +207,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserPortraitRules</B>
    * <B>概要说明：获取所有的规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月23日 15:06:53
    * @Param [pageNo, pageSize]
@@ -224,7 +223,7 @@ public class SkyflyingController {
    * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
    * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:06:55
    * @Param []
@@ -239,7 +238,7 @@ public class SkyflyingController {
    * <B>方法名称：initAllTableNameFields</B>
    * <B>概要说明：如果前端没有传递数据库名称，那么根据调用链信息获取到有哪些数据库，然后根据数据库名称获取所有的表，最后根据表获取对应的所有的字段，最后将获取到的表和相应的字段保存到数据库中</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月20日 14:06:37
    * @Param dbName：数据库名称，选传。如果没有传递，那么从调用链信息中获取数据库名称列表。
@@ -260,7 +259,7 @@ public class SkyflyingController {
    * <B>方法名称：updateSpecificDbTableNameFields</B>
    * <B>概要说明：更新指定的数据库中某个表的字段</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月20日 14:06:37
    * @Param
@@ -278,7 +277,7 @@ public class SkyflyingController {
    * <B>方法名称：getSpecificTableNameFields</B>
    * <B>概要说明：获取指定的数据库中某个表有哪些字段</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月20日 14:06:37
    * @Param
@@ -296,7 +295,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllTableNameFromDMS</B>
    * <B>概要说明：获取所有数据库表名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
@@ -311,7 +310,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllSqlTypeFromDMS</B>
    * <B>概要说明：获取所有sql语句的操作类型</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
@@ -326,7 +325,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllUserNameFromDMS</B>
    * <B>概要说明：获取所有操作DMS的用户名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 17:06:51
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
@@ -341,7 +340,7 @@ public class SkyflyingController {
    * <B>方法名称：getDmsAuditLogFromDb</B>
    * <B>概要说明：从数据库中获取DMS的数据库审计日志</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 15:06:08
    * @Param []
@@ -362,7 +361,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserNameAnomalyDetectionInfo</B>
    * <B>概要说明：获取异常信息中的所有的用户名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -378,7 +377,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllAlarmInfoDetailByUserName</B>
    * <B>概要说明：获取指定用户所有的异常信息</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月24日 16:06:19
    * @Param [userName, pageNo, pageSize]
@@ -397,7 +396,7 @@ public class SkyflyingController {
    * <B>方法名称：getAnomalyDetectionInfo</B>
    * <B>概要说明：获取异常信息</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -414,7 +413,7 @@ public class SkyflyingController {
    * <B>方法名称：getAnomalyDetectionInfoByGroupByUserName</B>
    * <B>概要说明：根据用户名分组获取告警摘要信息</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月30日 09:06:06
    * @Param [pageNo, pageSize]
@@ -431,7 +430,7 @@ public class SkyflyingController {
    * <B>方法名称：updateAnomalyDetectionInfo</B>
    * <B>概要说明：删除告警信息或更新画像</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月25日 13:07:16
    * @Param [pageNo, pageSize]
@@ -453,7 +452,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllUserNamePortraitByVisitedTime</B>
    * <B>概要说明：获取所有的用户</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -468,7 +467,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserPortraitByVisitedTime</B>
    * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -485,7 +484,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllVisitedTablePortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的表名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -500,7 +499,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserPortraitByVisitedTime</B>
    * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -515,7 +514,7 @@ public class SkyflyingController {
    * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
    * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:06:55
    * @Param []
@@ -530,7 +529,7 @@ public class SkyflyingController {
    * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的用户名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -545,7 +544,7 @@ public class SkyflyingController {
    * <B>方法名称：updateUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：更新用户访问过的表的画像规则：isDelete=0，启用这个规则；isDelete=1，禁用这个规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 14:06:35
    * @Param [ruleId, isDelete]
@@ -560,7 +559,7 @@ public class SkyflyingController {
    * <B>方法名称：addUserPortraitByVisitedTtimeRule</B>
    * <B>概要说明：增加用户在什么时间访问过系统多少次的画像规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:41:35
    * @Param [ruleId, isDelete]
@@ -578,7 +577,7 @@ public class SkyflyingController {
    * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
    * <B>概要说明：增加用户访问过的表的画像规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 16:41:35
    * @Param [ruleId, isDelete]
@@ -597,7 +596,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取用户每天访问表的次数的画像信息</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:57
    * @Param []
@@ -620,7 +619,7 @@ public class SkyflyingController {
    * <B>方法名称：userPortraitByVisitedTable</B>
    * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月08日 14:06:08
    * @Param []
@@ -635,7 +634,7 @@ public class SkyflyingController {
    * <B>方法名称：userPortraitByVisitedTime</B>
    * <B>概要说明：基于历史数据，统计用户访问系统的时间，以此来生成用户的画像</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月07日 14:06:08
    * @Param []
@@ -843,7 +842,7 @@ public class SkyflyingController {
    * <B>方法名称：getUserOperationTypeCount</B>
    * <B>概要说明：获取用户操作类型次数</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List < java.lang.String>>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.util.List < java.lang.String>>
    * @Author zm
    * @Date 2022年07月22日 17:07:46
    * @Param [userName]
@@ -981,7 +980,7 @@ public class SkyflyingController {
    * <B>方法名称：getAuditLogFromExcel</B>
    * <B>概要说明：从excel表格中获取审计日志</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年05月26日 19:05:00
    * @Param []
@@ -996,7 +995,7 @@ public class SkyflyingController {
    * <B>方法名称：</B>
    * <B>概要说明：</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年05月26日 16:05:50
    * @Param [startTime, endTime]

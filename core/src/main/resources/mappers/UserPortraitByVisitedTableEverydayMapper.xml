@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -47,12 +47,12 @@
     from user_portrait_by_visited_table_everyday
     group by user_name
   </select>
-  <select id="selectByUserNameAndTime" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo" resultMap="BaseResultMap">
+  <select id="selectByUserNameAndTime" parameterType="com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo" resultMap="BaseResultMap">
     select *
     from user_portrait_by_visited_table_everyday
     where user_name = #{userName} and visited_date = #{visitedDate} and visited_table = #{visitedTable} and db_type = #{dbType}
   </select>
-  <select id="selectAllVisitedTable" resultType="com.mingshi.skyflying.domain.InstanceTable">
+  <select id="selectAllVisitedTable" resultType="com.mingshi.skyflying.common.domain.InstanceTable">
     select distinct visited_db_instance,visited_table
     from user_portrait_by_visited_table_everyday
 --     group by visited_table,visited_db_instance
@@ -125,7 +125,7 @@
     </foreach>
     ON DUPLICATE KEY UPDATE visited_count=values(visited_count)
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo">
     insert into user_portrait_by_visited_table_everyday
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -204,7 +204,7 @@
     </foreach>
   </update>
   <update id="updateByPrimaryKeySelective"
-          parameterType="com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo">
+          parameterType="com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo">
     update user_portrait_by_visited_table_everyday
     <set>
       <if test="isDelete != null">

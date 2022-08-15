@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsAuditLogDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsAuditLogDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAuditLogDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -38,7 +38,7 @@
     remark,ms_sql, sql_source, hash, sql_insight_db_user_name, sql_insight_user_ip, parent_segment_id, current_segment_id, operation_name, application_user_name, ms_table_name
   </sql>
 
-  <select id="selectBehaviorByOptTime" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+  <select id="selectBehaviorByOptTime" resultType="com.mingshi.skyflying.common.domain.MsAuditLogDo"
           parameterType="java.util.Map">
     select * from ms_audit_log where is_delete = 0 and sql_type=#{sqlType}
     and op_time between date_format(#{startTime},'%Y%m%d') and date_format(#{endTime},'%Y%m%d')
@@ -48,7 +48,7 @@
     <!--        LIMIT #{pageNo},#{pageSize}-->
     <!--      </if>-->
   </select>
-  <select id="selectBehaviorByUserName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+  <select id="selectBehaviorByUserName" resultType="com.mingshi.skyflying.common.domain.MsAuditLogDo"
           parameterType="java.util.Map">
     select *
     from ms_audit_log
@@ -56,7 +56,7 @@
       and application_user_name = #{applicationUserName}
       and sql_type = #{sqlType}
   </select>
-  <select id="selectBehaviorByTableName" resultType="com.mingshi.skyflying.domain.MsAuditLogDo"
+  <select id="selectBehaviorByTableName" resultType="com.mingshi.skyflying.common.domain.MsAuditLogDo"
           parameterType="java.util.Map">
     select *
     from ms_audit_log
@@ -174,7 +174,7 @@
     from ms_audit_log
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAuditLogDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAuditLogDo">
     insert into ms_audit_log
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -349,7 +349,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAuditLogDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAuditLogDo">
     update ms_audit_log
     <set>
       <if test="isDelete != null">

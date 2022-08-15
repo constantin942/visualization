@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.statistics;
 
-import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.utils.RedisPoolUtil;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

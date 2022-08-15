@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
 
 import java.util.List;
 import java.util.Map;

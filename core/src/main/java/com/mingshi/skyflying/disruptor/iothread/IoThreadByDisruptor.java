@@ -7,7 +7,7 @@
 // import com.lmax.disruptor.dsl.Disruptor;
 // import com.lmax.disruptor.dsl.ProducerType;
 // import com.mingshi.skyflying.disruptor.processor.ProcessorConsumerByWrokHandler;
-// import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
+// import com.mingshi.skyflying.utils.EsMsSegmentDetailUtil;
 // import com.mingshi.skyflying.utils.MingshiServerUtil;
 // import lombok.extern.slf4j.Slf4j;
 // import org.springframework.beans.factory.annotation.Value;

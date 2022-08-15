@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.SegmentDetailDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.SegmentDetailDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SegmentDetailDo">
     <id column="id" jdbcType="VARCHAR" property="id" />
     <result column="segment_id" jdbcType="VARCHAR" property="segmentId" />
     <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
@@ -16,7 +16,7 @@
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
     <result column="time_bucket" jdbcType="BIGINT" property="timeBucket" />
   </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.SegmentDetailDo">
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.common.domain.SegmentDetailDo">
     <result column="data_binary" jdbcType="LONGVARCHAR" property="dataBinary" />
   </resultMap>
   <sql id="Base_Column_List">
@@ -44,7 +44,7 @@
 <!--    delete from segment_detail-->
 <!--    where id = #{id,jdbcType=VARCHAR}-->
 <!--  </delete>-->
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.SegmentDetailDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SegmentDetailDo">
     insert into segment_detail
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -135,7 +135,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.SegmentDetailDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SegmentDetailDo">
     update segment_detail
     <set>
       <if test="segmentId != null">

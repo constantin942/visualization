@@ -1,8 +1,8 @@
 // package com.mingshi.skyflying.config;
 //
 // import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-// import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-// import com.mingshi.skyflying.utils.DateTimeUtil;
+// import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+//
 // import lombok.extern.slf4j.Slf4j;
 // import org.springframework.boot.ApplicationArguments;
 // import org.springframework.boot.ApplicationRunner;

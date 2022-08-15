@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.InstanceTable;
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
+import com.mingshi.skyflying.common.domain.InstanceTable;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo;
 
 import java.util.List;
 import java.util.Map;

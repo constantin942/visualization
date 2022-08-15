@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsThirdPartyTableFieldsDo;
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableFieldsDo;
 
 import java.util.LinkedList;
 import java.util.List;

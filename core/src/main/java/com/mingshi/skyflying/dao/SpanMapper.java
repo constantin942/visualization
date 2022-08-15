@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.Span;
+import com.mingshi.skyflying.common.domain.Span;
 
 import java.util.List;
 

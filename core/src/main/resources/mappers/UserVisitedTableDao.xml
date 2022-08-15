@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.UserVisitedTableDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.UserVisitedTableDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserVisitedTableDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
     <result column="request_start_time" jdbcType="VARCHAR" property="requestStartTime" />
@@ -22,7 +22,7 @@
     delete from user_visited_table
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.mingshi.skyflying.domain.UserVisitedTableDo">
+  <insert id="insert" parameterType="com.mingshi.skyflying.common.domain.UserVisitedTableDo">
     insert into user_visited_table (id, user_name, request_start_time,
       gmt_create, gmt_modified, is_delete
       )
@@ -30,7 +30,7 @@
       #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP}, #{isDelete,jdbcType=TINYINT}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.UserVisitedTableDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserVisitedTableDo">
     insert into user_visited_table
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -73,7 +73,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.UserVisitedTableDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.UserVisitedTableDo">
     update user_visited_table
     <set>
       <if test="userName != null">
@@ -94,7 +94,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.domain.UserVisitedTableDo">
+  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.common.domain.UserVisitedTableDo">
     update user_visited_table
     set user_name = #{userName,jdbcType=VARCHAR},
       request_start_time = #{requestStartTime,jdbcType=VARCHAR},

@@ -1,7 +1,8 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.MsAlarmInformationDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+
 
 public interface MsAlarmInformationService extends ParentService<MsAlarmInformationDo, Long> {
   ServerResponse<String> getAllAlarmInfo(String userName, Integer pageNo, Integer pageSize);
@@ -18,7 +19,7 @@ public interface MsAlarmInformationService extends ParentService<MsAlarmInformat
    * @Author zm
    * @Date 2022年07月25日 13:07:17
    * @Param [userName, matchRuleId, originalTime]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   ServerResponse<String> updateAnomalyDetectionInfo(Integer id, Integer matchRuleId, String originalTime, String userName, String alarmContent, String flag);
 }

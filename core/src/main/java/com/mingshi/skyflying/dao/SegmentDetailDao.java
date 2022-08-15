@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.SegmentDetailDo;
+import com.mingshi.skyflying.common.domain.SegmentDetailDo;
 
 import java.util.List;
 

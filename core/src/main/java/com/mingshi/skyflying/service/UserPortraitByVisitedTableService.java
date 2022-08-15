@@ -1,7 +1,8 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+
 
 public interface UserPortraitByVisitedTableService extends ParentService<UserPortraitByVisitedTableDo, Long> {
 

@@ -1,9 +1,9 @@
 // package com.mingshi.skyflying.controller;
 //
-// import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
-// import com.mingshi.skyflying.elasticsearch.utils.MingshiElasticSearchUtil;
-// import com.mingshi.skyflying.response.ServerResponse;
-// import com.mingshi.skyflying.utils.JsonUtil;
+// import com.mingshi.skyflying.common.elasticsearch.domain.EsMsSegmentDetailDo;
+// import com.mingshi.skyflying.common.elasticsearch.utils.MingshiElasticSearchUtil;
+//
+// import com.mingshi.skyflying.common.utils.JsonUtil;
 // import lombok.extern.slf4j.Slf4j;
 // import org.springframework.stereotype.Controller;
 // import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +32,7 @@
 //    * <B>方法名称：updateSkywalkingAgent</B>
 //    * <B>概要说明：更新探针别名</B>
 //    *
-//    * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+//    * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
 //    * @Author zm
 //    * @Date 2022年06月29日 14:06:30
 //    * @Param [agentCode, pageNo, pageSize]

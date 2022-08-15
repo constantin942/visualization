@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsSegmentDetailDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="user_name" jdbcType="VARCHAR" property="userName"/>
     <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId"/>
@@ -226,13 +226,13 @@
     from ms_segment_detail
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <select id="selectAllInstanceAndTableName" resultType="com.mingshi.skyflying.domain.InstanceTable">
+  <select id="selectAllInstanceAndTableName" resultType="com.mingshi.skyflying.common.domain.InstanceTable">
     SELECT DISTINCT db_instance, ms_table_name
     FROM `ms_segment_detail`
     where db_instance is not null
   </select>
 
-  <select id="selectAllInstanceTrueName" resultType="com.mingshi.skyflying.domain.MsThirdPartyTableListDo">
+  <select id="selectAllInstanceTrueName" resultType="com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo">
     SELECT *
     FROM `ms_third_party_table_list`
     WHERE table_desc !=""
@@ -304,7 +304,7 @@
     order by start_time desc limit 1
   </select>
 
-  <select id="selectUserUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData" parameterType="java.util.Map">
+  <select id="selectUserUsualAndUnusualData" resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData" parameterType="java.util.Map">
     SELECT user_name, visited_table as visited_data, SUM(visited_count) as visited_count
     FROM `user_portrait_by_visited_table_everyday`
     where user_name is not null and user_name = #{userName}
@@ -414,7 +414,7 @@
     order by start_time desc limit 1
   </select>
 
-  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.domain.UserUsualAndUnusualVisitedData" parameterType="java.lang.String">
+  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData" parameterType="java.lang.String">
     select ms_table_name as visited_data, count(*) as visited_count, user_name
     from ms_segment_detail
     where ms_table_name = #{tableName} and user_name is not null
@@ -422,14 +422,14 @@
     order by count(*) desc
       limit 1;
   </select>
-  <select id="selectAlarmData" resultType="com.mingshi.skyflying.domain.AlarmData">
+  <select id="selectAlarmData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
     SELECT COUNT(*) as alarm_data, match_rule_id
     FROM ms_alarm_information
     where match_rule_id is not NULL and update_user_portrait = 0 and is_delete = 0
     GROUP BY match_rule_id
   </select>
 
-  <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.domain.UserAlarmData">
+  <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.common.domain.UserAlarmData">
     SELECT count(*) as alarm_count, user_name
     from ms_alarm_information
     where update_user_portrait = 0 and is_delete = 0
@@ -473,7 +473,7 @@
       )
     </foreach>
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     insert into ms_segment_detail
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -676,7 +676,7 @@
       where id=#{item.id}
     </foreach>
   </update>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsSegmentDetailDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     update ms_segment_detail
     <set>
       <if test="userName != null">

@@ -19,8 +19,8 @@
 package com.mingshi.skyflying.analysis;
 
 import com.mingshi.skyflying.service.Service;
-import com.mingshi.skyflying.utils.EndpointNameGrouping;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.EndpointNameGrouping;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

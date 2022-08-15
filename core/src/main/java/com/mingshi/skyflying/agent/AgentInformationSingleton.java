@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.agent;
 
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 
 import java.util.concurrent.atomic.AtomicBoolean;

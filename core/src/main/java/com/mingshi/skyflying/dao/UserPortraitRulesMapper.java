@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.UserPortraitRulesDo;
+import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 
 import java.util.List;
 import java.util.Map;

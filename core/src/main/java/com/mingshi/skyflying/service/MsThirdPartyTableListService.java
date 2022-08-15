@@ -1,7 +1,8 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+
 
 /**
  * <B>接口名称: MsThirdPartyTableService</B>

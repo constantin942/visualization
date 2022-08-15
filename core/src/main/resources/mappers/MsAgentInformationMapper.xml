@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsAgentInformationMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsAgentInformationDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -24,7 +24,7 @@
     <include refid="Base_Column_List"/>
     from ms_agent_information
   </select>
-  <select id="selectAllAgents" resultType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+  <select id="selectAllAgents" resultType="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
     select <include refid="Base_Column_List" />
     from ms_agent_information
     <where>
@@ -63,7 +63,7 @@
     </foreach>
     ON DUPLICATE KEY UPDATE gmt_modified = VALUES(gmt_modified)
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
     insert into ms_agent_information
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -106,7 +106,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAgentInformationDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
     update ms_agent_information
     <set>
       <if test="isDelete != null">

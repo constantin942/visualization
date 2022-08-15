@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTimeDo;
 
 import java.util.List;
 import java.util.Map;

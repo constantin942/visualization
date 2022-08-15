@@ -2,14 +2,14 @@ package com.mingshi.skyflying.impl;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
-import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
+import com.mingshi.skyflying.common.enums.ConstantsCode;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
-import com.mingshi.skyflying.domain.UserPortraitRulesDo;
-import com.mingshi.skyflying.enums.ConstantsCode;
 import com.mingshi.skyflying.init.rule.LoadUserPortraitFromDb;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.UserPortraitRulesService;
-import com.mingshi.skyflying.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -109,7 +109,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
    * <B>方法名称：noEnableByUserPortraitRule</B>
    * <B>概要说明：禁用规则：规则先在数据库中禁用，然后在本地内存中删除</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:06:20
    * @Param [userPortraitByVisitedTimeDo]
@@ -138,7 +138,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
    * <B>方法名称：enableByUserPortraitByVisitedTime</B>
    * <B>概要说明：将用户在什么时间访问多少次系统这个规则先在数据库中启用，然后添加到本地内存中</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:06:20
    * @Param [userPortraitByVisitedTimeDo]

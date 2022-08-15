@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsScheduledTaskDo;
+import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 
 public interface MsScheduledTaskDao {
     int insertSelective(MsScheduledTaskDo record);
@@ -13,7 +13,7 @@ public interface MsScheduledTaskDao {
      * @Author zm
      * @Date 2022年05月26日 17:05:59
      * @Param [id]
-     * @return com.mingshi.skyflying.domain.MsScheduledTaskDo
+     * @return com.mingshi.skyflying.common.domain.MsScheduledTaskDo
      **/
     MsScheduledTaskDo selectLastSuccessRecord(String flag);
 

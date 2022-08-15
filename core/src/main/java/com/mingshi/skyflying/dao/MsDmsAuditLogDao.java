@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsDmsAuditLogDo;
+import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +23,6 @@ public interface MsDmsAuditLogDao {
     List<String> selectAllUserName();
 
     List<String> selectAllSqlType();
-  
+
     List<String> selectAllTableName();
 }

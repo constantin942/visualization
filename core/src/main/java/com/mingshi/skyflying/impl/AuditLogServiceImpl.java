@@ -11,12 +11,16 @@ import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogRequest;
 import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogResponse;
 import com.aliyuncs.profile.DefaultProfile;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.ListUtils;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.*;
-import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.utils.*;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -103,7 +107,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * <B>方法名称：autoFetchAuditlogByDMS</B>
    * <B>概要说明：通过定时任务，自动拉取MDS中的数据库审计日志</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年05月26日 15:05:40
    * @Param []
@@ -153,7 +157,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * <B>概要说明：从excel表中读取审计日志</B>
    *
    * @param path
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年05月26日 19:05:57
    * @Param []
@@ -331,7 +335,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * <B>方法名称：getDMSAuditLog</B>
    * <B>概要说明：循环拉取DMS中的审计日志</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年05月26日 16:05:31
    * @Param [client, startTime, endTime]
@@ -563,7 +567,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * <B>方法名称：getDmsAuditLogFromDb</B>
    * <B>概要说明：从数据库中获取来自DMS的数据库审计日志</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月15日 15:06:35
    * @Param []

@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsAuditLogDo;
+import com.mingshi.skyflying.common.domain.MsAuditLogDo;
 
 import java.util.List;
 import java.util.Map;

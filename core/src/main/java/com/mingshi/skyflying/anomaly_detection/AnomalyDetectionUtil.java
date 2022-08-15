@@ -2,13 +2,13 @@ package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
-import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.domain.MsAlarmInformationDo;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.SegmentDo;
-import com.mingshi.skyflying.enums.ConstantsCode;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.SegmentDo;
+import com.mingshi.skyflying.common.enums.ConstantsCode;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;

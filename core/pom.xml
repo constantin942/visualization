@@ -10,12 +10,6 @@
   </parent>
   <packaging>jar</packaging>
   <dependencies>
-    <!-- https://mvnrepository.com/artifact/com.jcraft/jsch -->
-    <dependency>
-      <groupId>com.jcraft</groupId>
-      <artifactId>jsch</artifactId>
-      <version>0.1.55</version>
-    </dependency>
 
     <!-- https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine -->
     <dependency>
@@ -58,6 +52,11 @@
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
       <version>2.3.5.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mingshi.skyflying</groupId>
+      <artifactId>common</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <groupId>com.mingshi</groupId>

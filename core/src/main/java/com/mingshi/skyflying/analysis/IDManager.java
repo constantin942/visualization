@@ -18,10 +18,10 @@
 
 package com.mingshi.skyflying.analysis;
 
-import com.mingshi.skyflying.constant.Const;
-import com.mingshi.skyflying.exception.UnexpectedException;
-import com.mingshi.skyflying.type.NodeType;
-import com.mingshi.skyflying.utils.BooleanUtils;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.exception.UnexpectedException;
+import com.mingshi.skyflying.common.type.NodeType;
+import com.mingshi.skyflying.common.utils.BooleanUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

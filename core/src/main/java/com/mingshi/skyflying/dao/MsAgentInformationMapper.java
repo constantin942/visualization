@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsAgentInformationDo;
+import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
 
 import java.util.LinkedList;
 import java.util.List;

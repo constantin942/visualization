@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.controller;
 
 import com.mingshi.skyflying.config.LinuxStateForShellConfig;
-import com.mingshi.skyflying.utils.*;
+import com.mingshi.skyflying.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,7 +33,7 @@ public class TestController {
    * <B>方法名称：test</B>
    * <B>概要说明：测试部署了skywalking探针对业务系统的影响有多少，从请求时间、CPU占用率、内存使用率三个维度来考量</B>
    *
-   * @return com.mingshi.skyflying.domain.CommonResponse
+   * @return com.mingshi.skyflying.common.domain.CommonResponse
    * @Author zm
    * @Date 2022年08月04日 16:08:29
    * @Param []
@@ -95,7 +95,7 @@ public class TestController {
    * <B>方法名称：getResult</B>
    * <B>概要说明：获取统计结果</B>
    *
-   * @return com.mingshi.skyflying.domain.CommonResponse
+   * @return com.mingshi.skyflying.common.domain.CommonResponse
    * @Author zm
    * @Date 2022年08月05日 10:08:43
    * @Param []

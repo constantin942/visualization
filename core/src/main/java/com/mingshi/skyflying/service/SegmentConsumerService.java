@@ -1,8 +1,8 @@
 package com.mingshi.skyflying.service;
 
+import com.mingshi.skyflying.common.domain.SegmentDetailDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
-import com.mingshi.skyflying.domain.SegmentDetailDo;
-import com.mingshi.skyflying.response.ServerResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 

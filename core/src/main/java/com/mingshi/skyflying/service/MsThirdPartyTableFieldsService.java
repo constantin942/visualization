@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.MsThirdPartyTableFieldsDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableFieldsDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
 
 import java.util.Map;
 

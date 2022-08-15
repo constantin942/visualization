@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.SegmentRelationDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.SegmentRelationDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SegmentRelationDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -44,7 +44,7 @@
     from segment_relation
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.SegmentRelationDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SegmentRelationDo">
     insert into segment_relation
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -99,7 +99,7 @@
 <!--      </if>-->
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.SegmentRelationDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SegmentRelationDo">
     update segment_relation
     <set>
       <if test="isDelete != null">

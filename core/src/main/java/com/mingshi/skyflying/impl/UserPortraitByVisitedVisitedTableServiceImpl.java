@@ -1,18 +1,18 @@
 package com.mingshi.skyflying.impl;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
-import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.InstanceTable;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
-import com.mingshi.skyflying.domain.InstanceTable;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTableEverydayDo;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.UserPortraitByVisitedTableService;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -83,7 +83,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取用户基于每天访问过的数据库表次数的画像</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 09:06:52
    * @Param [userName, visitedTable, visitedTime, pageNo, pageSize]
@@ -130,7 +130,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的访问过的表</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 10:06:00
    * @Param []
@@ -160,7 +160,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * <B>方法名称：updateUserPortraitByVisitedTableEverydayRule</B>
    * <B>概要说明：更新用户访问过的表的画像规则状态。isDelete=0，启用这个规则；isDelete=1，禁用这个规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 14:06:35
    * @Param [ruleId, isDelete]
@@ -198,7 +198,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
    * <B>概要说明：增加用户访问过的表的画像规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 16:41:35
    * @Param [ruleId, isDelete]
@@ -410,7 +410,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
    * <B>概要说明：获取所有的用户名</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月13日 10:06:00
    * @Param []

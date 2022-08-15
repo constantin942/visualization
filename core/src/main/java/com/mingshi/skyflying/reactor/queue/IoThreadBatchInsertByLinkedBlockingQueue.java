@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.reactor.queue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.elasticsearch.utils.EsMsSegmentDetailUtil;
+import com.mingshi.skyflying.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.reactor.thread.IoThread;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;

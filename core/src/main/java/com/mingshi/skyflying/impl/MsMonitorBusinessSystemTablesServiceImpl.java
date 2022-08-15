@@ -1,13 +1,13 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
-import com.mingshi.skyflying.domain.MsMonitorBusinessSystemTablesDo;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsMonitorBusinessSystemTablesService;
-import com.mingshi.skyflying.utils.JsonUtil;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
-import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +38,7 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
    * <B>方法名称：getAllTables</B>
    * <B>概要说明：获取所有的表</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月13日 10:07:54
    * @Param []
@@ -86,7 +86,7 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
    *
    * @param tableId
    * @param isDelete
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月13日 10:07:54
    * @Param []
@@ -120,7 +120,7 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
    *
    * @param id
    * @param tableDesc
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年07月21日 17:07:02
    * @Param [id, tableDesc]

@@ -1,8 +1,8 @@
 package com.mingshi.skyflying.reactor.thread;
 
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.service.SegmentConsumerService;
-import com.mingshi.skyflying.utils.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;

@@ -1,7 +1,8 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.UserPortraitRulesDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+
 
 public interface UserPortraitRulesService extends ParentService<UserPortraitRulesDo, Long> {
   ServerResponse<String> getAllUserPortraitRules(Integer pageNo, Integer pageSize);

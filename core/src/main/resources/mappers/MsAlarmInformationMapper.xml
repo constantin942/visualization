@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsAlarmInformationMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsAlarmInformationDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <id column="match_rule_id" jdbcType="INTEGER" property="matchRuleId" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
@@ -98,7 +98,7 @@
     </where>
     group by user_name) as t1
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
     insert into ms_alarm_information
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -180,7 +180,7 @@
     </foreach>
     ON DUPLICATE KEY UPDATE original_time=values(original_time)
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
     update ms_alarm_information
     <set>
       <if test="isDelete != null">
@@ -213,7 +213,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByUserNameAndOriginalTime" parameterType="com.mingshi.skyflying.domain.MsAlarmInformationDo">
+  <update id="updateByUserNameAndOriginalTime" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
     update ms_alarm_information
     set is_delete = #{isDelete,jdbcType=TINYINT}
     where user_name = #{userName,jdbcType=VARCHAR} and

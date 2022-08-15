@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.response.ServerResponse;
 
 import java.text.ParseException;
 import java.util.List;

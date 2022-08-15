@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.SpanMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.Span">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.Span">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
     <result column="segment_id" jdbcType="VARCHAR" property="segmentId" />
@@ -69,7 +69,7 @@
     </foreach>
     on duplicate key update trace_id = values(trace_id)
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.Span">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.Span">
     insert into span
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -214,7 +214,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.Span">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.Span">
     update span
     <set>
       <if test="traceId != null">

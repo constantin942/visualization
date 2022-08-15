@@ -2,9 +2,9 @@ package com.mingshi.skyflying.caffeine;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

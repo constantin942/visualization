@@ -1,12 +1,12 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsThirdPartyTableListService;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

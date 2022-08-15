@@ -1,8 +1,8 @@
 package com.mingshi.skyflying.service;
 
 import com.aliyun.dms_enterprise20181101.models.ListSQLExecAuditLogResponseBody;
-import com.mingshi.skyflying.domain.MsAuditLogDo;
-import com.mingshi.skyflying.response.ServerResponse;
+import com.mingshi.skyflying.common.domain.MsAuditLogDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
    * @Author zm
    * @Date 2022年05月26日 15:05:40
    * @Param []
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   ServerResponse<String> autoFetchAuditlogByDMS(String startTime,String endTime);
 
@@ -27,7 +27,7 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
    * @Author zm
    * @Date 2022年05月26日 19:05:57
    * @Param []
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   ServerResponse<String> getAuditlogByExcel(String path);
 
@@ -49,7 +49,7 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
    * @Author zm
    * @Date 2022年06月15日 15:06:35
    * @Param []
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   ServerResponse<String> getDmsAuditLogFromDb(String dbUserName,
                                               String dbType, /* SQL语句的类型；是insert、select、update、delete等 */

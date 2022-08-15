@@ -1,13 +1,13 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableFieldsDo;
+import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsThirdPartyTableFieldsMapper;
 import com.mingshi.skyflying.dao.MsThirdPartyTableListMapper;
-import com.mingshi.skyflying.domain.MsThirdPartyTableFieldsDo;
-import com.mingshi.skyflying.domain.MsThirdPartyTableListDo;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.MsThirdPartyTableFieldsService;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -95,7 +95,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
    * <B>方法名称：getSpecificDbTableNameFields</B>
    * <B>概要说明：根据指定的数据库名和表名，获取该表所有的字段。</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月21日 09:06:44
    * @Param [dbName, tableName]

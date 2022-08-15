@@ -5,6 +5,7 @@
   <packaging>pom</packaging>
   <modules>
     <module>anomaly-detection</module>
+    <module>common</module>
     <module>core</module>
     <module>network</module>
   </modules>

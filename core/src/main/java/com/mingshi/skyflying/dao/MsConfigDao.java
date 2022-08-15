@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsConfigDo;
+import com.mingshi.skyflying.common.domain.MsConfigDo;
 
 public interface MsConfigDao {
     int insertSelective(MsConfigDo record);

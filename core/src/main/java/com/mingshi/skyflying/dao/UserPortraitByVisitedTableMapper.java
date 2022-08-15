@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTableDo;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableDo;
 
 import java.util.List;
 

@@ -5,22 +5,26 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.elasticsearch.domain.EsMsSegmentDetailDo;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.type.KeyValue;
+import com.mingshi.skyflying.common.type.LogEntity;
+import com.mingshi.skyflying.common.type.RefType;
+import com.mingshi.skyflying.common.utils.CollectionUtils;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
-import com.mingshi.skyflying.constant.Const;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
-import com.mingshi.skyflying.domain.*;
-import com.mingshi.skyflying.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
-import com.mingshi.skyflying.type.KeyValue;
-import com.mingshi.skyflying.type.LogEntity;
-import com.mingshi.skyflying.type.RefType;
-import com.mingshi.skyflying.utils.*;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -1453,7 +1457,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * <B>方法名称：setUserNameAndTokenFromSpan</B>
    * <B>概要说明：从span中获取用户名和token</B>
    *
-   * @return com.mingshi.skyflying.domain.SegmentDo
+   * @return com.mingshi.skyflying.common.domain.SegmentDo
    * @Author zm
    * @Date 2022年07月12日 10:07:33
    * @Param [spanList, segment]
@@ -1494,7 +1498,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * <B>方法名称：setUserNameAndTokenFromSegmentObject</B>
    * <B>概要说明：从SegmentObject中获取用户名和token</B>
    *
-   * @return com.mingshi.skyflying.domain.SegmentDo
+   * @return com.mingshi.skyflying.common.domain.SegmentDo
    * @Author zm
    * @Date 2022年07月12日 10:07:59
    * @Param [spanList, segment]

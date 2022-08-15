@@ -1,9 +1,9 @@
 package com.mingshi.skyflying.init;
 
 import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
-import com.mingshi.skyflying.domain.MsMonitorBusinessSystemTablesDo;
+import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
-import com.mingshi.skyflying.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;

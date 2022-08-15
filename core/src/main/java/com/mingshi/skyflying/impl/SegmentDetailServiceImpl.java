@@ -4,13 +4,17 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
-import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.*;
-import com.mingshi.skyflying.domain.*;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.SegmentDetailService;
-import com.mingshi.skyflying.utils.*;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -201,7 +205,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * <B>方法名称：getUserOperationTypeCount</B>
    * <B>概要说明：获取用户操作类型次数</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.util.List < java.lang.String>>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.util.List < java.lang.String>>
    * @Author zm
    * @Date 2022年07月22日 17:07:46
    * @Param [userName]
@@ -780,7 +784,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * <B>方法名称：getSegmentDetailsFromDb</B>
    * <B>概要说明：从数据库中获取一次调用链中所涉及到的segment信息</B>
    *
-   * @return java.util.HashMap<java.lang.String, java.util.HashMap < java.lang.String, java.util.List < com.mingshi.skyflying.domain.MsSegmentDetailDo>>>
+   * @return java.util.HashMap<java.lang.String, java.util.HashMap < java.lang.String, java.util.List < com.mingshi.skyflying.common.domain.MsSegmentDetailDo>>>
    * @Author zm
    * @Date 2022年06月02日 17:06:01
    * @Param [map]

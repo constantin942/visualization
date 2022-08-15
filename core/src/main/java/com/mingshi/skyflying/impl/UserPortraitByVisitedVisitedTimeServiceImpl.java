@@ -1,17 +1,17 @@
 package com.mingshi.skyflying.impl;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
-import com.mingshi.skyflying.constant.Const;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTimeDo;
+import com.mingshi.skyflying.common.enums.ConstantsCode;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
-import com.mingshi.skyflying.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.domain.UserPortraitByVisitedTimeDo;
-import com.mingshi.skyflying.enums.ConstantsCode;
-import com.mingshi.skyflying.response.ServerResponse;
 import com.mingshi.skyflying.service.UserPortraitByVisitedTimeService;
-import com.mingshi.skyflying.utils.DateTimeUtil;
-import com.mingshi.skyflying.utils.JsonUtil;
-import com.mingshi.skyflying.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -92,7 +92,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
    * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
    * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
    *
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年06月16日 17:06:55
    * @Param []
@@ -175,7 +175,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
    * @Author zm
    * @Date 2022年06月16日 17:06:20
    * @Param [userPortraitByVisitedTimeDo]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   private ServerResponse<String> noEnableByUserPortraitByVisitedTime(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
     int updateResult = userPortraitByVisitedTimeMapper.updateByPrimaryKeySelective(userPortraitByVisitedTimeDo);
@@ -205,7 +205,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
    * @Author zm
    * @Date 2022年06月16日 17:06:20
    * @Param [userPortraitByVisitedTimeDo]
-   * @return com.mingshi.skyflying.response.ServerResponse<java.lang.String>
+   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   private ServerResponse<String> enableByUserPortraitByVisitedTime(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
 

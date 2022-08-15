@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsMonitorBusinessSystemTablesDo;
+import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
 
 import java.util.LinkedList;
 import java.util.List;

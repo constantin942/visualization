@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.MsAlarmInformationDo;
+import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 
 import java.util.List;
 import java.util.Map;

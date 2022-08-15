@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.domain.UserVisitedTableDo;
+import com.mingshi.skyflying.common.domain.UserVisitedTableDo;
 
 public interface UserVisitedTableDao {
     int deleteByPrimaryKey(Integer id);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.MsDmsAuditLogDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsDmsAuditLogDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="sql_insight_db_user_name" jdbcType="VARCHAR" property="sqlInsightDbUserName"/>
     <result column="sql_source" jdbcType="VARCHAR" property="sqlSource"/>
@@ -25,7 +25,7 @@
     <result column="sql_insight_user_ip" jdbcType="VARCHAR" property="sqlInsightUserIp"/>
     <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
   </resultMap>
-  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.mingshi.skyflying.common.domain.MsDmsAuditLogDo">
     <result column="ms_sql" jdbcType="LONGVARCHAR" property="msSql"/>
   </resultMap>
   <sql id="Base_Column_List">
@@ -136,7 +136,7 @@
     </foreach>
     on duplicate key update hash = values(hash)
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsDmsAuditLogDo">
     insert into ms_dms_audit_log
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -310,7 +310,7 @@
     </foreach>
     on duplicate key update sql_insight_db_user_name = values(sql_insight_db_user_name),sql_source = values(sql_source)
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.domain.MsDmsAuditLogDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsDmsAuditLogDo">
     update ms_dms_audit_log
     <set>
       <if test="sqlInsightDbUserName != null">
