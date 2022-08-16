@@ -36,9 +36,9 @@ public class AnomalyDetectionUtil {
    * @Date 2022年06月08日 17:06:37
    * @Param [segmentDo, list]
    **/
-  public static void userVisitedTimeIsAbnormal(SegmentDo segmentDo, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+  public static void userVisitedTimeIsAbnormal(SegmentDo segmentDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
     Boolean userPortraitByVisitedTimeEnable = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeEnable();
-    if (false == userPortraitByVisitedTimeEnable) {
+    if (!Boolean.TRUE.equals(userPortraitByVisitedTimeEnable)) {
       // 这条规则没有启用，那么就直接返回；2022-06-23 16:09:28
       return;
     }
@@ -71,6 +71,7 @@ public class AnomalyDetectionUtil {
       msAlarmInformationDoList.add(msAlarmInformationDo);
     } else {
       String content = null;
+      assert currHourTime != null;
       if (currHourTime.equals(ConstantsCode.USER_PORTRAIT_FORENOON.getCode())) {
         count = map.get(ConstantsCode.USER_PORTRAIT_FORENOON.getCode());
         if (null != count && 0 < count) {

@@ -19,7 +19,7 @@
     </dependency>
 
     <dependency>
-      <groupId>com.lmax.mysourcecode</groupId>
+      <groupId>com.lmax</groupId>
       <artifactId>disruptor</artifactId>
       <version>3.3.10</version>
       <scope>compile</scope>
@@ -57,6 +57,12 @@
       <groupId>com.mingshi.skyflying</groupId>
       <artifactId>common</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mingshi.skyflying</groupId>
+      <artifactId>anomaly-detection</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
   <groupId>com.mingshi</groupId>
