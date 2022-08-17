@@ -87,12 +87,12 @@ public class MsKafkaConsumer extends Thread {
 
   @Override
   public void run() {
-    init();
-    if (false == isInitDone.get()) {
-      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-      return;
-    }
-    doRun();
+    // init();
+    // if (false == isInitDone.get()) {
+    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+    //   return;
+    // }
+    // doRun();
   }
 
   private void doRun() {
