@@ -135,6 +135,8 @@ public class ComponentsDefine {
     componentMap.put(123, "GuavaEventBus");
     componentMap.put(127, "Apache-ShenYu");
     componentMap.put(128, "send-email");
+    componentMap.put(129, "file-output");
+
   }
 
   public static final OfficialComponent TOMCAT = new OfficialComponent(1, "Tomcat");
@@ -239,4 +241,6 @@ public class ComponentsDefine {
   public static final OfficialComponent GUAVA_EVENT_BUS = new OfficialComponent(123, "GuavaEventBus");
   public static final OfficialComponent APACHE_SHENYU = new OfficialComponent(127, "Apache-ShenYu");
   public static final OfficialComponent SEND_EMAIL = new OfficialComponent(128, "send-email");
+  public static final OfficialComponent FILE_OUTPUT = new OfficialComponent(129, "file-output");
+
 }
