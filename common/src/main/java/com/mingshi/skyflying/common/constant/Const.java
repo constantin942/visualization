@@ -20,6 +20,9 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
+  private Const() {
+    throw new IllegalStateException("Const class");
+  }
 
   /**
    * 操作类型

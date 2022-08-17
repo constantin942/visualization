@@ -300,6 +300,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         tableName = String.valueOf(objects[0]);
         // 获取表对应的中文描述信息；2022-07-21 16:55:47
         String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+        if(StringUtil.isNotBlank(tableDesc)){
+          tableDesc = tableDesc.trim().replace("\t","");
+        }
         doUsualVisitedData(tableName, userCoarseInfo, tableDesc);
       }
       userCoarseInfos.add(userCoarseInfo);

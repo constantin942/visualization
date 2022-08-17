@@ -65,9 +65,9 @@ public class AiitKafkaConsumerUtil {
    * @Date 2022年05月19日 17:05:03
    * @Param [record]
    **/
-  public void useNoReactorModel(ConsumerRecord<String, Bytes> record) {
+  public void useNoReactorModel(ConsumerRecord<String, Bytes> msg) {
     try {
-      segmentConsumerService.consume(record, false);
+      segmentConsumerService.consume(msg, false);
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }

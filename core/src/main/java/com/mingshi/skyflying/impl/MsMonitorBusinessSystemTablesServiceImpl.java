@@ -48,12 +48,15 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
     log.info(" 开始执行 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 获取所有的表。");
     Map<String, Object> queryMap = new HashMap<>();
     if (StringUtil.isNotBlank(tableName)) {
+      tableName = tableName.trim().replace("\t", "");
       queryMap.put("tableName", tableName);
     }
     if (StringUtil.isNotBlank(dbName)) {
+      dbName = dbName.trim().replace("\t", "");
       queryMap.put("dbName", dbName);
     }
     if (StringUtil.isNotBlank(dbAddress)) {
+      dbAddress = dbAddress.trim().replace("\t", "");
       queryMap.put("dbAddress", dbAddress);
     }
     if (null == pageNo) {
