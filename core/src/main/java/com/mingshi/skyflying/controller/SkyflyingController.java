@@ -2,6 +2,7 @@ package com.mingshi.skyflying.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
+import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -9,10 +10,8 @@ import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
@@ -435,17 +434,9 @@ public class SkyflyingController {
    * @Date 2022年07月25日 13:07:16
    * @Param [pageNo, pageSize]
    **/
-  @ResponseBody
-  @RequestMapping(value = "/updateAnomalyDetectionInfo", method = RequestMethod.GET)
-  public ServerResponse<String> updateAnomalyDetectionInfo(
-    @RequestParam(value = "id") Integer id,
-    @RequestParam(value = "matchRuleId") Integer matchRuleId,
-    @RequestParam(value = "originalTime") String originalTime,
-    @RequestParam(value = "userName") String userName,
-    @RequestParam(value = "alarmContent") String alarmContent,
-    @RequestParam(value = "flag") String flag
-  ) {
-    return msAlarmInformationService.updateAnomalyDetectionInfo(id, matchRuleId, originalTime, userName, alarmContent, flag);
+  @PostMapping(value = "/updateAnomalyDetectionInfo")
+  public ServerResponse<String> updateAnomalyDetectionInfo(@Validated  @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+    return msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
   }
 
   /**
