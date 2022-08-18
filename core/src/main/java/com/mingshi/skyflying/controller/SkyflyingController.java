@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 @Controller
 @Slf4j
+@Validated
 @RequestMapping("/api/skyflying")
 public class SkyflyingController {
 
@@ -435,7 +436,7 @@ public class SkyflyingController {
    * @Param [pageNo, pageSize]
    **/
   @PostMapping(value = "/updateAnomalyDetectionInfo")
-  public ServerResponse<String> updateAnomalyDetectionInfo(@Validated  @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+  public ServerResponse<String> updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
     return msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
   }
 
