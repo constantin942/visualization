@@ -9,7 +9,7 @@ public interface MsSegmentDetailDao {
 
   void insertSelectiveBatch(List<MsSegmentDetailDo> list);
 
-  int insertSelective(MsSegmentDetailDo record);
+  int insertSelective(MsSegmentDetailDo msSegmentDetailDo);
 
   MsSegmentDetailDo selectByPrimaryKey(Integer id);
 
@@ -33,7 +33,7 @@ public interface MsSegmentDetailDao {
 
   List<Integer> selectAllId();
 
-  int updateByPrimaryKeySelective(MsSegmentDetailDo record);
+  int updateByPrimaryKeySelective(MsSegmentDetailDo msSegmentDetailDo);
 
   void updateBatch(List<MsSegmentDetailDo> setmentDetailDoList);
 

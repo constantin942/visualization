@@ -6,12 +6,12 @@ import java.util.List;
 
 public interface SegmentDetailDao {
 
-    int insertSelective(SegmentDetailDo record);
+    int insertSelective(SegmentDetailDo segmentDetailDo);
 
     SegmentDetailDo selectByPrimaryKey(String id);
 
     List<SegmentDetailDo> selectAll();
 
-    int updateByPrimaryKeySelective(SegmentDetailDo record);
+    int updateByPrimaryKeySelective(SegmentDetailDo segmentDetailDo);
 
 }

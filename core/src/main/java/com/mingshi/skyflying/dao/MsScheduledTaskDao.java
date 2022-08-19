@@ -3,7 +3,7 @@ package com.mingshi.skyflying.dao;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 
 public interface MsScheduledTaskDao {
-    int insertSelective(MsScheduledTaskDo record);
+    int insertSelective(MsScheduledTaskDo msScheduledTaskDo);
 
     MsScheduledTaskDo selectByPrimaryKey(Integer id);
 
@@ -17,5 +17,5 @@ public interface MsScheduledTaskDao {
      **/
     MsScheduledTaskDo selectLastSuccessRecord(String flag);
 
-    int updateByPrimaryKeySelective(MsScheduledTaskDo record);
+    int updateByPrimaryKeySelective(MsScheduledTaskDo msScheduledTaskDo);
 }

@@ -42,11 +42,6 @@
           parameterType="java.util.Map">
     select * from ms_audit_log where is_delete = 0 and sql_type=#{sqlType}
     and op_time between date_format(#{startTime},'%Y%m%d') and date_format(#{endTime},'%Y%m%d')
-
-
-    <!--      <if test="pageNo != null and pageSize != null   ">-->
-    <!--        LIMIT #{pageNo},#{pageSize}-->
-    <!--      </if>-->
   </select>
   <select id="selectBehaviorByUserName" resultType="com.mingshi.skyflying.common.domain.MsAuditLogDo"
           parameterType="java.util.Map">

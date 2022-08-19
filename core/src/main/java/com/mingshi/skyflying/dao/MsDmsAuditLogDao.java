@@ -8,11 +8,11 @@ import java.util.Map;
 public interface MsDmsAuditLogDao {
     void insertSelectiveBatchNoSqlInsightDbUserName(List<MsDmsAuditLogDo> list);
 
-    int insertSelective(MsDmsAuditLogDo record);
+    int insertSelective(MsDmsAuditLogDo msDmsAuditLogDo);
 
     MsDmsAuditLogDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(MsDmsAuditLogDo record);
+    int updateByPrimaryKeySelective(MsDmsAuditLogDo msDmsAuditLogDo);
 
     void insertSelectiveBatch(List<MsDmsAuditLogDo> list);
 

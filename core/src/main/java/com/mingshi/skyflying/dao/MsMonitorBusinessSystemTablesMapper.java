@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface MsMonitorBusinessSystemTablesMapper {
 
-    int insertSelective(MsMonitorBusinessSystemTablesDo record);
+    int insertSelective(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo);
 
     MsMonitorBusinessSystemTablesDo selectByPrimaryKey(Integer id);
 
@@ -32,7 +32,7 @@ public interface MsMonitorBusinessSystemTablesMapper {
 
     List<MsMonitorBusinessSystemTablesDo> selectAllNotEnable();
 
-    int updateByPrimaryKeySelective(MsMonitorBusinessSystemTablesDo record);
+    int updateByPrimaryKeySelective(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo);
 
     void insertSelectiveBatch(LinkedList<MsMonitorBusinessSystemTablesDo> list);
 

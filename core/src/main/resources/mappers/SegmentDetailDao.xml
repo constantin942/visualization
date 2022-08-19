@@ -40,10 +40,6 @@
     from segment_detail
     where id = #{id,jdbcType=VARCHAR}
   </select>
-<!--  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">-->
-<!--    delete from segment_detail-->
-<!--    where id = #{id,jdbcType=VARCHAR}-->
-<!--  </delete>-->
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SegmentDetailDo">
     insert into segment_detail
     <trim prefix="(" suffix=")" suffixOverrides=",">

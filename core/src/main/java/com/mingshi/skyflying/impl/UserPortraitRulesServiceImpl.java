@@ -46,8 +46,8 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
       if (null == pageSize) {
         pageSize = 10;
       }
-      queryMap.put("pageNo", (pageNo - 1) * pageSize);
-      queryMap.put("pageSize", pageSize);
+      queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+      queryMap.put(Const.PAGE_SIZE, pageSize);
 
       List<UserPortraitRulesDo> userPortraitRulesDoList = null;
       userPortraitRulesDoList = userPortraitRulesMapper.selectAllRules(queryMap);

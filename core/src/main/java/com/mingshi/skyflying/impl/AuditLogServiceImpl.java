@@ -476,14 +476,14 @@ public class AuditLogServiceImpl implements AuditLogService {
   public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
-      queryMap.put("pageNo", 1);
+      queryMap.put(Const.PAGE_NO, 1);
     } else {
-      queryMap.put("pageNo", pageNo);
+      queryMap.put(Const.PAGE_NO, pageNo);
     }
     if (null == pageSize) {
-      queryMap.put("pageSize", 10);
+      queryMap.put(Const.PAGE_SIZE, 10);
     } else {
-      queryMap.put("pageSize", pageSize);
+      queryMap.put(Const.PAGE_SIZE, pageSize);
     }
     queryMap.put("applicationUserName", applicationUserName);
     queryMap.put("sqlType", sqlType);
@@ -498,18 +498,18 @@ public class AuditLogServiceImpl implements AuditLogService {
   public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
-      queryMap.put("pageNo", 1);
+      queryMap.put(Const.PAGE_NO, 1);
     } else {
-      queryMap.put("pageNo", pageNo);
+      queryMap.put(Const.PAGE_NO, pageNo);
     }
     if (null == pageSize) {
-      queryMap.put("pageSize", 10);
+      queryMap.put(Const.PAGE_SIZE, 10);
     } else {
-      queryMap.put("pageSize", pageSize);
+      queryMap.put(Const.PAGE_SIZE, pageSize);
     }
     queryMap.put("sqlType", sqlType);
-    queryMap.put("startTime", startTime);
-    queryMap.put("endTime", endTime);
+    queryMap.put(Const.START_TIME, startTime);
+    queryMap.put(Const.END_TIME, endTime);
 
 
     List<MsAuditLogDo> listMsAuditLog = msAuditLogDao.selectBehaviorByOptTime(queryMap);
@@ -522,14 +522,14 @@ public class AuditLogServiceImpl implements AuditLogService {
   public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
-      queryMap.put("pageNo", 1);
+      queryMap.put(Const.PAGE_NO, 1);
     } else {
-      queryMap.put("pageNo", pageNo);
+      queryMap.put(Const.PAGE_NO, pageNo);
     }
     if (null == pageSize) {
-      queryMap.put("pageSize", 10);
+      queryMap.put(Const.PAGE_SIZE, 10);
     } else {
-      queryMap.put("pageSize", pageSize);
+      queryMap.put(Const.PAGE_SIZE, pageSize);
     }
     queryMap.put("msTableName", msTableName);
 
@@ -588,10 +588,10 @@ public class AuditLogServiceImpl implements AuditLogService {
       queryMap.put("msTableName", msTableName);
     }
     if (StringUtil.isNotBlank(startTime)) {
-      queryMap.put("startTime", startTime);
+      queryMap.put(Const.START_TIME, startTime);
     }
     if (StringUtil.isNotBlank(endTime)) {
-      queryMap.put("endTime", endTime);
+      queryMap.put(Const.END_TIME, endTime);
     }
     if (StringUtil.isNotBlank(dbUserName)) {
       queryMap.put("userName", dbUserName);
@@ -602,8 +602,8 @@ public class AuditLogServiceImpl implements AuditLogService {
     if (null == pageSize) {
       pageSize = 10;
     }
-    queryMap.put("pageNo", (pageNo - 1) * pageSize);
-    queryMap.put("pageSize", pageSize);
+    queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    queryMap.put(Const.PAGE_SIZE, pageSize);
 
     List<MsDmsAuditLogDo> listMsAuditLog = msDmsAuditLogDao.selectAll(queryMap);
     Integer count = msDmsAuditLogDao.selectAllCount(queryMap);
@@ -611,7 +611,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     context.put("rows", JsonUtil.obj2String(listMsAuditLog));
     context.put("total", count);
     log.info("执行完毕 AuditLogServiceImpl.getDmsAuditLogFromDb() # 获取来自DMS的数据库审计日志信息。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", JsonUtil.obj2String(context));
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
   }
 
   @Override

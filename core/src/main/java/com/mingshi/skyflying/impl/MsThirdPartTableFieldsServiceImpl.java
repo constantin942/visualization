@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsThirdPartyTableFieldsDo;
 import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -45,16 +46,16 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
         String dbName = iterator.next();
 
         List<MsThirdPartyTableListDo> msThirdPartyTableListDoList = msThirdPartyTableListMapper.selectAllTablesByDbName(dbName);
-        if (null != msThirdPartyTableListDoList && 0 < msThirdPartyTableListDoList.size()) {
+        if (null != msThirdPartyTableListDoList && !msThirdPartyTableListDoList.isEmpty()) {
           putAllTablesIntoLocalMemory(dbNameTableNameIdMap, msThirdPartyTableListDoList);
         }
         String tables = map.get(dbName);
         List<String> list = JsonUtil.string2Obj(tables, List.class, String.class);
-        if (null != list && 0 < list.size()) {
+        if (null != list && !list.isEmpty()) {
           for (int i = 0; i < list.size(); i++) {
             String tableName = list.get(i);
             List<Map<String, Object>> fieldList = msThirdPartyTableFieldsMapper.selectAllFields(tableName);
-            if (null != fieldList && 0 < fieldList.size()) {
+            if (null != fieldList && !fieldList.isEmpty()) {
               Map<String, Integer> tableNameIdMap = dbNameTableNameIdMap.get(dbName);
               Integer recordId = null;
               if (null != tableNameIdMap) {
@@ -77,7 +78,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
       }
     }
 
-    if (0 < msThirdPartyTableFieldsDos.size()) {
+    if (!msThirdPartyTableFieldsDos.isEmpty()) {
       // 将每个表中域的信息插入到表中；2022-06-21 09:14:32
       batchInsert(msThirdPartyTableFieldsDos);
     }
@@ -116,12 +117,12 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
     if (null == pageSize) {
       pageSize = 10;
     }
-    queryMap.put("pageNo", (pageNo - 1) * pageSize);
-    queryMap.put("pageSize", pageSize);
+    queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    queryMap.put(Const.PAGE_SIZE, pageSize);
 
     List<MsThirdPartyTableFieldsDo> msThirdPartyTableFieldsList = new LinkedList<>();
     List<Map<String, Object>> msThirdPartyTableListDoIdList = msThirdPartyTableListMapper.selectByDbNameAndTableName(queryMap);
-    if (null != msThirdPartyTableListDoIdList && 0 < msThirdPartyTableListDoIdList.size()) {
+    if (null != msThirdPartyTableListDoIdList && !msThirdPartyTableListDoIdList.isEmpty()) {
       msThirdPartyTableFieldsList = msThirdPartyTableFieldsMapper.selectByThirdPartyNameId(msThirdPartyTableListDoIdList);
       log.info("开始执行 # MsThirdPartTableFieldsServiceImpl.getSpecificDbTableNameFields() # 根据指定的数据库名和表名，获取该表所有的字段。根据查询条件 = 【{}】，查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), msThirdPartyTableFieldsList.size());
     }

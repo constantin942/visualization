@@ -64,8 +64,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         if (null == pageSize) {
             pageSize = 10;
         }
-        queryMap.put("pageNo", (pageNo - 1) * pageSize);
-        queryMap.put("pageSize", pageSize);
+        queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+        queryMap.put(Const.PAGE_SIZE, pageSize);
         List<MsAlarmInformationDo> alarmInformationDoList = msAlarmInformationMapper.selectAll(queryMap);
 
         Integer count = msAlarmInformationMapper.selectAllCount(queryMap);
@@ -93,8 +93,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         if (null == pageSize) {
             pageSize = 10;
         }
-        queryMap.put("pageNo", (pageNo - 1) * pageSize);
-        queryMap.put("pageSize", pageSize);
+        queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+        queryMap.put(Const.PAGE_SIZE, pageSize);
         List<Map<String, Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllUserTimes(queryMap);
 
         Integer count = msAlarmInformationMapper.selectAllUserTimesCount(queryMap);
@@ -126,8 +126,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         if (null == pageSize) {
             pageSize = 10;
         }
-        queryMap.put("pageNo", (pageNo - 1) * pageSize);
-        queryMap.put("pageSize", pageSize);
+        queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+        queryMap.put(Const.PAGE_SIZE, pageSize);
         List<Map<String, Object>> alarmInformationDoList = msAlarmInformationMapper.selectAllByGroupByUserName(queryMap);
 
         Integer count = msAlarmInformationMapper.selectAllByGroupByUserNameCount();

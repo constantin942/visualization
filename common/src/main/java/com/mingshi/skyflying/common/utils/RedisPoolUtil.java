@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
@@ -1068,7 +1069,7 @@ public class RedisPoolUtil {
 
   public Boolean isMemberFallback(String key, String member, Throwable throwable) {
     log.error("isMemberFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
-    return null;
+    return false;
   }
 
   /**

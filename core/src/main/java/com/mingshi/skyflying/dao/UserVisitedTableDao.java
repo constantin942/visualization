@@ -5,13 +5,13 @@ import com.mingshi.skyflying.common.domain.UserVisitedTableDo;
 public interface UserVisitedTableDao {
     int deleteByPrimaryKey(Integer id);
 
-    int insert(UserVisitedTableDo record);
+    int insert(UserVisitedTableDo userVisitedTableDo);
 
-    int insertSelective(UserVisitedTableDo record);
+    int insertSelective(UserVisitedTableDo userVisitedTableDo);
 
     UserVisitedTableDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(UserVisitedTableDo record);
+    int updateByPrimaryKeySelective(UserVisitedTableDo userVisitedTableDo);
 
-    int updateByPrimaryKey(UserVisitedTableDo record);
+    int updateByPrimaryKey(UserVisitedTableDo userVisitedTableDo);
 }

@@ -11,7 +11,7 @@ public interface MsSegmentDetailUsernameIsNullMapper {
 
     void insertSelectiveBatch(List<MsSegmentDetailDo> list);
 
-    int insertSelective(MsSegmentDetailDo record);
+    int insertSelective(MsSegmentDetailDo msSegmentDetailDo);
 
     MsSegmentDetailDo selectByPrimaryKey(Integer id);
 
@@ -21,7 +21,7 @@ public interface MsSegmentDetailUsernameIsNullMapper {
 
     List<String> selectAllGlobalTraceIdUserNameIsNull();
 
-    int updateByPrimaryKeySelective(MsSegmentDetailDo record);
+    int updateByPrimaryKeySelective(MsSegmentDetailDo msSegmentDetailDo);
 
     int updateUserNameByToken(Map<String,String> map);
 

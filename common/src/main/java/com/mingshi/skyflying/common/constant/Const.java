@@ -23,6 +23,11 @@ public class Const {
   public static final Integer NUMBER_EIGHT = 8;
   public static final String MYSQL = "mysql";
   public static final String FAIL = "FAIL";
+  public static final String PAGE_NO = "pageNo";
+  public static final String PAGE_SIZE = "pageSize";
+  public static final String SUCCESS = "success";
+  public static final String SUCCESS_MSG = "获取数据成功！";
+  public static final String FAILED = "failed";
 
   private Const() {
     throw new IllegalStateException("Const class");
@@ -68,6 +73,9 @@ public class Const {
   public static final String SEGMENTS = "segments";
 
   public static final String POUND_KEY = "#";
+
+  public static final String START_TIME = "startTime";
+  public static final String END_TIME = "endTime";
 
 
   /**

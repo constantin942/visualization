@@ -109,8 +109,8 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     if (null == pageSize) {
       pageSize = 10;
     }
-    queryMap.put("pageNo", (pageNo - 1) * pageSize);
-    queryMap.put("pageSize", pageSize);
+    queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    queryMap.put(Const.PAGE_SIZE, pageSize);
 
     List<UserPortraitByVisitedTableEverydayDo> userPortraitByVisitedTableEverydayDos = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndVisitedTableAndVisitedDate(queryMap);
 
@@ -437,7 +437,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     // 获取所有的历史数据，根据用户访问系统的时间，来计算其时间维度的画像。
     List<MsSegmentDetailDo> list = msSegmentDetailDao.selectAllUserNameIsNotNullAndTableNameIsNotNull();
     log.info("# UserPortraitByTimeServiceImpl.statisticsVistedTableCount() # 从数据库中查询出【{}】条用户访问过的表，用时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(selectNow));
-    if (null != list && 0 < list.size()) {
+    if (null != list && !list.isEmpty()) {
       for (MsSegmentDetailDo msSegmentDetailDo : list) {
         String dbType = msSegmentDetailDo.getDbType();
         String userName = msSegmentDetailDo.getUserName();
@@ -543,7 +543,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
           }
         }
       }
-      if (0 < list.size()) {
+      if (!list.isEmpty()) {
         Instant now = Instant.now();
         userPortraitByVisitedTableEverydayMapper.insertSelectiveBatch(list);
         log.info("# UserPortraitByTimeServiceImpl.batchInsertUserPortraitByVisitedTable() # 将统计好的用户访问次数【{}条】批量插入到数据库中用时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));

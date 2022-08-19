@@ -8,7 +8,7 @@ import java.util.Map;
 public interface SegmentRelationDao {
     int deleteByPrimaryKey(Integer id);
 
-    int insertSelective(SegmentRelationDo record);
+    int insertSelective(SegmentRelationDo segmentRelationDo);
 
     SegmentRelationDo selectByPrimaryKey(Integer id);
 
@@ -16,5 +16,5 @@ public interface SegmentRelationDao {
 
     SegmentRelationDo selectByGlobalTraceId(Map<String, Object> map);
 
-    int updateByPrimaryKeySelective(SegmentRelationDo record);
+    int updateByPrimaryKeySelective(SegmentRelationDo segmentRelationDo);
 }

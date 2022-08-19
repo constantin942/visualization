@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
@@ -47,7 +48,7 @@ public class MsThirdPartTableListServiceImpl implements MsThirdPartyTableListSer
         dbName = list.get(i);
         // 根据数据库名称，获取这个数据库有哪些表；2022-06-20 14:44:27
         List<String> tableList = msThirdPartyTableListMapper.selectAllTables(dbName);
-        if (0 < tableList.size()) {
+        if (!tableList.isEmpty()) {
           dbNameTableMap.put(dbName, JsonUtil.obj2String(tableList));
           for (String tableName : tableList) {
             // 将这个数据库中对应的表都插入到数据库中；

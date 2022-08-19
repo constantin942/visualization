@@ -169,7 +169,7 @@ public class MsCaffeine implements ApplicationRunner {
    * @Date 2022年08月01日 10:08:14
    * @Param []
    **/
-  private void createAllCaffeine() {
+  private static void createAllCaffeine() {
     createTokenUserNameCaffeine();
     createGlobalTraceIdUserNameCaffeine();
     createGlobalTraceIdTokenCaffeine();
@@ -184,7 +184,7 @@ public class MsCaffeine implements ApplicationRunner {
    * @Date 2022年08月01日 10:08:10
    * @Param []
    **/
-  private void createGlobalTraceIdUserNameCaffeine() {
+  private static void createGlobalTraceIdUserNameCaffeine() {
     globalTraceIdUserNameCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
       .initialCapacity(100)
@@ -221,7 +221,7 @@ public class MsCaffeine implements ApplicationRunner {
    * @Date 2022年08月01日 13:08:56
    * @Param []
    **/
-  private void createGlobalTraceIdTokenCaffeine() {
+  private static void createGlobalTraceIdTokenCaffeine() {
     globalTraceIdTokenCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
       .initialCapacity(100)
@@ -243,7 +243,7 @@ public class MsCaffeine implements ApplicationRunner {
    * @Date 2022年08月01日 10:08:14
    * @Param []
    **/
-  private void createTokenUserNameCaffeine() {
+  private static void createTokenUserNameCaffeine() {
     tokenUserNameCache = Caffeine.newBuilder()
       // 初始的缓存空间大小
       .initialCapacity(100)

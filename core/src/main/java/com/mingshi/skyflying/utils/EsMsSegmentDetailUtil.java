@@ -60,9 +60,9 @@ public class EsMsSegmentDetailUtil {
   //       String serviceCode = String.valueOf(map.get("serviceCode"));
   //       String peer = String.valueOf(map.get("peer"));
   //       String endpointName = String.valueOf(map.get("endpointName"));
-  //       Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
+  //       Long startTime = Long.valueOf(String.valueOf(map.get(Const.START_TIME)));
   //       String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
-  //       Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
+  //       Long endTime = Long.valueOf(String.valueOf(map.get(Const.END_TIME)));
   //       Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
   //       String tags = String.valueOf(map.get("tags"));
   //       String logs = String.valueOf(map.get("logs"));

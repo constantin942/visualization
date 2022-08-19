@@ -883,40 +883,6 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：flushSegmentDetailToDB</B>
-   * <B>概要说明：将segmentDetail实例信息批量插入到MySQL中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年06月02日 11:06:24
-   * @Param [segmentDetaiDolList]
-   **/
-  // public void flushSegmentDetailToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
-  //   if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-  //     try {
-  //       Instant now = Instant.now();
-  //       mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
-  //       log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-  //       segmentDetailDoList.clear();
-  //     } catch (Exception e) {
-  //       log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
-  //     }
-  //   }
-  // }
-
-  // public void flushSegmentDetailCountToEs(LinkedList<EsMsSegmentDetailDo> segmentDetailDoList) {
-  //   if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-  //     try {
-  //       Instant now = Instant.now();
-  //       mingshiElasticSearchUtil.saveAll(segmentDetailDoList);
-  //       log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到ES中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-  //       segmentDetailDoList.clear();
-  //     } catch (Exception e) {
-  //       log.error("# SegmentConsumeServiceImpl.flushSegmentDetailToDB() # 将segmentDetail实例信息批量插入到ES中出现了异常。", e);
-  //     }
-  //   }
-  // }
-  /**
    * <B>方法名称：flushSegmentDetailToDb</B>
    * <B>概要说明：将用户操作信息保存到数据库中</B>
    * @Author zm

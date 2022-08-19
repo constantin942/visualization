@@ -205,45 +205,6 @@ public class ScheduledTask {
       log.error("# scheduledGetDmsAuditLog.updateUserNameIsNull() # 根据token更新用户名到表 ms_segment_detail_username_is_null 时，出现了异常。", e);
     }
   }
-  // public void scheduledUpdateUserNameByToken() {
-  //   Instant now1 = Instant.now();
-  //   Instant now = Instant.now();
-  //   log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。");
-  //   List<Integer> resultList = new LinkedList<>();
-  //   try {
-  //     resultList = msSegmentDetailDao.selectAllId();
-  //     if (null != resultList && 0 < resultList.size()) {
-  //       Integer stepLength = 2000;
-  //       Integer end = 0;
-  //       for (int i = 0; i < resultList.size(); i = i + stepLength) {
-  //         if (stepLength >= resultList.size()) {
-  //           List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(resultList);
-  //           if (null != userNameTokenList && 0 < userNameTokenList.size()) {
-  //             msSegmentDetailDao.updateBatchByToken(userNameTokenList);
-  //             break;
-  //           }
-  //         } else {
-  //           if (i + stepLength > resultList.size()) {
-  //             end = resultList.size();
-  //           } else {
-  //             end = i + stepLength;
-  //           }
-  //           List<Integer> list = resultList.subList(i, end);
-  //           List<Map<String, String>> userNameTokenList = msSegmentDetailDao.selectBatchUserNameIsNotNullAndTokeIsNotNull(list);
-  //           if (null != userNameTokenList && 0 < userNameTokenList.size()) {
-  //             msSegmentDetailDao.updateBatchByToken(userNameTokenList);
-  //             log.info(" #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。更新【{}】条记录，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
-  //             now = Instant.now();
-  //           }
-  //         }
-  //       }
-  //     }
-  //   } catch (Exception e) {
-  //     log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
-  //   }
-  //   log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now1));
-  //   log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-  // }
 
   /**
    * <B>方法名称：scheduledUpdateUserPortraitByVisitedTime</B>
@@ -347,7 +308,7 @@ public class ScheduledTask {
         }
       }
 
-      if (0 < list.size()) {
+      if (!list.isEmpty()) {
         try {
           userPortraitByVisitedTableEverydayMapper.insertSelectiveBatch(list);
           log.info("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息【{}条】标识耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(start));
@@ -355,7 +316,6 @@ public class ScheduledTask {
         } catch (Exception e) {
           log.error("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息时，出现了异常。", e);
         }
-        return;
       }
     } catch (Exception e) {
       log.error("# ScheduledTask.updateUserPortraitByVisitedTable() # 将基于用户访问过的表的画像信息更新到数据库中时，出现了异常。", e);
@@ -393,11 +353,7 @@ public class ScheduledTask {
         return;
       }
 
-      // TODO：在检测基于访问时间的异常行为时，也要检测基于访问过的表的异常行为；2022-06-08 18:06:48
-      // TODO：将基于访问时间的用户画像信息更新到数据库中的时候，也要更新基于访问过的表的画像信息到数据库中；2022-06-08 18:06:48
-
       List<UserPortraitByVisitedTimeDo> list = new LinkedList<>();
-
       ConcurrentHashMap<String, Map<String, Integer>> newMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       newMap.putAll(oldMap);
       Iterator<String> iterator = newMap.keySet().iterator();
@@ -424,7 +380,7 @@ public class ScheduledTask {
         }
       }
 
-      if (0 < list.size()) {
+      if (!list.isEmpty()) {
         try {
           userPortraitByVisitedTimeMapper.updateBatch(list);
           log.info("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息【{}条】标识耗时 = 【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(start));
@@ -432,7 +388,6 @@ public class ScheduledTask {
         } catch (Exception e) {
           log.error("# scheduledGetDmsAuditLog.scheduledUpdateUserPortraitByVisitedTime() # 定时更新基于访问时间的用户画像信息时，出现了异常。", e);
         }
-        return;
       }
     } catch (Exception e) {
       log.error("# ScheduledTask.updateUserPortraitByVisitedTime() # 将基于用户访问时间的画像信息更新到数据库中时，出现了异常。", e);
@@ -470,16 +425,13 @@ public class ScheduledTask {
     log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord()# 定时将数据库中用户名不为空，且未进行过基于访问时间的异常检测记录查询出来，然后进行异常检测。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
 
     try {
-      if (0 < userNameIsNotNullAndVisitedTimeList.size()) {
+      if (!userNameIsNotNullAndVisitedTimeList.isEmpty()) {
         Instant now = Instant.now();
         msSegmentDetailDao.updateBatchById(userNameIsNotNullAndVisitedTimeList);
         log.info("# scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord() # 定时任务批量更新基于访问时间的异常信息【{}条】标识耗时 = 【{}】毫秒。", userNameIsNotNullAndVisitedTimeList.size(), DateTimeUtil.getTimeMillis(now));
         AnomylyDetectionSingletonByVisitedTime.setUserPortraitByVisitedTimeIsChanged(true);
       }
     } catch (Exception e) {
-      // TODO：解决bug；2022-06-09 16:01:47
-      // update ms_segment_detail
-      // where id=6
       log.error("# scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord() # 定时任务批量更新基于访问时间的异常信息标识出现了异常。", e);
     }
   }
@@ -496,7 +448,7 @@ public class ScheduledTask {
   private void getNoCheckVisitedTableAbnormalRecord(LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist, List<MsSegmentDetailDo> userNameIsNotNullAndVisitedTimeList) {
     try {
       List<MsSegmentDetailDo> userNameIsNotNullAndVisitedTableList = msSegmentDetailDao.selectAllUserNameIsNotNullAndVisitedTableIsZero();
-      if (null != userNameIsNotNullAndVisitedTableList && 0 != userNameIsNotNullAndVisitedTableList.size()) {
+      if (null != userNameIsNotNullAndVisitedTableList && !userNameIsNotNullAndVisitedTableList.isEmpty()) {
         userNameIsNotNullAndVisitedTimeList.addAll(userNameIsNotNullAndVisitedTableList);
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(userNameIsNotNullAndVisitedTableList, msAlarmInformationDoLinkedListist);
       }
@@ -522,7 +474,7 @@ public class ScheduledTask {
     }
     try {
       List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAllUserNameIsNotNullAndVisitedTimeIsZero();
-      if (null != msSegmentDetailDoList & 0 != msSegmentDetailDoList.size()) {
+      if (null != msSegmentDetailDoList && !msSegmentDetailDoList.isEmpty()) {
         userNameIsNotNullAndVisitedTimeList.addAll(msSegmentDetailDoList);
         // 如果用户画像还没有加载到本地内存中来，那么先加载进来，然后在进行异常检测；
         Map<String, Map<String, Integer>> oldUserPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
@@ -570,7 +522,6 @@ public class ScheduledTask {
     MsScheduledTaskDo msScheduledTaskDo = msScheduledTaskDao.selectLastSuccessRecord(Const.RETCH_AUDIT_LOG_BY_DMS_SUCCESS_RESULT);
     if (null == msScheduledTaskDo || StringUtil.isBlank(msScheduledTaskDo.getStartTime())) {
       // 如果定时任务表里不存在操作记录，那么就设置一个默认值；2022-05-26 17:37:27
-      // startTime = "2022-05-29 10:50:00";
       startTime = "1990-01-01 00:00:00";
     } else {
       // 获取上一次成功执行完毕的操作事件；2022-05-26 17:37:56

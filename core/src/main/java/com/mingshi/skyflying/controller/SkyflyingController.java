@@ -3,6 +3,7 @@ package com.mingshi.skyflying.controller;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -66,7 +67,7 @@ public class SkyflyingController {
    * @Param [id, agentName]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getQps", method = RequestMethod.GET)
+  @GetMapping(value = "/getQps")
   public ServerResponse<String> getQps() {
     Map<String/* 时间 */, Integer> countMap1 = new HashMap<>(Const.NUMBER_EIGHT);
     Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
@@ -116,7 +117,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllMonitorTables", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllMonitorTables")
   public ServerResponse<String> getAllMonitorTables(
     String tableName,
     String dbName,
@@ -128,7 +129,7 @@ public class SkyflyingController {
   }
 
   @ResponseBody
-  @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.GET)
+  @GetMapping(value = "/updateMonitorTable")
   public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
     return bySuccess;
@@ -161,7 +162,7 @@ public class SkyflyingController {
    * @Param [agentCode, pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/updateSkywalkingAgent", method = RequestMethod.GET)
+  @GetMapping(value = "/updateSkywalkingAgent")
   public ServerResponse<String> updateSkywalkingAgent(
     @RequestParam(value = "id") Integer id,
     @RequestParam(value = "agentName") String agentName) {
@@ -179,7 +180,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllSkywalkingAgent", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllSkywalkingAgent")
   public ServerResponse<String> getAllSkywalkingAgent(
     String agentCode,
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -199,7 +200,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getActiveSkywalkingAgent", method = RequestMethod.GET)
+  @GetMapping(value = "/getActiveSkywalkingAgent")
   public ServerResponse<String> getActiveSkywalkingAgent() {
     return msAgentInformationService.getActiveSkywalkingAgent();
   }
@@ -214,7 +215,7 @@ public class SkyflyingController {
    * @Param [pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getUserPortraitRules", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserPortraitRules")
   public ServerResponse<String> getUserPortraitRules(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return userPortraitRulesService.getAllUserPortraitRules(pageNo, pageSize);
@@ -245,7 +246,7 @@ public class SkyflyingController {
    * @Param dbName：数据库名称，选传。如果没有传递，那么从调用链信息中获取数据库名称列表。
    **/
   @ResponseBody
-  @RequestMapping(value = "/initAllTableNameFields", method = RequestMethod.GET)
+  @GetMapping(value = "/initAllTableNameFields")
   public ServerResponse<String> initAllTableNameFields(String dbName) {
     ServerResponse<String> allTableNames = msThirdPartyTableListService.getAllTableNames(dbName);
     if (allTableNames.getCode().equals(AiitExceptionCode.SUCCESS.getCode())) {
@@ -284,7 +285,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getSpecificDbTableNameFields", method = RequestMethod.GET)
+  @GetMapping(value = "/getSpecificDbTableNameFields")
   public ServerResponse<String> getSpecificDbTableNameFields(String dbName,
                                                              String tableName,
                                                              @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -302,7 +303,7 @@ public class SkyflyingController {
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllTableNameFromDMS", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllTableNameFromDMS")
   public ServerResponse<String> getAllTableNameFromDms() {
     return auditLogService.getAllTableNameFromDms();
   }
@@ -317,7 +318,7 @@ public class SkyflyingController {
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllSqlTypeFromDMS", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllSqlTypeFromDMS")
   public ServerResponse<String> getAllSqlTypeFromDms() {
     return auditLogService.getAllSqlTypeFromDms();
   }
@@ -332,7 +333,7 @@ public class SkyflyingController {
    * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllUserNameFromDMS", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllUserNameFromDMS")
   public ServerResponse<String> getAllUserNameFromDms() {
     return auditLogService.getAllUserNameFromDms();
   }
@@ -347,7 +348,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getDmsAuditLogFromDb", method = RequestMethod.GET)
+  @GetMapping(value = "/getDmsAuditLogFromDb")
   public ServerResponse<String> getDmsAuditLogFromDb(String dbUserName, /* 访问数据库的用户名 */
                                                      String sqlType, /* SQL语句的类型；是insert、select、update、delete等 */
                                                      String msTableName, /* 数据库表名 */
@@ -368,7 +369,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getUserNameAnomalyDetectionInfo", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserNameAnomalyDetectionInfo")
   public ServerResponse<String> getUserNameAnomalyDetectionInfo() {
     return msAlarmInformationService.getUserNameAnomalyDetectionInfo();
   }
@@ -384,7 +385,7 @@ public class SkyflyingController {
    * @Param [userName, pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllAlarmInfoDetailByUserName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllAlarmInfoDetailByUserName")
   public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName,
                                                                 Integer matchRuleId,
                                                                 String originalTime,
@@ -403,7 +404,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAnomalyDetectionInfo", method = RequestMethod.GET)
+  @GetMapping(value = "/getAnomalyDetectionInfo")
   public ServerResponse<String> getAnomalyDetectionInfo(String userName,
                                                         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -420,7 +421,7 @@ public class SkyflyingController {
    * @Param [pageNo, pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAnomalyDetectionInfoByGroupByUserName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAnomalyDetectionInfoByGroupByUserName")
   public ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -451,7 +452,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllUserNamePortraitByVisitedTime", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllUserNamePortraitByVisitedTime")
   public ServerResponse<String> getAllUserNamePortraitByVisitedTime() {
     return userPortraitByTimeService.getAllUserNamePortraitByVisitedTime();
   }
@@ -466,7 +467,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllUserPortraitByVisitedTime", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllUserPortraitByVisitedTime")
   public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, /* 登录系统的名称 */
                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -483,7 +484,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday")
   public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
     return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
   }
@@ -498,7 +499,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getUserPortraitByVisitedTime", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserPortraitByVisitedTime")
   public ServerResponse<String> getUserPortraitByVisitedTime() {
     return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
   }
@@ -513,7 +514,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/updateUserPortraitByVisitedTimeRule", method = RequestMethod.GET)
+  @GetMapping(value = "/updateUserPortraitByVisitedTimeRule")
   public ServerResponse<String> updateUserPortraitByVisitedTimeRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
     return userPortraitByTimeService.updateUserPortraitByVisitedTimeRule(ruleId, isDelete);
   }
@@ -528,7 +529,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday")
   public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
     return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
   }
@@ -543,7 +544,7 @@ public class SkyflyingController {
    * @Param [ruleId, isDelete]
    **/
   @ResponseBody
-  @RequestMapping(value = "/updateUserPortraitByVisitedTableEverydayRule", method = RequestMethod.GET)
+  @GetMapping(value = "/updateUserPortraitByVisitedTableEverydayRule")
   public ServerResponse<String> updateUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
     return userPortraitByTableService.updateUserPortraitByVisitedTableEverydayRule(ruleId, isDelete);
   }
@@ -558,7 +559,7 @@ public class SkyflyingController {
    * @Param [ruleId, isDelete]
    **/
   @ResponseBody
-  @RequestMapping(value = "/addUserPortraitByVisitedTtimeRule", method = RequestMethod.GET)
+  @GetMapping(value = "/addUserPortraitByVisitedTtimeRule")
   public ServerResponse<String> addUserPortraitByVisitedTtimeRule(@RequestParam(value = "userName") String userName,
                                                                   @RequestParam(value = "forenoonCount") Integer forenoonCount,
                                                                   @RequestParam(value = "afternoonCount") Integer afternoonCount,
@@ -576,7 +577,7 @@ public class SkyflyingController {
    * @Param [ruleId, isDelete]
    **/
   @ResponseBody
-  @RequestMapping(value = "/addUserPortraitByVisitedTableEverydayRule", method = RequestMethod.GET)
+  @GetMapping(value = "/addUserPortraitByVisitedTableEverydayRule")
   public ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "userName") String userName,
                                                                           @RequestParam(value = "visitedTable") String visitedTable,
                                                                           @RequestParam(value = "visitedCount") Integer visitedCount,
@@ -595,7 +596,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getUserPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserPortraitByVisitedTableEveryday")
   public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
                                                                       String visitedTable, /* 访问数据库的表 */
                                                                       String visitedDate, /* 访问数据库表的时间 */
@@ -618,7 +619,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/userPortraitByVisitedTableEveryday", method = RequestMethod.GET)
+  @GetMapping(value = "/userPortraitByVisitedTableEveryday")
   public ServerResponse<String> userPortraitByVisitedTableEveryday() {
     return userPortraitByTableService.createUserPortraitByVisitedTableEveryday();
   }
@@ -633,7 +634,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/userPortraitByVisitedTime", method = RequestMethod.GET)
+  @GetMapping(value = "/userPortraitByVisitedTime")
   public ServerResponse<String> userPortraitByVisitedTime() {
     return userPortraitByTimeService.createUserPortraitByVisitedTime();
   }
@@ -648,7 +649,7 @@ public class SkyflyingController {
    * @Param [sqlType, applicationUserName, pageNo,pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getBehaviorByUserName", method = RequestMethod.GET)
+  @GetMapping(value = "/getBehaviorByUserName")
   public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
     return auditLogService.getBehaviorByUserName(applicationUserName, sqlType, pageNo, pageSize);
   }
@@ -663,7 +664,7 @@ public class SkyflyingController {
    * @Param [sqlInsightDbUserName, optTime, pageNo,pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getBehaviorByOptTime", method = RequestMethod.GET)
+  @GetMapping(value = "/getBehaviorByOptTime")
   public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
     return auditLogService.getBehaviorByOptTime(sqlType, startTime, endTime, pageNo, pageSize);
   }
@@ -678,7 +679,7 @@ public class SkyflyingController {
    * @Param [sqlInsightDbUserName, optTime, pageNo,pageSize]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getBehaviorByTableName", method = RequestMethod.GET)
+  @GetMapping(value = "/getBehaviorByTableName")
   public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
     return auditLogService.getBehaviorByTableName(msTableName, pageNo, pageSize);
   }
@@ -693,7 +694,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getNumberOfTablesByOpTime", method = RequestMethod.GET)
+  @GetMapping(value = "/getNumberOfTablesByOpTime")
   public ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
     return auditLogService.getNumberOfTablesByOpTime(msTableName, startTime, endTime, pageNo, pageSize);
   }
@@ -708,7 +709,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllUserName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllUserName")
   public ServerResponse<String> getAllUserName() {
     return segmentDetailService.getAllUserName();
   }
@@ -725,7 +726,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllMsTableName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllMsTableName")
   public ServerResponse<String> getAllMsTableName() {
     return segmentDetailService.getAllMsTableName();
   }
@@ -741,7 +742,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllInstanceAndTableName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllInstanceAndTableName")
   public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
     return segmentDetailService.getAllInstanceAndTableName();
   }
@@ -757,7 +758,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllInstanceTrueName", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllInstanceTrueName")
   public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
     return segmentDetailService.getAllInstanceTrueName();
   }
@@ -773,7 +774,7 @@ public class SkyflyingController {
    **/
 
   @ResponseBody
-  @RequestMapping(value = "/getCoarseCountsOfUser", method = RequestMethod.GET)
+  @GetMapping(value = "/getCoarseCountsOfUser")
   public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
@@ -790,7 +791,7 @@ public class SkyflyingController {
    * @Question：计算数据过慢
    **/
   @ResponseBody
-  @RequestMapping(value = "/getCoarseCountsOfTableName", method = RequestMethod.GET)
+  @GetMapping(value = "/getCoarseCountsOfTableName")
   public ServerResponse<String> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
@@ -806,7 +807,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getCoarseCountsOfOneUser", method = RequestMethod.GET)
+  @GetMapping(value = "/getCoarseCountsOfOneUser")
   public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
                                                                  @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                  @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -826,7 +827,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getCountsOfUser", method = RequestMethod.GET)
+  @GetMapping(value = "/getCountsOfUser")
   public ServerResponse<List<String>> getCountsOfUser(@RequestParam(value = "tableName") String tableName /* 数据库表名 */) {
     return segmentDetailService.getCountsOfUser(tableName);
   }
@@ -841,7 +842,7 @@ public class SkyflyingController {
    * @Param [userName]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getUserOperationTypeCount", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserOperationTypeCount")
   public ServerResponse<List<String>> getUserOperationTypeCount(@RequestParam(value = "userName") String userName) {
     return segmentDetailService.getUserOperationTypeCount(userName);
   }
@@ -856,7 +857,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getCountsOfUserRecentSevenDays", method = RequestMethod.GET)
+  @GetMapping(value = "/getCountsOfUserRecentSevenDays")
   public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(@RequestParam(value = "tableName") String tableName, /* 数据库表名 */
                                                                    @RequestParam(value = "startTime") String startTime, /* 开始时间 */
                                                                    @RequestParam(value = "endTime") String endTime, /* 结束时间 */
@@ -876,7 +877,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getCountsOfAllRecentSevenDays", method = RequestMethod.GET)
+  @GetMapping(value = "/getCountsOfAllRecentSevenDays")
   public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(@RequestParam(value = "startTime") String startTime, /* 开始时间 */
                                                                   @RequestParam(value = "endTime") String endTime /* 结束时间 */) {
     return segmentDetailService.getCountsOfAllRecentSevenDays(startTime, endTime);
@@ -892,7 +893,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getOverviewOfSystem", method = RequestMethod.GET)
+  @GetMapping(value = "/getOverviewOfSystem")
   public ServerResponse<SystemOverview> getOverviewOfSystem() {
     return segmentDetailService.getOverviewOfSystem();
   }
@@ -909,7 +910,7 @@ public class SkyflyingController {
    **/
 
   @ResponseBody
-  @RequestMapping(value = "/getUserUsualAndUnusualData", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserUsualAndUnusualData")
   public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName) {
     return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
   }
@@ -924,7 +925,7 @@ public class SkyflyingController {
    * @Param
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAlarmData", method = RequestMethod.GET)
+  @GetMapping(value = "/getAlarmData")
   public ServerResponse<List<AlarmData>> getAlarmData() {
     return segmentDetailService.getAlarmData();
   }
@@ -940,7 +941,7 @@ public class SkyflyingController {
    **/
 
   @ResponseBody
-  @RequestMapping(value = "/getUserAlarmData", method = RequestMethod.GET)
+  @GetMapping(value = "/getUserAlarmData")
   public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
     return segmentDetailService.getUserAlarmData();
   }
@@ -957,7 +958,7 @@ public class SkyflyingController {
    * @Param [request, userName, password]
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAllSegments", method = RequestMethod.GET)
+  @GetMapping(value = "/getAllSegments")
   public ServerResponse<String> getAllSegments(String applicationUserName, /* 登录系统的名称 */
                                                String dbUserName, /* 访问数据库的用户名 */
                                                String dbType, /* SQL语句的类型；是insert、select、update、delete等 */
@@ -980,7 +981,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/getAuditLogFromExcel", method = RequestMethod.GET)
+  @GetMapping(value = "/getAuditLogFromExcel")
   public ServerResponse<String> getAuditLogFromExcel(@RequestParam("path") String path) {
     return auditLogService.getAuditlogByExcel(path);
   }
@@ -995,7 +996,7 @@ public class SkyflyingController {
    * @Param [startTime, endTime]
    **/
   @ResponseBody
-  @RequestMapping(value = "/autoFetchAuditlogByDMS", method = RequestMethod.GET)
+  @GetMapping(value = "/autoFetchAuditlogByDMS")
   public ServerResponse<String> autoFetchAuditlogByDms(@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
     return auditLogService.autoFetchAuditlogByDms(startTime, endTime);
   }

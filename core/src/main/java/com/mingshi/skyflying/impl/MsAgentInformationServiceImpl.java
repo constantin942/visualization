@@ -47,8 +47,8 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
       if (null == pageSize) {
         pageSize = 10;
       }
-      queryMap.put("pageNo", (pageNo - 1) * pageSize);
-      queryMap.put("pageSize", pageSize);
+      queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+      queryMap.put(Const.PAGE_SIZE, pageSize);
 
       List<MsAgentInformationDo> userPortraitRulesDoList = msAgentInformationMapper.selectAllAgents(queryMap);
       log.info("执行 # MsAgentInformationServiceImpl.getAllSkywalkingAgent() # 获取所有的探针信息。根据查询条件【{}】获取到的探针信息是【{}】。", JsonUtil.obj2String(queryMap), JsonUtil.obj2String(userPortraitRulesDoList));

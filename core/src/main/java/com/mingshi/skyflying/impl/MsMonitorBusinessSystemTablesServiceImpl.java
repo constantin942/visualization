@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.impl;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
@@ -65,15 +66,15 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
     if (null == pageSize) {
       pageSize = 10;
     }
-    queryMap.put("pageNo", (pageNo - 1) * pageSize);
-    queryMap.put("pageSize", pageSize);
+    queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    queryMap.put(Const.PAGE_SIZE, pageSize);
 
     List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAllByQueryMap(queryMap);
 
     Integer count = msMonitorBusinessSystemTablesMapper.selectAllByQueryMapCount(queryMap);
     Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
+    if (null != msMonitorBusinessSystemTablesDos && !msMonitorBusinessSystemTablesDos.isEmpty()) {
       context.put("rows", JsonUtil.obj2String(msMonitorBusinessSystemTablesDos));
     }
     context.put("total", count);

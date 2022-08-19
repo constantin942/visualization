@@ -8,7 +8,7 @@ import java.util.Map;
 public interface UserTokenDao {
     int deleteByPrimaryKey(Integer id);
 
-    int insertSelective(UserTokenDo record);
+    int insertSelective(UserTokenDo userTokenDo);
 
     UserTokenDo selectByPrimaryKey(Integer id);
 
@@ -32,5 +32,5 @@ public interface UserTokenDao {
 
     List<UserTokenDo> selectByUserName(Map<String, Object> map);
 
-    int updateByPrimaryKeySelective(UserTokenDo record);
+    int updateByPrimaryKeySelective(UserTokenDo userTokenDo);
 }

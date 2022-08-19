@@ -65,10 +65,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       map.put(Const.MS_TABLE_NAME, msTableName);
     }
     if (StringUtil.isNotBlank(startTime)) {
-      map.put("startTime", startTime);
+      map.put(Const.START_TIME, startTime);
     }
     if (StringUtil.isNotBlank(endTime)) {
-      map.put("endTime", endTime);
+      map.put(Const.END_TIME, endTime);
     }
     if (StringUtil.isNotBlank(dbUserName)) {
       map.put(Const.DB_USER_NAME2, dbUserName);
@@ -79,9 +79,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     if (null == pageSize) {
       pageSize = 10;
     }
-    map.put("pageNo", (pageNo - 1) * pageSize);
-    map.put("pageSize", pageSize);
-    Long count = 0L;
+    map.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    map.put(Const.PAGE_SIZE, pageSize);
+    Long count;
 
     // 从数据库中获取一次调用链中所涉及到的segment信息；2022-06-02 17:41:11
     LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map, operationType);
@@ -99,7 +99,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     context.put("rows", traceInfo);
     context.put("total", count);
     log.info("执行完毕 SegmentDetailServiceImpl # getAllSegmentsBySegmentRelation()，获取用户的调用链信息。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", JsonUtil.obj2String(context));
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
   }
 
   /**
@@ -114,7 +114,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Override
   public ServerResponse<String> getAllUserName() {
     List<String> list = msSegmentDetailDao.selectAllUserName();
-    ServerResponse serverResponse = ServerResponse.createBySuccess();
+    ServerResponse<String> serverResponse = ServerResponse.createBySuccess();
     serverResponse.setData(JsonUtil.obj2String(list));
     return serverResponse;
   }
@@ -132,7 +132,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Override
   public ServerResponse<String> getAllMsTableName() {
     List<String> list = msSegmentDetailDao.selectAllMsTableName();
-    ServerResponse serverResponse = ServerResponse.createBySuccess();
+    ServerResponse<String> serverResponse = ServerResponse.createBySuccess();
     serverResponse.setData(JsonUtil.obj2String(list));
     return serverResponse;
   }
@@ -169,17 +169,17 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         map.put(Const.MS_TABLE_NAME, tableName);
       } catch (Exception e) {
         log.error("# SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数时，出现了异常。", msTableName, e);
-        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", list);
+        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, list);
       }
     } else {
-      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", list);
+      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, list);
     }
 
     String key = Const.ZSET_TABLE_OPERATION_TYPE + msTableName;
     Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
     // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
     Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
-    if (null != set && 0 < set.size()) {
+    if (null != set && !set.isEmpty()) {
       Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
       while (iterator.hasNext()) {
         ZSetOperations.TypedTuple<String> next = iterator.next();
@@ -204,7 +204,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       }
     }
     log.info("执行完毕 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
-    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
   }
 
   /**
@@ -219,13 +219,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Override
   public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
     List<String> list = new LinkedList<>();
-    List<String> list1 = new LinkedList<>();
     Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
     String key = Const.ZSET_USER_OPERATION_TYPE + userName;
     Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
     // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
     Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
-    if (null != set && 0 < set.size()) {
+    if (null != set && !set.isEmpty()) {
       Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
       while (iterator.hasNext()) {
         ZSetOperations.TypedTuple<String> next = iterator.next();
@@ -275,7 +274,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
       // 根据用户名获取用户对数据库总的访问次数；
       Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName);
-      Long countFromRedis = 0L;
+      Long countFromRedis;
       if (null != obj) {
         countFromRedis = Long.valueOf(String.valueOf(obj));
       } else {
@@ -292,7 +291,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       String tableName = null;
       // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
       Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, 0L, 0L);
-      if (null == set || 0 == set.size()) {
+      if (null == set || set.isEmpty()) {
         // 从数据库中获取用户名；
         tableName = getTableNameFromDb(userName);
         if (StringUtil.isBlank(tableName)) {
@@ -315,7 +314,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfos);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfos);
   }
 
   /**
@@ -350,8 +349,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         String msTableName = tableNameMap.get(Const.MS_TABLE_NAME);
         String peer = tableNameMap.get(Const.PEER);
         String dbInstance = tableNameMap.get(Const.DB_INSTANCE2);
-        String tableName = peer + Const.POUND_KEY + dbInstance + Const.POUND_KEY + msTableName;
-        return tableName;
+        return peer + Const.POUND_KEY + dbInstance + Const.POUND_KEY + msTableName;
       }
     } catch (Exception e) {
       log.error("# SegmentDetailServiceImpl.getTableNameFromDb() # 从数据库中获取用户名时，出现了异常。", e);
@@ -378,7 +376,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", userCoarseInfo);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfo);
   }
 
   @Override
@@ -386,7 +384,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     List<Long> returnList = new ArrayList<>();
     log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
     Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-    // todo:这里不能传中文的表名称，要传完整版的数据地址+数据库名称+英文表名；2022-07-22 10:33:26
     if (msTableName.contains(Const.POUND_KEY)) {
       try {
         String[] split = msTableName.split(Const.POUND_KEY);
@@ -398,10 +395,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         map.put(Const.MS_TABLE_NAME, tableName);
       } catch (Exception e) {
         log.error("# SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays() # 获取用户近七天的访问次数时，出现了异常。", e);
-        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", returnList);
+        return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, returnList);
       }
     } else {
-      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", "failed", returnList);
+      return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, returnList);
     }
     if (null == pageNo) {
       pageNo = 1;
@@ -409,17 +406,17 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     if (null == pageSize) {
       pageSize = 10;
     }
-    map.put("pageNo", (pageNo - 1) * pageSize);
-    map.put("pageSize", pageSize);
+    map.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+    map.put(Const.PAGE_SIZE, pageSize);
 
     List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
     for (int i = 0; i < dateList.size() - 1; i++) {
       String value = dateList.get(i);
-      map.put("startTime", value);
-      map.put("endTime", dateList.get(i + 1));
+      map.put(Const.START_TIME, value);
+      map.put(Const.END_TIME, dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
       String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-      Long count = 0L;
+      Long count;
       Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYyyyMmDd);
       if (null != hget) {
         count = Long.valueOf(String.valueOf(hget));
@@ -430,7 +427,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, returnList);
   }
 
   @Override
@@ -442,27 +439,29 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
     // 从有序集合zset中获取最频繁访问的数据表；2022-07-22 10:01:52
     Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, sizeFromZset);
-    if (null != set && 0 < set.size()) {
+    if (null != set && !set.isEmpty()) {
       Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
       while (iterator.hasNext()) {
         ZSetOperations.TypedTuple<String> next = iterator.next();
-        Double score = next.getScore();
-        String value = next.getValue();
-        UserUsualAndUnusualVisitedData userUsualAndUnusualVisitedData = new UserUsualAndUnusualVisitedData();
-        userUsualAndUnusualVisitedData.setUserName(userName);
-        userUsualAndUnusualVisitedData.setVisitedCount(score.longValue());
-        String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(value);
-        if (value.contains(Const.POUND_KEY)) {
-          String[] split = value.split(Const.POUND_KEY);
-          if (StringUtil.isNotBlank(tableDesc)) {
-            value = split[0] + Const.POUND_KEY + split[1] + Const.POUND_KEY + tableDesc;
+        if(null != next){
+          Double score = next.getScore();
+          String value = next.getValue();
+          UserUsualAndUnusualVisitedData userUsualAndUnusualVisitedData = new UserUsualAndUnusualVisitedData();
+          userUsualAndUnusualVisitedData.setUserName(userName);
+          userUsualAndUnusualVisitedData.setVisitedCount(score.longValue());
+          String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(value);
+          if (value.contains(Const.POUND_KEY)) {
+            String[] split = value.split(Const.POUND_KEY);
+            if (StringUtil.isNotBlank(tableDesc)) {
+              value = split[0] + Const.POUND_KEY + split[1] + Const.POUND_KEY + tableDesc;
+            }
           }
+          userUsualAndUnusualVisitedData.setVisitedData(value);
+          list.add(userUsualAndUnusualVisitedData);
         }
-        userUsualAndUnusualVisitedData.setVisitedData(value);
-        list.add(userUsualAndUnusualVisitedData);
       }
     }
-    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
   }
 
   @Override
@@ -473,11 +472,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
     for (int i = 0; i < dateList.size() - 1; i++) {
       String value = dateList.get(i);
-      map.put("startTime", value);
-      map.put("endTime", dateList.get(i + 1));
+      map.put(Const.START_TIME, value);
+      map.put(Const.END_TIME, dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
       String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-      Long count = 0L;
+      Long count;
       Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYyyyMmDd);
       if (null != hget) {
         count = Long.valueOf(String.valueOf(hget));
@@ -488,7 +487,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", returnList);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, returnList);
   }
 
   @Override
@@ -508,7 +507,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     getUserCount(systemOverview);
 
     log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", systemOverview);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, systemOverview);
   }
 
   /**
@@ -522,7 +521,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    **/
   private void getRecordCount(SystemOverview systemOverview) {
     // 获取ms_segment_detail表中记录的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
-    Long informationCount = 0L;
+    Long informationCount;
     Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
     if (null != hget) {
       informationCount = Long.parseLong(String.valueOf(hget));
@@ -598,8 +597,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       pageSize = 10;
     }
     pageNo = (pageNo - 1) * pageSize;
-    queryMap.put("pageNo", pageNo);
-    queryMap.put("pageSize", pageSize);
+    queryMap.put(Const.PAGE_NO, pageNo);
+    queryMap.put(Const.PAGE_SIZE, pageSize);
 
     List<TableCoarseInfo> tableCoarseInfoList = new ArrayList<>();
     //获取所有的数据库表名
@@ -630,7 +629,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Integer count = msMonitorBusinessSystemTablesMapper.selectAllEnableCount(queryMap);
     Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    if (null != tableCoarseInfoList && 0 < tableCoarseInfoList.size()) {
+    if (null != tableCoarseInfoList && !tableCoarseInfoList.isEmpty()) {
       context.put("rows", JsonUtil.obj2String(tableCoarseInfoList));
     }
     context.put("total", count);
@@ -654,9 +653,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     String zsetVlue = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + tableName;
     Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, 0L, 0L);
-    if (null == set || 0 == set.size()) {
+    if (null == set || set.isEmpty()) {
       List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(tableName);
-      if (list.size() != 0) {
+      if (!list.isEmpty()) {
         userName = list.get(0).getUserName();
       }
     } else {
@@ -672,7 +671,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         String serviceCodeName = AgentInformationSingleton.get(split[0]);
         if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
           userName = split[1] + "（" + serviceCodeName + "）";
-          // userName = serviceCodeName + Const.DOLLAR + split[1];
         }
       }
       tableCoarseInfo.setUsualVisitedUser(userName);
@@ -718,14 +716,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Long size = redisPoolUtil.sizeFromZset(key);
     Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, size);
     Long countFromRedis = 0L;
-    if (null == set || 0 == set.size()) {
+    if (null == set || set.isEmpty()) {
       countFromRedis = msSegmentDetailDao.selectCountOfOneTable(tableName);
     } else {
       Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
       while (iterator.hasNext()) {
         ZSetOperations.TypedTuple<String> next = iterator.next();
         Double score = next.getScore();
-        countFromRedis = countFromRedis + score.longValue();
+        if(null != score){
+          countFromRedis = countFromRedis + score.longValue();
+        }
       }
     }
     tableCoarseInfo.setVisitedCount(countFromRedis);
@@ -742,24 +742,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       } else {
         list.get(i).setAlarmName("异常告警");
       }
-      // if (list.get(i).getMatchRuleId() == 1) {
-      //   UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(1);
-      //   if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
-      //     list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
-      //   }else{
-      //     list.get(i).setAlarmName("基于访问时间段的异常告警");
-      //   }
-      // } else if (list.get(i).getMatchRuleId() == 2) {
-      //   UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(2);
-      //   if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
-      //     list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
-      //   }else{
-      //     list.get(i).setAlarmName("基于访问数据库表的异常告警");
-      //   }
-      // }
     }
     log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取告警信息。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
 
   }
 
@@ -782,7 +767,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       }
     });
     log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取用户告警信息。");
-    return ServerResponse.createBySuccess("获取数据成功！", "success", list);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
   }
 
 
@@ -807,7 +792,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       }
 
       log.info("# SegmentDetailServiceImpl.getSegmentDetailsFromDb() # 根据查询条件 = 【{}】，在表ms_segment_detail中获取到了【{}】条详细数据。", JsonUtil.obj2String(map), msSegmentDetailDoList.size());
-      if (null != msSegmentDetailDoList && 0 < msSegmentDetailDoList.size()) {
+      if (null != msSegmentDetailDoList && !msSegmentDetailDoList.isEmpty()) {
         for (MsSegmentDetailDo msSegmentDetailDo : msSegmentDetailDoList) {
           String globalTraceId = msSegmentDetailDo.getGlobalTraceId();
           LinkedHashMap<String, LinkedList<MsSegmentDetailDo>> globalTraceIdHashMap = linkedHashMap.get(globalTraceId);
@@ -861,7 +846,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         while (iterator2.hasNext()) {
           String url = iterator2.next();
           List<MsSegmentDetailDo> segmentDetailDoList = urlHhashMap.get(url);
-          if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+          if (null != segmentDetailDoList && !segmentDetailDoList.isEmpty()) {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
             ArrayNode everyBodylinkedList = JsonUtil.createJsonArray();
             bodyJsonArray.add(jsonObject);
@@ -927,7 +912,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     } catch (Exception e) {
       log.error("# SegmentDetailServiceImpl.getEveryCallChainInfo() # 组装每一条调用链信息时，出现了异常。", e);
     }
-    if (0 < hashSet.size()) {
+    if (!hashSet.isEmpty()) {
       return hashSet.toString();
     }
     return null;
@@ -947,16 +932,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     // 设置默认值；2022-05-18 17:27:15
     if (null == pageNo) {
-      queryMap.put("pageNo", 1);
+      queryMap.put(Const.PAGE_NO, 1);
     }
     if (null == pageSize) {
-      queryMap.put("pageSize", 10);
+      queryMap.put(Const.PAGE_SIZE, 10);
     }
     // 查询出所有的traceId；2022-04-25 09:56:29
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put(Const.USER_NAME, userName);
       List<UserTokenDo> listUserToken = userTokenDao.selectByUserName(queryMap);
-      if (null != listUserToken && 0 < listUserToken.size()) {
+      if (null != listUserToken && !listUserToken.isEmpty()) {
         for (UserTokenDo userTokenDo : listUserToken) {
           String globalTraceId = userTokenDo.getGlobalTraceId();
           Map<String, Object> queryMap2 = new HashMap<>(Const.NUMBER_EIGHT);

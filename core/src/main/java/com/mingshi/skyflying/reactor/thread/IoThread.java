@@ -38,31 +38,24 @@ public class IoThread extends Thread {
   private Integer flushToRocketMqInterval = 10;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */, Integer/* 消费的数量 */>> processorThreadQpsMap = null;
-  // private HashSet<Map<String/* 时间 */,Integer/* 队列的大小 */>> ioThreadQueueSet = null;
   private LinkedList<SegmentDo> segmentList = null;
-  // private LinkedList<MsAuditLogDo> auditLogList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
   private LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList = null;
   private HashSet<String> userHashSet = null;
   private LinkedList<Span> spanList = null;
-  // private LinkedList<EsMsSegmentDetailDo> esSegmentDetailDoList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
-  private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
   public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     currentTime = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
     processorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
-    // ioThreadQueueSet = new HashSet<>();
     segmentList = new LinkedList();
     userHashSet = new HashSet();
-    // auditLogList = new LinkedList();
     segmentDetailDoList = new LinkedList();
     segmentDetailUserNameIsNullDoList = new LinkedList();
     spanList = new LinkedList();
-    // esSegmentDetailDoList = new LinkedList();
     msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMqInterval || flushToRocketMqInterval < 0) {
@@ -70,8 +63,6 @@ public class IoThread extends Thread {
     }
     this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
-    // this.esSegmentDetailDoList = esSegmentDetailDoList;
-    this.esMsSegmentDetailUtil = esMsSegmentDetailUtil;
   }
 
   // user_token 表存在的意义是：将 segment 表中的全局追踪id与用户名或 token 关联起来。
@@ -80,7 +71,6 @@ public class IoThread extends Thread {
   public void run() {
     try {
       while (true) {
-        // while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         try {
           ObjectNode jsonObject = linkedBlockingQueue.poll();
           if (null == jsonObject) {

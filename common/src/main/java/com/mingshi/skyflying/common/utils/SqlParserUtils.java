@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.mingshi.skyflying.common.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -277,10 +278,10 @@ public class SqlParserUtils {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
-    List<Expression> GroupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
+    List<Expression> groupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
     List<String> strGroupby = new ArrayList<String>();
-    if (GroupByColumnReferences != null) {
-      for (Expression groupByColumnReference : GroupByColumnReferences) {
+    if (null != groupByColumnReferences) {
+      for (Expression groupByColumnReference : groupByColumnReferences) {
         strGroupby.add(groupByColumnReference.toString());
       }
     }

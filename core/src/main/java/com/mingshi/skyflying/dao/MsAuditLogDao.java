@@ -8,7 +8,7 @@ import java.util.Map;
 public interface MsAuditLogDao {
     int deleteByPrimaryKey(Integer id);
 
-    int insertSelective(MsAuditLogDo record);
+    int insertSelective(MsAuditLogDo msAuditLogDo);
 
     MsAuditLogDo selectByPrimaryKey(Integer id);
 
@@ -20,9 +20,9 @@ public interface MsAuditLogDao {
 
     void insertSelectiveBatchNoSqlInsightDbUserName(List<MsAuditLogDo> list);
 
-    int updateByPrimaryKeySelective(MsAuditLogDo record);
+    int updateByPrimaryKeySelective(MsAuditLogDo msAuditLogDo);
 
-    int updateBatch(List<MsAuditLogDo> record);
+    int updateBatch(List<MsAuditLogDo> list);
 
     Long selectCount(Map<String, Object> map);
 

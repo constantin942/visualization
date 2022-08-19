@@ -155,7 +155,7 @@ public class MingshiElasticSearchUtil {
   //   List<EsMsSegmentDetailDo> list = new LinkedList<>();
   //   String queryByField/* 根据那个字段查询 */;
   //   String fieldContent/* 查询字段的内容 */;
-  //   String sortByField = "startTime";/* 排序字段 */;
+  //   String sortByField = Const.START_TIME;/* 排序字段 */;
   //
   //   NativeSearchQueryBuilder nativeSearchQueryBuilder =  new NativeSearchQueryBuilder();
   //
@@ -181,8 +181,8 @@ public class MingshiElasticSearchUtil {
   //   // 分组查询
   //   TermsAggregationBuilder termsAgg = AggregationBuilders.terms("groupByGlobalTraceId").field("globalTraceId");
   //
-  //   String startTime = String.valueOf(map.get("startTime"));
-  //   String endTime = String.valueOf(map.get("endTime"));
+  //   String startTime = String.valueOf(map.get(Const.START_TIME));
+  //   String endTime = String.valueOf(map.get(Const.END_TIME));
   //
   //   nativeSearchQueryBuilder.withFilter(boolQueryBuilder);
   //   nativeSearchQueryBuilder.addAggregation(termsAgg);
@@ -204,7 +204,7 @@ public class MingshiElasticSearchUtil {
   //   });
   //
   //
-  //   Integer pageNo = Integer.parseInt((String) map.get("pageNo"));
+  //   Integer pageNo = Integer.parseInt((String) map.get(Const.PAGE_NO));
   //   Integer pageSize = Integer.parseInt((String) map.get("pageSize"));
   //
   //   //设置查询分页

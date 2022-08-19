@@ -391,9 +391,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     msSegmentDetailDo.setPeer(peer);
     String endpointName = String.valueOf(map.get("endpointName"));
     msSegmentDetailDo.setEndpointName(endpointName);
-    Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
+    Long startTime = Long.valueOf(String.valueOf(map.get(Const.START_TIME)));
     String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
-    Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
+    Long endTime = Long.valueOf(String.valueOf(map.get(Const.END_TIME)));
     Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
     msSegmentDetailDo.setToken(segment.getToken());
     msSegmentDetailDo.setComponent(component);
@@ -784,8 +784,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         jsonObject.put("parentSpanId", span.getParentSpanId());
         jsonObject.put("serviceCode", span.getServiceCode());
         jsonObject.put("serviceInstanceName", span.getServiceInstanceName());
-        jsonObject.put("startTime", span.getStartTime());
-        jsonObject.put("endTime", span.getEndTime());
+        jsonObject.put(Const.START_TIME, span.getStartTime());
+        jsonObject.put(Const.END_TIME, span.getEndTime());
         jsonObject.put("endpointName", span.getEndpointName());
         jsonObject.put("peer", span.getPeer());
         jsonObject.put("component", span.getComponent());
@@ -903,7 +903,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   //       jsonObject.put("parentSpanId", span.getParentSpanId());
   //       jsonObject.put("serviceCode", span.getServiceCode());
   //       jsonObject.put("serviceInstanceName", span.getServiceInstanceName());
-  //       jsonObject.put("startTime", span.getStartTime());
+  //       jsonObject.put(Const.START_TIME, span.getStartTime());
   //       jsonObject.put("endTime", span.getEndTime());
   //       jsonObject.put("endpointName", span.getEndpointName());
   //       jsonObject.put("peer", span.getPeer());
