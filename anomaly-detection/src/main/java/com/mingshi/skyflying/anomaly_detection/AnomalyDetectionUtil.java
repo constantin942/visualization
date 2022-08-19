@@ -69,6 +69,7 @@ public class AnomalyDetectionUtil {
       msAlarmInformationDo.setGlobalTraceId(globalTraceId);
       msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次出现。");
       msAlarmInformationDoList.add(msAlarmInformationDo);
+      // todo：钉钉告警；2022-08-19 15:28:19
     } else {
       String content = null;
       assert currHourTime != null;
@@ -100,6 +101,7 @@ public class AnomalyDetectionUtil {
         msAlarmInformationDo.setGlobalTraceId(globalTraceId);
         msAlarmInformationDo.setAlarmContent("用户 " + userName + " 首次在这个时间段【" + content + "】访问了系统。");
         msAlarmInformationDoList.add(msAlarmInformationDo);
+        // todo：钉钉告警；2022-08-19 15:28:19
       } else {
         // 设置变更标记；2022-06-08 10:53:05
         AnomylyDetectionSingletonByVisitedTime.setUserPortraitByVisitedTimeIsChanged(true);
