@@ -418,9 +418,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       map.put("startTime", value);
       map.put("endTime", dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
-      String dateToStrYYYYMMDD = DateTimeUtil.DateToStrYYYYMMDD(date);
+      String dateToStrYyyyMmDd = DateTimeUtil.DateToStrYYYYMMDD(date);
       Long count = 0L;
-      Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYYYYMMDD);
+      Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYyyyMmDd);
       if (null != hget) {
         count = Long.valueOf(String.valueOf(hget));
       } else {
@@ -470,11 +470,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     log.info("开始执行 # SegmentDetailServiceImpl. getCountsOfAllRecentSevenDays # 获取用户近七天的访问次数。");
     Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
     List<Long> returnList = new ArrayList<>();
-    List<String> DateList = DateTimeUtil.getDateList(startTime, endTime);
-    for (int i = 0; i < DateList.size() - 1; i++) {
-      String value = DateList.get(i);
+    List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
+    for (int i = 0; i < dateList.size() - 1; i++) {
+      String value = dateList.get(i);
       map.put("startTime", value);
-      map.put("endTime", DateList.get(i + 1));
+      map.put("endTime", dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
       String dateToStrYyyyMmDd = DateTimeUtil.DateToStrYYYYMMDD(date);
       Long count = 0L;
