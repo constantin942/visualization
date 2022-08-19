@@ -10,7 +10,7 @@ public enum AiitExceptionCode {
   /**
    * 操作成功
    */
-  SUCCESS("0000", Const.SUCCESS, "成功"),
+  SUCCESS("0000", "success", "成功"),
 
   /**
    * 操作失败
