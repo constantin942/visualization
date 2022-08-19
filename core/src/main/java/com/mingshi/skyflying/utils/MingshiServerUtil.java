@@ -84,6 +84,20 @@ public class MingshiServerUtil {
   private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
   /**
+   * <B>方法名称：setDbTypeAndOperationType</B>
+   * <B>概要说明：给MsSegmentDetailDo实例设置dbType类型和operationType类型</B>
+   * @Author zm
+   * @Date 2022年08月19日 09:08:00
+   * @Param [msSegmentDetailDo, dbType, operationType, value]
+   * @return void
+   **/
+  public void setDbTypeAndOperationType(MsSegmentDetailDo msSegmentDetailDo, String dbType, String operationType, String value) {
+    msSegmentDetailDo.setDbType(dbType);
+    msSegmentDetailDo.setDbStatement(value);
+    msSegmentDetailDo.setOperationType(operationType);
+  }
+
+  /**
    * <B>方法名称：doEnableReactorModel</B>
    * <B>概要说明：将数据组装一下，然后放入到公共队列中</B>
    * @Author zm

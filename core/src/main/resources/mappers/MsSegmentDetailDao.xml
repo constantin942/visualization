@@ -93,6 +93,31 @@
     </if>
     group by global_trace_id) as t1;
   </select>
+  <select id="selectCountAllFileOutputAndSendEmail" parameterType="java.util.Map" resultType="java.lang.Long">
+    select count(*)
+    from (select global_trace_id
+    from ms_segment_detail
+    where user_name is not null
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="endTime != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
+    group by global_trace_id) as t1;
+  </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select *
     from ms_segment_detail
@@ -142,6 +167,60 @@
     -- 先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
     and (db_type != 'url')
     and user_name is not null and ms_table_name is not null and operation_name != 'null'
+    order by id desc;
+    -- 这行代码同时也输出对Redis的操作。
+    -- and (db_type != 'url' or db_type is null)
+    -- order by id desc;
+  </select>
+  <select id="selectAllFileOutputAndSendEmail" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select *
+    from ms_segment_detail
+    where user_name is not null and global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
+    where user_name is not null
+      <if test="userName != null and  userName != null   ">
+        and user_name = #{userName}
+      </if>
+      <if test="operationType != null and  operationType != null   ">
+        and operation_type = #{operationType}
+      </if>
+      <if test="dbType != null and  dbType != null   ">
+        and db_type = #{dbType}
+      </if>
+      <if test="startTime != null and  startTime != null   ">
+        and start_time <![CDATA[ >= ]]> #{startTime}
+      </if>
+      <if test="endTime != null and  endTime != null   ">
+        and end_time <![CDATA[ <= ]]> #{endTime}
+      </if>
+      <if test="msTableName != null and  msTableName != null   ">
+        and ms_table_name = #{msTableName}
+      </if>
+    group by global_trace_id order by global_trace_id desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+    ) as t1 )
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="endTime != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
+    -- 先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
+    and (db_type != 'url')
+    and user_name is not null
     order by id desc;
     -- 这行代码同时也输出对Redis的操作。
     -- and (db_type != 'url' or db_type is null)

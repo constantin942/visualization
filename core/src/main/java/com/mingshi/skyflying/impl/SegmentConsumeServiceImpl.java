@@ -22,6 +22,8 @@ import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.operation.Operation;
+import com.mingshi.skyflying.operation.OperatorFactory;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -267,10 +269,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return skywalkingAgentHeartBeatMap;
   }
 
-  private void getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiDolList,
-                                      LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
-                                      SegmentDo segment,
-                                      SegmentObject segmentObject) {
+  private void getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
     try {
       String reorganizingSpans = segment.getReorganizingSpans();
       if (StringUtil.isBlank(reorganizingSpans)) {
@@ -282,69 +281,43 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
         return;
       }
-      LinkedHashMap map1 = list.get(0);
-      Object url = map1.get("url");
       MsSegmentDetailDo msSegmentDetailDo = null;
       for (int i = 1; i < list.size(); i++) {
-        msSegmentDetailDo = new MsSegmentDetailDo();
-        msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
         LinkedHashMap map = list.get(i);
-        msSegmentDetailDo.setOperationName(String.valueOf(url));
 
-        Integer spanId = null;
-        if (null != map.get("spanId")) {
-          spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
-        }
-
-        String component = String.valueOf(map.get("component"));
-        String serviceCode = String.valueOf(map.get("serviceCode"));
-        String peer = String.valueOf(map.get("peer"));
-        msSegmentDetailDo.setPeer(peer);
-        String endpointName = String.valueOf(map.get("endpointName"));
-        msSegmentDetailDo.setEndpointName(endpointName);
-        Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
-        String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
-        Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
-        Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
-        msSegmentDetailDo.setToken(segment.getToken());
-        msSegmentDetailDo.setComponent(component);
-        msSegmentDetailDo.setSpanId(spanId);
-        msSegmentDetailDo.setServiceCode(serviceCode);
-        msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
-        msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
-        msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
-        msSegmentDetailDo.setParentSpanId(parentSpanId);
-        msSegmentDetailDo.setUserName(segment.getUserName());
-        msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
-        msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
-        msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
-
-        String tags = String.valueOf(map.get("tags"));
+        // 给MsSegmentDetailDo实例赋值
+        msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
         String logs = String.valueOf(map.get("logs"));
-
         Boolean isError = false;
 
+        String tags = String.valueOf(map.get("tags"));
         List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
         if (null != tagsList) {
           String isSql = null;
+          String dingTalkContent = null;
           for (KeyValue keyValue : tagsList) {
             String key = keyValue.getKey();
             String value = keyValue.getValue();
-            if(Const.SEND_EMAIL_PARAMS.equals(key)){
-              msSegmentDetailDo.setDbType(Const.SEND_EMAIL_PARAMS);
-              msSegmentDetailDo.setDbStatement(value);
-              msSegmentDetailDo.setOperationType(Const.SEND_EMAIL_PARAMS);
-            }else{
-              if (key.equals("db.type")) {
+            Operation targetOperation = OperatorFactory.getOperation(key);
+            targetOperation.set();
+            if (Const.FILE_OUTPUT.equals(key)) {
+              // 给MsSegmentDetailDo实例设置dbType类型和operationType类型
+              mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.FILE_OUTPUT, Const.FILE_OUTPUT, value);
+            } else if (Const.SEND_EMAIL.equals(key)) {
+              mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.SEND_EMAIL, Const.SEND_EMAIL, value);
+            } else {
+              if (Const.OPERATION_TYPE_DING_TALK.equals(key)) {
+                dingTalkContent = value;
+              } else if (Const.DB_TYPE.equals(key)) {
                 isSql = value;
                 msSegmentDetailDo.setOperationType(value);
-              } else if (key.equals("db.instance")) {
+              } else if (Const.DB_INSTANCE.equals(key)) {
                 msSegmentDetailDo.setDbInstance(value);
-              } else if (key.equals("db_user_name")) {
+              } else if (Const.DB_USER_NAME.equals(key)) {
                 msSegmentDetailDo.setDbUserName(value);
-              } else if (key.equals("db.statement")) {
-                if (isSql.equals("sql")) {
-                  if ((StringUtil.isNotBlank(logs) && !logs.equals("null")) || StringUtil.isBlank(value)) {
+              } else if (Const.DB_STATEMENT.equals(key)) {
+                if (Const.OPERATION_TYPE_SQL.equals(isSql)) {
+                  if ((StringUtil.isNotBlank(logs) && !logs.equals(Const.IS_NULL)) || StringUtil.isBlank(value)) {
                     isError = true;
                     // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
                     break;
@@ -361,11 +334,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 msSegmentDetailDo.setDbStatement(value);
               } else if (key.equals(Const.OPERATION_TYPE_URL)) {
                 if (value.contains(Const.OPERATION_TYPE_DINGTALK)) {
-                  msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DINGTALK);
+                  msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DING_TALK);
+                  ObjectNode jsonObject = JsonUtil.createJSONObject();
+                  jsonObject.put(Const.IP, value);
+                  jsonObject.put(Const.CONTENT, dingTalkContent);
+                  msSegmentDetailDo.setDbStatement(jsonObject.toString());
+                  msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_DING_TALK);
                 } else {
                   msSegmentDetailDo.setDbType(key);
+                  msSegmentDetailDo.setDbStatement(value);
                 }
-                msSegmentDetailDo.setDbStatement(value);
               }
             }
           }
@@ -388,6 +366,50 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
     }
+  }
+
+  /**
+   * <B>方法名称：getMsSegmentDetailDo</B>
+   * <B>概要说明：给MsSegmentDetailDo实例赋值</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月19日 08:08:49
+   * @Param [msSegmentDetailDo, map, segment]
+   **/
+  private MsSegmentDetailDo getMsSegmentDetailDo(LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
+    Object url = map1.get("url");
+    MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+    msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
+    msSegmentDetailDo.setOperationName(String.valueOf(url));
+
+    Integer spanId = null;
+    if (null != map.get("spanId")) {
+      spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
+    }
+    String component = String.valueOf(map.get("component"));
+    String serviceCode = String.valueOf(map.get("serviceCode"));
+    String peer = String.valueOf(map.get("peer"));
+    msSegmentDetailDo.setPeer(peer);
+    String endpointName = String.valueOf(map.get("endpointName"));
+    msSegmentDetailDo.setEndpointName(endpointName);
+    Long startTime = Long.valueOf(String.valueOf(map.get("startTime")));
+    String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
+    Long endTime = Long.valueOf(String.valueOf(map.get("endTime")));
+    Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
+    msSegmentDetailDo.setToken(segment.getToken());
+    msSegmentDetailDo.setComponent(component);
+    msSegmentDetailDo.setSpanId(spanId);
+    msSegmentDetailDo.setServiceCode(serviceCode);
+    msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
+    msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
+    msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
+    msSegmentDetailDo.setParentSpanId(parentSpanId);
+    msSegmentDetailDo.setUserName(segment.getUserName());
+    msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+    msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
+    msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+    return msSegmentDetailDo;
   }
 
   private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {

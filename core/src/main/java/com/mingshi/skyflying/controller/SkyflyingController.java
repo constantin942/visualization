@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -963,9 +964,10 @@ public class SkyflyingController {
                                                String msTableName, /* 数据库表名 */
                                                String startTime, /* 开始时间 */
                                                String endTime, /* 结束时间 */
+                                               String operationType, /* 操作行为 */
                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getAllSegmentsBySegmentRelation(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, pageNo, pageSize);
+    return segmentDetailService.getAllSegmentsBySegmentRelation(applicationUserName, dbType, msTableName, startTime, endTime, dbUserName, operationType, pageNo, pageSize);
   }
 
   /**

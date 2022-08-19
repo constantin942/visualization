@@ -52,7 +52,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private UserPortraitRulesMapper userPortraitRulesMapper;
 
   @Override
-  public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, String operationType, Integer pageNo, Integer pageSize) {
     log.info("开始执行 # SegmentDetailServiceImpl.getAllSegmentsBySegmentRelation2() # 获取用户的调用链信息。");
     Map<String, Object> map = new HashMap<>();
     if (StringUtil.isNotBlank(applicationUserName)) {
@@ -81,14 +81,20 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
     map.put("pageNo", (pageNo - 1) * pageSize);
     map.put("pageSize", pageSize);
+    Long count = 0L;
 
     // 从数据库中获取一次调用链中所涉及到的segment信息；2022-06-02 17:41:11
-    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map);
+    LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> hashMap = getSegmentDetailsFromDb(map, operationType);
+    if (operationType.equals(Const.SEND_EMAIL) || operationType.equals(Const.FILE_OUTPUT) || operationType.equals(Const.OPERATION_TYPE_DING_TALK)) {
+      map.put("operationType", operationType);
+      count = msSegmentDetailDao.selectCountAllFileOutputAndSendEmail(map);
+    } else {
+      count = msSegmentDetailDao.selectCountAll(map);
+    }
 
     // 组装每一条调用链信息；2022-06-02 17:41:16
     String traceInfo = getEveryCallChainInfo(hashMap);
 
-    Long count = msSegmentDetailDao.selectCountAll(map);
     Map<String, Object> context = new HashMap<>();
     context.put("rows", traceInfo);
     context.put("total", count);
@@ -300,8 +306,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         tableName = String.valueOf(objects[0]);
         // 获取表对应的中文描述信息；2022-07-21 16:55:47
         String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
-        if(StringUtil.isNotBlank(tableDesc)){
-          tableDesc = tableDesc.trim().replace("\t","");
+        if (StringUtil.isNotBlank(tableDesc)) {
+          tableDesc = tableDesc.trim().replace("\t", "");
         }
         doUsualVisitedData(tableName, userCoarseInfo, tableDesc);
       }
@@ -734,9 +740,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     List<AlarmData> list = msSegmentDetailDao.selectAlarmData();
     for (int i = 0; i < list.size(); i++) {
       UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(list.get(i).getMatchRuleId());
-      if(null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())){
+      if (null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())) {
         list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
-      }else{
+      } else {
         list.get(i).setAlarmName("异常告警");
       }
       // if (list.get(i).getMatchRuleId() == 1) {
@@ -792,11 +798,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Date 2022年06月02日 17:06:01
    * @Param [map]
    **/
-  private LinkedHashMap<String, LinkedHashMap<String, LinkedList<MsSegmentDetailDo>>> getSegmentDetailsFromDb(Map<String, Object> map) {
-
+  private LinkedHashMap<String, LinkedHashMap<String, LinkedList<MsSegmentDetailDo>>> getSegmentDetailsFromDb(Map<String, Object> map,String operationType) {
     LinkedHashMap<String/* global_trace_id */, LinkedHashMap<String/* url */, LinkedList<MsSegmentDetailDo>>> linkedHashMap = new LinkedHashMap<>();
     try {
-      List<MsSegmentDetailDo> msSegmentDetailDoList = msSegmentDetailDao.selectAll(map);
+      List<MsSegmentDetailDo> msSegmentDetailDoList = null;
+      if (operationType.equals(Const.SEND_EMAIL) || operationType.equals(Const.FILE_OUTPUT) || operationType.equals(Const.OPERATION_TYPE_DING_TALK)) {
+        map.put("operationType", operationType);
+        msSegmentDetailDoList = msSegmentDetailDao.selectAllFileOutputAndSendEmail(map);
+      } else {
+        msSegmentDetailDoList = msSegmentDetailDao.selectAll(map);
+      }
 
       // 在ES中进行搜索；2022-07-07 11:13:25
       // List<EsMsSegmentDetailDo> msSegmentDetailDoListByEs = mingshiElasticSearchUtil.termQueryByMap(map);

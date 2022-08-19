@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface SegmentDetailService extends ParentService<SegmentDetailDo, Long> {
 
-  ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, Integer pageNo, Integer pageSize);
+  ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, String operationType, Integer pageNo, Integer pageSize);
 
   ServerResponse<String> getAllUserName();
 

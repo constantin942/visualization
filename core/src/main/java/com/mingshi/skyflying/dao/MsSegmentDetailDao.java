@@ -23,6 +23,8 @@ public interface MsSegmentDetailDao {
 
   List<MsSegmentDetailDo> selectAll(Map<String, Object> map);
 
+  List<MsSegmentDetailDo> selectAllFileOutputAndSendEmail(Map<String, Object> map);
+
   List<Map<String, String>> selectBatchUserNameIsNotNullAndTokeIsNotNull(List<Integer> list);
 
   List<Map<String, String>> selectAllUserNameIsNotNullAndTokeIsNotNull();
@@ -38,6 +40,8 @@ public interface MsSegmentDetailDao {
   void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
 
   Long selectCountAll(Map<String, Object> map);
+
+  Long selectCountAllFileOutputAndSendEmail(Map<String, Object> map);
 
   List<String> selectAllUserName();
 

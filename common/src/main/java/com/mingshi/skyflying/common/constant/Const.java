@@ -24,17 +24,28 @@ public class Const {
     throw new IllegalStateException("Const class");
   }
 
+
+  public static final String DB_TYPE = "db.type";
+  public static final String DB_INSTANCE = "db.instance";
+  public static final String DB_USER_NAME = "db_user_name";
+  public static final String DB_STATEMENT = "db.statement";
+  public static final String IS_NULL = "null";
+  public static final String IP = "ip";
+  public static final String CONTENT = "content";
   /**
    * 操作类型
    */
-  public static final String OPERATION_TYPE_DINGTALK="dingtalk";
-  public static final String OPERATION_TYPE_SQL="sql";
-  public static final String OPERATION_TYPE_URL="url";
+  public static final String OPERATION_TYPE_DING_TALK = "ding-talk";
+  public static final String OPERATION_TYPE_DINGTALK = "dingtalk";
+  public static final String OPERATION_TYPE_SQL = "sql";
+  public static final String OPERATION_TYPE_URL = "url";
 
   /**
    * 获取邮件的目的地址和发送内容
    */
-  public static final String SEND_EMAIL_PARAMS="send-email-params";
+  public static final String SEND_EMAIL = "send-email";
+
+  public static final String FILE_OUTPUT = "file-output";
 
   public static final String OPERATION_TYPE_SELECT = "select";
   public static final String OPERATION_TYPE_UPDATE = "update";
