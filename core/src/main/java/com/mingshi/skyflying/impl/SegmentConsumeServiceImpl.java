@@ -183,62 +183,73 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
-
-        // 将QPS信息刷入Redis中；2022-06-27 13:42:13
-        // mingshiServerUtil.flushQpsToRedis();
-
-        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
-
-        // 统计processor线程的QPS；2022-07-23 11:26:40
-        mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
-
-        // mingshiServerUtil.flushSpansToDB(spanList);
-
-        mingshiServerUtil.flushUserNameToRedis(userHashSet);
-
-        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
-
-        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
-
-        // 不使用reactor模型；2022-05-30 21:04:16
-        // 插入segment数据；2022-05-23 10:15:22
-        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-        // if (null != segment) {
-        //   segmentDoLinkedList.add(segment);
-        //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
-        // }
-
-        // 将表名字插入到监管表中；2022-07-13 14:16:57
-        mingshiServerUtil.insertMonitorTables();
-
-        // 插入segment对应的index数据；2022-05-23 10:15:38
-        // 不能更新了，太耗时；2022-07-18 17:36:16
-        // mingshiServerUtil.updateUserNameByGlobalTraceId();
-
-        // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
-        // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
-        // if (true == esMsSegmentDetailUtil.getEsEnable()) {
-        //   mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
-        // }
-
-        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-
-        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
-
-        // 将异常信息插入到MySQL中；2022-06-07 18:16:44
-        LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
-        if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
-          msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
-        }
-        mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
+        disableReactorModel(statisticsProcessorThreadQpsMap,userHashSet,skywalkingAgentHeartBeatMap,segmentDetaiDolList,segmentDetaiUserNameIsNullDolList,msAlarmInformationDoList);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
     // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now1));
+  }
+
+  /**
+   * <B>方法名称：disableReactorModel</B>
+   * <B>概要说明：不使用Reactor模型</B>
+   * @Author zm
+   * @Date 2022年08月19日 18:08:34
+   * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
+   * @return void
+   **/
+  private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+    // 将QPS信息刷入Redis中；2022-06-27 13:42:13
+    // mingshiServerUtil.flushQpsToRedis();
+
+    // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+    mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
+    // 统计processor线程的QPS；2022-07-23 11:26:40
+    mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
+
+    // mingshiServerUtil.flushSpansToDB(spanList);
+
+    mingshiServerUtil.flushUserNameToRedis(userHashSet);
+
+    // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+    mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
+    // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
+    mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+
+    // 不使用reactor模型；2022-05-30 21:04:16
+    // 插入segment数据；2022-05-23 10:15:22
+    // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+    // if (null != segment) {
+    //   segmentDoLinkedList.add(segment);
+    //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+    // }
+
+    // 将表名字插入到监管表中；2022-07-13 14:16:57
+    mingshiServerUtil.insertMonitorTables();
+
+    // 插入segment对应的index数据；2022-05-23 10:15:38
+    // 不能更新了，太耗时；2022-07-18 17:36:16
+    // mingshiServerUtil.updateUserNameByGlobalTraceId();
+
+    // mingshiServerUtil.flushAuditLogToDB(auditLogFromSkywalkingAgentList);
+    // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
+    // if (true == esMsSegmentDetailUtil.getEsEnable()) {
+    //   mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
+    // }
+
+    mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+
+    mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
+
+    // 将异常信息插入到MySQL中；2022-06-07 18:16:44
+    LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
+    if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+      msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+    }
+    mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
   }
 
   /**
