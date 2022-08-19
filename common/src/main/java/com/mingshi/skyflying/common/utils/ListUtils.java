@@ -70,7 +70,7 @@ public class ListUtils {
      * syntax</a>.
      */
     public static <E> ArrayList<E> newArrayList(Iterable<? extends E> elements) {
-        checkNotNull(elements); // for GWT
+        checkNotNull(elements);
         // Let ArrayList's sizing logic work, if possible
         return (elements instanceof Collection)
             ? new ArrayList<>((Collection<? extends E>)elements)

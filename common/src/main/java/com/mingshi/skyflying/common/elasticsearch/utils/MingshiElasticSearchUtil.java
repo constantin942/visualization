@@ -198,7 +198,7 @@ public class MingshiElasticSearchUtil {
   //   Aggregations aggregations = restTemplate.query(build, SearchResponse::getAggregations);
   //   Terms terms = aggregations.get(aggName);
   //   List<? extends Terms.Bucket> buckets = terms.getBuckets();
-  //   HashMap<String,Long> statusRes = new HashMap<>();
+  //   HashMap<String,Long> statusRes = new HashMap<>(Const.NUMBER_EIGHT);
   //   buckets.forEach(bucket -> {
   //     statusRes.put(bucket.getKeyAsString(),bucket.getDocCount());
   //   });

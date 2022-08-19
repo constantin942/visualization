@@ -173,7 +173,7 @@ public class RedisPoolUtil {
       @Override
       public String doInRedis(RedisConnection connection) throws DataAccessException {
         StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
-        Map<byte[], byte[]> tuple = new HashMap<>();
+        Map<byte[], byte[]> tuple = new HashMap<>(Const.NUMBER_EIGHT);
         for (String key : map.keySet()) {
           String value = String.valueOf(map.get(key));
           tuple.put(key.getBytes(), value.getBytes());

@@ -2,6 +2,7 @@ package com.mingshi.skyflying.init.rule;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo;
 import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTimeDo;
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
@@ -97,7 +98,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
       now = Instant.now();
       Boolean loop = true;
       Integer id = 0;
-      Map<String, Integer> query = new HashMap<>();
+      Map<String, Integer> query = new HashMap<>(Const.NUMBER_EIGHT);
       while (true == loop) {
         query.put("startId", id + 1);
         query.put("endId", id + 100);
@@ -121,17 +122,17 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
           String userName = userPortraitByVisitedTableEverydayDo.getUserName();
           Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = userPortraitByVisitedTableEverydayMap.get(userName);
           if (null == visitedTableDateCountMap) {
-            visitedTableDateCountMap = new ConcurrentHashMap<>();
+            visitedTableDateCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
             userPortraitByVisitedTableEverydayMap.put(userName, visitedTableDateCountMap);
           }
           Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
           if (null == dateDbTypeCountMap) {
-            dateDbTypeCountMap = new ConcurrentHashMap<>();
+            dateDbTypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
             visitedTableDateCountMap.put(tableName, dateDbTypeCountMap);
           }
           Map<String, Integer> dbTypeCountMap = dateDbTypeCountMap.get(strToDateToStr);
           if (null == dbTypeCountMap) {
-            dbTypeCountMap = new ConcurrentHashMap<>();
+            dbTypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
             dateDbTypeCountMap.put(strToDateToStr, dbTypeCountMap);
           }
           if (null != visitedCount && StringUtil.isNotBlank(dbType)) {
@@ -181,7 +182,7 @@ public class LoadUserPortraitFromDb implements ApplicationRunner {
         String userName = userPortraitByVisitedTimeDo.getUserName();
         Map<String, Integer> map = userPortraitByVisitedTimeMap.get(userName);
         if (null == map) {
-          map = new ConcurrentHashMap<>();
+          map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
           userPortraitByVisitedTimeMap.put(userName, map);
         }
         if (null != forenoonCount) {

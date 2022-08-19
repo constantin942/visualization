@@ -39,7 +39,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
   public ServerResponse<String> getAllUserPortraitRules(Integer pageNo, Integer pageSize) {
     ServerResponse<String> bySuccess = null;
     try {
-      Map<String, Object> queryMap = new HashMap<>();
+      Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
       if (null == pageNo) {
         pageNo = 1;
       }
@@ -54,7 +54,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
       log.info("执行 # UserPortraitRulesServiceImpl.getAllUserPortraitRules() # 获取所有的规则信息。根据查询条件【{}】获取到的规则信息是【{}】。", JsonUtil.obj2String(queryMap), JsonUtil.obj2String(userPortraitRulesDoList));
 
       Integer count = userPortraitRulesMapper.selectAllRulesCount(queryMap);
-      Map<String, Object> context = new HashMap<>();
+      Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
       bySuccess = ServerResponse.createBySuccess();
       context.put("rows", JsonUtil.obj2String(userPortraitRulesDoList));
       context.put("total", count);

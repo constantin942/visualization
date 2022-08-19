@@ -1,7 +1,8 @@
 package com.mingshi.skyflying.controller;
 
-import com.mingshi.skyflying.config.LinuxStateForShellConfig;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.utils.*;
+import com.mingshi.skyflying.config.LinuxStateForShellConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -130,16 +131,16 @@ public class TestController {
   //
   //   log.info("开始执行#SkyflyingController#getResult()");
   //
-  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> getMap24 = new HashMap<>();
-  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> getMap25 = new HashMap<>();
+  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> getMap24 = new HashMap<>(Const.NUMBER_EIGHT);
+  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> getMap25 = new HashMap<>(Const.NUMBER_EIGHT);
   //
-  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> postMap24 = new HashMap<>();
-  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> postMap25 = new HashMap<>();
+  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> postMap24 = new HashMap<>(Const.NUMBER_EIGHT);
+  //   Map<String/* url */, Map<Integer/* 总的访问次数 */, Integer/* 平均访问时间 */>> postMap25 = new HashMap<>(Const.NUMBER_EIGHT);
   //
-  //   Map<String/* cpuMemory */, Map<String/* 总的访问次数 */, Double/* 平均负载 */>> cpuMemoryMap24 = new HashMap<>();
-  //   Map<String/* cpuMemory */, Map<String/* 总的访问次数 */, Double/* 平均负载 */>> cpuMemoryMap25 = new HashMap<>();
+  //   Map<String/* cpuMemory */, Map<String/* 总的访问次数 */, Double/* 平均负载 */>> cpuMemoryMap24 = new HashMap<>(Const.NUMBER_EIGHT);
+  //   Map<String/* cpuMemory */, Map<String/* 总的访问次数 */, Double/* 平均负载 */>> cpuMemoryMap25 = new HashMap<>(Const.NUMBER_EIGHT);
   //
-  //   HashMap<Object, Object> statisticsMap = new HashMap<>();
+  //   HashMap<Object, Object> statisticsMap = new HashMap<>(Const.NUMBER_EIGHT);
   //   statisticsMap.put("24_Get", getMap24);
   //   statisticsMap.put("25_Get", getMap25);
   //   statisticsMap.put("24_Post", postMap24);
@@ -200,7 +201,7 @@ public class TestController {
         String memoryLoad = split[1].split(":")[1].split("GB")[0].trim();
         countMemoryLoad += Double.valueOf(memoryLoad);
       }
-      Map<String, Double> map = new HashMap<>();
+      Map<String, Double> map = new HashMap<>(Const.NUMBER_EIGHT);
       map.put("allSamples", size.doubleValue());
       map.put("cpuAverageSamples", countCpuLoad / size);
       map.put("memoryAverageSamples", countMemoryLoad / size);
@@ -228,7 +229,7 @@ public class TestController {
         int usedTime = Integer.parseInt(String.valueOf(o));
         count += usedTime;
       }
-      Map<Integer, Integer> map = new HashMap<>();
+      Map<Integer, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
       map.put(size, count / size);
       returnMap.put(url, map);
     }

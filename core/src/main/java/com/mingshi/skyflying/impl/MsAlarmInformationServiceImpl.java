@@ -48,7 +48,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
 
     @Override
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
-        Map<String, Object> queryMap = new HashMap<>();
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         if (StringUtil.isNotBlank(userName)) {
             queryMap.put("userName", userName);
         }
@@ -70,7 +70,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
 
         Integer count = msAlarmInformationMapper.selectAllCount(queryMap);
 
-        Map<String, Object> context = new HashMap<>();
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
         context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
         context.put("total", count);
 
@@ -83,7 +83,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     @Override
     public ServerResponse<String> getAllAlarmInfo(String userName, Integer pageNo, Integer pageSize) {
 
-        Map<String, Object> queryMap = new HashMap<>();
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         if (StringUtil.isNotBlank(userName)) {
             queryMap.put("userName", userName);
         }
@@ -99,7 +99,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
 
         Integer count = msAlarmInformationMapper.selectAllUserTimesCount(queryMap);
 
-        Map<String, Object> context = new HashMap<>();
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
         context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
         context.put("total", count);
 
@@ -119,7 +119,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
 
     @Override
     public ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(Integer pageNo, Integer pageSize) {
-        Map<String, Object> queryMap = new HashMap<>();
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         if (null == pageNo) {
             pageNo = 1;
         }
@@ -132,7 +132,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
 
         Integer count = msAlarmInformationMapper.selectAllByGroupByUserNameCount();
 
-        Map<String, Object> context = new HashMap<>();
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
         context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
         context.put("total", count);
 
@@ -273,7 +273,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
      * @Param [userName, originalTime]
      **/
     private void updateOrInsertUserPortraitByVisitedTime(String userName, String originalTime) {
-        Map<String, Object> queryMap = new HashMap<>();
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         queryMap.put("userName", userName);
         List<UserPortraitByVisitedTimeDo> userPortraitByVisitedTimeDoList = userPortraitByVisitedTimeMapper.selectByUserName(queryMap);
         UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo = null;

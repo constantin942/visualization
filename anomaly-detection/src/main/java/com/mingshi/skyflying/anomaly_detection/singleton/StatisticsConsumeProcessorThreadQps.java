@@ -27,7 +27,7 @@ public class StatisticsConsumeProcessorThreadQps {
   //   if (null == timeCountMap) {
   //     synchronized (StatisticsConsumeProcessorThreadQPS.class) {
   //       if (null == timeCountMap) {
-  //         timeCountMap = new ConcurrentHashMap<>();
+  //         timeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
   //       }
   //     }
   //   }
@@ -38,7 +38,7 @@ public class StatisticsConsumeProcessorThreadQps {
     if (null == statisticsConsumeProcessorThreadQPSMap) {
       synchronized (StatisticsConsumeProcessorThreadQps.class) {
         if (null == statisticsConsumeProcessorThreadQPSMap) {
-          statisticsConsumeProcessorThreadQPSMap = new ConcurrentHashMap<>();
+          statisticsConsumeProcessorThreadQPSMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
         }
       }
     }
@@ -71,7 +71,7 @@ public class StatisticsConsumeProcessorThreadQps {
     getStatisticsConsumeProcessorThreadQpsMap();
     Map<String, AtomicInteger> stringAtomicIntegerMap = statisticsConsumeProcessorThreadQPSMap.get(threadName);
     if (null == stringAtomicIntegerMap) {
-      stringAtomicIntegerMap = new HashMap<>();
+      stringAtomicIntegerMap = new HashMap<>(Const.NUMBER_EIGHT);
       statisticsConsumeProcessorThreadQPSMap.put(threadName, stringAtomicIntegerMap);
     }
     AtomicInteger atomicInteger = stringAtomicIntegerMap.get(time);

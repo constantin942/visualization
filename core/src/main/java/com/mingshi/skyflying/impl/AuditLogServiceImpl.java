@@ -474,7 +474,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getBehaviorByUserName(String applicationUserName, String sqlType, Integer pageNo, Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
     } else {
@@ -496,7 +496,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getBehaviorByOptTime(String sqlType, String startTime, String endTime, Integer pageNo, Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
     } else {
@@ -520,7 +520,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
   @Override
   public ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (null == pageNo) {
       queryMap.put("pageNo", 1);
     } else {
@@ -580,7 +580,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                                                      String endTime, /* 结束时间 */
                                                      Integer pageNo,
                                                      Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (StringUtil.isNotBlank(sqlType)) {
       queryMap.put("sqlType", sqlType);
     }
@@ -607,7 +607,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     List<MsDmsAuditLogDo> listMsAuditLog = msDmsAuditLogDao.selectAll(queryMap);
     Integer count = msDmsAuditLogDao.selectAllCount(queryMap);
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     context.put("rows", JsonUtil.obj2String(listMsAuditLog));
     context.put("total", count);
     log.info("执行完毕 AuditLogServiceImpl.getDmsAuditLogFromDb() # 获取来自DMS的数据库审计日志信息。");

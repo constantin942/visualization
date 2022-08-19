@@ -37,7 +37,7 @@ public class MsThirdPartTableListServiceImpl implements MsThirdPartyTableListSer
   @Override
   public ServerResponse<String> getAllTableNames(String dbName) {
     log.info("开始执行 # MsThirdPartTableListServiceImpl.getAllTableNames() # 根据数据库名称获取这个数据库中所有的表。");
-    Map<String, String> dbNameTableMap = new HashMap<>();
+    Map<String, String> dbNameTableMap = new HashMap<>(Const.NUMBER_EIGHT);
 
     List<MsThirdPartyTableListDo> msThirdPartyTableListDoList = new LinkedList<>();
     // 如果前端没有传递数据库名过来，那么从调用链表ms_segment_detail中获取所有的数据库名称。2022-06-20 14:40:40

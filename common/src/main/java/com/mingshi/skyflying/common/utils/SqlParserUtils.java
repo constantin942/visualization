@@ -147,7 +147,7 @@ public class SqlParserUtils {
     List<String> tablewithjoin = new ArrayList<String>();
     if (joinList != null) {
       for (Join join : joinList) {
-        join.setLeft(true);//是否开放left jion中的left
+        join.setLeft(true);
         tablewithjoin.add(join.toString());
       }
     }
@@ -204,7 +204,7 @@ public class SqlParserUtils {
         }
 
         private void visitBinaryExpr(BinaryExpression expr, String operator) {
-          Map<String, Object> map = new HashMap<>();
+          Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
           if (!(expr.getLeftExpression() instanceof OrExpression)
             && !(expr.getLeftExpression() instanceof AndExpression)
             && !(expr.getLeftExpression() instanceof Parenthesis)) {
@@ -238,7 +238,7 @@ public class SqlParserUtils {
    * @Date: 2020/12/28 16:47
    **/
   public static Map<Object, Object> fullResolutionWhere(String where) {
-    Map<Object, Object> map = new HashMap<>();
+    Map<Object, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
     try {
       Expression expr = CCJSqlParserUtil.parseCondExpression(where);
       expr.accept(new ExpressionVisitorAdapter() {

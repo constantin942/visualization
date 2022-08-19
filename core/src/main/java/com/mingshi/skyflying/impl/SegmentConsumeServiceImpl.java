@@ -172,7 +172,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
       }
 
-      HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>();
+      HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
       statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
 
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
@@ -253,7 +253,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private Map<String, String> getAgentServiceName(SegmentObject segmentObject) {
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
-      skywalkingAgentHeartBeatMap = new HashMap<>();
+      skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
       String service = segmentObject.getService();
       String serviceInstance = segmentObject.getServiceInstance();
       ObjectNode jsonObject = JsonUtil.createJsonObject();
@@ -548,7 +548,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [jsonObject]
    **/
   private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
-    HashMap<String, Integer> hashMap = new HashMap<>();
+    HashMap<String, Integer> hashMap = new HashMap<>(Const.NUMBER_EIGHT);
     hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
     // hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()), 1);
     map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
@@ -576,7 +576,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       synchronized (KafkaConsumer.class) {
         // synchronized (AiitKafkaConsumer.class) {
         try {
-          Map<String, Object> map = new HashMap<>();
+          Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
           map.put("globalTraceId", globalTraceId);
           log.info("当前线程 {}", Thread.currentThread().getName());
           segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(map);

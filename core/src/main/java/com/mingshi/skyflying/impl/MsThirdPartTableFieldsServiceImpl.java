@@ -35,7 +35,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
   @Override
   public ServerResponse<String> getAllTableFieldsName(Map<String, String> map) {
 
-    Map<String/* 数据库名称 */, Map<String/* 表名称 */, Integer/* 记录id */>> dbNameTableNameIdMap = new HashMap<>();
+    Map<String/* 数据库名称 */, Map<String/* 表名称 */, Integer/* 记录id */>> dbNameTableNameIdMap = new HashMap<>(Const.NUMBER_EIGHT);
     log.info("开始执行 # MsThirdPartTableListServiceImpl.getAllTableNames() # 根据数据库名称获取这个数据库中所有的表。");
 
     LinkedList<MsThirdPartyTableFieldsDo> msThirdPartyTableFieldsDos = new LinkedList<>();
@@ -82,7 +82,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
       batchInsert(msThirdPartyTableFieldsDos);
     }
 
-    Map<String, List<String>> dbNameTableMap = new HashMap<>();
+    Map<String, List<String>> dbNameTableMap = new HashMap<>(Const.NUMBER_EIGHT);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     if (0 < dbNameTableMap.size()) {
       log.info("开始执行 # MsThirdPartTableListServiceImpl.getAllTableNames() # 根据数据库名称获取这个数据库中所有的表。获取到的数据库名称和对应的数据库表有【{}】。", JsonUtil.obj2String(dbNameTableMap));
@@ -103,7 +103,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
   @Override
   public ServerResponse<String> getSpecificDbTableNameFields(String dbName, String tableName, Integer pageNo, Integer pageSize) {
     log.info("开始执行 # MsThirdPartTableFieldsServiceImpl.getSpecificDbTableNameFields() # 根据指定的数据库名和表名，获取该表所有的字段。");
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (StringUtil.isNotBlank(dbName)) {
       queryMap.put("dbName", dbName);
     }
@@ -126,7 +126,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
       log.info("开始执行 # MsThirdPartTableFieldsServiceImpl.getSpecificDbTableNameFields() # 根据指定的数据库名和表名，获取该表所有的字段。根据查询条件 = 【{}】，查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), msThirdPartyTableFieldsList.size());
     }
 
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     context.put("rows", JsonUtil.obj2String(msThirdPartyTableFieldsList));
     context.put("total", msThirdPartyTableFieldsList.size());
@@ -164,7 +164,7 @@ public class MsThirdPartTableFieldsServiceImpl implements MsThirdPartyTableField
       if (StringUtil.isNotBlank(thirdPartyDbName)) {
         Map<String, Integer> tableNameIdMap = dbNameTableNameIdMap.get(thirdPartyDbName);
         if (null == tableNameIdMap) {
-          tableNameIdMap = new HashMap<>();
+          tableNameIdMap = new HashMap<>(Const.NUMBER_EIGHT);
           dbNameTableNameIdMap.put(thirdPartyDbName, tableNameIdMap);
         }
         Integer id = msThirdPartyTableListDo.getId();

@@ -68,7 +68,7 @@ public class SkyflyingController {
   @ResponseBody
   @RequestMapping(value = "/getQps", method = RequestMethod.GET)
   public ServerResponse<String> getQps() {
-    Map<String/* 时间 */, Integer> countMap1 = new HashMap<>();
+    Map<String/* 时间 */, Integer> countMap1 = new HashMap<>(Const.NUMBER_EIGHT);
     Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
       StatisticsConsumeProcessorThreadQps.getStatisticsConsumeProcessorThreadQpsMap();
 

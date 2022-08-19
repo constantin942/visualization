@@ -51,9 +51,9 @@
 //     atomicBooleanIsChanged.set(flag);
 //   }
 //
-//   private static Map<String/* token */, String/* userName */> tokenAndUserNameMap = new ConcurrentHashMap<>();
-//   private static Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = new ConcurrentHashMap<>();
-//   private static Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = new ConcurrentHashMap<>();
+//   private static Map<String/* token */, String/* userName */> tokenAndUserNameMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//   private static Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//   private static Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
 //
 //   public static Map<String, String> getGlobalTraceIdAndTokenMapMap() {
 //     return globalTraceIdAndTokenMap;

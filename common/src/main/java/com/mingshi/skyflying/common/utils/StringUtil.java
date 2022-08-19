@@ -66,10 +66,14 @@ public final class StringUtil {
   public static String mD5(String key) {
     char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     try {
-      byte[] btInput = key.getBytes();// 获得MD5摘要算法的 MessageDigest 对象
-      MessageDigest mdInst = MessageDigest.getInstance("MD5");// 使用指定的字节更新摘要
-      mdInst.update(btInput);// 获得密文
-      byte[] md = mdInst.digest();// 把密文转换成十六进制的字符串形式
+      // 获得MD5摘要算法的 MessageDigest 对象
+      byte[] btInput = key.getBytes();
+      // 使用指定的字节更新摘要
+      MessageDigest mdInst = MessageDigest.getInstance("MD5");
+      // 获得密文
+      mdInst.update(btInput);
+      // 把密文转换成十六进制的字符串形式
+      byte[] md = mdInst.digest();
       int j = md.length;
       char str[] = new char[j * 2];
       int k = 0;

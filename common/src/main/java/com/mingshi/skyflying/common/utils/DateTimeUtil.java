@@ -588,10 +588,12 @@ public class DateTimeUtil {
     date.setTime(nowTime);
     //设置开始时间
     Calendar amBegin = Calendar.getInstance();
-    amBegin.setTime(amBeginTime);//上午开始时间
+    //上午开始时间
+    amBegin.setTime(amBeginTime);
     //设置结束时间
     Calendar amEnd = Calendar.getInstance();
-    amEnd.setTime(amEndTime);//上午结束时间
+    //上午结束时间
+    amEnd.setTime(amEndTime);
     //处于开始时间之后，和结束时间之前的判断
     if ((date.after(amBegin) && date.before(amEnd))) {
       return true;
@@ -877,86 +879,6 @@ public class DateTimeUtil {
   }
 
   /**
-   * 根据开始时间和结束时间返回时间段内的时间集合
-   *
-   * @param beginDate
-   * @param endDate
-   * @return
-   */
-  public static List<Date> getDatesBetweenTwoDate(Date beginDate, Date endDate) {
-    List<Date> lDate = new ArrayList<Date>();
-    lDate.add(beginDate);// 把开始时间加入集合
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(beginDate);
-    boolean bContinue = true;
-    while (bContinue) {
-      cal.add(Calendar.DAY_OF_MONTH, 1);
-      if (endDate.after(cal.getTime())) {
-        lDate.add(cal.getTime());
-      } else {
-        break;
-      }
-    }
-    lDate.add(endDate);// 把结束时间加入集合
-    return lDate;
-  }
-
-  /**
-   * 一天的结束时间，【注：只精确到毫秒】
-   *
-   * @param date
-   * @return
-   */
-  public static Date getEndOfDate(final Date date) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-
-    cal.set(Calendar.HOUR_OF_DAY, 23);
-    cal.set(Calendar.MINUTE, 59);
-    cal.set(Calendar.SECOND, 59);
-    cal.set(Calendar.MILLISECOND, 999);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-  /**
-   * 一天的结束时间，【注：只精确到秒】
-   *
-   * @param date
-   * @return
-   */
-  public static Date getEndOfDatePrecisionSecond(final Date date) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-
-    cal.set(Calendar.HOUR_OF_DAY, 23);
-    cal.set(Calendar.MINUTE, 59);
-    cal.set(Calendar.SECOND, 59);
-    cal.set(Calendar.MILLISECOND, 000);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-  /**
-   * 一天的结束时间，【注：只精确到毫秒】
-   *
-   * @param date
-   * @return
-   */
-  public static Date getWithDrawOfDate(final Date date) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-
-    cal.set(Calendar.HOUR_OF_DAY, 13);
-    cal.set(Calendar.MINUTE, 00);
-    cal.set(Calendar.SECOND, 00);
-    cal.set(Calendar.MILLISECOND, 000);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-
-  /**
    * 获得当前日期
    *
    * @return
@@ -983,71 +905,6 @@ public class DateTimeUtil {
     return "";
   }
 
-  /**
-   * 日期转换为字符串 MM月dd日 hh:mm
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr(Date date) {
-    return dateStr(date, DATEFORMAT_STR_023);
-  }
-
-
-  /**
-   * 日期转换为字符串 yyyy-MM-dd
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr2(Date date) {
-    return dateStr(date, DATEFORMAT_STR_002);
-  }
-
-  /**
-   * yyyy年MM月dd日HH时mm分ss秒
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr5(Date date) {
-    return dateStr(date, DATEFORMAT_STR_021);
-  }
-
-  public static String dateStr9(Date date) {
-    return dateStr(date, DATEFORMAT_STR_006);
-  }
-
-  /**
-   * yyyyMMddHHmmss
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr3(Date date) {
-    return dateStr(date, DATEFORMAT_STR_011);
-  }
-
-  /**
-   * yyyy-MM-dd HH:mm:ss
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr4(Date date) {
-    return dateStr(date, DATEFORMAT_STR_001);
-
-  }
-
-  /**
-   * yyyyMMdd
-   *
-   * @param date
-   * @return
-   */
-  public static String dateStr7(Date date) {
-    return dateStr(date, DATEFORMAT_STR_012);
-  }
 
   /**
    * 将时间戳转换为Date
@@ -1091,18 +948,6 @@ public class DateTimeUtil {
    */
   public static String getNowTimeStr() {
     String str = Long.toString(System.currentTimeMillis() / 1000);
-    return str;
-  }
-
-  /**
-   * 将Date转换为时间戳
-   *
-   * @param time
-   * @return
-   */
-  public static String getTimeStr(Date time) {
-    long date = time.getTime();
-    String str = Long.toString(date / 1000);
     return str;
   }
 
@@ -1185,7 +1030,8 @@ public class DateTimeUtil {
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
     Calendar c = Calendar.getInstance();
     c.add(Calendar.MONTH, 0);
-    c.set(Calendar.DAY_OF_MONTH, 1);// 设置为1号,当前日期既为本月第一天
+    // 设置为1号,当前日期既为本月第一天
+    c.set(Calendar.DAY_OF_MONTH, 1);
     String first = format.format(c.getTime());
     return first;
   }
@@ -1285,7 +1131,7 @@ public class DateTimeUtil {
    * @return
    */
   public static String getCurrentDateStr() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");//等价于now.toLocaleString()
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     return sdf.format(DateTimeUtil.getNow());
   }
 
@@ -1296,7 +1142,7 @@ public class DateTimeUtil {
    * @return
    */
   public static String getCurrentSimpleDateStr() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");//等价于now.toLocaleString()
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     return sdf.format(DateTimeUtil.getNow());
   }
 

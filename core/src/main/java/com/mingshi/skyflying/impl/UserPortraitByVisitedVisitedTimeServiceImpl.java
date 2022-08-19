@@ -49,7 +49,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
 
   @Override
   public ServerResponse<String> createUserPortraitByVisitedTime() {
-    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> statisticsMap = new HashMap<>();
+    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> statisticsMap = new HashMap<>(Const.NUMBER_EIGHT);
 
     // 基于时间，统计用户的访问次数
     statisticsVistedCount(statisticsMap);
@@ -62,7 +62,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
 
   @Override
   public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, Integer pageNo, Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put("userName", userName);
     }
@@ -78,7 +78,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
 
     Integer count = userPortraitByVisitedTimeMapper.selectByUserNameCount(queryMap);
 
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     context.put("rows", JsonUtil.obj2String(userPortraitByVisitedTimeDos));
     context.put("total", count);
 
@@ -232,7 +232,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
     Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
     Map<String, Integer> visitedDateCountMap = userVisitedDateCountMap.get(userName);
     if (null == visitedDateCountMap) {
-      visitedDateCountMap = new ConcurrentHashMap<>();
+      visitedDateCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       userVisitedDateCountMap.put(userName, visitedDateCountMap);
     }
     if(null != forenoonCount && 0 <= forenoonCount){
@@ -279,7 +279,7 @@ public class UserPortraitByVisitedVisitedTimeServiceImpl implements UserPortrait
 
         Map<String, Integer> timeCountMap = statisticsMap.get(userName);
         if (null == timeCountMap) {
-          timeCountMap = new HashMap<>();
+          timeCountMap = new HashMap<>(Const.NUMBER_EIGHT);
           statisticsMap.put(userName, timeCountMap);
           timeCountMap.put(currHourTime, 1);
         } else {

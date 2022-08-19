@@ -1,5 +1,7 @@
 package com.mingshi.skyflying.anomaly_detection.singleton;
 
+import com.mingshi.skyflying.common.constant.Const;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,7 +69,7 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
     if (null == userPortraitByVisitedTableEverydayMap) {
       synchronized (AnomylyDetectionSingletonByVisitedTableEveryday.class) {
         if (null == userPortraitByVisitedTableEverydayMap) {
-          userPortraitByVisitedTableEverydayMap = new ConcurrentHashMap<>();
+          userPortraitByVisitedTableEverydayMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
         }
       }
     }

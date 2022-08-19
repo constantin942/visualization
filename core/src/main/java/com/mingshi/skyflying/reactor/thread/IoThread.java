@@ -53,8 +53,8 @@ public class IoThread extends Thread {
   public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     currentTime = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
-    skywalkingAgentHeartBeatMap = new HashMap<>();
-    processorThreadQpsMap = new HashMap<>();
+    skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
+    processorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
     // ioThreadQueueSet = new HashSet<>();
     segmentList = new LinkedList();
     userHashSet = new HashSet();

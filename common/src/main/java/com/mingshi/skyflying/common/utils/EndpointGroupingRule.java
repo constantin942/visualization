@@ -25,7 +25,7 @@ import java.util.Map;
  * Endpoint group rule hosts all group rules of all services.
  */
 public class EndpointGroupingRule {
-    private Map<String, StringFormatGroup> rules = new HashMap<>();
+    private Map<String, StringFormatGroup> rules = new HashMap<>(Const.NUMBER_EIGHT);
 
     /**
      * Add a new rule to the context.

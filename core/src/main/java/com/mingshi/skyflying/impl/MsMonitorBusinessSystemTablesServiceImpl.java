@@ -46,7 +46,7 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
   @Override
   public ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress, Integer pageNo, Integer pageSize) {
     log.info(" 开始执行 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 获取所有的表。");
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (StringUtil.isNotBlank(tableName)) {
       tableName = tableName.trim().replace("\t", "");
       queryMap.put("tableName", tableName);
@@ -71,7 +71,7 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
     List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAllByQueryMap(queryMap);
 
     Integer count = msMonitorBusinessSystemTablesMapper.selectAllByQueryMapCount(queryMap);
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
       context.put("rows", JsonUtil.obj2String(msMonitorBusinessSystemTablesDos));

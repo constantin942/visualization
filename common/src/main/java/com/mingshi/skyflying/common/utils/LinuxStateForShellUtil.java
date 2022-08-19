@@ -3,6 +3,7 @@ package com.mingshi.skyflying.common.utils;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.Session;
+import com.mingshi.skyflying.common.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -28,7 +29,7 @@ public class LinuxStateForShellUtil {
    * @return 最终命令返回信息
    */
   public static Map<String, String> runDistanceShell(Session session) {
-    Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
     StringBuilder stringBuffer;
 
     BufferedReader reader = null;
@@ -84,7 +85,7 @@ public class LinuxStateForShellUtil {
   public static Map<String, String> runLocalShell(String[] commands) {
     Runtime runtime = Runtime.getRuntime();
 
-    Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
     StringBuilder stringBuffer;
 
     BufferedReader reader;

@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ComponentsDefine {
 
-  private final static Map<Integer, String> COMPONENT_MAP = new ConcurrentHashMap<>();
+  private final static Map<Integer, String> COMPONENT_MAP = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
 
   public static Map<Integer, String> getComponentMap() {
     return COMPONENT_MAP;

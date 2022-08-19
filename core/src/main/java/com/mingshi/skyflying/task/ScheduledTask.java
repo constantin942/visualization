@@ -177,7 +177,7 @@ public class ScheduledTask {
    **/
   private void updateUserNameIsNullByToken(String userNameByToken, String token) {
     try {
-      HashMap<String, String> map = new HashMap<>();
+      HashMap<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
       map.put("userName", userNameByToken);
       map.put("token", token);
       msSegmentDetailUsernameIsNullMapper.updateUserNameByToken(map);
@@ -197,7 +197,7 @@ public class ScheduledTask {
    **/
   private void updateUserNameIsNullByGlobalTraceId(String userNameByToken, String globalTraceId) {
     try {
-      HashMap<String, String> map = new HashMap<>();
+      HashMap<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
       map.put("userName", userNameByToken);
       map.put("globalTraceId", globalTraceId);
       msSegmentDetailUsernameIsNullMapper.updateUserNameByGlobalTraceId(map);
@@ -310,7 +310,7 @@ public class ScheduledTask {
         Map<String/* 访问过的表 */,
           Map<String/* 访问日期，以天为单位 */,
             Map<String,/* 数据库操作类型：insert、delete、update、select */
-              Integer/* 访问次数 */>>>> newMap = new ConcurrentHashMap<>();
+              Integer/* 访问次数 */>>>> newMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       newMap.putAll(userVisitedTableDateCountMap);
       Iterator<String> iterator = newMap.keySet().iterator();
       while (iterator.hasNext()) {
@@ -398,7 +398,7 @@ public class ScheduledTask {
 
       List<UserPortraitByVisitedTimeDo> list = new LinkedList<>();
 
-      ConcurrentHashMap<String, Map<String, Integer>> newMap = new ConcurrentHashMap<>();
+      ConcurrentHashMap<String, Map<String, Integer>> newMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       newMap.putAll(oldMap);
       Iterator<String> iterator = newMap.keySet().iterator();
       while (iterator.hasNext()) {

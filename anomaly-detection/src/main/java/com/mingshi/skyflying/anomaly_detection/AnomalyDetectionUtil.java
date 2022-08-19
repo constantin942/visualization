@@ -168,7 +168,7 @@ public class AnomalyDetectionUtil {
           Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateCountMap.get(strToDateToStr);
           try {
             if (null == dbTypeCountMap) {
-              dbTypeCountMap = new ConcurrentHashMap<>();
+              dbTypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
               dateCountMap.put(strToDateToStr, dbTypeCountMap);
             }
             if (StringUtil.isNotBlank(dbType)) {

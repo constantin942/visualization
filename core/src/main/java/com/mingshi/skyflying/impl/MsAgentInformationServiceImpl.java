@@ -37,7 +37,7 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
   public ServerResponse<String> getAllSkywalkingAgent(String agentCode, Integer pageNo, Integer pageSize) {
     ServerResponse<String> bySuccess = null;
     try {
-      Map<String, Object> queryMap = new HashMap<>();
+      Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
       if (StringUtil.isNotBlank(agentCode)) {
         queryMap.put("agentCode", agentCode);
       }
@@ -54,7 +54,7 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
       log.info("执行 # MsAgentInformationServiceImpl.getAllSkywalkingAgent() # 获取所有的探针信息。根据查询条件【{}】获取到的探针信息是【{}】。", JsonUtil.obj2String(queryMap), JsonUtil.obj2String(userPortraitRulesDoList));
 
       Integer count = msAgentInformationMapper.selectAllAgentsCount(queryMap);
-      Map<String, Object> context = new HashMap<>();
+      Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
       bySuccess = ServerResponse.createBySuccess();
       context.put("rows", JsonUtil.obj2String(userPortraitRulesDoList));
       context.put("total", count);
@@ -122,7 +122,7 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
       ++count;
       Map<String, String> codeNameMap = JsonUtil.string2Obj(key, Map.class);
       if (null != codeNameMap) {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
         String serviceCode = codeNameMap.get("serviceCode");
         String serviceInstanceName = codeNameMap.get("serviceInstanceName");
         map.put("serviceCode", serviceCode);

@@ -68,7 +68,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
 
   @Override
   public ServerResponse<String> createUserPortraitByVisitedTableEveryday() {
-    Map<String/* 用户名 */,Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>> statisticsMap = new HashMap<>();
+    Map<String/* 用户名 */,Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>>> statisticsMap = new HashMap<>(Const.NUMBER_EIGHT);
 
     // 统计用户每天访问过的表的访问次数
     statisticsEverydayVistedTableCount(statisticsMap);
@@ -90,7 +90,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
    **/
   @Override
   public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, String visitedTable, String visitedDate, String visitedDbInstance,Integer pageNo, Integer pageSize) {
-    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     if (StringUtil.isNotBlank(userName)) {
       queryMap.put("userName", userName);
     }
@@ -116,7 +116,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
 
 
     Integer count = userPortraitByVisitedTableEverydayMapper.selectByUserNameAndVisitedTableAndVisitedDateCount(queryMap);
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
     context.put("rows", JsonUtil.obj2String(userPortraitByVisitedTableEverydayDos));
     context.put("total", count);
 
@@ -334,17 +334,17 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     Map<String, Integer> dbtypeCountMap = null;
     Map<String, Map<String, Map<String, Integer>>> visitedTableDateDbtypeCountMap = userPortraitByVisitedTableMap.get(userName);
     if (null == visitedTableDateDbtypeCountMap) {
-      visitedTableDateDbtypeCountMap = new ConcurrentHashMap<>();
+      visitedTableDateDbtypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       userPortraitByVisitedTableMap.put(userName, visitedTableDateDbtypeCountMap);
     }
     Map<String, Map<String, Integer>> dateDbtypeCountMap = visitedTableDateDbtypeCountMap.get(visitedTable);
     if (null == dateDbtypeCountMap) {
-      dateDbtypeCountMap = new ConcurrentHashMap<>();
+      dateDbtypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       visitedTableDateDbtypeCountMap.put(visitedTable, dateDbtypeCountMap);
     }
     dbtypeCountMap = dateDbtypeCountMap.get(visitedDate);
     if (null == dbtypeCountMap) {
-      dbtypeCountMap = new ConcurrentHashMap<>();
+      dbtypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       dateDbtypeCountMap.put(visitedDate, dbtypeCountMap);
     }
     // 只有当数据库操作成功的情况下，才更新本地内存里的数据。2022-06-16 15:05:56
@@ -456,27 +456,27 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
         //lhx新增，再tablename外嵌套一层dbInstance
         Map<String/* 数据库名 */,Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>>> visitedDbInstanceMap=userVisitedTableDateCountMap.get(userName);
         if (null == visitedDbInstanceMap) {
-          visitedDbInstanceMap = new ConcurrentHashMap<>();
+          visitedDbInstanceMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
           userVisitedTableDateCountMap.put(userName,visitedDbInstanceMap);
         }
 
 
         Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>>> visitedTableDateCountMap = visitedDbInstanceMap.get(dbInstance);
         if (null == visitedTableDateCountMap) {
-          visitedTableDateCountMap = new ConcurrentHashMap<>();
+          visitedTableDateCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
           visitedDbInstanceMap.put(dbInstance,visitedTableDateCountMap);
         }
 
 
         Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */>> dateDbTypeCountMap = visitedTableDateCountMap.get(tableName);
         if (null == dateDbTypeCountMap) {
-          dateDbTypeCountMap = new ConcurrentHashMap<>();
+          dateDbTypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
           visitedTableDateCountMap.put(tableName, dateDbTypeCountMap);
         }
 
         Map<String,/* 数据库操作类型：insert、delete、update、select */ Integer/* 访问次数 */> dbTypeCountMap = dateDbTypeCountMap.get(strToDateToStr);
         if (null == dbTypeCountMap) {
-          dbTypeCountMap = new ConcurrentHashMap<>();
+          dbTypeCountMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
           dateDbTypeCountMap.put(strToDateToStr, dbTypeCountMap);
         }
         Integer count = dbTypeCountMap.get(dbType);

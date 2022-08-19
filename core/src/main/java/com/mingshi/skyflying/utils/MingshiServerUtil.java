@@ -5,13 +5,13 @@ import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.utils.*;
-import com.mingshi.skyflying.dao.*;
-import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.common.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
+import com.mingshi.skyflying.common.utils.*;
+import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.Instant;
@@ -205,17 +204,17 @@ public class MingshiServerUtil {
     if (null != userPortraitByVisitedTableMap) {
       Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>> stringMapMap = userPortraitByVisitedTableMap.get(userName);
       if (null == stringMapMap) {
-        stringMapMap = new ConcurrentHashMap<>();
+        stringMapMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
         userPortraitByVisitedTableMap.put(userName, stringMapMap);
       }
       Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>> tablesMap = stringMapMap.get(tables);
       if (null == tablesMap) {
-        tablesMap = new ConcurrentHashMap<>();
+        tablesMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
         stringMapMap.put(tables, tablesMap);
       }
       Map<String, Integer> originalTimeMap = tablesMap.get(visitedDate);
       if (null == originalTimeMap) {
-        originalTimeMap = new ConcurrentHashMap<>();
+        originalTimeMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
         tablesMap.put(visitedDate, originalTimeMap);
       }
       originalTimeMap.put(dbType, visitedCount);
@@ -239,7 +238,7 @@ public class MingshiServerUtil {
     Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
     Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
     if (null == map) {
-      map = new ConcurrentHashMap<>();
+      map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
       userPortraitByVisitedTimeMap.put(userName, map);
     }
     if (null != forenoonCount) {
@@ -548,7 +547,7 @@ public class MingshiServerUtil {
     if (null != list && 0 < list.size()) {
       Integer count = list.size();
       try {
-        Map<String, Integer> map = new HashMap<>();
+        Map<String, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
         for (MsSegmentDetailDo msSegmentDetailDo : list) {
           String userName = msSegmentDetailDo.getUserName();
           String startTime = msSegmentDetailDo.getStartTime();
@@ -843,8 +842,8 @@ public class MingshiServerUtil {
   //   Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
   //   if (null != timeCountMap && 0 < timeCountMap.size()) {
   //     try {
-  //       Map<String, Integer> countMap = new HashMap<>();
-  //       // Map<String, String> countMap = new HashMap<>();
+  //       Map<String, Integer> countMap = new HashMap<>(Const.NUMBER_EIGHT);
+  //       // Map<String, String> countMap = new HashMap<>(Const.NUMBER_EIGHT);
   //       Iterator<String> iterator = timeCountMap.keySet().iterator();
   //       while(iterator.hasNext()){
   //         String key = iterator.next();
@@ -917,7 +916,14 @@ public class MingshiServerUtil {
   //     }
   //   }
   // }
-  @Transactional
+  /**
+   * <B>方法名称：flushSegmentDetailToDb</B>
+   * <B>概要说明：将用户操作信息保存到数据库中</B>
+   * @Author zm
+   * @Date 2022年08月19日 16:08:43
+   * @Param [segmentDetailDoList]
+   * @return void
+   **/
   public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       // Instant now = Instant.now();
@@ -939,7 +945,6 @@ public class MingshiServerUtil {
    * @Param [segmentDetaiUserNameIsNullDolList]
    * @return void
    **/
-  @Transactional
   public void flushSegmentDetailUserNameIsNullToDb(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
     if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
       msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);

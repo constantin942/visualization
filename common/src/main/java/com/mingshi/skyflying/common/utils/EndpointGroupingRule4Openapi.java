@@ -18,6 +18,7 @@
 
 package com.mingshi.skyflying.common.utils;
 
+import com.mingshi.skyflying.common.constant.Const;
 import lombok.Getter;
 
 import java.util.Comparator;
@@ -25,9 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EndpointGroupingRule4Openapi {
-    private final Map<String/*serviceName*/, Map<String/*endpointName*/, String/*endpointGroupName*/>> directLookup = new HashMap<>();
+    private final Map<String/*serviceName*/, Map<String/*endpointName*/, String/*endpointGroupName*/>> directLookup = new HashMap<>(Const.NUMBER_EIGHT);
     @Getter
-    private final Map<String, Map<String, StringFormatGroup>> groupedRules = new HashMap<>();
+    private final Map<String, Map<String, StringFormatGroup>> groupedRules = new HashMap<>(Const.NUMBER_EIGHT);
 
     void addDirectLookup(String serviceName, String endpointName, String endpointGroupName) {
         Map<String, String> endpointNameLookup = directLookup.computeIfAbsent(serviceName, name -> new HashMap<>());
@@ -76,7 +77,7 @@ public class EndpointGroupingRule4Openapi {
 
     String getGroupedRulesKey(String string) {
         String[] ss = string.split("/");
-        if (ss.length == 1) {   //eg. POST:/
+        if (ss.length == 1) {
             return ss[0] + "/";
         }
         if (ss.length > 1) {
