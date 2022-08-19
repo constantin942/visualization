@@ -36,7 +36,7 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
   }
 
   // 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
-  public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
+  public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     log.info("开始执行方法OperatorRedisFailureBuffer（）。");
     if (0 < SINGLE_CASE_COUNT.get()) {
       log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
@@ -46,19 +46,19 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
     linkedBlockingQueue = new LinkedBlockingQueue(QUEUE_SIZE);
     for (Integer integer = 0; integer < localStatisticsThreadCount; integer++) {
       log.info("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。",(1 + integer));
-      IoThread ioThread = new IoThread(linkedBlockingQueue, flushToRocketMQInterval, mingshiServerUtil, esMsSegmentDetailUtil);
+      IoThread ioThread = new IoThread(linkedBlockingQueue, flushToRocketMqInterval, mingshiServerUtil, esMsSegmentDetailUtil);
       ioThread.setName("processLocalStatisticsThread_" + integer);
       ioThread.start();
     }
   }
 
   // 获取单例；2021-06-23 10:50:06
-  public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMQInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
+  public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
     if (null == linkedBlockingQueue) {
       synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
         if (null == linkedBlockingQueue) {
           log.info("获取单例LinkedBlockingQueue。");
-          new IoThreadBatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, flushToRocketMQInterval, mingshiServerUtil, esMsSegmentDetailUtil);
+          new IoThreadBatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil, esMsSegmentDetailUtil);
         }
       }
     }

@@ -50,7 +50,7 @@ public class JsonUtil {
    * @Date 2022年06月16日 08:06:56
    * @Param []
    **/
-  public static ObjectNode createJSONObject() {
+  public static ObjectNode createJsonObject() {
     ObjectNode objectNode = mapper.createObjectNode();
     return objectNode;
   }
@@ -64,7 +64,7 @@ public class JsonUtil {
    * @Date 2022年06月16日 08:06:35
    * @Param []
    **/
-  public static ArrayNode createJSONArray() {
+  public static ArrayNode createJsonArray() {
     ArrayNode arrayNode = mapper.createArrayNode();
     return arrayNode;
   }
@@ -76,7 +76,7 @@ public class JsonUtil {
     try {
       return obj instanceof String ? (String) obj : mapper.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
-      log.error(" # JsonUtil.createJSONArray() # 将实例【{}】转换成字符串时，出现了异常。 ", obj.toString());
+      log.error(" # JsonUtil.createJsonArray() # 将实例【{}】转换成字符串时，出现了异常。 ", obj.toString());
       return null;
     }
   }

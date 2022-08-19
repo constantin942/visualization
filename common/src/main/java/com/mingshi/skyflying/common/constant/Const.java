@@ -21,6 +21,8 @@ package com.mingshi.skyflying.common.constant;
 public class Const {
 
   public static final Integer NUMBER_EIGHT = 8;
+  public static final String MYSQL = "mysql";
+  public static final String FAIL = "FAIL";
 
   private Const() {
     throw new IllegalStateException("Const class");

@@ -114,7 +114,7 @@ public class MingshiServerUtil {
                                     List<MsAlarmInformationDo> msAlarmInformationDoList,
                                     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
-      ObjectNode jsonObject = JsonUtil.createJSONObject();
+      ObjectNode jsonObject = JsonUtil.createJsonObject();
       // if (null != segmentDo) {
       //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
       // }
@@ -313,7 +313,7 @@ public class MingshiServerUtil {
       return Const.SQL_TYPE_COMMIT.toLowerCase();
     } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME)) {
       return Const.SQL_TYPE_RENAME.toLowerCase();
-    } else if (msSql.equals("keys *")) {
+    } else if ("keys *".equals(msSql)) {
       return null;
     }
     log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
@@ -521,7 +521,7 @@ public class MingshiServerUtil {
    * @Date 2022年05月19日 18:05:20
    * @Param []
    **/
-  public void flushSegmentToDB(LinkedList<SegmentDo> segmentList) {
+  public void flushSegmentToDb(LinkedList<SegmentDo> segmentList) {
     if (0 < segmentList.size()) {
       try {
         Instant now = Instant.now();
@@ -756,7 +756,7 @@ public class MingshiServerUtil {
    * @Date 2022年05月30日 18:05:15
    * @Param [now]
    **/
-  public void flushAuditLogToDB(LinkedList<MsAuditLogDo> auditLogList) {
+  public void flushAuditLogToDb(LinkedList<MsAuditLogDo> auditLogList) {
     if (0 < auditLogList.size()) {
       try {
         Instant now = Instant.now();
@@ -778,7 +778,7 @@ public class MingshiServerUtil {
    * @Date 2022年06月07日 18:06:24
    * @Param [segmentDetaiDolList]
    **/
-  public void flushAbnormalToDB(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
+  public void flushAbnormalToDb(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
     if (0 < msAlarmInformationDoLinkedListist.size()) {
       try {
         Instant now = Instant.now();
@@ -918,7 +918,7 @@ public class MingshiServerUtil {
   //   }
   // }
   @Transactional
-  public void flushSegmentDetailToDB(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
+  public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
       // Instant now = Instant.now();
       msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
@@ -940,7 +940,7 @@ public class MingshiServerUtil {
    * @return void
    **/
   @Transactional
-  public void flushSegmentDetailUserNameIsNullToDB(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
+  public void flushSegmentDetailUserNameIsNullToDb(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
     if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
       msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
       segmentDetaiUserNameIsNullDolList.clear();
@@ -956,7 +956,7 @@ public class MingshiServerUtil {
    * @Date 2022年07月18日 09:07:06
    * @Param [spansList]
    **/
-  public void flushSpansToDB(List<Span> spansList) {
+  public void flushSpansToDb(List<Span> spansList) {
     if (null != spansList && 0 < spansList.size()) {
       try {
         Instant now = Instant.now();
@@ -1123,7 +1123,7 @@ public class MingshiServerUtil {
    * @Date 2022年07月27日 15:07:45
    * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
    **/
-  public void doInsertSegmentDetailIntoMySQLAndRedis(HashSet<String> userHashSet,
+  public void doInsertSegmentDetailIntoMySqlAndRedis(HashSet<String> userHashSet,
                                                      Map<String, Map<String, Integer>> processorThreadQpsMap,
                                                      LinkedList<SegmentDo> segmentList,
                                                      LinkedList<Span> spanList,
@@ -1165,11 +1165,11 @@ public class MingshiServerUtil {
     // 去Redis缓存中获取。如果获取到了用户名，那么就把用户名更新到MySQL数据库中。
     // updateUserNameByGlobalTraceId();
 
-    flushSegmentDetailToDB(segmentDetailDoList);
+    flushSegmentDetailToDb(segmentDetailDoList);
 
-    flushSegmentDetailUserNameIsNullToDB(segmentDetailUserNameIsNullDoList);
+    flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
 
-    flushAbnormalToDB(msAlarmInformationDoLinkedListist);
+    flushAbnormalToDb(msAlarmInformationDoLinkedListist);
   }
 
   /**

@@ -249,13 +249,13 @@ public class LinuxStateForShellUtil {
       String lastIndex = s.substring(s.length() - 1);
       String num = s.substring(0, s.length() - 1);
       int parseInt = Integer.parseInt(num);
-      if (lastIndex.equals("G")) {
+      if ("G".equals(lastIndex)) {
         return parseInt;
-      } else if (lastIndex.equals("T")) {
+      } else if ("T".equals(lastIndex)) {
         return parseInt * 1024;
-      } else if (lastIndex.equals("M")) {
+      } else if ("M".equals(lastIndex)) {
         return parseInt / 1024;
-      } else if (lastIndex.equals("K") || lastIndex.equals("KB")) {
+      } else if ("K".equals(lastIndex) || "KB".equals(lastIndex)) {
         return parseInt / (1024 * 1024);
       }
     } catch (NumberFormatException e) {

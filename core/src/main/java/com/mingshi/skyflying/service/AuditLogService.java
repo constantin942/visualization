@@ -7,9 +7,8 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import java.util.List;
 
 public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
-  ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSQLExecAuditLogList);
 
-
+  ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSqlExecAuditLogList);
 
   /**
    * <B>方法名称：autoFetchAuditlogByDMS</B>
@@ -19,7 +18,7 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
    * @Param []
    * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
-  ServerResponse<String> autoFetchAuditlogByDMS(String startTime,String endTime);
+  ServerResponse<String> autoFetchAuditlogByDms(String startTime,String endTime);
 
   /**
    * <B>方法名称：getAuditlogByExcel</B>
@@ -59,9 +58,9 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
                                               Integer pageNo,
                                               Integer pageSize);
 
-  ServerResponse<String> getAllUserNameFromDMS();
+  ServerResponse<String> getAllUserNameFromDms();
 
-  ServerResponse<String> getAllSqlTypeFromDMS();
+  ServerResponse<String> getAllSqlTypeFromDms();
 
-  ServerResponse<String> getAllTableNameFromDMS();
+  ServerResponse<String> getAllTableNameFromDms();
 }

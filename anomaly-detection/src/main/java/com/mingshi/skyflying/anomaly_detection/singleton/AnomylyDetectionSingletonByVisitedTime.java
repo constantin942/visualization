@@ -18,8 +18,8 @@ public class AnomylyDetectionSingletonByVisitedTime {
    */
   private static volatile Integer visitedTimeRuleId = null;
 
-  public static void setVisitedTimeRuleId(Integer vTimeRId){
-    visitedTimeRuleId = vTimeRId;
+  public static void setVisitedTimeRuleId(Integer vTimeRid){
+    visitedTimeRuleId = vTimeRid;
   }
 
   public static Integer getVisitedTimeRuleId(){

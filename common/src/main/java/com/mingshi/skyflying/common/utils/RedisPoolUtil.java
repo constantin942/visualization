@@ -1361,8 +1361,8 @@ public class RedisPoolUtil {
     }, fallbackMethod = "zAddFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public Boolean zAdd(String key, String value, double scoure) {
     try {
-      ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
-      return stringStringZSetOperations.add(key, value, scoure);
+      ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
+      return stringStringZsetOperations.add(key, value, scoure);
     } catch (Exception e) {
       log.error("# RedisPoolUtil.zAdd() # 往有序集合中存放数据时，出现了异常。", e);
       return false;
@@ -1387,8 +1387,8 @@ public class RedisPoolUtil {
     }, fallbackMethod = "zAddBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public Long zAddBatch(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
     try {
-      ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
-      return stringStringZSetOperations.add(key, tuples);
+      ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
+      return stringStringZsetOperations.add(key, tuples);
     } catch (Exception e) {
       log.error("# RedisPoolUtil.zAddBatch() # 往有序集合中存放数据时，出现了异常。", e);
       return -1L;
@@ -1419,8 +1419,8 @@ public class RedisPoolUtil {
     }, fallbackMethod = "incrementScoreFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
   public void incrementScore(String key, String value, double scoure) {
     try {
-      ZSetOperations<String, String> stringStringZSetOperations = stringRedisTemplate.opsForZSet();
-      stringStringZSetOperations.incrementScore(key, value, scoure);
+      ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
+      stringStringZsetOperations.incrementScore(key, value, scoure);
     } catch (Exception e) {
       log.error("将有序集合中的某个元素进行累时，出现了异常。", e);
     }

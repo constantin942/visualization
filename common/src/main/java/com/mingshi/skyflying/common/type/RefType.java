@@ -19,5 +19,12 @@
 package com.mingshi.skyflying.common.type;
 
 public enum RefType {
-    CROSS_PROCESS, CROSS_THREAD
+  /**
+   * 跨进程的操作
+   */
+  CROSS_PROCESS,
+  /**
+   * 跨线程的操作
+   */
+  CROSS_THREAD
 }

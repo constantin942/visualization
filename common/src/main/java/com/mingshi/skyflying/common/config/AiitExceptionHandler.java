@@ -13,7 +13,7 @@ public class AiitExceptionHandler {
 
     @ExceptionHandler(AiitException.class)
     @ResponseBody
-    public ServerResponse MyExceptionHandle(AiitException e) {
+    public ServerResponse myExceptionHandle(AiitException e) {
 
         log.error("发生业务异常！原因是：{}", e.getErrorMsg());
 

@@ -58,15 +58,15 @@ public class AuditLogServiceImpl implements AuditLogService {
   private AllAuditLogDao allAuditLogDao;
 
   @Override
-  public ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSQLExecAuditLogList) {
+  public ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSqlExecAuditLogList) {
     int size = 0;
     Instant now = Instant.now();
     log.info("开始执行# AuditLogServiceImpl.process() # 将阿里云提供的数据库审计日志插入到数据库中。");
     try {
       List<MsAuditLogDo> list = new LinkedList<>();
-      for (ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog dmsAuditLogDo : listSQLExecAuditLogList) {
+      for (ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog dmsAuditLogDo : listSqlExecAuditLogList) {
         String schemaName = dmsAuditLogDo.getSchemaName();
-        if (schemaName.equals("mysql")) {
+        if (Const.MYSQL.equals(schemaName)) {
           continue;
         }
         String sql = dmsAuditLogDo.getSQL();
@@ -113,7 +113,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * @Param []
    **/
   @Override
-  public ServerResponse<String> autoFetchAuditlogByDMS(String startTime, String endTime) {
+  public ServerResponse<String> autoFetchAuditlogByDms(String startTime, String endTime) {
     Instant now = Instant.now();
     if (StringUtil.isBlank(startTime) || StringUtil.isBlank(endTime)) {
       log.error("#AuditLogServiceImpl.manualFetchAuditlog()# 通过定时任务自动拉取DMS审计日志，收到的开始间或者结束时间为空。");
@@ -146,7 +146,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     DefaultProfile profile = DefaultProfile.getProfile("cn-beijing", ak, sk);
     IAcsClient client = new DefaultAcsClient(profile);
 
-    ServerResponse<String> dmsAuditLog = getDMSAuditLog(client, startTime, endTime);
+    ServerResponse<String> dmsAuditLog = getDmsAuditLog(client, startTime, endTime);
     log.info("执行结束 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
     return dmsAuditLog;
 
@@ -267,10 +267,10 @@ public class AuditLogServiceImpl implements AuditLogService {
        * @return void
        **/
       private void batchInsertAuditLogFromDms(AllAuditLogDo data) {
-        Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
+        Long originTime = Long.valueOf(data.getORIGIN_TIME()) / 1000;
         String sqlType = data.getSQL_TYPE();
         String msSchemaName = data.getDB();
-        String opTime = DateTimeUtil.longToDate(origin_time);
+        String opTime = DateTimeUtil.longToDate(originTime);
         String dbUser = data.getUSER();
         String userIp = data.getUSER_IP();
         MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
@@ -283,7 +283,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         msDmsAuditLogDo.setSqlInsightUserIp(userIp);
         msDmsAuditLogDo.setSqlType(sqlType);
         String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
-        String hash = StringUtil.MD5(strData);
+        String hash = StringUtil.mD5(strData);
         msDmsAuditLogDo.setHash(hash);
         cachedDmsAuditLogList.add(msDmsAuditLogDo);
         if (cachedDmsAuditLogList.size() >= BATCH_COUNT) {
@@ -302,10 +302,10 @@ public class AuditLogServiceImpl implements AuditLogService {
        * @return void
        **/
       private void batchInsertAuditLogFromSqlInsight(String msSql, AllAuditLogDo data) {
-        Long origin_time = Long.valueOf(data.getORIGIN_TIME()) / 1000;
+        Long originTime = Long.valueOf(data.getORIGIN_TIME()) / 1000;
         String sqlType = data.getSQL_TYPE();
         String msSchemaName = data.getDB();
-        String opTime = DateTimeUtil.longToDate(origin_time);
+        String opTime = DateTimeUtil.longToDate(originTime);
 
         String dbUser = data.getUSER();
         String userIp = data.getUSER_IP();
@@ -318,7 +318,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         msAuditLogDo.setSqlType(sqlType);
         msAuditLogDo.setSqlSource(Const.SQL_SOURCE_INSIGHT);
         String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
-        String hash = StringUtil.MD5(strData);
+        String hash = StringUtil.mD5(strData);
         msAuditLogDo.setHash(hash);
         cachedDataList.add(msAuditLogDo);
         if (cachedDataList.size() >= BATCH_COUNT) {
@@ -340,7 +340,7 @@ public class AuditLogServiceImpl implements AuditLogService {
    * @Date 2022年05月26日 16:05:31
    * @Param [client, startTime, endTime]
    **/
-  private ServerResponse<String> getDMSAuditLog(IAcsClient client, String startTime, String endTime) {
+  private ServerResponse<String> getDmsAuditLog(IAcsClient client, String startTime, String endTime) {
     ServerResponse<String> byErrorMessage = ServerResponse.createBySuccess();
     int pageSize = 100;
     int pageNumber = 0;
@@ -369,7 +369,7 @@ public class AuditLogServiceImpl implements AuditLogService {
           "当前totalCount.intValue() =【{}】，increment = 【{}】。", totalCount.intValue(), increment);
 
         if (0 < sqlExecAuditLogList.size()) {
-          batchProcessDMSAuditLog(sqlExecAuditLogList);
+          batchProcessDmsAuditLog(sqlExecAuditLogList);
         }
 
         msScheduledTaskDo.setStartTime(startTime);
@@ -398,15 +398,15 @@ public class AuditLogServiceImpl implements AuditLogService {
     return byErrorMessage;
   }
 
-  public ServerResponse<String> batchProcessDMSAuditLog(List<ListSQLExecAuditLogResponse.SQLExecAuditLog> listSQLExecAuditLogList) {
+  public ServerResponse<String> batchProcessDmsAuditLog(List<ListSQLExecAuditLogResponse.SQLExecAuditLog> listSqlExecAuditLogList) {
     int size = 0;
     Instant now = Instant.now();
     log.info("开始执行# AuditLogServiceImpl.batchProcessDMSAuditLog() # 将阿里云提供的DMS数据库审计日志插入到数据库中。");
     try {
       List<MsDmsAuditLogDo> list = new LinkedList<>();
-      for (ListSQLExecAuditLogResponse.SQLExecAuditLog sqlExecAuditLog : listSQLExecAuditLogList) {
+      for (ListSQLExecAuditLogResponse.SQLExecAuditLog sqlExecAuditLog : listSqlExecAuditLogList) {
         String msSchemaName = sqlExecAuditLog.getSchemaName();
-        if (msSchemaName.equals("mysql")) {
+        if (Const.MYSQL.equals(msSchemaName)) {
           continue;
         }
         String msSql = sqlExecAuditLog.getSQL();
@@ -429,12 +429,12 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         // 大写统一转换成消息、去掉多余的空格
         String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
-        String hash = StringUtil.MD5(strData);
+        String hash = StringUtil.mD5(strData);
         MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
 
         String sqlType1 = mingshiServerUtil.getSqlType(msSql);
         // 获取表名；2022-06-06 14:11:21
-        if (StringUtil.isNotBlank(sqlType1) && !execState.equals("FAIL")) {
+        if (StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(execState)) {
           String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
           msDmsAuditLogDo.setMsTableName(tableName);
         }
@@ -615,7 +615,7 @@ public class AuditLogServiceImpl implements AuditLogService {
   }
 
   @Override
-  public ServerResponse<String> getAllUserNameFromDMS() {
+  public ServerResponse<String> getAllUserNameFromDms() {
     List<String> userNameList = msDmsAuditLogDao.selectAllUserName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(userNameList));
@@ -623,7 +623,7 @@ public class AuditLogServiceImpl implements AuditLogService {
   }
 
   @Override
-  public ServerResponse<String> getAllSqlTypeFromDMS() {
+  public ServerResponse<String> getAllSqlTypeFromDms() {
     List<String> list = msDmsAuditLogDao.selectAllSqlType();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(list));
@@ -631,7 +631,7 @@ public class AuditLogServiceImpl implements AuditLogService {
   }
 
   @Override
-  public ServerResponse<String> getAllTableNameFromDMS() {
+  public ServerResponse<String> getAllTableNameFromDms() {
     List<String> list = msDmsAuditLogDao.selectAllTableName();
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(list));

@@ -70,7 +70,7 @@ public class SkyflyingController {
   public ServerResponse<String> getQps() {
     Map<String/* 时间 */, Integer> countMap1 = new HashMap<>();
     Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
-      StatisticsConsumeProcessorThreadQps.getStatisticsConsumeProcessorThreadQPSMap();
+      StatisticsConsumeProcessorThreadQps.getStatisticsConsumeProcessorThreadQpsMap();
 
     Integer maxValue1 = -1;
     if (null != threadNameTimeCountMap && 0 < threadNameTimeCountMap.size()) {
@@ -99,7 +99,7 @@ public class SkyflyingController {
     }
 
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    ObjectNode jsonObject = JsonUtil.createJSONObject();
+    ObjectNode jsonObject = JsonUtil.createJsonObject();
     jsonObject.put("maxQps1", maxValue1);
 
     bySuccess.setData(jsonObject.toString());
@@ -303,8 +303,8 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllTableNameFromDMS", method = RequestMethod.GET)
-  public ServerResponse<String> getAllTableNameFromDMS() {
-    return auditLogService.getAllTableNameFromDMS();
+  public ServerResponse<String> getAllTableNameFromDms() {
+    return auditLogService.getAllTableNameFromDms();
   }
 
   /**
@@ -318,8 +318,8 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllSqlTypeFromDMS", method = RequestMethod.GET)
-  public ServerResponse<String> getAllSqlTypeFromDMS() {
-    return auditLogService.getAllSqlTypeFromDMS();
+  public ServerResponse<String> getAllSqlTypeFromDms() {
+    return auditLogService.getAllSqlTypeFromDms();
   }
 
   /**
@@ -333,8 +333,8 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/getAllUserNameFromDMS", method = RequestMethod.GET)
-  public ServerResponse<String> getAllUserNameFromDMS() {
-    return auditLogService.getAllUserNameFromDMS();
+  public ServerResponse<String> getAllUserNameFromDms() {
+    return auditLogService.getAllUserNameFromDms();
   }
 
   /**
@@ -996,8 +996,8 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @RequestMapping(value = "/autoFetchAuditlogByDMS", method = RequestMethod.GET)
-  public ServerResponse<String> autoFetchAuditlogByDMS(@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
-    return auditLogService.autoFetchAuditlogByDMS(startTime, endTime);
+  public ServerResponse<String> autoFetchAuditlogByDms(@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
+    return auditLogService.autoFetchAuditlogByDms(startTime, endTime);
   }
 
 }

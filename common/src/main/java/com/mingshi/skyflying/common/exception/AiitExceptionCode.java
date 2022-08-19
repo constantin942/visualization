@@ -7,7 +7,14 @@ package com.mingshi.skyflying.common.exception;
  */
 public enum AiitExceptionCode {
 
+  /**
+   * 操作成功
+   */
   SUCCESS("0000", "success", "成功"),
+
+  /**
+   * 操作失败
+   */
   FAILURE("1000", "failed", "失败"),
   ;
 

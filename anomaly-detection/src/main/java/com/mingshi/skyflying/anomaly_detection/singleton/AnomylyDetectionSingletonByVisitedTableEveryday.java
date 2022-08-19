@@ -18,8 +18,8 @@ public class AnomylyDetectionSingletonByVisitedTableEveryday {
    */
   private static volatile Integer visitedTableRuleId = null;
 
-  public static void setVisitedTableRuleId(Integer vTRId){
-    visitedTableRuleId = vTRId;
+  public static void setVisitedTableRuleId(Integer vTrid){
+    visitedTableRuleId = vTrid;
   }
 
   public static Integer getVisitedTableRuleId(){

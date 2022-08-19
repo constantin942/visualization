@@ -466,7 +466,7 @@ public class ScheduledTask {
     getNoCheckVisitedTableAbnormalRecord(msAlarmInformationDoLinkedListist, userNameIsNotNullAndVisitedTimeList);
 
     // 将异常信息批量插入到MySQL中；2022-06-07 18:16:44
-    mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
+    mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
     log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetNoCheckAbnormalRecord()# 定时将数据库中用户名不为空，且未进行过基于访问时间的异常检测记录查询出来，然后进行异常检测。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
 
     try {
@@ -579,7 +579,7 @@ public class ScheduledTask {
 
     endTime = DateTimeUtil.dateToStrformat(new Date());
     log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。开始时间 startTime = 【{}】，endTime = 【{}】。", startTime, endTime);
-    auditLogService.autoFetchAuditlogByDMS(startTime, endTime);
+    auditLogService.autoFetchAuditlogByDms(startTime, endTime);
     log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
   }
 }

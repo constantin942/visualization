@@ -185,7 +185,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         ZSetOperations.TypedTuple<String> next = iterator.next();
         Double score = next.getScore();
         String operationType = next.getValue();
-        ObjectNode jsonObject = JsonUtil.createJSONObject();
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
         jsonObject.put(Const.DB_TYPE2, operationType);
         jsonObject.put(Const.DB_TYPE_TIMES, score);
         list.add(jsonObject.toString());
@@ -196,7 +196,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         map.put(Const.DB_TYPE2, ot);
         Long count = msSegmentDetailDao.selectCountsOfUser(map);
         if (null != count && 0L < count) {
-          ObjectNode jsonObject = JsonUtil.createJSONObject();
+          ObjectNode jsonObject = JsonUtil.createJsonObject();
           jsonObject.put(Const.DB_TYPE2, ot);
           jsonObject.put(Const.DB_TYPE_TIMES, count);
           list.add(jsonObject.toString());
@@ -231,7 +231,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         ZSetOperations.TypedTuple<String> next = iterator.next();
         Double score = next.getScore();
         String operationType = next.getValue();
-        ObjectNode jsonObject = JsonUtil.createJSONObject();
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
         jsonObject.put(Const.DB_TYPE2, operationType);
         jsonObject.put(Const.DB_TYPE_TIMES, score);
         list.add(jsonObject.toString());
@@ -243,7 +243,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         map.put(Const.DB_TYPE2, ot);
         Long count = msSegmentDetailDao.selectCountsOfUser(map);
         if (null != count && 0L < count) {
-          ObjectNode jsonObject = JsonUtil.createJSONObject();
+          ObjectNode jsonObject = JsonUtil.createJsonObject();
           jsonObject.put(Const.DB_TYPE2, ot);
           jsonObject.put(Const.DB_TYPE_TIMES, count);
           list.add(jsonObject.toString());
@@ -328,7 +328,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
    * @Param [tableName, userCoarseInfo, tableDesc]
    **/
   private void doUsualVisitedData(String tableName, UserCoarseInfo userCoarseInfo, String tableDesc) {
-    ObjectNode jsonObject = JsonUtil.createJSONObject();
+    ObjectNode jsonObject = JsonUtil.createJsonObject();
     jsonObject.put(Const.TABLE_NAME, tableName);
     jsonObject.put(Const.TABLE_NAME_DESC, StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
     userCoarseInfo.setUsualVisitedData(jsonObject.toString());
@@ -418,7 +418,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       map.put("startTime", value);
       map.put("endTime", dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
-      String dateToStrYyyyMmDd = DateTimeUtil.DateToStrYYYYMMDD(date);
+      String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
       Long count = 0L;
       Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYyyyMmDd);
       if (null != hget) {
@@ -476,7 +476,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       map.put("startTime", value);
       map.put("endTime", dateList.get(i + 1));
       Date date = DateTimeUtil.strToDate(value);
-      String dateToStrYyyyMmDd = DateTimeUtil.DateToStrYYYYMMDD(date);
+      String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
       Long count = 0L;
       Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYyyyMmDd);
       if (null != hget) {
@@ -850,10 +850,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     try {
       Iterator<String> iterator1 = hashMap.keySet().iterator();
       while (iterator1.hasNext()) {
-        ObjectNode everyGlobalCallInfoJson = JsonUtil.createJSONObject();
+        ObjectNode everyGlobalCallInfoJson = JsonUtil.createJsonObject();
         hashSet.add(everyGlobalCallInfoJson);
-        ObjectNode headerJson = JsonUtil.createJSONObject();
-        ArrayNode bodyJsonArray = JsonUtil.createJSONArray();
+        ObjectNode headerJson = JsonUtil.createJsonObject();
+        ArrayNode bodyJsonArray = JsonUtil.createJsonArray();
         String globalTraceId = iterator1.next();
         // 组装每一个调用链；2022-06-02 15:03:11
         HashMap<String, LinkedList<MsSegmentDetailDo>> urlHhashMap = hashMap.get(globalTraceId);
@@ -862,8 +862,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
           String url = iterator2.next();
           List<MsSegmentDetailDo> segmentDetailDoList = urlHhashMap.get(url);
           if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-            ObjectNode jsonObject = JsonUtil.createJSONObject();
-            ArrayNode everyBodylinkedList = JsonUtil.createJSONArray();
+            ObjectNode jsonObject = JsonUtil.createJsonObject();
+            ArrayNode everyBodylinkedList = JsonUtil.createJsonArray();
             bodyJsonArray.add(jsonObject);
             everyGlobalCallInfoJson.set(Const.BODY, bodyJsonArray);
             MsSegmentDetailDo msSegmentDetailDoBackup = new MsSegmentDetailDo();
@@ -877,7 +877,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 everyGlobalCallInfoJson.set(Const.HEADER, headerJson);
               }
               jsonObject.put(Const.OPERATION_TYPE_URL, msSegmentDetailDo.getOperationName());
-              ObjectNode detailJson = JsonUtil.createJSONObject();
+              ObjectNode detailJson = JsonUtil.createJsonObject();
               detailJson.put(Const.PEER, msSegmentDetailDo.getPeer());
               detailJson.put(Const.SERVICE_INSTANCE_NAME, msSegmentDetailDo.getServiceInstanceName());
               detailJson.put(Const.SERVICE_CODE, msSegmentDetailDo.getServiceCode());

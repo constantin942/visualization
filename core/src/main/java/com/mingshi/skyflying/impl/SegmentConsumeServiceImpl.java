@@ -224,16 +224,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         //   mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
         // }
 
-        mingshiServerUtil.flushSegmentDetailToDB(segmentDetaiDolList);
+        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
 
-        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDB(segmentDetaiUserNameIsNullDolList);
+        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
 
         // 将异常信息插入到MySQL中；2022-06-07 18:16:44
         LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
         if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
           msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
         }
-        mingshiServerUtil.flushAbnormalToDB(msAlarmInformationDoLinkedListist);
+        mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
@@ -256,7 +256,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       skywalkingAgentHeartBeatMap = new HashMap<>();
       String service = segmentObject.getService();
       String serviceInstance = segmentObject.getServiceInstance();
-      ObjectNode jsonObject = JsonUtil.createJSONObject();
+      ObjectNode jsonObject = JsonUtil.createJsonObject();
       jsonObject.put("serviceCode", service);
       jsonObject.put("serviceInstanceName", serviceInstance);
       // todo：不应该用当前时间，如果当kafka中出现了消息积压时，那么这个时间就不是探针目前存活的时间。这个时间应该用消息本身的时间。2022-07-04 10:03:17
@@ -333,7 +333,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               } else if (key.equals(Const.OPERATION_TYPE_URL)) {
                 if (value.contains(Const.OPERATION_TYPE_DINGTALK)) {
                   msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DING_TALK);
-                  ObjectNode jsonObject = JsonUtil.createJSONObject();
+                  ObjectNode jsonObject = JsonUtil.createJsonObject();
                   jsonObject.put(Const.IP, value);
                   jsonObject.put(Const.CONTENT, dingTalkContent);
                   msSegmentDetailDo.setDbStatement(jsonObject.toString());
@@ -585,7 +585,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           return;
         }
         String service = segmentObject.getService();
-        ObjectNode jsonObject = JsonUtil.createJSONObject();
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
         jsonObject.put("parentSegmentId", parentSegmentId == null ? "##" : parentSegmentId);
         jsonObject.put("currentSegmentId", traceSegmentId);
         jsonObject.put("service", service);
@@ -775,10 +775,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList) {
     try {
-      ObjectNode jsonObject = JsonUtil.createJSONObject();
+      ObjectNode jsonObject = JsonUtil.createJsonObject();
       int spanId = span.getSpanId();
       if (0 == spanId) {
-        getSpringMVCInfo(span, jsonObject, linkedList);
+        getSpringMvcInfo(span, jsonObject, linkedList);
       } else if (0 < span.getTags().size()) {
         jsonObject.put("spanId", spanId);
         jsonObject.put("parentSpanId", span.getParentSpanId());
@@ -796,7 +796,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         List<KeyValue> tags = span.getTags();
         if (0 < tags.size()) {
           Boolean flag = false;
-          Boolean isSQL = false;
+          Boolean isSql = false;
           String dbUserName = null;
           String msSql = null;
           String msSchemaName = null;
@@ -838,7 +838,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
               // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
               msSql = tag.getValue();
-              isSQL = true;
+              isSql = true;
             }
           }
 
@@ -894,7 +894,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
   // private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
   //   try {
-  //     ObjectNode jsonObject = JsonUtil.createJSONObject();
+  //     ObjectNode jsonObject = JsonUtil.createJsonObject();
   //     int spanId = span.getSpanId();
   //     if (0 == spanId) {
   //       getSpringMVCInfo(span, jsonObject, linkedList);
@@ -1007,7 +1007,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 由于SQL洞察中的数据量巨大，且处理出来还比较麻烦。所以李老师就不打算处理SQL洞察中的数据了。进而可以将数据库表ms_audit_log中的hash字段不再设置为唯一索引。
       // 2022-06-01 15:43:56
       String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
-      String hash = StringUtil.MD5(strData);
+      String hash = StringUtil.mD5(strData);
       msAuditLogDo.setHash(hash);
       auditLogFromSkywalkingAgent.add(msAuditLogDo);
     } catch (Exception e) {
@@ -1024,7 +1024,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月12日 16:05:24
    * @Param [span, jsonObject, linkedList]
    **/
-  private void getSpringMVCInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
+  private void getSpringMvcInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
     List<KeyValue> tagsList = span.getTags();
     for (KeyValue keyValue : tagsList) {
       if (keyValue.getKey().equals("url")) {

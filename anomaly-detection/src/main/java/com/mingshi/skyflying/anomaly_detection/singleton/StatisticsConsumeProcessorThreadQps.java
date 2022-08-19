@@ -34,7 +34,7 @@ public class StatisticsConsumeProcessorThreadQps {
   //   return timeCountMap;
   // }
 
-  public static Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> getStatisticsConsumeProcessorThreadQPSMap() {
+  public static Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> getStatisticsConsumeProcessorThreadQpsMap() {
     if (null == statisticsConsumeProcessorThreadQPSMap) {
       synchronized (StatisticsConsumeProcessorThreadQps.class) {
         if (null == statisticsConsumeProcessorThreadQPSMap) {
@@ -68,7 +68,7 @@ public class StatisticsConsumeProcessorThreadQps {
   }
 
   private static void threadNameTimeCount(String threadName, String time) {
-    getStatisticsConsumeProcessorThreadQPSMap();
+    getStatisticsConsumeProcessorThreadQpsMap();
     Map<String, AtomicInteger> stringAtomicIntegerMap = statisticsConsumeProcessorThreadQPSMap.get(threadName);
     if (null == stringAtomicIntegerMap) {
       stringAtomicIntegerMap = new HashMap<>();

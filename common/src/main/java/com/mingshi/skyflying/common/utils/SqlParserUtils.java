@@ -42,19 +42,19 @@ public class SqlParserUtils {
    * @Return: java.util.List<java.lang.String>
    * @Date: 2020/12/25 15:03
    **/
-  public static List<String> select_items(String sql)
+  public static List<String> selectItems(String sql)
     throws JSQLParserException {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
     List<SelectItem> selectitems = plain.getSelectItems();
-    List<String> str_items = new ArrayList<String>();
+    List<String> strItems = new ArrayList<>();
     if (selectitems != null) {
       for (SelectItem selectitem : selectitems) {
-        str_items.add(selectitem.toString());
+        strItems.add(selectitem.toString());
       }
     }
-    return str_items;
+    return strItems;
   }
 
   /**
@@ -138,7 +138,7 @@ public class SqlParserUtils {
    * @Return: java.util.List<java.lang.String>
    * @Date: 2020/12/25 15:05
    **/
-  public static List<String> select_join(String sql)
+  public static List<String> selectJoin(String sql)
     throws JSQLParserException {
     Statement statement = CCJSqlParserUtil.parse(sql);
     Select selectStatement = (Select) statement;
@@ -161,13 +161,12 @@ public class SqlParserUtils {
    * @Return: java.lang.String
    * @Date: 2020/12/25 15:06
    **/
-  public static String select_where(String sql)
+  public static String selectWhere(String sql)
     throws JSQLParserException {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
-    Expression where_expression = plain.getWhere();
-    return where_expression.toString();
+    return plain.getWhere().toString();
   }
 
   /**
@@ -273,19 +272,19 @@ public class SqlParserUtils {
    * @Return: java.util.List<java.lang.String>
    * @Date: 2020/12/25 15:10
    **/
-  public static List<String> select_groupby(String sql)
+  public static List<String> selectGroupby(String sql)
     throws JSQLParserException {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
     List<Expression> GroupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
-    List<String> str_groupby = new ArrayList<String>();
+    List<String> strGroupby = new ArrayList<String>();
     if (GroupByColumnReferences != null) {
       for (Expression groupByColumnReference : GroupByColumnReferences) {
-        str_groupby.add(groupByColumnReference.toString());
+        strGroupby.add(groupByColumnReference.toString());
       }
     }
-    return str_groupby;
+    return strGroupby;
   }
 
   /**
@@ -295,19 +294,19 @@ public class SqlParserUtils {
    * @Return: java.util.List<java.lang.String>
    * @Date: 2020/12/25 15:13
    **/
-  public static List<String> select_orderby(String sql)
+  public static List<String> selectOrderby(String sql)
     throws JSQLParserException {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
     List<OrderByElement> OrderByElements = plain.getOrderByElements();
-    List<String> str_orderby = new ArrayList<String>();
+    List<String> strOrderby = new ArrayList<String>();
     if (OrderByElements != null) {
       for (OrderByElement orderByElement : OrderByElements) {
-        str_orderby.add(orderByElement.toString());
+        strOrderby.add(orderByElement.toString());
       }
     }
-    return str_orderby;
+    return strOrderby;
   }
 
   /**

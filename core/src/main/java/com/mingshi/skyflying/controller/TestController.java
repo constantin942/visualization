@@ -185,15 +185,15 @@ public class TestController {
   //   }
   // }
 
-  private void getCpuAndMemoryLoad(Map<Object, Object> cpu_memory_used_detail_skywalking_agent, String flag, Map<String, Map<String, Double>> cpuMemoryMap) {
-    if (null != cpu_memory_used_detail_skywalking_agent && 0 < cpu_memory_used_detail_skywalking_agent.size()) {
-      Integer size = cpu_memory_used_detail_skywalking_agent.size();
+  private void getCpuAndMemoryLoad(Map<Object, Object> cpuMemoryUsedDetailSkywalkingAgent, String flag, Map<String, Map<String, Double>> cpuMemoryMap) {
+    if (null != cpuMemoryUsedDetailSkywalkingAgent && 0 < cpuMemoryUsedDetailSkywalkingAgent.size()) {
+      Integer size = cpuMemoryUsedDetailSkywalkingAgent.size();
       Double countCpuLoad = 0d;
       Double countMemoryLoad = 0d;
-      Iterator<Object> iterator = cpu_memory_used_detail_skywalking_agent.keySet().iterator();
+      Iterator<Object> iterator = cpuMemoryUsedDetailSkywalkingAgent.keySet().iterator();
       while (iterator.hasNext()) {
         Object key = iterator.next();
-        Object value = cpu_memory_used_detail_skywalking_agent.get(key);
+        Object value = cpuMemoryUsedDetailSkywalkingAgent.get(key);
         String[] split = String.valueOf(value).split("\n");
         String cpuLoad = split[0].split(":")[1].trim();
         countCpuLoad += Double.valueOf(cpuLoad);
@@ -246,7 +246,7 @@ public class TestController {
   private void getCpuAndMemoryUsedDetail(Map<String, String> map24CpuMemory, Map<String, String> map25CpuMemory) {
     if (LinuxStateForShellConfig.getAtomicBoolean()) {
       Map<String, String> result1 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession24());
-      String item = DateTimeUtil.formatWithDATE_TIME_FULL(new Date());
+      String item = DateTimeUtil.formatWithDateTimeFull(new Date());
       String x = LinuxStateForShellUtil.disposeResultMessage(result1);
       if (StringUtil.isNotBlank(x)) {
         Map<String, String> result2 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession25());
