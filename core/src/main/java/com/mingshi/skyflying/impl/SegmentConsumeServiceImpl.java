@@ -22,8 +22,6 @@ import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.operation.Operation;
-import com.mingshi.skyflying.operation.OperatorFactory;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -298,12 +296,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           for (KeyValue keyValue : tagsList) {
             String key = keyValue.getKey();
             String value = keyValue.getValue();
-            Operation targetOperation = OperatorFactory.getOperation(key);
-            targetOperation.set();
             if (Const.FILE_OUTPUT.equals(key)) {
               // 给MsSegmentDetailDo实例设置dbType类型和operationType类型
               mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.FILE_OUTPUT, Const.FILE_OUTPUT, value);
             } else if (Const.SEND_EMAIL.equals(key)) {
+              String address = JsonUtil.string2Obj(value, ObjectNode.class).get(Const.ADDREE).asText();
+              msSegmentDetailDo.setPeer(address);
               mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.SEND_EMAIL, Const.SEND_EMAIL, value);
             } else {
               if (Const.OPERATION_TYPE_DING_TALK.equals(key)) {
@@ -427,8 +425,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
       if (null != list && 1 == list.size()) {
         LinkedHashMap hashMap = (LinkedHashMap) list.get(0);
-        if (null != hashMap && null != hashMap.get("url")) {
-          msSegmentDetailDo.setOperationType("url");
+        if (null != hashMap && null != hashMap.get(Const.OPERATION_TYPE_URL)) {
+          msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_URL_NO_DB_STATEMENT);
         }
       }
       if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {

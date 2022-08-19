@@ -20,6 +20,8 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
+  public static final Integer NUMBER_EIGHT = 8;
+
   private Const() {
     throw new IllegalStateException("Const class");
   }
@@ -39,6 +41,32 @@ public class Const {
   public static final String OPERATION_TYPE_DINGTALK = "dingtalk";
   public static final String OPERATION_TYPE_SQL = "sql";
   public static final String OPERATION_TYPE_URL = "url";
+  public static final String OPERATION_TYPE_URL_NO_DB_STATEMENT = "url-no-statement";
+  public static final String ADDREE = "address";
+
+  public static final String USER_NAME = "userName";
+  public static final String BODY = "body";
+  public static final String HEADER = "header";
+  public static final String REQUEST_START_TIME = "requestStartTime";
+  public static final String PEER = "peer";
+  public static final String SERVICE_INSTANCE_NAME = "serviceInstanceName";
+  public static final String SERVICE_CODE = "serviceCode";
+  public static final String DB_TYPE2 = "dbType";
+  public static final String DB_TYPE_TIMES = "dbTypeTimes";
+  public static final String DB_INSTANCE2 = "dbInstance";
+  public static final String MS_TABLE_NAME = "msTableName";
+  public static final String DB_USER_NAME2 = "dbUserName";
+  public static final String DB_STATEMENT2 = "dbStatement";
+  public static final String DB_TABLE_NAME = "dbTableName";
+  public static final String TABLE_NAME = "tableName";
+  public static final String TABLE_NAME_DESC = "tableNameDesc";
+  public static final String DB_NAME = "dbName";
+  public static final String DB_ADDRESS = "dbAddress";
+  public static final String FUNCTION = "function";
+  public static final String SEGMENTS = "segments";
+
+  public static final String POUND_KEY = "#";
+
 
   /**
    * 获取邮件的目的地址和发送内容

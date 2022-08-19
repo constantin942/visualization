@@ -21,7 +21,9 @@ public interface MsSegmentDetailDao {
 
   List<MsSegmentDetailDo> selectAllUserNameIsNotNullAndVisitedTableIsZero();
 
-  List<MsSegmentDetailDo> selectAll(Map<String, Object> map);
+  List<MsSegmentDetailDo> selectAllOld(Map<String, Object> map);
+
+  List<MsSegmentDetailDo> selectAllNew(Map<String, Object> map);
 
   List<MsSegmentDetailDo> selectAllFileOutputAndSendEmail(Map<String, Object> map);
 
@@ -39,7 +41,9 @@ public interface MsSegmentDetailDao {
 
   void updateBatchById(List<MsSegmentDetailDo> setmentDetailDoList);
 
-  Long selectCountAll(Map<String, Object> map);
+  Long selectCountAllOld(Map<String, Object> map);
+
+  Long selectCountAllNew(Map<String, Object> map);
 
   Long selectCountAllFileOutputAndSendEmail(Map<String, Object> map);
 
