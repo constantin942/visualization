@@ -3,7 +3,6 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
@@ -28,7 +27,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
@@ -48,11 +46,6 @@ import java.util.*;
 @Service("SegmentConsumerService")
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
-  /**
-   * 是否开启reactor模式的开关；2022-06-01 09:28:28
-   */
-  @Value("${reactor.processor.enable}")
-  private boolean reactorProcessorEnable;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
@@ -67,8 +60,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (InvalidProtocolBufferException e) {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
-    // 统计QPS；2022-06-24 10:34:24
-    // StatisticsConsumeProcessorThreadQPS.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 
@@ -83,8 +74,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (InvalidProtocolBufferException e) {
       log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
     }
-    // 统计QPS；2022-06-24 10:34:24
-    StatisticsConsumeProcessorThreadQps.accumulateTimes(Thread.currentThread().getName(), DateTimeUtil.dateToStrformat(new Date()));
     return null;
   }
 

@@ -1,9 +1,6 @@
 package com.mingshi.skyflying.controller;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.anomaly_detection.singleton.StatisticsConsumeProcessorThreadQps;
 import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
-import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -17,11 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author zhaoming
@@ -56,56 +50,6 @@ public class SkyflyingController {
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
   private MsAgentInformationService msAgentInformationService;
-
-  /**
-   * <B>方法名称：getQps</B>
-   * <B>概要说明：获取消费线程的QPS</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月29日 17:06:41
-   * @Param [id, agentName]
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getQps")
-  public ServerResponse<String> getQps() {
-    Map<String/* 时间 */, Integer> countMap1 = new HashMap<>(Const.NUMBER_EIGHT);
-    Map<String/* 线程名称 */, Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */>> threadNameTimeCountMap =
-      StatisticsConsumeProcessorThreadQps.getStatisticsConsumeProcessorThreadQpsMap();
-
-    Integer maxValue1 = -1;
-    if (null != threadNameTimeCountMap && 0 < threadNameTimeCountMap.size()) {
-      Iterator<String> iterator = threadNameTimeCountMap.keySet().iterator();
-      while (iterator.hasNext()) {
-        String threadName = iterator.next();
-        Map<String/* 时间 */, AtomicInteger/* 在当前时间内的处理消息的数量 */> timeCountMap = threadNameTimeCountMap.get(threadName);
-        if (null != timeCountMap && 0 < timeCountMap.size()) {
-          Iterator<String> iterator1 = timeCountMap.keySet().iterator();
-          while (iterator1.hasNext()) {
-            String time = iterator1.next();
-            AtomicInteger atomicInteger = timeCountMap.get(time);
-            Integer value = atomicInteger.intValue();
-            Integer count = countMap1.get(time);
-            if (null == count) {
-              countMap1.put(time, value);
-              maxValue1 = Math.max(maxValue1, value);
-            } else {
-              int tempValue = value + count;
-              countMap1.put(time, tempValue);
-              maxValue1 = Math.max(maxValue1, tempValue);
-            }
-          }
-        }
-      }
-    }
-
-    ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    ObjectNode jsonObject = JsonUtil.createJsonObject();
-    jsonObject.put("maxQps1", maxValue1);
-
-    bySuccess.setData(jsonObject.toString());
-    return bySuccess;
-  }
 
   /**
    * <B>方法名称：getAllMonitorTables</B>
