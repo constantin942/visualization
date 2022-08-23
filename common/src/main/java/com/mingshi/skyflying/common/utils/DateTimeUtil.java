@@ -296,44 +296,6 @@ public class DateTimeUtil {
     return Duration.between(instStart, instEnd).getSeconds();
   }
 
-  // 计算两个时间的差
-  public static double timeDifference(String time1, String time2) {
-    double diff = -1;
-    String formatIn = "yyyy-MM-dd HH:mm:ss.SSSSSS";
-
-    try {
-      Calendar c1 = Calendar.getInstance();
-      c1.setTime(new SimpleDateFormat(formatIn).parse(time1));
-      log.info("时间转化后的毫秒数为：" + c1.getTimeInMillis());
-
-      Calendar c2 = Calendar.getInstance();
-      c2.setTime(new SimpleDateFormat(formatIn).parse(time2));
-      log.info("时间转化后的毫秒数为：" + c2.getTimeInMillis());
-      diff = c1.getTimeInMillis() - c2.getTimeInMillis();
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-
-    return Math.abs(diff);
-  }
-
-  //原始时间
-  public static final Date INIT_DATE = new Date(0L);
-
-  public static String formatDate(final Date date) {
-    if (null == date) {
-      return "";
-    }
-    return formatDate(date, DEFAULT_PATTERN);
-  }
-
-  public static String formatWithDateTimeFull(final Date date) {
-    if (date == null) {
-      return "";
-    }
-    return formatDate(date, DATE_TIME_FULL);
-  }
-
   /**
    * 格式化日期
    *
@@ -999,7 +961,10 @@ public class DateTimeUtil {
     return preMonday;
   }
 
-  // 获得当前日期与本周日相差的天数
+  /**
+   * 获得当前日期与本周日相差的天数
+   * @return
+   */
   private static int getMondayPlus() {
     Calendar cd = Calendar.getInstance();
     // 获得今天是一周的第几天，星期日是第一天，星期二是第二天......
@@ -1011,7 +976,10 @@ public class DateTimeUtil {
     }
   }
 
-  // 获得本周一的日期
+  /**
+   * 获得本周一的日期
+   * @return
+   */
   @SuppressWarnings("unused")
   public static String getMondayOfWeek() {
     int weeks = 0;
@@ -1025,7 +993,10 @@ public class DateTimeUtil {
     return preMonday;
   }
 
-  // 获取当前月第一天：
+  /**
+   * 获取当前月第一天：
+   * @return
+   */
   public static String getFirstDayOfMonth() {
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
     Calendar c = Calendar.getInstance();

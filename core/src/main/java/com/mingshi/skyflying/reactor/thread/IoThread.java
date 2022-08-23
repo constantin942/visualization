@@ -30,7 +30,9 @@ import java.util.concurrent.TimeUnit;
  **/
 @Slf4j
 public class IoThread extends Thread {
-  // 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
+  /**
+   * 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
+   */
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant currentTime = null;
 

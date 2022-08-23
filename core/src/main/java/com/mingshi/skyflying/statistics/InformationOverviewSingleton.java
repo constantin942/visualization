@@ -11,8 +11,6 @@ import javax.annotation.Resource;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <B>类名称：InformationOverviewSingleton</B>
@@ -29,9 +27,6 @@ public class InformationOverviewSingleton implements ApplicationRunner {
 
   @Resource
   private RedisPoolUtil redisPoolUtil;
-
-  // 当把addUserChangedMap中的用户信息发送到Redis中的时候，需要加锁。2022-07-19 09:44:08
-  private static Lock lock = new ReentrantLock();
 
   private static volatile Map<String, Integer> userCountHashMap = new ConcurrentHashMap();
 

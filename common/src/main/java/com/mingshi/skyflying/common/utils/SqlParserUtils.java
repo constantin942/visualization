@@ -72,7 +72,7 @@ public class SqlParserUtils {
     try {
       Statement statement = null;
         String newSql = null;
-      if(sql.contains("like")){
+      if(sql.contains(Const.LIKE)){
         newSql = sql.replace("\"%\"","");
         statement = CCJSqlParserUtil.parse(newSql);
       }else{
@@ -82,7 +82,7 @@ public class SqlParserUtils {
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(selectStatement);
     } catch (Exception e) {
-      // log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
+      // ignore;
     }
     return tableList;
   }
@@ -254,10 +254,10 @@ public class SqlParserUtils {
         }
       });
       //暂时无法解析IS NOT NULL 和 IS NULL
-      if (CollectionUtils.isEmpty(map) && (where.toUpperCase().contains("IS NOT NULL") || where.toUpperCase().contains("IS NULL"))) {
-        map.put("leftExpression", where.substring(0, where.lastIndexOf("IS")));
-        map.put("operate", null);
-        map.put("rightExpression", where.substring(where.lastIndexOf("IS"), where.length()));
+      if (CollectionUtils.isEmpty(map) && (where.toUpperCase().contains(Const.IS_NOT_NULL) || where.toUpperCase().contains(Const.IS_NULL2))) {
+        map.put(Const.LEFT_EXPRESSION, where.substring(0, where.lastIndexOf(Const.IS)));
+        map.put(Const.OPERATE, null);
+        map.put(Const.RIGHT_EXPRESSION, where.substring(where.lastIndexOf(Const.IS), where.length()));
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -300,10 +300,10 @@ public class SqlParserUtils {
     CCJSqlParserManager parserManager = new CCJSqlParserManager();
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
-    List<OrderByElement> OrderByElements = plain.getOrderByElements();
+    List<OrderByElement> orderByElements = plain.getOrderByElements();
     List<String> strOrderby = new ArrayList<String>();
-    if (OrderByElements != null) {
-      for (OrderByElement orderByElement : OrderByElements) {
+    if (orderByElements != null) {
+      for (OrderByElement orderByElement : orderByElements) {
         strOrderby.add(orderByElement.toString());
       }
     }

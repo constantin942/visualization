@@ -1,9 +1,10 @@
 package com.mingshi.skyflying.init;
 
-import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
+import com.mingshi.skyflying.utils.MingshiServerUtil;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -64,16 +65,16 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
    * @Param [key]
    **/
   public static String getTableDesc(String key) {
-    if(key.contains(",")){
-      String[] split = key.split("#");
+    if(key.contains(Const.COMMA)){
+      String[] split = key.split(Const.POUND_KEY);
       String peer = split[0];
       String dbName = split[1];
       String tableName = split[2];
       String tableDesc = "";
-      if(tableName.contains(",")){
-        String[] split1 = tableName.split(",");
+      if(tableName.contains(Const.COMMA)){
+        String[] split1 = tableName.split(Const.COMMA);
         for (String str : split1) {
-          String newTableName = peer + "#" + dbName + "#" + str;
+          String newTableName = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + str;
           if(StringUtil.isBlank(tableDesc)){
             tableDesc = concurrentHashMapTableDesc.get(newTableName);
             if(StringUtil.isBlank(tableDesc)){
@@ -82,9 +83,9 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
           }else{
             String tableNameDesc = concurrentHashMapTableDesc.get(newTableName);
             if(StringUtil.isBlank(tableNameDesc)){
-              tableDesc = tableDesc + "," + str;
+              tableDesc = tableDesc + Const.COMMA + str;
             }else{
-              tableDesc = tableDesc + "," + tableNameDesc;
+              tableDesc = tableDesc + Const.COMMA + tableNameDesc;
             }
           }
         }

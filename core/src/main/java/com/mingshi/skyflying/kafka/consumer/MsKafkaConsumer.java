@@ -22,7 +22,9 @@ public class MsKafkaConsumer extends Thread {
   private String bootstrapServers;
   private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
 
-  // 初始化完成的标志；2022-07-28 17:12:32
+  /**
+   * 初始化完成的标志；2022-07-28 17:12:32
+   */
   private AtomicBoolean isInitDone = new AtomicBoolean(false);
 
   org.apache.kafka.clients.consumer.KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;

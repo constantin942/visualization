@@ -30,18 +30,20 @@ import java.util.concurrent.ThreadFactory;
 @Component
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class ProcessorByDisruptor implements ApplicationRunner {
-  // 是否开启reactor模式的开关；2022-06-01 09:28:28
+  /**
+   * 是否开启reactor模式的开关；2022-06-01 09:28:28
+   */
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
 
   @Value("${reactor.processor.disruptor}")
   private boolean reactorProcessorByDisruptor;
 
-  // private AtomicInteger atomicInteger = new AtomicInteger(0);
-
   @Resource
   private SegmentConsumerService segmentConsumerService;
-  // 在开启reactor模式的情况下，创建processor线程的数量；2022-06-01 09:28:57
+  /**
+   * 在开启reactor模式的情况下，创建processor线程的数量；2022-06-01 09:28:57
+   */
   @Value("${reactor.processor.thread.count}")
   private Integer reactorProcessorThreadCount;
 
@@ -150,7 +152,10 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     }
   }
 
-  // 获取队列中元素的个数；2021-10-20 15:22:55
+  /**
+   * 获取队列中元素的个数；2021-10-20 15:22:55
+   * @return
+   */
   public long getQueueSize() {
     return queueSize - acceptorRingBuffer.remainingCapacity();
   }

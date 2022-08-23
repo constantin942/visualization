@@ -133,7 +133,13 @@ public class DbUtil {
     }
   }
 
-  // 设置表格高度
+  /**
+   * 设置表格高度
+   * @param xTable
+   * @param rowNomber
+   * @param cellNumber
+   * @return
+   */
   private static XWPFTableCell getCellHight(XWPFTable xTable, int rowNomber, int cellNumber) {
     XWPFTableRow row = null;
     row = xTable.getRow(rowNomber);
@@ -165,7 +171,11 @@ public class DbUtil {
     rIO.setText(text);
   }
 
-  // 设置表格间的空行
+  /**
+   * 设置表格间的空行
+   * @param xdoc
+   * @param r1
+   */
   public static void setEmptyRow(XWPFDocument xdoc, XWPFRun r1) {
     XWPFParagraph p1 = xdoc.createParagraph();
     p1.setAlignment(ParagraphAlignment.CENTER);

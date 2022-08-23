@@ -260,7 +260,7 @@ public class MingshiServerUtil {
       return Const.SQL_TYPE_COMMIT.toLowerCase();
     } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME)) {
       return Const.SQL_TYPE_RENAME.toLowerCase();
-    } else if ("keys *".equals(msSql)) {
+    } else if (Const.KEYS_ALL.equals(msSql)) {
       return null;
     }
     log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
@@ -298,7 +298,7 @@ public class MingshiServerUtil {
         if (StringUtil.isBlank(tableName)) {
           tableName = table;
         } else {
-          tableName = tableName + "," + table;
+          tableName = tableName + Const.COMMA + table;
         }
       }
     }
@@ -318,8 +318,6 @@ public class MingshiServerUtil {
       tableNameList = SqlParserUtils.updateTable(msSql);
     } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
       tableNameList = SqlParserUtils.deleteTable(msSql);
-    } else {
-      // log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
     }
     return tableNameList;
   }
@@ -338,7 +336,7 @@ public class MingshiServerUtil {
       if (0 < setmentDetailDoList.size()) {
         Instant now = Instant.now();
         msSegmentDetailDao.updateBatch(setmentDetailDoList);
-        // log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# IoThread.batchUpdateMsSegmentDetail # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
@@ -359,7 +357,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         segmentDao.insertSelectiveBatch(segmentList);
-        // log.info("将【{}】条segment数据插入到表中，耗时【{}】毫秒。", segmentList.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("将【{}】条segment数据插入到表中，耗时【{}】毫秒。", segmentList.size(), DateTimeUtil.getTimeMillis(now));
         segmentList.clear();
       } catch (Exception e) {
         log.error("将segment数据批量插入到数据库中的时候，出现了异常。", e);
@@ -402,7 +400,7 @@ public class MingshiServerUtil {
         // 更新每天采集情况和总的采集情况到Redis；2022-07-20 14:17:03
         updateEverydayStatisticToRedis(map);
 
-        // log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
       } catch (Exception e) {
         log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
       }
@@ -479,7 +477,7 @@ public class MingshiServerUtil {
           // 将用户名放到本地内存中；2022-07-19 10:12:13
           InformationOverviewSingleton.put(userName);
         }
-        // log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+        log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
         userHashSet.clear();
       } catch (Exception e) {
         log.error("# MingshiServerUtil.flushUserNameToRedis() # 实时将用户名发送到redis中，出现了异常。", e);
@@ -505,17 +503,7 @@ public class MingshiServerUtil {
         redisPoolUtil.set(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName, startTime);
       }
 
-      // 这里不再区分表名是否由多个组成，因为把表名存到MySQL数据库中就没有区分.这里强行区分的话，会导致Redis和MySQL中数据不一致。2022-07-21 08:49:12
-      // 如果要换成ES查询，那可以将多个表名分开存储；2022-07-21 08:57:27
       doFlushUserAccessBehaviorToRedis(dbType, peer, dbInstance, tableName, userName, startTime, serviceCode);
-      // if (tableName.contains(",")) {
-      //   String[] split = tableName.split(",");
-      //   for (String tableNameSplited : split) {
-      //     doFlushUserAccessBehaviorToRedis(peer, dbInstance, tableNameSplited, userName, startTime);
-      //   }
-      // }else{
-      //   doFlushUserAccessBehaviorToRedis(peer, dbInstance, tableName, userName, startTime);
-      // }
 
     } catch (Exception e) {
       log.error("# MingshiServerUtil.doFlushUserAccessBehaviorToRedis() # 实时将用户访问行为信息发送到redis中，出现了异常。", e);
@@ -540,8 +528,8 @@ public class MingshiServerUtil {
     Date date = DateTimeUtil.strToDate(startTime);
     String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
-    if (tableName.contains(",")) {
-      String[] split = tableName.split(",");
+    if (tableName.contains(Const.COMMA)) {
+      String[] split = tableName.split(Const.COMMA);
       for (String tn : split) {
         // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
         zsetVlue = doGetTableName(peer, dbInstance, tn);
@@ -594,7 +582,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
-        // log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("#SegmentConsumeServiceImpl.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
         msAlarmInformationDoLinkedListist.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
@@ -635,7 +623,7 @@ public class MingshiServerUtil {
         msAgentInformationMapper.insertBatch(list);
         // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
         AgentInformationSingleton.setAtomicBooleanToFalse();
-        // log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
@@ -868,9 +856,6 @@ public class MingshiServerUtil {
 
     // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
     flushSkywalkingAgentInformationToDb();
-
-    // 将Span信息刷入MySQL数据库中;
-    // flushSpansToDB(spanList);
 
     // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
     flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);

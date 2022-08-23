@@ -15,11 +15,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
 
-  // 这里使用LinkedBlockingQueue的原因是：该阻塞队列有两把独占锁，分别是入队列的独占锁和出队列的独占锁。
-  // 当线程执行入队列操作时，不影响操作出队列的线程。也就是说，执行入队列的线程与执行出队列的线程互不影响。2022-06-01 09:47:30
+  /**
+   * 这里使用LinkedBlockingQueue的原因是：该阻塞队列有两把独占锁，分别是入队列的独占锁和出队列的独占锁。
+   * 当线程执行入队列操作时，不影响操作出队列的线程。也就是说，执行入队列的线程与执行出队列的线程互不影响。2022-06-01 09:47:30
+   */
   private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> linkedBlockingQueue;
 
-  // 队列里存放的消息的个数；2022-06-01 09:42:19
+  /**
+   * 队列里存放的消息的个数；2022-06-01 09:42:19
+   */
   private final Integer queueSize = Const.QUEUE_SIZE;
 
   private Instant now = Instant.now();
@@ -47,14 +51,16 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
     }
   }
 
-  // 获取队列中元素的个数；2021-10-20 15:22:55
+  /**
+   * 获取队列中元素的个数；2021-10-20 15:22:55
+   * @return
+   */
   public Integer getQueueSize() {
     return linkedBlockingQueue.size();
   }
 
   @Override
   public void run() {
-    // 优雅关闭processor线程：只有jvm进程退出，并且当前队列中没有了元素时，processor线程才退出循环。2022-06-01 10:06:19
     while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
       try {
         ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();

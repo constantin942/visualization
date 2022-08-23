@@ -150,8 +150,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     // 统计processor线程的QPS；2022-07-23 11:26:40
     mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
 
-    // mingshiServerUtil.flushSpansToDB(spanList);
-
     mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
     // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
@@ -521,7 +519,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   private void reorganizingSpans(SegmentDo segment, List<Span> spanList) {
     if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-      // log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+      log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
 
@@ -792,7 +790,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
     if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-      // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
+      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
 

@@ -20,7 +20,6 @@ public class LinuxStateForShellUtil {
   public static final String CPU_MEM_SHELL = "top -b -n 1";
   public static final String FILES_SHELL = "df -hl";
   public static final String[] COMMANDS = {CPU_MEM_SHELL};
-  // public static final String[] COMMANDS = {CPU_MEM_SHELL, FILES_SHELL};
   public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
   /**

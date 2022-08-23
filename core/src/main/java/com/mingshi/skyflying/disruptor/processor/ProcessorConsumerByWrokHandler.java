@@ -16,7 +16,10 @@ public class ProcessorConsumerByWrokHandler implements WorkHandler<SegmentByByte
     this.segmentConsumerService = segmentConsumerService;
   }
 
-  // 在多消费者的情况下使用。每个消费者只会消费其中一个消息。2021-12-23 07:53:11
+  /**
+   * 在多消费者的情况下使用。每个消费者只会消费其中一个消息。2021-12-23 07:53:11
+   * @param data
+   */
   @Override
   public void onEvent(SegmentByByte data) {
     try {

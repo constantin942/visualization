@@ -16,7 +16,13 @@ public class ProcessorConsumerByEventHandler implements EventHandler<SegmentByBy
     this.segmentConsumerService = segmentConsumerService;
   }
 
-  // 在单消费者的情况下使用。2021-12-23 07:53:11
+  /**
+   * 在单消费者的情况下使用。2021-12-23 07:53:11
+   * @param data
+   * @param l
+   * @param b
+   * @throws Exception
+   */
   @Override
   public void onEvent(SegmentByByte data, long l, boolean b) throws Exception {
     try {

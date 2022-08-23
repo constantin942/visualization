@@ -76,6 +76,14 @@ public class Const {
   public static final Integer INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL = 5;
   public static final Integer FLUSH_TO_ROCKETMQ_INTERVAL = 10;
   public static final Integer CURRENT_TIME_RANDOM = 30;
+  public static final String KEYS_ALL = "keys *";
+  public static final CharSequence LIKE = "like";
+  public static final CharSequence IS_NOT_NULL = "IS NOT NULL";
+  public static final CharSequence IS_NULL2 = "IS NULL";
+  public static final Object LEFT_EXPRESSION = "leftExpression";
+  public static final String IS = "IS";
+  public static final Object OPERATE = "operate";
+  public static final Object RIGHT_EXPRESSION = "rightExpression";
 
   private Const() {
     throw new IllegalStateException("Const class");
@@ -121,6 +129,8 @@ public class Const {
   public static final String SEGMENTS = "segments";
 
   public static final String POUND_KEY = "#";
+  public static final String COMMA = "#";
+
 
   public static final String START_TIME = "startTime";
   public static final String END_TIME = "endTime";
@@ -231,7 +241,9 @@ public class Const {
    * 统计kafka消费者每秒钟拿到多少消息；2022-07-28 14:00:38
    */
   public static final String QPS_ZSET_KAFKA_CONSUMER_RECORDS_THREAD = "qps_zset_kafka_consumer_records_";
-  // 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
+  /**
+   * 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
+   */
   public static final String SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR = "second_queue_size_zset_by_disruptor";
   public static final String SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "second_queue_size_zset_by_linked_blocking_queue";
   /**

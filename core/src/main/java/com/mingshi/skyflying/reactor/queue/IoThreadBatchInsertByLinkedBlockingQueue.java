@@ -18,23 +18,38 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class IoThreadBatchInsertByLinkedBlockingQueue {
 
-  // 阻塞队列中，元素的个数；2021-06-09 16:30:20
+  /**
+   * 阻塞队列中，元素的个数；2021-06-09 16:30:20
+   */
   private final static Integer QUEUE_SIZE = Const.IO_THREAD_QUEUE_SIZE;
   private volatile static LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = null;
-  // 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
+  /**
+   * 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
+   */
   private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
 
-  // 获取队列的容量；2021-11-17 14:35:19
+  /**
+   * 获取队列的容量；2021-11-17 14:35:19
+   * @return
+   */
   public static Integer getQueueAllSize() {
     return QUEUE_SIZE;
   }
 
-  // 获取队列中元素的个数；2022-07-26 17:27:02
+  /**
+   * 获取队列中元素的个数；2022-07-26 17:27:02
+   * @return
+   */
   public static Integer getQueueSize() {
     return linkedBlockingQueue.size();
   }
 
-  // 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
+  /**
+   * 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
+   * @param localStatisticsThreadCount
+   * @param flushToRocketMqInterval
+   * @param mingshiServerUtil
+   */
   public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
     log.info("开始执行方法OperatorRedisFailureBuffer（）。");
     if (0 < SINGLE_CASE_COUNT.get()) {
@@ -51,7 +66,13 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
     }
   }
 
-  // 获取单例；2021-06-23 10:50:06
+  /**
+   * 获取单例；2021-06-23 10:50:06
+   * @param localStatisticsThreadCount
+   * @param flushToRocketMqInterval
+   * @param mingshiServerUtil
+   * @return
+   */
   public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
     if (null == linkedBlockingQueue) {
       synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
