@@ -70,8 +70,6 @@ public class MingshiServerUtil {
   @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
   @Resource
-  private MsAuditLogDao msAuditLogDao;
-  @Resource
   private SegmentDao segmentDao;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
@@ -466,27 +464,6 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：batchUpdateMsAuditLog</B>
-   * <B>概要说明：批量更新审计日志的用户名和globalTraceId信息；</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年06月01日 11:06:48
-   * @Param [auditLogDoList]
-   **/
-  private void batchUpdateMsAuditLog(List<MsAuditLogDo> auditLogDoList) {
-    try {
-      if (0 < auditLogDoList.size()) {
-        Instant now = Instant.now();
-        msAuditLogDao.updateBatch(auditLogDoList);
-        // log.info("# IoThread.batchUpdateMsAuditLog # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", auditLogDoList.size(), DateTimeUtil.getTimeMillis(now));
-      }
-    } catch (Exception e) {
-      log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
-    }
-  }
-
-  /**
    * <B>方法名称：flushToDB</B>
    * <B>概要说明：批量插入到数据库中</B>
    *
@@ -719,28 +696,6 @@ public class MingshiServerUtil {
     // 有序集合：统计每个用户操作类型次数；
     redisPoolUtil.incrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
 
-  }
-
-  /**
-   * <B>方法名称：flushAuditLogToDB</B>
-   * <B>概要说明：将来自探针的SQL语句插入到表中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月30日 18:05:15
-   * @Param [now]
-   **/
-  public void flushAuditLogToDb(LinkedList<MsAuditLogDo> auditLogList) {
-    if (0 < auditLogList.size()) {
-      try {
-        Instant now = Instant.now();
-        msAuditLogDao.insertSelectiveBatch(auditLogList);
-        // log.info("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的【{}】条SQL语句插入到表中耗时【{}】毫秒。", auditLogList.size(), DateTimeUtil.getTimeMillis(now));
-        auditLogList.clear();
-      } catch (Exception e) {
-        log.error("#SegmentConsumeServiceImpl.reorganizingSpans()# 将来自探针的SQL语句插入到表中出现了异常。", e);
-      }
-    }
   }
 
   /**

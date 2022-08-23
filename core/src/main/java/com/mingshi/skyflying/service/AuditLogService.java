@@ -1,14 +1,9 @@
 package com.mingshi.skyflying.service;
 
-import com.aliyun.dms_enterprise20181101.models.ListSQLExecAuditLogResponseBody;
-import com.mingshi.skyflying.common.domain.MsAuditLogDo;
+import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 
-import java.util.List;
-
-public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
-
-  ServerResponse<String> process(List<ListSQLExecAuditLogResponseBody.ListSQLExecAuditLogResponseBodySQLExecAuditLogListSQLExecAuditLog> listSqlExecAuditLogList);
+public interface AuditLogService extends ParentService<MsDmsAuditLogDo, Long> {
 
   /**
    * <B>方法名称：autoFetchAuditlogByDMS</B>
@@ -19,28 +14,6 @@ public interface AuditLogService extends ParentService<MsAuditLogDo, Long> {
    * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
    **/
   ServerResponse<String> autoFetchAuditlogByDms(String startTime,String endTime);
-
-  /**
-   * <B>方法名称：getAuditlogByExcel</B>
-   * <B>概要说明：从excel表中读取审计日志</B>
-   * @Author zm
-   * @Date 2022年05月26日 19:05:57
-   * @Param []
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   **/
-  ServerResponse<String> getAuditlogByExcel(String path);
-
-  ServerResponse<String> getBehaviorByUserName(String applicationUserName, String opTime, Integer pageNo, Integer pageSize);
-
-  ServerResponse<String> getBehaviorByOptTime(String sqlInsightDbUserName,String startTime,String endTime,Integer pageNo, Integer pageSize);
-
-  ServerResponse<String> getBehaviorByTableName(String msTableName, Integer pageNo, Integer pageSize);
-
-  ServerResponse<String> getAllUserName();
-
-  ServerResponse<String> getAllMsTableName();
-
-  ServerResponse<String> getNumberOfTablesByOpTime(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize);
 
   /**
    * <B>方法名称：getDmsAuditLogFromDb</B>

@@ -79,25 +79,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   private void doConsume(SegmentObject segmentObject, Boolean enableReactorModelFlag) {
     HashSet<String> userHashSet = new HashSet<>();
-    // Instant now1 = Instant.now();
-    // Instant now = Instant.now();
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
       SegmentDo segment = new SegmentDo();
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
-      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完81行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-      // now = Instant.now();
       // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
       setUserNameAndTokenFromSegmentObject(userHashSet, segment, segmentObject);
       // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
       setUserNameTokenGlobalTraceIdToLocalMemory(segment);
 
-      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完89行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-      // now = Instant.now();
-
-      // 暂存sql语句的来源：skywalking 探针；2022-05-27 18:36:50
-      // LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgentList = null;
       // 判断是否是异常信息；2022-06-07 18:00:13
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
       // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
@@ -109,9 +100,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
       List<Span> spanList = buildSpanList(segmentObject, segment);
 
-      // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完104行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-      // now = Instant.now();
-
       if (null != spanList && 0 < spanList.size()) {
         // 组装segment；2022-04-20 16:33:48
         segment = setUserNameAndTokenFromSpan(spanList, segment);
@@ -119,30 +107,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
         reorganizingSpans(segment, spanList);
 
-        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完114行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-        // now = Instant.now();
-
-        // auditLogFromSkywalkingAgentList = new LinkedList<>();
-        // // 重组span数据，返回前端使用；2022-04-20 16:49:02
-        // reorganizingSpans(segment, spanList, auditLogFromSkywalkingAgentList);
-
-        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完95行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-        // now = Instant.now();
-
-        // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
-        // if (true == esMsSegmentDetailUtil.getEsEnable()) {
-        //   esSegmentDetaiDolList = esMsSegmentDetailUtil.getEsSegmentDetaiDolList(segment);
-        // }
         segmentDetaiDolList = new LinkedList<>();
         segmentDetaiUserNameIsNullDolList = new LinkedList<>();
         getSegmentDetaiDolList(segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
-        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完100行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
 
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
-
-        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完134行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-        // now = Instant.now();
 
         AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
@@ -155,16 +125,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
         mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
-        // log.info(" # SegmentConsumeServiceImpl.doConsume() # 执行完144行，用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
-        // now = Instant.now();
-        // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
         disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
-    // log.info(" # SegmentConsumeServiceImpl.doConsume() # 消费完一条链路信息用时【{}】毫秒。",DateTimeUtil.getTimeMillis(now1));
   }
 
   /**
@@ -196,7 +162,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
     mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
-    // 不使用reactor模型；2022-05-30 21:04:16
     // 插入segment数据；2022-05-23 10:15:22
     // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
     // if (null != segment) {
@@ -858,62 +823,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   //     log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
   //   }
   // }
-
-  /**
-   * <B>方法名称：getMsAuditLogDo</B>
-   * <B>概要说明：组装MsAuditLogDo实例，用于将其插入到审计日志表中（ms_audit_log）</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月28日 13:05:03
-   * @Param [msSql, startTime, msSchemaName, dbUserName, auditLogFromSkywalkingAgent]
-   **/
-  private void getMsAuditLogDo(SegmentDo segmentDo, String msSql, Span span, String msSchemaName, String dbUserName, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
-    MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-    try {
-      msAuditLogDo.setApplicationUserName(segmentDo.getUserName());
-      msAuditLogDo.setOperationName(segmentDo.getOperationName());
-      msAuditLogDo.setCurrentSegmentId(span.getSegmentId());
-      msAuditLogDo.setParentSegmentId(segmentDo.getParentSegmentId());
-      // 设置全局追踪id；2022-05-30 18:55:00
-      String traceId = span.getTraceId();
-      msAuditLogDo.setGlobalTraceId(traceId);
-      // 设置登录应用系统的用户名；2022-05-30 18:55:12
-
-      msAuditLogDo.setSqlSource(Const.SQL_SOURCE_SKYWALKING_AGENT);
-      // sql语句；
-      msAuditLogDo.setMsSql(msSql);
-      // 执行时间；
-      long startTime = span.getStartTime();
-      String opTime = DateTimeUtil.longToDate(startTime);
-      msAuditLogDo.setOpTime(opTime);
-      // 数据库名称；
-      msAuditLogDo.setMsSchemaName(msSchemaName);
-      // 执行语句的数据库用户名；
-      msAuditLogDo.setSqlInsightDbUserName(dbUserName);
-      // 发送请求的客户端IP；
-      // msAuditLogDo.setSqlInsightUserIp(data.getUSER_IP());
-      // sql类型；
-      String sqlType = mingshiServerUtil.getSqlType(msSql);
-      msAuditLogDo.setSqlType(sqlType);
-
-      // 获取表名；2022-05-31 17:01:39
-      String tableName = mingshiServerUtil.getTableName(sqlType, msSql);
-      msAuditLogDo.setMsTableName(tableName);
-
-      // 这个来自探针的操作时间opTime不是SQL语句真正的执行时间，所以这里就不传了。直接根据sql语句 + 数据库名称 + sql类型来计算md5值；2022-05-28 13:09:47
-      // 这里有也有一个问题：当来自探针的同一条SQL在不同的时间过来时，会根据hash值进行更新。为了解决这个问题，数据库中ms_audit_log中的hash字段就不能设置为唯一索引了。
-      // 当初设置这个hash字段为唯一索引时，是为了识别出来自SQL洞察中skywalking探针发出来的SQL语句。
-      // 由于SQL洞察中的数据量巨大，且处理出来还比较麻烦。所以李老师就不打算处理SQL洞察中的数据了。进而可以将数据库表ms_audit_log中的hash字段不再设置为唯一索引。
-      // 2022-06-01 15:43:56
-      String strData = StringUtil.recombination(msSql, null, msSchemaName, sqlType);
-      String hash = StringUtil.mD5(strData);
-      msAuditLogDo.setHash(hash);
-      auditLogFromSkywalkingAgent.add(msAuditLogDo);
-    } catch (Exception e) {
-      log.error("#SegmentConsumeServiceImpl.getMsAuditLogDo()# 组装MsAuditLogDo实例时，出现了异常。", JsonUtil.obj2String(msAuditLogDo));
-    }
-  }
 
   /**
    * <B>方法名称：getSpringMVCInfo</B>
