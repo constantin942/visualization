@@ -18,7 +18,6 @@ import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.dao.SegmentDao;
-import com.mingshi.skyflying.dao.SegmentRelationDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -64,8 +63,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private MingshiServerUtil mingshiServerUtil;
   @Resource
   private SegmentDao segmentDao;
-  @Resource
-  private SegmentRelationDao segmentRelationDao;
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
@@ -560,83 +557,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
     // hashMap.put(DateTimeUtil.DateToStrYYYYMMDDHHMMSS(new Date()), 1);
     map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
-  }
-
-  /**
-   * <B>方法名称：saveGlobalTraceIdAndSegmentIds</B>
-   * <B>概要说明：将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年04月24日 17:04:04
-   * @Param [segmentObject]
-   **/
-  private void saveGlobalTraceIdAndSegmentIds(SegmentObject segmentObject, String parentSegmentId, String userName, String token) {
-    SegmentRelationDo segmentRelationDo = null;
-    try {
-      // 之所以使用LinkedHashSet，是为了防止存在重复的数据；2022-04-24 17:44:29
-      LinkedHashSet<String> linkedHashSet = new LinkedHashSet<>();
-      String traceSegmentId = segmentObject.getTraceSegmentId();
-      String globalTraceId = segmentObject.getTraceId();
-
-      try {
-        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-        map.put("globalTraceId", globalTraceId);
-        log.info("当前线程 {}", Thread.currentThread().getName());
-        segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(map);
-      } catch (Exception e) {
-        log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId =【{}】在表中查询数据时，出现了异常。", globalTraceId, e);
-        return;
-      }
-      String service = segmentObject.getService();
-      ObjectNode jsonObject = JsonUtil.createJsonObject();
-      jsonObject.put("parentSegmentId", parentSegmentId == null ? "##" : parentSegmentId);
-      jsonObject.put("currentSegmentId", traceSegmentId);
-      jsonObject.put("service", service);
-      if (null == segmentRelationDo) {
-        segmentRelationDo = new SegmentRelationDo();
-
-        if (StringUtil.isNotBlank(userName)) {
-          segmentRelationDo.setUserName(userName);
-        }
-        if (StringUtil.isNotBlank(token)) {
-          segmentRelationDo.setToken(token);
-        }
-        segmentRelationDo.setGlobalTraceId(globalTraceId);
-        linkedHashSet.add(jsonObject.toString());
-        segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
-        int insertReslut = segmentRelationDao.insertSelective(segmentRelationDo);
-        if (1 != insertReslut) {
-          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds插入到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-        }
-      } else {
-        if (StringUtil.isBlank(segmentRelationDo.getUserName())) {
-          if (StringUtil.isNotBlank(userName)) {
-            segmentRelationDo.setUserName(userName);
-          }
-        }
-        if (StringUtil.isBlank(segmentRelationDo.getToken())) {
-          if (StringUtil.isNotBlank(token)) {
-            segmentRelationDo.setToken(token);
-          }
-        }
-
-        String segmentIds = segmentRelationDo.getSegmentIds();
-        if (StringUtil.isBlank(segmentIds)) {
-          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId在表中找到了对应的记录，但该记录没有设置对应的segmentId。这是不正常的。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-          return;
-        }
-        linkedHashSet = JsonUtil.string2Obj(segmentIds, LinkedHashSet.class);
-        linkedHashSet.add(jsonObject.toString());
-        segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
-        int updateResult = segmentRelationDao.updateByPrimaryKeySelective(segmentRelationDo);
-        if (1 != updateResult) {
-          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds更新到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-        }
-      }
-    } catch (Exception e) {
-      log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds更新或保存到表中失败。【{}】。", segmentRelationDo == null ? null : JsonUtil.obj2String(segmentRelationDo), e);
-    }
   }
 
   /**
@@ -1192,9 +1112,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     int insertResult = segmentDao.insertSelective(segment);
     if (1 != insertResult) {
       log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
-    } else {
-      // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
-      saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId, segment.getUserName(), segment.getToken());
     }
   }
 

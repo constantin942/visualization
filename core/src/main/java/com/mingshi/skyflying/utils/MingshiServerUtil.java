@@ -76,8 +76,6 @@ public class MingshiServerUtil {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
-  private SegmentRelationDao segmentRelationDao;
-  @Resource
   private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
   /**

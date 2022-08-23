@@ -36,8 +36,6 @@ import java.util.*;
 @Service("segmentDetailService")
 public class SegmentDetailServiceImpl implements SegmentDetailService {
   @Resource
-  private SegmentRelationDao segmentRelationDao;
-  @Resource
   private RedisPoolUtil redisPoolUtil;
   @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
