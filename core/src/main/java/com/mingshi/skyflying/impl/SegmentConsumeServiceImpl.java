@@ -53,12 +53,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    */
   @Value("${reactor.processor.enable}")
   private boolean reactorProcessorEnable;
-
-  // @Value("${reactor.iothread.disruptor}")
-  // private boolean reactorIoThreadByDisruptor;
-
-  // @Resource
-  // private IoThreadByDisruptor ioThreadByDisruptor;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
