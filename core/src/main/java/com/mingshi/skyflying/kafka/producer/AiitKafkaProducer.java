@@ -28,7 +28,7 @@ public class AiitKafkaProducer {
   */
   public void send(String topic, String obj) {
     //发送消息
-    ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, obj);
+    ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, Bytes.wrap(obj.getBytes()));
     future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
       @Override
       public void onFailure(Throwable throwable) {
@@ -39,7 +39,7 @@ public class AiitKafkaProducer {
       @Override
       public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
         //成功的处理
-        log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
+        // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
       }
     });
   }
