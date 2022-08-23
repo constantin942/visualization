@@ -16,8 +16,6 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<InstanceTable> getAllInstanceAndTableName();
 
-  ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName();
-
   ServerResponse<List<String>> getCountsOfUser(String tableName);
 
   ServerResponse<List<String>> getUserOperationTypeCount(String userName);

@@ -2,9 +2,7 @@ package com.mingshi.skyflying.controller;
 
 import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
-import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -15,7 +13,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Author zhaoming
@@ -42,10 +39,6 @@ public class SkyflyingController {
   private UserPortraitByVisitedTimeService userPortraitByTimeService;
   @Resource
   private UserPortraitByVisitedTableService userPortraitByTableService;
-  @Resource
-  private MsThirdPartyTableListService msThirdPartyTableListService;
-  @Resource
-  private MsThirdPartyTableFieldsService msThirdPartyTableFieldsService;
   @Resource
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
@@ -178,63 +171,6 @@ public class SkyflyingController {
   @RequestMapping(value = "/updateUserPortraitRule", method = RequestMethod.POST)
   public ServerResponse<String> updateUserPortraitRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
     return userPortraitRulesService.updateUserPortraitRule(ruleId, isDelete);
-  }
-
-  /**
-   * <B>方法名称：initAllTableNameFields</B>
-   * <B>概要说明：如果前端没有传递数据库名称，那么根据调用链信息获取到有哪些数据库，然后根据数据库名称获取所有的表，最后根据表获取对应的所有的字段，最后将获取到的表和相应的字段保存到数据库中</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月20日 14:06:37
-   * @Param dbName：数据库名称，选传。如果没有传递，那么从调用链信息中获取数据库名称列表。
-   **/
-  @ResponseBody
-  @GetMapping(value = "/initAllTableNameFields")
-  public ServerResponse<String> initAllTableNameFields(String dbName) {
-    ServerResponse<String> allTableNames = msThirdPartyTableListService.getAllTableNames(dbName);
-    if (allTableNames.getCode().equals(AiitExceptionCode.SUCCESS.getCode())) {
-      String data = allTableNames.getData();
-      Map<String, String> dbNameTableMap = JsonUtil.string2Obj(data, Map.class);
-      msThirdPartyTableFieldsService.getAllTableFieldsName(dbNameTableMap);
-    }
-    return allTableNames;
-  }
-
-  /**
-   * <B>方法名称：updateSpecificDbTableNameFields</B>
-   * <B>概要说明：更新指定的数据库中某个表的字段</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月20日 14:06:37
-   * @Param
-   **/
-  @ResponseBody
-  @RequestMapping(value = "/updateSpecificDbTableNameFields", method = RequestMethod.POST)
-  public ServerResponse<String> updateSpecificDbTableNameFields(@RequestParam(value = "id") Integer id,
-                                                                String field,
-                                                                String fieldName,
-                                                                String fieldNote) {
-    return msThirdPartyTableFieldsService.updateSpecificDbTableNameFields(id, field, fieldName, fieldNote);
-  }
-
-  /**
-   * <B>方法名称：getSpecificTableNameFields</B>
-   * <B>概要说明：获取指定的数据库中某个表有哪些字段</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月20日 14:06:37
-   * @Param
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getSpecificDbTableNameFields")
-  public ServerResponse<String> getSpecificDbTableNameFields(String dbName,
-                                                             String tableName,
-                                                             @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return msThirdPartyTableFieldsService.getSpecificDbTableNameFields(dbName, tableName, pageNo, pageSize);
   }
 
   /**
@@ -629,22 +565,6 @@ public class SkyflyingController {
   @GetMapping(value = "/getAllInstanceAndTableName")
   public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
     return segmentDetailService.getAllInstanceAndTableName();
-  }
-
-
-  /**
-   * <B>方法名称：getAllInstanceTrueName/B>
-   * <B>概要说明：获取数据库表名与汉语名字的对应关系</B>
-   *
-   * @return ServerResponse<SysOperator>
-   * @Author lhx
-   * @Date 2022年07月5日 14:30:19
-   * @Param
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getAllInstanceTrueName")
-  public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
-    return segmentDetailService.getAllInstanceTrueName();
   }
 
   /**

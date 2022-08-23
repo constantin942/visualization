@@ -387,12 +387,6 @@
     where db_instance is not null
   </select>
 
-  <select id="selectAllInstanceTrueName" resultType="com.mingshi.skyflying.common.domain.MsThirdPartyTableListDo">
-    SELECT *
-    FROM `ms_third_party_table_list`
-    WHERE table_desc !=""
-  </select>
-
   <select id="selectCountsOfUser" resultType="java.lang.Long" parameterType="java.util.Map">
     select count(*) from ms_segment_detail
     where user_name is not null

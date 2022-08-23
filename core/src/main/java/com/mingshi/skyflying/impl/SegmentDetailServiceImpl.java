@@ -141,14 +141,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<MsThirdPartyTableListDo> getAllInstanceTrueName() {
-    List<MsThirdPartyTableListDo> list = msSegmentDetailDao.selectAllInstanceTrueName();
-    ServerResponse serverResponse = ServerResponse.createBySuccess();
-    serverResponse.setData(JsonUtil.obj2String(list));
-    return serverResponse;
-  }
-
-  @Override
   public ServerResponse<List<String>> getCountsOfUser(String msTableName) {
     List<String> list = new LinkedList<>();
     log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);

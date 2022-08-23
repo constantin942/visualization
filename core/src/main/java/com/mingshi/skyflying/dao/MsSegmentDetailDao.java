@@ -59,8 +59,6 @@ public interface MsSegmentDetailDao {
 
   List<InstanceTable> selectAllInstanceAndTableName();
 
-  List<MsThirdPartyTableListDo> selectAllInstanceTrueName();
-
   Long selectCountsOfUser(Map<String, Object> map);
 
   Long selectCountsOfUserByPeerAndDbInstanceAndTableName(Map<String, Object> map);
