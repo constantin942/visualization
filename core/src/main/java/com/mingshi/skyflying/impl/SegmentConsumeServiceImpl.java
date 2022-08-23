@@ -536,7 +536,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         childrenSpan.add(span);
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        getData2(segment, span, linkedList);
+        getData(segment, span, linkedList);
         findChildrenDetail(segment, spanList, span, childrenSpan, linkedList);
       }
     }
@@ -572,14 +572,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     spans.forEach(span -> {
       if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
         childrenSpan.add(span);
-        getData2(segmentDo, span, linkedList);
+        getData(segmentDo, span, linkedList);
         findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList);
       }
     });
   }
 
   /**
-   * <B>方法名称：getData2</B>
+   * <B>方法名称：getData</B>
    * <B>概要说明：只要span中的tags字段不为空，那么就把这个span放入到链表中。这样做的目的是：不再区分是哪个插件拦截到的信息，像skywalking的服务端一样，使用统一的展示方式在前端展示数据。</B>
    *
    * @return void
@@ -587,7 +587,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年05月17日 10:05:41
    * @Param [span, linkedList]
    **/
-  private void getData2(SegmentDo segmentDo, Span span, List<String> linkedList) {
+  private void getData(SegmentDo segmentDo, Span span, List<String> linkedList) {
     try {
       ObjectNode jsonObject = JsonUtil.createJsonObject();
       int spanId = span.getSpanId();
