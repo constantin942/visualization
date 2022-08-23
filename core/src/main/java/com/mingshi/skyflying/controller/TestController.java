@@ -1,18 +1,18 @@
 package com.mingshi.skyflying.controller;
 
-import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.utils.*;
-import com.mingshi.skyflying.config.LinuxStateForShellConfig;
+import com.mingshi.skyflying.common.utils.DbUtil;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
+import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * @Author zhaoming
@@ -23,13 +23,48 @@ import java.util.Map;
  **/
 @Controller
 @Slf4j
-@RequestMapping("/api")
+// @RequestMapping("/api")
 public class TestController {
+  @Value("${data_name}")
+  private String dataName;
+  @Value("${doc_dir_path}")
+  private String docDirPath;
+  @Autowired
+  DriverManagerDataSource driverManagerDataSource;
+
+  @Resource
+  private DbUtil dbUtil;
   @Resource
   private RedisPoolUtil redisPoolUtil;
+  @Resource
+  private AiitKafkaProducer aiitKafkaProducer;
+
+  private String topic = "zm-test-topic-02";
 
   private Instant nowCpuMemory = Instant.now();
 
+  /**
+   * <B>方法名称：test</B>
+   * <B>概要说明：生成数据库设计文档</B>
+   * @Author zm
+   * @Date 2022年08月23日 14:08:38
+   * @Param []
+   * @return void
+   **/
+  @ResponseBody
+  @GetMapping(value = "/createDbDocument")
+  public void createDbDocument() {
+    dbUtil.createWord(dataName, docDirPath);
+  }
+
+  // @ResponseBody
+  // @GetMapping(value = "/sendMsg")
+  // public void testSendMsgToKafka(){
+  //   for (int i = 0; i < 1000 * 10000; i++) {
+  //     System.out.println("开始发送第" + (i + 1) + "条消息：" + i);
+  //     aiitKafkaProducer.send(topic,i + "");
+  //   }
+  // }
   /**
    * <B>方法名称：test</B>
    * <B>概要说明：测试部署了skywalking探针对业务系统的影响有多少，从请求时间、CPU占用率、内存使用率三个维度来考量</B>
@@ -186,28 +221,28 @@ public class TestController {
   //   }
   // }
 
-  private void getCpuAndMemoryLoad(Map<Object, Object> cpuMemoryUsedDetailSkywalkingAgent, String flag, Map<String, Map<String, Double>> cpuMemoryMap) {
-    if (null != cpuMemoryUsedDetailSkywalkingAgent && 0 < cpuMemoryUsedDetailSkywalkingAgent.size()) {
-      Integer size = cpuMemoryUsedDetailSkywalkingAgent.size();
-      Double countCpuLoad = 0d;
-      Double countMemoryLoad = 0d;
-      Iterator<Object> iterator = cpuMemoryUsedDetailSkywalkingAgent.keySet().iterator();
-      while (iterator.hasNext()) {
-        Object key = iterator.next();
-        Object value = cpuMemoryUsedDetailSkywalkingAgent.get(key);
-        String[] split = String.valueOf(value).split("\n");
-        String cpuLoad = split[0].split(":")[1].trim();
-        countCpuLoad += Double.valueOf(cpuLoad);
-        String memoryLoad = split[1].split(":")[1].split("GB")[0].trim();
-        countMemoryLoad += Double.valueOf(memoryLoad);
-      }
-      Map<String, Double> map = new HashMap<>(Const.NUMBER_EIGHT);
-      map.put("allSamples", size.doubleValue());
-      map.put("cpuAverageSamples", countCpuLoad / size);
-      map.put("memoryAverageSamples", countMemoryLoad / size);
-      cpuMemoryMap.put(flag,map);
-    }
-  }
+  // private void getCpuAndMemoryLoad(Map<Object, Object> cpuMemoryUsedDetailSkywalkingAgent, String flag, Map<String, Map<String, Double>> cpuMemoryMap) {
+  //   if (null != cpuMemoryUsedDetailSkywalkingAgent && 0 < cpuMemoryUsedDetailSkywalkingAgent.size()) {
+  //     Integer size = cpuMemoryUsedDetailSkywalkingAgent.size();
+  //     Double countCpuLoad = 0d;
+  //     Double countMemoryLoad = 0d;
+  //     Iterator<Object> iterator = cpuMemoryUsedDetailSkywalkingAgent.keySet().iterator();
+  //     while (iterator.hasNext()) {
+  //       Object key = iterator.next();
+  //       Object value = cpuMemoryUsedDetailSkywalkingAgent.get(key);
+  //       String[] split = String.valueOf(value).split("\n");
+  //       String cpuLoad = split[0].split(":")[1].trim();
+  //       countCpuLoad += Double.valueOf(cpuLoad);
+  //       String memoryLoad = split[1].split(":")[1].split("GB")[0].trim();
+  //       countMemoryLoad += Double.valueOf(memoryLoad);
+  //     }
+  //     Map<String, Double> map = new HashMap<>(Const.NUMBER_EIGHT);
+  //     map.put("allSamples", size.doubleValue());
+  //     map.put("cpuAverageSamples", countCpuLoad / size);
+  //     map.put("memoryAverageSamples", countMemoryLoad / size);
+  //     cpuMemoryMap.put(flag,map);
+  //   }
+  // }
 
   /**
    * <B>方法名称：getAverage</B>
@@ -218,22 +253,22 @@ public class TestController {
    * @Date 2022年08月05日 10:08:35
    * @Param [returnMap, url, hgetall]
    **/
-  private void getAverage(Map<String, Map<Integer, Integer>> returnMap, String url, Map<Object, Object> hgetall) {
-    if (null != hgetall && 0 < hgetall.size()) {
-      int size = hgetall.size();
-      Iterator<Object> iterator = hgetall.keySet().iterator();
-      int count = 0;
-      while (iterator.hasNext()) {
-        Object key = iterator.next();
-        Object o = hgetall.get(key);
-        int usedTime = Integer.parseInt(String.valueOf(o));
-        count += usedTime;
-      }
-      Map<Integer, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
-      map.put(size, count / size);
-      returnMap.put(url, map);
-    }
-  }
+  // private void getAverage(Map<String, Map<Integer, Integer>> returnMap, String url, Map<Object, Object> hgetall) {
+  //   if (null != hgetall && 0 < hgetall.size()) {
+  //     int size = hgetall.size();
+  //     Iterator<Object> iterator = hgetall.keySet().iterator();
+  //     int count = 0;
+  //     while (iterator.hasNext()) {
+  //       Object key = iterator.next();
+  //       Object o = hgetall.get(key);
+  //       int usedTime = Integer.parseInt(String.valueOf(o));
+  //       count += usedTime;
+  //     }
+  //     Map<Integer, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
+  //     map.put(size, count / size);
+  //     returnMap.put(url, map);
+  //   }
+  // }
 
   /**
    * <B>方法名称：getCpuAndMemoryUsedDetail</B>
@@ -244,34 +279,34 @@ public class TestController {
    * @Date 2022年08月04日 17:08:36
    * @Param []
    **/
-  private void getCpuAndMemoryUsedDetail(Map<String, String> map24CpuMemory, Map<String, String> map25CpuMemory) {
-    if (LinuxStateForShellConfig.getAtomicBoolean()) {
-      Map<String, String> result1 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession24());
-      String item = DateTimeUtil.formatWithDateTimeFull(new Date());
-      String x = LinuxStateForShellUtil.disposeResultMessage(result1);
-      if (StringUtil.isNotBlank(x)) {
-        Map<String, String> result2 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession25());
-        String x1 = LinuxStateForShellUtil.disposeResultMessage(result2);
-        if (StringUtil.isNotBlank(x1)) {
-          map24CpuMemory.put(item, x);
-          map25CpuMemory.put(item, x1);
-          if (20 < DateTimeUtil.getSecond(nowCpuMemory)) {
-            log.info("########## cpu使用情况，开始本地批量刷新。map24.size() = 【{}】。", map24CpuMemory.size());
-            redisPoolUtil.hsetBatch("cpu_memory_used_detail_skywalking_agent_24", map24CpuMemory);
-            map24CpuMemory.clear();
-            log.info("########## cpu使用情况，本次批量刷新结束。map24.size() = 【{}】。", map24CpuMemory.size());
-
-            log.info("########## cpu使用情况，开始本地批量刷新。map25.size() = 【{}】。", map25CpuMemory.size());
-            redisPoolUtil.hsetBatch("cpu_memory_used_detail_no_skywalking_agent_25", map25CpuMemory);
-            map25CpuMemory.clear();
-            log.info("########## cpu使用情况，本次批量刷新结束。map25.size() = 【{}】。", map25CpuMemory.size());
-
-            nowCpuMemory = Instant.now();
-          }
-        }
-      }
-    }
-  }
+  // private void getCpuAndMemoryUsedDetail(Map<String, String> map24CpuMemory, Map<String, String> map25CpuMemory) {
+  //   if (LinuxStateForShellConfig.getAtomicBoolean()) {
+  //     Map<String, String> result1 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession24());
+  //     String item = DateTimeUtil.formatWithDateTimeFull(new Date());
+  //     String x = LinuxStateForShellUtil.disposeResultMessage(result1);
+  //     if (StringUtil.isNotBlank(x)) {
+  //       Map<String, String> result2 = LinuxStateForShellUtil.runDistanceShell(LinuxStateForShellConfig.getSession25());
+  //       String x1 = LinuxStateForShellUtil.disposeResultMessage(result2);
+  //       if (StringUtil.isNotBlank(x1)) {
+  //         map24CpuMemory.put(item, x);
+  //         map25CpuMemory.put(item, x1);
+  //         if (20 < DateTimeUtil.getSecond(nowCpuMemory)) {
+  //           log.info("########## cpu使用情况，开始本地批量刷新。map24.size() = 【{}】。", map24CpuMemory.size());
+  //           redisPoolUtil.hsetBatch("cpu_memory_used_detail_skywalking_agent_24", map24CpuMemory);
+  //           map24CpuMemory.clear();
+  //           log.info("########## cpu使用情况，本次批量刷新结束。map24.size() = 【{}】。", map24CpuMemory.size());
+  //
+  //           log.info("########## cpu使用情况，开始本地批量刷新。map25.size() = 【{}】。", map25CpuMemory.size());
+  //           redisPoolUtil.hsetBatch("cpu_memory_used_detail_no_skywalking_agent_25", map25CpuMemory);
+  //           map25CpuMemory.clear();
+  //           log.info("########## cpu使用情况，本次批量刷新结束。map25.size() = 【{}】。", map25CpuMemory.size());
+  //
+  //           nowCpuMemory = Instant.now();
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   /**
    * <B>方法名称：doGet</B>
@@ -282,12 +317,12 @@ public class TestController {
    * @Date 2022年08月04日 17:08:09
    * @Param [url, flag, item]
    **/
-  private void doGet(String url, String flag, String item) {
-    Instant start = Instant.now();
-    HttpUtil.get(url);
-    Long timeMillis = DateTimeUtil.getTimeMillis(start);
-    redisPoolUtil.hset(flag + url, item, timeMillis.toString());
-  }
+  // private void doGet(String url, String flag, String item) {
+  //   Instant start = Instant.now();
+  //   HttpUtil.get(url);
+  //   Long timeMillis = DateTimeUtil.getTimeMillis(start);
+  //   redisPoolUtil.hset(flag + url, item, timeMillis.toString());
+  // }
 
   /**
    * <B>方法名称：doPost</B>
@@ -298,10 +333,10 @@ public class TestController {
    * @Date 2022年08月04日 17:08:27
    * @Param
    **/
-  private void doPost(String url, String flag, String item) {
-    Instant start = Instant.now();
-    HttpUtil.post(url);
-    Long timeMillis = DateTimeUtil.getTimeMillis(start);
-    redisPoolUtil.hset(flag + url, item, timeMillis.toString());
-  }
+  // private void doPost(String url, String flag, String item) {
+  //   Instant start = Instant.now();
+  //   HttpUtil.post(url);
+  //   Long timeMillis = DateTimeUtil.getTimeMillis(start);
+  //   redisPoolUtil.hset(flag + url, item, timeMillis.toString());
+  // }
 }
