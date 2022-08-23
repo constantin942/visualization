@@ -44,13 +44,8 @@ public class MingshiServerUtil {
   private boolean reactorProcessorEnable;
   @Value("${reactor.processor.disruptor}")
   private boolean reactorProcessorDisruptor;
-  // 在开启reactor模式的情况下，创建ioThread线程的数量；2022-06-01 09:28:57
   @Value("${reactor.iothread.thread.count}")
   private Integer reactorIoThreadThreadCount;
-
-  // @Value("${reactor.iothread.disruptor}")
-  // private boolean reactorIoThreadByDisruptor;
-
   @Resource
   private ProcessorByDisruptor processorByDisruptor;
   @Resource
@@ -65,8 +60,6 @@ public class MingshiServerUtil {
   private MsAlarmInformationMapper msAlarmInformationMapper;
   @Resource
   private MsAgentInformationMapper msAgentInformationMapper;
-  @Resource
-  private SpanMapper spanMapper;
   @Resource
   private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
   @Resource
@@ -369,78 +362,6 @@ public class MingshiServerUtil {
     }
     return tableNameList;
   }
-
-  /**
-   * <B>方法名称：updateUserNameByGlobalTraceId</B>
-   * <B>概要说明：根据全局追踪id更新用户名</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月24日 11:05:07
-   * @Param [now]
-   * 不能这样更新了，因为当数据库表中数据量上百万甚至上千万之后，这样更新就会有性能问题。2022-08-01 14:22:38
-   **/
-  // public void updateUserNameByGlobalTraceId() {
-  //   Boolean atomicBoolean = SingletonLocalStatisticsMap.getAtomicBooleanIsChanged();
-  //   if (false == atomicBoolean) {
-  //     // 只有当索引有变动的时候，才把数据更新到数据库中；2022-05-24 17:15:55
-  //     return;
-  //   }
-  //
-  //   Boolean booleanIsUpdatingData = SingletonLocalStatisticsMap.getAtomicBooleanIsUpdatingData();
-  //   if (true == booleanIsUpdatingData) {
-  //     // 只有其他线程没有执行刷新操作时，本线程才执行；2022-05-24 17:15:55
-  //     return;
-  //   }
-  //   // 这里应该加个正在执行更新的标志；考虑这样一种场景：在同一个jvm进程内，有多个 IoThread 线程在执行，在同一时间应该只有一个 IoThread 线程执行更新操作。
-  //   // 2022-05-24 17:17:55
-  //   Map<String/* token */, String/* userName */> tokenUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
-  //   Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
-  //   Map<String/* globalTraceId */, String/* token */> globalTraceIdTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
-  //   Iterator<String> iterator = globalTraceIdAndUserNameMap.keySet().iterator();
-  //   // List<UserTokenDo> userTokenDoList = new LinkedList<>();
-  //   // List<MsAuditLogDo> auditLogDoList = new LinkedList<>();
-  //   List<MsSegmentDetailDo> setmentDetailDoList = new LinkedList<>();
-  //   while (iterator.hasNext()) {
-  //     String globalTraceId = iterator.next();
-  //     String userName = globalTraceIdAndUserNameMap.get(globalTraceId);
-  //     String token = globalTraceIdTokenMap.get(globalTraceId);
-  //     if (StringUtil.isBlank(userName)) {
-  //       userName = tokenUserNameMap.get(token);
-  //     }
-  //     if (StringUtil.isBlank(userName)) {
-  //       log.error("# IoThread.updateUserNameByGlobalTraceId # 将索引插入到数据库中的时候，出现了异常。userName = null，globalTraceId = 【{}】，token = 【{}】。", globalTraceId, token);
-  //       continue;
-  //     }
-  //
-  //     // UserTokenDo userTokenDo = new UserTokenDo();
-  //     // userTokenDo.setUserName(userName);
-  //     // userTokenDo.setGlobalTraceId(globalTraceId);
-  //     // userTokenDo.setToken(token);
-  //     // userTokenDoList.add(userTokenDo);
-  //
-  //     MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-  //     msSegmentDetailDo.setGlobalTraceId(globalTraceId);
-  //     msSegmentDetailDo.setUserName(userName);
-  //     setmentDetailDoList.add(msSegmentDetailDo);
-  //
-  //     // MsAuditLogDo msAuditLogDo = new MsAuditLogDo();
-  //     // msAuditLogDo.setGlobalTraceId(globalTraceId);
-  //     // msAuditLogDo.setApplicationUserName(userName);
-  //     // auditLogDoList.add(msAuditLogDo);
-  //   }
-  //   // 批量插入用户名、token、global信息
-  //   // batchInsertUserToken(userTokenDoList);
-  //
-  //   // 批量更新审计日志的用户名和globalTraceId信息；
-  //   // batchUpdateMsAuditLog(auditLogDoList);
-  //
-  //   // 批量更新segmentDetail信息的用户名和globalTraceId信息；
-  //   batchUpdateMsSegmentDetail(setmentDetailDoList);
-  //
-  //   SingletonLocalStatisticsMap.setAtomicBooleanIsUpdatingData(false);
-  //   SingletonLocalStatisticsMap.setAtomicBooleanIsChanged(false);
-  // }
 
   /**
    * <B>方法名称：batchUpdateMsAuditLog</B>
@@ -849,28 +770,6 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：flushSpansToDB</B>
-   * <B>概要说明：将Spans实例信息插入到表中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月18日 09:07:06
-   * @Param [spansList]
-   **/
-  public void flushSpansToDb(List<Span> spansList) {
-    if (null != spansList && 0 < spansList.size()) {
-      try {
-        Instant now = Instant.now();
-        spanMapper.insertSelectiveBatch(spansList);
-        // log.info("#SegmentConsumeServiceImpl.flushSpansToDB()# 将Spans实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", spansList.size(), DateTimeUtil.getTimeMillis(now));
-        spansList.clear();
-      } catch (Exception e) {
-        log.error("# SegmentConsumeServiceImpl.flushSpansToDB() # 将Spans实例信息批量插入到MySQL中出现了异常。", e);
-      }
-    }
-  }
-
-  /**
    * <B>方法名称：getTableName</B>
    * <B>概要说明：获取表名</B>
    *
@@ -1004,15 +903,6 @@ public class MingshiServerUtil {
     if (true == reactorProcessorEnable) {
       redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
     }
-    // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(ioThreadByDisruptor.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-    //   redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(ioThreadByDisruptor.getQueueSize()));
-    // } else {
-    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, String.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()), DateTimeUtil.DateToStrYYYYMMDDHHMMSS2(new Date()));
-    //   // redisPoolUtil.incrementScore(Const.SECOND_QUEUE_SIZE_ZSET, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-    //   redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-    // }
   }
 
   /**
@@ -1045,7 +935,6 @@ public class MingshiServerUtil {
     // statisticsKafkaConsumerRecords();
 
     // flushSegmentToDB(segmentList);
-    // flushAuditLogToDB(auditLogList);
 
     // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
     flushSkywalkingAgentInformationToDb();
@@ -1061,44 +950,10 @@ public class MingshiServerUtil {
 
     insertMonitorTables();
 
-    // 不能再更新这个了，因为花的时间太久；2022-07-18 17:24:06
-    // 比较好的做法是，把用户名、token、globalTraceId放到Redis中去存储，有一个定时任务，定时去MySQL中根据token和globalTraceId分组查询用户名为空的记录，然后拿着token和globalTraceId
-    // 去Redis缓存中获取。如果获取到了用户名，那么就把用户名更新到MySQL数据库中。
-    // updateUserNameByGlobalTraceId();
-
     flushSegmentDetailToDb(segmentDetailDoList);
 
     flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
 
     flushAbnormalToDb(msAlarmInformationDoLinkedListist);
   }
-
-  /**
-   * <B>方法名称：statisticsKafkaConsumerRecords</B>
-   * <B>概要说明：统计kafka消费者每秒拿到多少消息；</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月28日 14:07:23
-   * @Param []
-   **/
-  // private void statisticsKafkaConsumerRecords() {
-  //   String name = Thread.currentThread().getName();
-  //   if (name.equals("processLocalStatisticsThread_0")) {
-  //     Map<String, Map<String, AtomicInteger>> map = AiitKafkaConsumer.getMap();
-  //     Iterator<String> iterator = map.keySet().iterator();
-  //     while (iterator.hasNext()) {
-  //       String key = iterator.next();
-  //       Map<String, AtomicInteger> stringAtomicIntegerMap1 = map.get(key);
-  //       Iterator<String> iterator1 = stringAtomicIntegerMap1.keySet().iterator();
-  //       while (iterator1.hasNext()) {
-  //         String next = iterator1.next();
-  //         AtomicInteger atomicInteger = stringAtomicIntegerMap1.get(next);
-  //         Integer scoure = atomicInteger.get();
-  //         redisPoolUtil.incrementScore(Const.QPS_ZSET_KAFKA_CONSUMER_RECORDS_THREAD + key, next, scoure.doubleValue());
-  //       }
-  //     }
-  //     map.clear();
-  //   }
-  // }
 }
