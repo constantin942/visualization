@@ -23,44 +23,6 @@
     , is_delete, gmt_create, gmt_modified, operation_name, request_start_time,
      global_trace_id, current_segment_id, parent_segment_id, spans, reorganizing_spans, user_name, token, service_code, service_instance_name
   </sql>
-  <select id="selectAll" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List"/>
-    from segment
-  </select>
-  <select id="selectBySegmentId" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select id,
-           operation_name,
-           request_start_time,
-           reorganizing_spans
-    from segment
-    where current_segment_id = #{segmentId,jdbcType=VARCHAR}
-    order by id desc limit 1
-  </select>
-  <select id="selectByGlobalTraceId" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select id,
-           operation_name,
-           request_start_time,
-           reorganizing_spans
-    from segment
-    where global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
-  </select>
-  <select id="selectByGlobalTraceIdAndUserNameIsNull" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select id
-    from segment
-    where global_trace_id = #{globalTraceId,jdbcType=VARCHAR}
-  </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List"/>
-    from segment
-    where id = #{id,jdbcType=INTEGER}
-  </select>
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete
-    from segment
-    where id = #{id,jdbcType=INTEGER}
-  </delete>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into segment
     ( operation_name, request_start_time, global_trace_id, current_segment_id, parent_segment_id, spans,
@@ -180,52 +142,4 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SegmentDo">
-    update segment
-    <set>
-      <if test="isDelete != null">
-        is_delete = #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="userName != null">
-        user_name = #{userName,jdbcType=VARCHAR},
-      </if>
-      <if test="token != null">
-        token = #{token,jdbcType=VARCHAR},
-      </if>
-      <if test="operationName != null">
-        operation_name = #{operationName,jdbcType=VARCHAR},
-      </if>
-      <if test="requestStartTime != null">
-        request_start_time = #{requestStartTime,jdbcType=VARCHAR},
-      </if>
-      <if test="globalTraceId != null">
-        global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
-      </if>
-      <if test="currentSegmentId != null">
-        current_segment_id = #{currentSegmentId,jdbcType=VARCHAR},
-      </if>
-      <if test="parentSegmentId != null">
-        parent_segment_id = #{parentSegmentId,jdbcType=VARCHAR},
-      </if>
-      <if test="spans != null">
-        spans = #{spans,jdbcType=LONGVARCHAR},
-      </if>
-      <if test="reorganizingSpans != null">
-        reorganizing_spans = #{reorganizingSpans,jdbcType=LONGVARCHAR},
-      </if>
-      <if test="serviceCode != null">
-        service_code = #{serviceCode,jdbcType=VARCHAR},
-      </if>
-      <if test="serviceInstanceName != null">
-        service_instance_name = #{serviceInstanceName,jdbcType=VARCHAR},
-      </if>
-    </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
 </mapper>

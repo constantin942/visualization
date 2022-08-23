@@ -170,11 +170,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     // 将表名字插入到监管表中；2022-07-13 14:16:57
     mingshiServerUtil.insertMonitorTables();
 
-    // 将segmentDetail实例信息插入到数据库中；2022-06-02 11:07:51
-    // if (true == esMsSegmentDetailUtil.getEsEnable()) {
-    //   mingshiServerUtil.flushSegmentDetailToEs(esSegmentDetaiDolList);
-    // }
-
     mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
 
     mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
@@ -663,12 +658,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
           getUserNameFromHttpBody(segmentDo, url, httpBody);
 
-          // 已经不再往ms_audit_log表里插入数据了，所以这里注释掉；2022-07-01 09:27:49
-          // if (true == isSQL && StringUtil.isNotBlank(msSql)) {
-          //   // 将SQL组装成对象，并放入到list集合中；2022-05-28 13:22:45
-          //   getMsAuditLogDo(segmentDo, msSql, span, msSchemaName, dbUserName, auditLogFromSkywalkingAgent);
-          // }
-
           if (false == flag) {
             jsonObject.put("tags", JsonUtil.obj2String(tags));
             linkedList.add(jsonObject.toString());
@@ -759,10 +748,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [segment]
    **/
   private void setUserNameTokenGlobalTraceIdToLocalMemory(SegmentDo segment) {
-    // Map<String/* globalTraceId */, String/* userName */> globalTraceIdAndUserNameMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndUserNameMap();
-    // Map<String/* globalTraceId */, String/* token */> globalTraceIdAndTokenMap = SingletonLocalStatisticsMap.getGlobalTraceIdAndTokenMapMap();
-    // Map<String/* token */, String/* userName */> tokenAndUserNameMap = SingletonLocalStatisticsMap.getTokenAndUserNameMap();
-
     String globalTraceId = segment.getGlobalTraceId();
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
     String segmentUserName = segment.getUserName();
@@ -944,8 +929,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (null == segment) {
         segment = new SegmentDo();
       }
-
-      // 为了制造千万级的数据，这里暂时不存储span的信息；2022-05-19 08:43:32
       // segment.setSpans(JsonUtil.obj2String(spanList));
       if (null == spanList && 0 == spanList.size()) {
         return segment;
