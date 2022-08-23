@@ -198,8 +198,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String service = segmentObject.getService();
       String serviceInstance = segmentObject.getServiceInstance();
       ObjectNode jsonObject = JsonUtil.createJsonObject();
-      jsonObject.put("serviceCode", service);
-      jsonObject.put("serviceInstanceName", serviceInstance);
+      jsonObject.put(Const.SERVICE_CODE, service);
+      jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
       // todo：不应该用当前时间，如果当kafka中出现了消息积压时，那么这个时间就不是探针目前存活的时间。这个时间应该用消息本身的时间。2022-07-04 10:03:17
       skywalkingAgentHeartBeatMap.put(jsonObject.toString(), DateTimeUtil.DateToStr(new Date()));
     } catch (Exception e) {
@@ -226,10 +226,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 给MsSegmentDetailDo实例赋值
         msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
-        String logs = String.valueOf(map.get("logs"));
+        String logs = String.valueOf(map.get(Const.LOGS));
         Boolean isError = false;
 
-        String tags = String.valueOf(map.get("tags"));
+        String tags = String.valueOf(map.get(Const.TAGS));
         List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
         if (null != tagsList) {
           String isSql = null;
@@ -317,25 +317,25 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [msSegmentDetailDo, map, segment]
    **/
   private MsSegmentDetailDo getMsSegmentDetailDo(LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
-    Object url = map1.get("url");
+    Object url = map1.get(Const.URL);
     MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
     msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
     msSegmentDetailDo.setOperationName(String.valueOf(url));
 
     Integer spanId = null;
-    if (null != map.get("spanId")) {
-      spanId = Integer.valueOf(String.valueOf(map.get("spanId")));
+    if (null != map.get(Const.SPANID)) {
+      spanId = Integer.valueOf(String.valueOf(map.get(Const.SPANID)));
     }
-    String component = String.valueOf(map.get("component"));
-    String serviceCode = String.valueOf(map.get("serviceCode"));
-    String peer = String.valueOf(map.get("peer"));
+    String component = String.valueOf(map.get(Const.COMPONET));
+    String serviceCode = String.valueOf(map.get(Const.SERVICE_CODE));
+    String peer = String.valueOf(map.get(Const.PEER));
     msSegmentDetailDo.setPeer(peer);
-    String endpointName = String.valueOf(map.get("endpointName"));
+    String endpointName = String.valueOf(map.get(Const.ENDPOINT_NAME));
     msSegmentDetailDo.setEndpointName(endpointName);
     Long startTime = Long.valueOf(String.valueOf(map.get(Const.START_TIME)));
-    String serviceInstanceName = String.valueOf(map.get("serviceInstanceName"));
+    String serviceInstanceName = String.valueOf(map.get(Const.SERVICE_INSTANCE_NAME));
     Long endTime = Long.valueOf(String.valueOf(map.get(Const.END_TIME)));
-    Integer parentSpanId = Integer.valueOf(String.valueOf(map.get("parentSpanId")));
+    Integer parentSpanId = Integer.valueOf(String.valueOf(map.get(Const.PARENT_SPAN_ID)));
     msSegmentDetailDo.setToken(segment.getToken());
     msSegmentDetailDo.setComponent(component);
     msSegmentDetailDo.setSpanId(spanId);
@@ -364,7 +364,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
       String reorganizingSpans = segment.getReorganizingSpans();
       List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
-      if (null != list && 1 == list.size()) {
+      if (null != list && Const.NUMBER_ONE == list.size()) {
         LinkedHashMap hashMap = (LinkedHashMap) list.get(0);
         if (null != hashMap && null != hashMap.get(Const.OPERATION_TYPE_URL)) {
           msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_URL_NO_DB_STATEMENT);
@@ -445,35 +445,32 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [operationName]
    **/
   private Boolean ignoreMethod(String operationName) {
-    // TODO: 2022/6/28 正常来说，需要忽略的操作类型应该配置到数据库中或者配置到配置文件中，不应该写死在这里。
-    if (operationName.equals("Redisson/PING") ||
-      operationName.equals("Jedis/sentinelGetMasterAddrByName") ||
-      operationName.equals("Lettuce/SENTINEL") ||
-      operationName.equals("Mysql/JDBI/Connection/close") ||
-      operationName.equals("GET:/devices/notification") ||
-      operationName.equals("GET:/manager/html") ||
-      operationName.equals("Balancer/user/checkToken") ||
-      operationName.equals("GET:") ||
-      operationName.equals("GET:/assets/fonts/Nunito-Bold.woff2") ||
-      operationName.equals("GET:/temp/null") ||
-      operationName.equals("GET:/assets/fonts/Nioicon.ttf") ||
-      operationName.equals("GET:/assets/fonts/Nunito-Regular.woff2") ||
-      operationName.equals("GET:/assets/fonts/Roboto-Regular.woff2") ||
-      operationName.equals("GET:/assets/fonts/Roboto-Medium.woff2") ||
-      operationName.equals("HikariCP/Connection/getConnection") ||
-      operationName.equals("GET:/") ||
-      operationName.equals("GET:/companies/companyHealth/list") ||
-      operationName.equals("null:null") ||
-      operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
-      operationName.equals("HikariCP/Connection/close") ||
-      operationName.equals("POST:/users/menusAuths") ||
-      operationName.equals("GET:/zlb/getRuralCommercialBank/info") ||
-      operationName.equals("Mysql/JDBI/Connection/commit") ||
-      operationName.equals("Mysql/JDBI/PreparedStatement/executeUpdate") ||
-      operationName.equals("HikariCP/Connection/close") ||
-      operationName.equals("Mysql/JDBI/PreparedStatement/executeQuery") ||
-      operationName.startsWith("SpringScheduled") ||
-      operationName.equals("POST:/devices/heartbeat")) {
+    if (operationName.equals(Const.REDISSON_PING) ||
+      operationName.equals(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME) ||
+      operationName.equals(Const.LETTUCE_SENTINEL) ||
+      operationName.equals(Const.MYSQL_JDBI_CONNECTION_CLOSE) ||
+      operationName.equals(Const.GET_DEVICES_NOTIFICATION) ||
+      operationName.equals(Const.GET_MANAGER_HTML) ||
+      operationName.equals(Const.BALANCER_USER_CHECKTOKEN) ||
+      operationName.equals(Const.GET1) ||
+      operationName.equals(Const.GET_ASSETS_FONTS_NUNITO_BOLD_WOFF2) ||
+      operationName.equals(Const.GET_TEMP_NULL) ||
+      operationName.equals(Const.GET_ASSETS_FONTS_NIOICON_TTF) ||
+      operationName.equals(Const.GET_ASSETS_FONTS_NUNITO_REGULAR_WOFF2) ||
+      operationName.equals(Const.GET_ASSETS_FONTS_ROBOTO_REGULAR_WOFF2) ||
+      operationName.equals(Const.GET_ASSETS_FONTS_ROBOTO_MEDIUM_WOFF2) ||
+      operationName.equals(Const.HIKARICP_CONNECTION_GETCONNECTION) ||
+      operationName.equals(Const.GET2) ||
+      operationName.equals(Const.GET_COMPANIES_COMPANYHEALTH_LIST) ||
+      operationName.equals(Const.NULL_NULL) ||
+      operationName.equals(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_UPDATE) ||
+      operationName.equals(Const.HIKARICP_CONNECTION_CLOSE) ||
+      operationName.equals(Const.POST_USERS_MENUSAUTHS) ||
+      operationName.equals(Const.GET_ZLB_GET_RURAL_COMMERCIAL_BANK_INFO) ||
+      operationName.equals(Const.MYSQL_JDBI_CONNECTION_COMMIT) ||
+      operationName.equals(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY) ||
+      operationName.startsWith(Const.SPRING_SCHEDULED) ||
+      operationName.equals(Const.POST_DEVICES_HEARTEAT)) {
       return true;
     }
     return false;
@@ -594,18 +591,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (0 == spanId) {
         getSpringMvcInfo(span, jsonObject, linkedList);
       } else if (0 < span.getTags().size()) {
-        jsonObject.put("spanId", spanId);
-        jsonObject.put("parentSpanId", span.getParentSpanId());
-        jsonObject.put("serviceCode", span.getServiceCode());
-        jsonObject.put("serviceInstanceName", span.getServiceInstanceName());
+        jsonObject.put(Const.SPANID, spanId);
+        jsonObject.put(Const.PARENT_SPAN_ID, span.getParentSpanId());
+        jsonObject.put(Const.SERVICE_CODE, span.getServiceCode());
+        jsonObject.put(Const.SERVICE_INSTANCE_NAME, span.getServiceInstanceName());
         jsonObject.put(Const.START_TIME, span.getStartTime());
         jsonObject.put(Const.END_TIME, span.getEndTime());
-        jsonObject.put("endpointName", span.getEndpointName());
-        jsonObject.put("peer", span.getPeer());
-        jsonObject.put("component", span.getComponent());
+        jsonObject.put(Const.ENDPOINT_NAME, span.getEndpointName());
+        jsonObject.put(Const.PEER, span.getPeer());
+        jsonObject.put(Const.COMPONET, span.getComponent());
         List<LogEntity> logs = span.getLogs();
         if (null != logs && 0 < logs.size()) {
-          jsonObject.put("logs", JsonUtil.obj2String(logs));
+          jsonObject.put(Const.LOGS, JsonUtil.obj2String(logs));
         }
         List<KeyValue> tags = span.getTags();
         if (0 < tags.size()) {
@@ -615,28 +612,28 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           String httpBody = null;
           for (KeyValue tag : tags) {
             key = tag.getKey();
-            if (segmentDo.getOperationName().equals("Jedis/sentinelGetMasterAddrByName")) {
+            if (segmentDo.getOperationName().equals(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME)) {
               flag = true;
               break;
             }
-            if (tag.getValue().equals("Redis")) {
+            if (tag.getValue().equals(Const.REDIS)) {
               // 不再存储单纯的Redis请求；2022-06-30 16:34:24
               flag = true;
               break;
             }
-            if (key.equals("http.body")) {
+            if (key.equals(Const.HTTP_BODY)) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               httpBody = tag.getValue();
-            } else if (key.equals("url")) {
+            } else if (key.equals(Const.URL)) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               url = tag.getValue();
-              if (!url.contains("dingtalk")) {
+              if (!url.contains(Const.DING_TALK)) {
                 flag = true;
                 break;
               }
-            } else if (key.equals("http.method")) {
+            } else if (key.equals(Const.HTTP_METHOD)) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              if (StringUtil.isNotBlank(url) && !url.contains("dingtalk")) {
+              if (StringUtil.isNotBlank(url) && !url.contains(Const.DING_TALK)) {
                 flag = true;
                 break;
               }
@@ -645,7 +642,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
           getUserNameFromHttpBody(segmentDo, url, httpBody);
           if (false == flag) {
-            jsonObject.put("tags", JsonUtil.obj2String(tags));
+            jsonObject.put(Const.TAGS, JsonUtil.obj2String(tags));
             linkedList.add(jsonObject.toString());
           }
         }
@@ -674,7 +671,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if (null != commonResponse) {
           Object data = commonResponse.getData();
           if (null != data) {
-            String username = String.valueOf(((LinkedHashMap) data).get("username"));
+            String username = String.valueOf(((LinkedHashMap) data).get(Const.USERNAME));
             if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
               segmentDo.setUserName(username);
               setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
@@ -699,9 +696,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void getSpringMvcInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
     List<KeyValue> tagsList = span.getTags();
     for (KeyValue keyValue : tagsList) {
-      if (keyValue.getKey().equals("url")) {
+      if (keyValue.getKey().equals(Const.URL)) {
         String url = keyValue.getValue();
-        jsonObject.put("url", url);
+        jsonObject.put(Const.URL, url);
         linkedList.add(jsonObject.toString());
       }
     }
