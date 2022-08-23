@@ -6,8 +6,6 @@ import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSinglet
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
-import com.mingshi.skyflying.common.elasticsearch.domain.EsMsSegmentDetailDo;
-import com.mingshi.skyflying.common.elasticsearch.utils.MingshiElasticSearchUtil;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
 import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.*;
@@ -51,8 +49,6 @@ public class MingshiServerUtil {
   @Resource
   private RedisPoolUtil redisPoolUtil;
   @Resource
-  private MingshiElasticSearchUtil mingshiElasticSearchUtil;
-  @Resource
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MsSegmentDetailUsernameIsNullMapper msSegmentDetailUsernameIsNullMapper;
@@ -66,8 +62,6 @@ public class MingshiServerUtil {
   private SegmentDao segmentDao;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
-  @Resource
-  private EsMsSegmentDetailUtil esMsSegmentDetailUtil;
 
   /**
    * <B>方法名称：setDbTypeAndOperationType</B>
@@ -93,7 +87,6 @@ public class MingshiServerUtil {
    **/
   public void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
                                     List<Span> spanList,
-                                    List<EsMsSegmentDetailDo> esSegmentDetaiDolList,
                                     SegmentDo segmentDo,
                                     List<MsSegmentDetailDo> segmentDetaiDolList,
                                     List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
@@ -111,13 +104,6 @@ public class MingshiServerUtil {
       if(null != map && 0 < map.size()){
         jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
       }
-
-      if (null != esSegmentDetaiDolList && 0 < esSegmentDetaiDolList.size()) {
-        jsonObject.put(Const.ES_SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(esSegmentDetaiDolList));
-      }
-      // if (null != spanList && 0 < spanList.size()) {
-      //   jsonObject.put(Const.SPAN, JsonUtil.obj2String(spanList));
-      // }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
@@ -132,7 +118,7 @@ public class MingshiServerUtil {
       }
 
       if (null != jsonObject && 0 < jsonObject.size()) {
-        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
+        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil);
         if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
           // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
           log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());

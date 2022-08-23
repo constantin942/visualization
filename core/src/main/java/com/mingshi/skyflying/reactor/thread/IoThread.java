@@ -13,7 +13,6 @@ import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
-import com.mingshi.skyflying.utils.EsMsSegmentDetailUtil;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +45,7 @@ public class IoThread extends Thread {
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
 
-  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, EsMsSegmentDetailUtil esMsSegmentDetailUtil) {
+  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
     currentTime = Instant.now().minusSeconds(new Random().nextInt(30));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -65,8 +64,6 @@ public class IoThread extends Thread {
     this.mingshiServerUtil = mingshiServerUtil;
   }
 
-  // user_token 表存在的意义是：将 segment 表中的全局追踪id与用户名或 token 关联起来。
-  // 当前端查询 segment 表中的数据时，若是碰到了 用户名或者 token 为空，此时就去 user_token 表中根据全局追踪id查询对应的用户名或者 token。
   @Override
   public void run() {
     try {
@@ -90,17 +87,8 @@ public class IoThread extends Thread {
             // 从json实例中获取用户名为空的segmentDetail实例信息
             getSegmentDetailUserNameIsNullFromJsonObject(jsonObject);
 
-            // 从json实例中获取esSegmentDetail实例的信息
-            // getEsSegmentDetailFromJSONObject(jsonObject);
-
-            // 从json实例中获取Span实例的信息
-            // getSpanFromJSONObject(jsonObject);
-
             // 从json实例中获取异常信息
             getAbnormalFromJsonObject(jsonObject);
-
-            // 从json实例中获取审计日志的信息
-            // getAuditLogFromJSONObject(jsonObject);
 
             // 从json实例中获取segment的信息
             // getSegmentFromJSONObject(jsonObject);
@@ -228,67 +216,6 @@ public class IoThread extends Thread {
       }
     } catch (Exception e) {
       log.error("# IoThread.getSkywalkingAgentNameFromJSONObject() # 将skywalking探针名称信息放入到 skywalkingAgentHeartBeatList 中出现了异常。", e);
-    }
-  }
-
-  /**
-   * <B>方法名称：getEsSegmentDetailFromJSONObject</B>
-   * <B>概要说明：将EsSegmentDetail实例信息放入到 esSegmentDetailList 中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月13日 08:07:22
-   * @Param [jsonObject]
-   **/
-  // private void getEsSegmentDetailFromJSONObject(ObjectNode jsonObject) {
-  //   if (null == esMsSegmentDetailUtil && false == esMsSegmentDetailUtil.getEsEnable()) {
-  //     return;
-  //   }
-  //   try {
-  //     String listString = null;
-  //     try {
-  //       JsonNode jsonNode = jsonObject.get(Const.ES_SEGMENT_DETAIL_DO_LIST);
-  //       if (null != jsonNode) {
-  //         listString = jsonNode.asText();
-  //       }
-  //     } catch (Exception e) {
-  //       log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsEegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
-  //     }
-  //     if (StringUtil.isNotBlank(listString)) {
-  //       LinkedList<EsMsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, EsMsSegmentDetailDo.class);
-  //       esSegmentDetailDoList.addAll(segmentDetailList);
-  //     }
-  //   } catch (Exception e) {
-  //     log.error("# IoThread.getEsSegmentDetailFromJSONObject() # 将EsSegmentDetail实例信息放入到 esSegmentDetailList 中出现了异常。", e);
-  //   }
-  // }
-
-  /**
-   * <B>方法名称：getSegmentDetailFromJSONObject</B>
-   * <B>概要说明：将segmentDetail实例信息放入到 segmentDetailList 中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年06月02日 11:06:40
-   * @Param [jsonObject]
-   **/
-  private void getSpanFromJsonObject(ObjectNode jsonObject) {
-    try {
-      String listString = null;
-      try {
-        JsonNode jsonNode = jsonObject.get(Const.SPAN);
-        if (null != jsonNode) {
-          listString = jsonNode.asText();
-        }
-      } catch (Exception e) {
-        log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
-      }
-      if (StringUtil.isNotBlank(listString)) {
-        LinkedList<Span> spanLinkedList = JsonUtil.string2Obj(listString, LinkedList.class, Span.class);
-        spanList.addAll(spanLinkedList);
-      }
-    } catch (Exception e) {
-      log.error("# IoThread.getSpanFromJSONObject() # 将Span实例信息放入到 spanList 中出现了异常。", e);
     }
   }
 

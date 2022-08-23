@@ -135,15 +135,6 @@ server:
   compression:
     excluded-user-agents:
 
-# es启用状态；2022-07-13 08:22:04
-es:
-  enable: ${es_enable}
-# es 地址
-elasticsearch:
-  host: ${elasticsearch_host}
-  # es 端口号
-  port: ${elasticsearch_port}
-
 reactor:
   processor:
     enable: ${reactor_processor_enable}
@@ -151,6 +142,5 @@ reactor:
     thread:
       count: ${reactor_processor_thread_count}
   iothread:
-#    disruptor: ${reactor_iothread_disruptor}
     thread:
       count: ${reactor_iothread_thread_count}

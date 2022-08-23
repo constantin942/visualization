@@ -170,7 +170,6 @@ public class Const {
   public static final String SKYWALKING_AGENT_HEART_BEAT_DO_LIST = "string_skywalking_agent_heart_beat";
   public static final String SEGMENT_DETAIL_DO_LIST = "segmentDetaiDolList";
   public static final String SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST = "segmentDetaiUserNameIsNullDolList";
-  public static final String ES_SEGMENT_DETAIL_DO_LIST = "esSegmentDetaiDolList";
   public static final String ABNORMAL = "abnormal";
   /**
    * 统计processor线程的QPS；2022-07-23 11:03:06

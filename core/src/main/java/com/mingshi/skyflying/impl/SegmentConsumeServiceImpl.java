@@ -6,7 +6,6 @@ import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
-import com.mingshi.skyflying.common.elasticsearch.domain.EsMsSegmentDetailDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.type.KeyValue;
 import com.mingshi.skyflying.common.type.LogEntity;
@@ -92,7 +91,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 判断是否是异常信息；2022-06-07 18:00:13
       LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
       // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
-      LinkedList<EsMsSegmentDetailDo> esSegmentDetaiDolList = null;
       LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
       LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList = null;
       // 获取探针的名称；2022-06-28 14:25:46
@@ -124,7 +122,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, esSegmentDetaiDolList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
         disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
       }
