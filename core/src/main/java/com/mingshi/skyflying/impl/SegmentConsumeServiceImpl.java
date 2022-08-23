@@ -610,10 +610,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         List<KeyValue> tags = span.getTags();
         if (0 < tags.size()) {
           Boolean flag = false;
-          Boolean isSql = false;
-          String dbUserName = null;
-          String msSql = null;
-          String msSchemaName = null;
           String key = null;
           String url = null;
           String httpBody = null;
@@ -644,20 +640,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 flag = true;
                 break;
               }
-            } else if (key.equals("db.instance")) {
-              msSchemaName = tag.getValue();
-            } else if (key.equals("db_user_name")) {
-              dbUserName = tag.getValue();
-            } else if (key.equals("db.statement") && !key.equals("Redis")) {
-              // 一开始的想法：这里需要对SQL语句进行规范化，否则无法将探针获取到的SQL与阿里云的SQL洞察获取到的SQL进行精确匹配；2022-05-27 21:12:13
-              // 想法更改：这里不需要对SQL语句进行格式化了，因为skywalking的Java探针截取到的SQL语句有一定的格式，一般人很难在Navicat这样的工具中，来模仿Java探针的SQL语句格式。通过这个格式就可以简单区分来自SQL洞察中的skywalking探针发出的SQL；2022-05-28 12:48:12
-              msSql = tag.getValue();
-              isSql = true;
             }
           }
 
           getUserNameFromHttpBody(segmentDo, url, httpBody);
-
           if (false == flag) {
             jsonObject.put("tags", JsonUtil.obj2String(tags));
             linkedList.add(jsonObject.toString());
