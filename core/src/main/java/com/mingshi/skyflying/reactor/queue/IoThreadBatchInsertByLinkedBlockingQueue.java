@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.reactor.queue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.reactor.thread.IoThread;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class IoThreadBatchInsertByLinkedBlockingQueue {
 
   // 阻塞队列中，元素的个数；2021-06-09 16:30:20
-  private final static Integer QUEUE_SIZE = 5000;
-  // private final static Integer QUEUE_SIZE = 500;
+  private final static Integer QUEUE_SIZE = Const.IO_THREAD_QUEUE_SIZE;
   private volatile static LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = null;
   // 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
-  private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(0);
+  private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
 
   // 获取队列的容量；2021-11-17 14:35:19
   public static Integer getQueueAllSize() {

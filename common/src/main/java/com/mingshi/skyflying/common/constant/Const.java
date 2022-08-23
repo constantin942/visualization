@@ -67,6 +67,15 @@ public class Const {
   public static final String MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY = "Mysql/JDBI/PreparedStatement/executeQuery";
   public static final String SPRING_SCHEDULED = "SpringScheduled";
   public static final String POST_DEVICES_HEARTEAT = "POST:/devices/heartbeat";
+  public static final Integer QUEUE_SIZE = 2000;
+  public static final Integer RECORD_COUNT = 10 * 10000;
+  public static final Long SLEEP_INTERVAL = 50L;
+  public static final Integer INITIAL_PROCESSOR_THREAD_COUNT = 4;
+  public static final Integer NUMBER_ZERO = 0;
+  public static final Integer IO_THREAD_QUEUE_SIZE = 5000;
+  public static final Integer INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL = 5;
+  public static final Integer FLUSH_TO_ROCKETMQ_INTERVAL = 10;
+  public static final Integer CURRENT_TIME_RANDOM = 30;
 
   private Const() {
     throw new IllegalStateException("Const class");

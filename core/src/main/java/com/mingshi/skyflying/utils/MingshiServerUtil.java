@@ -44,6 +44,7 @@ public class MingshiServerUtil {
   private boolean reactorProcessorDisruptor;
   @Value("${reactor.iothread.thread.count}")
   private Integer reactorIoThreadThreadCount;
+
   @Resource
   private ProcessorByDisruptor processorByDisruptor;
   @Resource
@@ -120,37 +121,11 @@ public class MingshiServerUtil {
       if (null != jsonObject && 0 < jsonObject.size()) {
         LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil);
         if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-          // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
           log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
           String key = DateTimeUtil.dateToStr(new Date());
           redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
         }
-        // else if (++count >= 50000) {
-        //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //   count = 0;
-        // }
-        // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
         linkedBlockingQueue.put(jsonObject);
-
-        // if (true == reactorProcessorEnable && true == reactorIoThreadByDisruptor) {
-        //   ioThreadByDisruptor.disruptorInitDone();
-        //   // 使用Disruptor无锁高性能队列；
-        //   ioThreadByDisruptor.offer(jsonObject);
-        // } else {
-        //   LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil, esMsSegmentDetailUtil);
-        //   if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-        //     // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        //     log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //     String key = DateTimeUtil.dateToStr(new Date());
-        //     redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
-        //   }
-        //   // else if (++count >= 50000) {
-        //   //   log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-        //   //   count = 0;
-        //   // }
-        //   // ioThread线程不使用Disruptor无锁高性能队列；2022-07-24 11:41:18
-        //   linkedBlockingQueue.put(jsonObject);
-        // }
       }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
@@ -668,36 +643,6 @@ public class MingshiServerUtil {
   }
 
   /**
-   * <B>方法名称：flushQpsToRedis</B>
-   * <B>概要说明：将QPS信息发送到Redis中</B>
-   * @Author zm
-   * @Date 2022年06月28日 18:06:41
-   * @Param []
-   * @return void
-   **/
-  // public void flushQpsToRedis() {
-  //   Map<String, AtomicInteger> timeCountMap = StatisticsConsumeProcessorThreadQPS.getTimeCountMap();
-  //   if (null != timeCountMap && 0 < timeCountMap.size()) {
-  //     try {
-  //       Map<String, Integer> countMap = new HashMap<>(Const.NUMBER_EIGHT);
-  //       // Map<String, String> countMap = new HashMap<>(Const.NUMBER_EIGHT);
-  //       Iterator<String> iterator = timeCountMap.keySet().iterator();
-  //       while(iterator.hasNext()){
-  //         String key = iterator.next();
-  //         AtomicInteger value = timeCountMap.get(key);
-  //         countMap.put(key,value.intValue());
-  //       }
-  //       Instant now = Instant.now();
-
-  //       redisPoolUtil.hsetBatch2(Const.SKYWALKING_CONSUME_QPS, countMap);
-  //       log.info("#SegmentConsumeServiceImpl.flushQpsToRedis()# 将QPS信息【{}条】发送到Redis中耗时【{}】毫秒。", timeCountMap.size(), DateTimeUtil.getTimeMillis(now));
-  //     } catch (Exception e) {
-  //       log.error("# SegmentConsumeServiceImpl.flushQpsToRedis() # 将QPS批量发送到Redis中出现了异常。", e);
-  //     }
-  //   }
-  // }
-
-  /**
    * <B>方法名称：flushSkywalkingAgentNameToRedis</B>
    * <B>概要说明：将探针信息发送到Redis中，用于计算探针心跳</B>
    *
@@ -711,7 +656,7 @@ public class MingshiServerUtil {
       try {
         Instant now = Instant.now();
         redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
-        // log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
         map.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
@@ -729,13 +674,12 @@ public class MingshiServerUtil {
    **/
   public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
-      // Instant now = Instant.now();
+      Instant now = Instant.now();
       msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
-
       // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
       flushSegmentDetailCountToRedis(segmentDetailDoList);
 
-      // log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+      log.info("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
       segmentDetailDoList.clear();
     }
   }
@@ -778,10 +722,10 @@ public class MingshiServerUtil {
   public String doGetTableName(String dbAddress, String dbName, String tableName) {
     String key = "";
     if (StringUtil.isNotBlank(dbAddress)) {
-      key = dbAddress + "#";
+      key = dbAddress + Const.POUND_KEY;
     }
     if (StringUtil.isNotBlank(dbName)) {
-      key += dbName + "#";
+      key += dbName + Const.POUND_KEY;
     }
     if (StringUtil.isNotBlank(tableName)) {
       key += tableName;
@@ -805,7 +749,7 @@ public class MingshiServerUtil {
         Set<String> keySet = isChangedMap.keySet();
         LinkedList<MsMonitorBusinessSystemTablesDo> list = new LinkedList<>();
         for (String tables : keySet) {
-          String[] splits = tables.split("#");
+          String[] splits = tables.split(Const.POUND_KEY);
           if (3 == splits.length) {
             MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
             msMonitorBusinessSystemTablesDo.setDbAddress(splits[0]);
@@ -924,9 +868,6 @@ public class MingshiServerUtil {
 
     // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
     flushSkywalkingAgentInformationToDb();
-
-    // 将QPS信息刷入Redis中；2022-06-27 13:42:13
-    // flushQpsToRedis();
 
     // 将Span信息刷入MySQL数据库中;
     // flushSpansToDB(spanList);

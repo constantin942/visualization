@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.reactor.queue;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.utils.ReactorUtil;
@@ -59,12 +60,12 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
 
   private void doRun() {
     if(true == reactorProcessorEnable && false == reactorProcessorByDisruptor){
-      if(null == reactorProcessorThreadCount || 0 > reactorProcessorThreadCount){
+      if(null == reactorProcessorThreadCount || Const.NUMBER_ZERO > reactorProcessorThreadCount){
         // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
-        reactorProcessorThreadCount = 4;
+        reactorProcessorThreadCount = Const.INITIAL_PROCESSOR_THREAD_COUNT;
       }
       processorSize = reactorProcessorThreadCount;
-      indexAtomicInteger = new AtomicInteger(0);
+      indexAtomicInteger = new AtomicInteger(Const.NUMBER_ZERO);
       processorHandlerByLinkedBlockingQueueList = new ArrayList<>(reactorProcessorThreadCount);
       // 项目启动成功后，创建指定数量的processor线程；
       createProcessors();
@@ -102,7 +103,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   public static ProcessorHandlerByLinkedBlockingQueue getProcessor() {
     // 当自增的原子类实例自增到processor线程数量时，就重置为0；2021-10-20 14:26:25
     if (indexAtomicInteger.get() == processorSize) {
-      indexAtomicInteger = new AtomicInteger(0);
+      indexAtomicInteger = new AtomicInteger(Const.NUMBER_ZERO);
     }
 
     int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);

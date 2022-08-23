@@ -34,7 +34,7 @@ public class IoThread extends Thread {
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant currentTime = null;
 
-  private Integer flushToRocketMqInterval = 10;
+  private Integer flushToRocketMqInterval = Const.FLUSH_TO_ROCKETMQ_INTERVAL;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */, Integer/* 消费的数量 */>> processorThreadQpsMap = null;
   private LinkedList<SegmentDo> segmentList = null;
@@ -46,7 +46,7 @@ public class IoThread extends Thread {
   private MingshiServerUtil mingshiServerUtil;
 
   public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
-    currentTime = Instant.now().minusSeconds(new Random().nextInt(30));
+    currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
     processorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -58,7 +58,7 @@ public class IoThread extends Thread {
     msAlarmInformationDoLinkedListist = new LinkedList();
     // 防御性编程，当间隔为null或者小于0时，设置成5；2022-05-19 18:11:31
     if (null == flushToRocketMqInterval || flushToRocketMqInterval < 0) {
-      this.flushToRocketMqInterval = 5;
+      this.flushToRocketMqInterval = Const.INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL;
     }
     this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
@@ -154,7 +154,7 @@ public class IoThread extends Thread {
         Set<String> stringSet = skywalkingAgentTimeMap.keySet();
         for (String set : stringSet) {
           Map<String, String> map = JsonUtil.string2Obj(set, Map.class);
-          String serviceCode = map.get("serviceCode");
+          String serviceCode = map.get(Const.SERVICE_CODE);
           AgentInformationSingleton.put(serviceCode, Const.DOLLAR);
         }
         skywalkingAgentHeartBeatMap.putAll(skywalkingAgentTimeMap);

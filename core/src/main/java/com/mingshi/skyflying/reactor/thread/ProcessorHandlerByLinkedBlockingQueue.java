@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.reactor.thread;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -19,8 +20,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> linkedBlockingQueue;
 
   // 队列里存放的消息的个数；2022-06-01 09:42:19
-  private final Integer queueNoBatchSize = 2000;
-  // private final Integer queueNoBatchSize = 256;
+  private final Integer queueSize = Const.QUEUE_SIZE;
 
   private Instant now = Instant.now();
   private SegmentConsumerService segmentConsumerService;
@@ -28,14 +28,14 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
 
   public ProcessorHandlerByLinkedBlockingQueue(SegmentConsumerService segmentConsumerService) {
     this.segmentConsumerService = segmentConsumerService;
-    this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueNoBatchSize);
+    this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
   }
 
   public boolean offer(ConsumerRecord<String, Bytes> record) {
     try {
-      if (++count > (10 * 10000)) {
-        // 每200条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueNoBatchSize);
+      if (++count > (Const.RECORD_COUNT)) {
+        // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+        log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueSize);
         count = 0;
       }
 
@@ -64,7 +64,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
             log.info("当前 processor 线程【{}】对应的队列为空，休眠50毫秒。再尝试从队列里获取数据。", Thread.currentThread().getName());
             now = Instant.now();
           }
-          TimeUnit.MILLISECONDS.sleep(50);
+          TimeUnit.MILLISECONDS.sleep(Const.SLEEP_INTERVAL);
         } else {
           segmentConsumerService.consume(record, true);
         }
