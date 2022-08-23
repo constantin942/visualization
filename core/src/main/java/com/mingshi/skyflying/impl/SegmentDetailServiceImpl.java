@@ -35,9 +35,6 @@ import java.util.*;
 @Slf4j
 @Service("segmentDetailService")
 public class SegmentDetailServiceImpl implements SegmentDetailService {
-
-  @Resource
-  private UserTokenDao userTokenDao;
   @Resource
   private SegmentRelationDao segmentRelationDao;
   @Resource
@@ -916,46 +913,5 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
       return hashSet.toString();
     }
     return null;
-  }
-
-  /**
-   * <B>方法名称：getGlobalTraceIdList</B>
-   * <B>概要说明：根据用户名，获取对应全局追踪id</B>
-   *
-   * @return java.util.List<java.util.Map < java.lang.String, java.lang.String>>
-   * @Author zm
-   * @Date 2022年05月17日 17:05:04
-   * @Param [userName]
-   **/
-  private List<Map<String, String>> getGlobalTraceIdList(String userName, Integer pageNo, Integer pageSize) {
-    List<Map<String, String>> globalTraceIdMapList = new ArrayList<>();
-    Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-    // 设置默认值；2022-05-18 17:27:15
-    if (null == pageNo) {
-      queryMap.put(Const.PAGE_NO, 1);
-    }
-    if (null == pageSize) {
-      queryMap.put(Const.PAGE_SIZE, 10);
-    }
-    // 查询出所有的traceId；2022-04-25 09:56:29
-    if (StringUtil.isNotBlank(userName)) {
-      queryMap.put(Const.USER_NAME, userName);
-      List<UserTokenDo> listUserToken = userTokenDao.selectByUserName(queryMap);
-      if (null != listUserToken && !listUserToken.isEmpty()) {
-        for (UserTokenDo userTokenDo : listUserToken) {
-          String globalTraceId = userTokenDo.getGlobalTraceId();
-          Map<String, Object> queryMap2 = new HashMap<>(Const.NUMBER_EIGHT);
-          queryMap2.put("globalTraceId", globalTraceId);
-          SegmentRelationDo segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(queryMap2);
-          Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
-          map.put("globalTraceId", segmentRelationDo.getGlobalTraceId());
-          map.put("segmentIds", segmentRelationDo.getSegmentIds());
-          globalTraceIdMapList.add(map);
-        }
-      }
-    } else {
-      globalTraceIdMapList = segmentRelationDao.selectAllGlobalTraceId(queryMap);
-    }
-    return globalTraceIdMapList;
   }
 }

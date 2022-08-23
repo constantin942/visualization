@@ -74,8 +74,6 @@ public class MingshiServerUtil {
   @Resource
   private SegmentDao segmentDao;
   @Resource
-  private UserTokenDao userTokenDao;
-  @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
   private SegmentRelationDao segmentRelationDao;
@@ -487,27 +485,6 @@ public class MingshiServerUtil {
       }
     } catch (Exception e) {
       log.error("# IoThread.batchUpdateMsAuditLog # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
-    }
-  }
-
-  /**
-   * <B>方法名称：batchInsertUserToken</B>
-   * <B>概要说明：批量插入用户名、token、global信息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年06月01日 11:06:39
-   * @Param [userTokenDoList]
-   **/
-  private void batchInsertUserToken(List<UserTokenDo> userTokenDoList) {
-    try {
-      if (0 < userTokenDoList.size()) {
-        Instant now = Instant.now();
-        userTokenDao.insertSelectiveBatch(userTokenDoList);
-        // log.info("当前线程【{}】将segment数据对应的索引（{}条）插入到表中，耗时【{}】毫秒。", Thread.currentThread().getName(), userTokenDoList.size(), DateTimeUtil.getTimeMillis(now));
-      }
-    } catch (Exception e) {
-      log.error("将索引存储到数据库中出现了异常。", e);
     }
   }
 

@@ -19,7 +19,6 @@ import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.SegmentRelationDao;
-import com.mingshi.skyflying.dao.UserTokenDao;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -27,7 +26,6 @@ import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
@@ -68,8 +66,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private SegmentDao segmentDao;
   @Resource
   private SegmentRelationDao segmentRelationDao;
-  @Resource
-  private UserTokenDao userTokenDao;
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
@@ -183,7 +179,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // now = Instant.now();
         // doEnableReactorModel(segment, auditLogFromSkywalkingAgentList, segmentDetaiDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
-        disableReactorModel(statisticsProcessorThreadQpsMap,userHashSet,skywalkingAgentHeartBeatMap,segmentDetaiDolList,segmentDetaiUserNameIsNullDolList,msAlarmInformationDoList);
+        disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
       }
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
@@ -194,10 +190,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：disableReactorModel</B>
    * <B>概要说明：不使用Reactor模型</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年08月19日 18:08:34
    * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
-   * @return void
    **/
   private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
     // 将QPS信息刷入Redis中；2022-06-27 13:42:13
@@ -582,70 +579,59 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       String traceSegmentId = segmentObject.getTraceSegmentId();
       String globalTraceId = segmentObject.getTraceId();
 
-      // 在这里之所以加独占锁，是因为测试的时候，发现Kafka的消费者竟然由单线程变成多线程的了？为了保证插入和更新操作的线程安全问题，这里加独占锁。
-      // 注意：这里加独占锁只适合于单实例部署的情况。如果是多实例部署的话，需要将独占锁改成分布式独占锁，比如使用Redission的lock锁。
-      synchronized (KafkaConsumer.class) {
-        // synchronized (AiitKafkaConsumer.class) {
-        try {
-          Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-          map.put("globalTraceId", globalTraceId);
-          log.info("当前线程 {}", Thread.currentThread().getName());
-          segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(map);
-        } catch (Exception e) {
-          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId =【{}】在表中查询数据时，出现了异常。", globalTraceId, e);
-          return;
-        }
-        String service = segmentObject.getService();
-        ObjectNode jsonObject = JsonUtil.createJsonObject();
-        jsonObject.put("parentSegmentId", parentSegmentId == null ? "##" : parentSegmentId);
-        jsonObject.put("currentSegmentId", traceSegmentId);
-        jsonObject.put("service", service);
-        if (null == segmentRelationDo) {
-          segmentRelationDo = new SegmentRelationDo();
+      try {
+        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
+        map.put("globalTraceId", globalTraceId);
+        log.info("当前线程 {}", Thread.currentThread().getName());
+        segmentRelationDo = segmentRelationDao.selectByGlobalTraceId(map);
+      } catch (Exception e) {
+        log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId =【{}】在表中查询数据时，出现了异常。", globalTraceId, e);
+        return;
+      }
+      String service = segmentObject.getService();
+      ObjectNode jsonObject = JsonUtil.createJsonObject();
+      jsonObject.put("parentSegmentId", parentSegmentId == null ? "##" : parentSegmentId);
+      jsonObject.put("currentSegmentId", traceSegmentId);
+      jsonObject.put("service", service);
+      if (null == segmentRelationDo) {
+        segmentRelationDo = new SegmentRelationDo();
 
+        if (StringUtil.isNotBlank(userName)) {
+          segmentRelationDo.setUserName(userName);
+        }
+        if (StringUtil.isNotBlank(token)) {
+          segmentRelationDo.setToken(token);
+        }
+        segmentRelationDo.setGlobalTraceId(globalTraceId);
+        linkedHashSet.add(jsonObject.toString());
+        segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
+        int insertReslut = segmentRelationDao.insertSelective(segmentRelationDo);
+        if (1 != insertReslut) {
+          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds插入到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
+        }
+      } else {
+        if (StringUtil.isBlank(segmentRelationDo.getUserName())) {
           if (StringUtil.isNotBlank(userName)) {
             segmentRelationDo.setUserName(userName);
           }
+        }
+        if (StringUtil.isBlank(segmentRelationDo.getToken())) {
           if (StringUtil.isNotBlank(token)) {
             segmentRelationDo.setToken(token);
           }
-          segmentRelationDo.setGlobalTraceId(globalTraceId);
-          linkedHashSet.add(jsonObject.toString());
-          segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
-          int insertReslut = segmentRelationDao.insertSelective(segmentRelationDo);
-          if (1 != insertReslut) {
-            log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds插入到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-          }
-        } else {
-          if (StringUtil.isBlank(segmentRelationDo.getUserName())) {
-            if (StringUtil.isNotBlank(userName)) {
-              segmentRelationDo.setUserName(userName);
-            } else if (StringUtil.isNotBlank(token)) {
-              // 去用户token表中获取对应的用户名；2022-05-17 14:59:51
-              UserTokenDo userTokenDo = userTokenDao.selectByToken(token);
-              if (null != userTokenDo) {
-                segmentRelationDo.setUserName(userTokenDo.getUserName());
-              }
-            }
-          }
-          if (StringUtil.isBlank(segmentRelationDo.getToken())) {
-            if (StringUtil.isNotBlank(token)) {
-              segmentRelationDo.setToken(token);
-            }
-          }
+        }
 
-          String segmentIds = segmentRelationDo.getSegmentIds();
-          if (StringUtil.isBlank(segmentIds)) {
-            log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId在表中找到了对应的记录，但该记录没有设置对应的segmentId。这是不正常的。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-            return;
-          }
-          linkedHashSet = JsonUtil.string2Obj(segmentIds, LinkedHashSet.class);
-          linkedHashSet.add(jsonObject.toString());
-          segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
-          int updateResult = segmentRelationDao.updateByPrimaryKeySelective(segmentRelationDo);
-          if (1 != updateResult) {
-            log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds更新到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
-          }
+        String segmentIds = segmentRelationDo.getSegmentIds();
+        if (StringUtil.isBlank(segmentIds)) {
+          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，根据全局traceId在表中找到了对应的记录，但该记录没有设置对应的segmentId。这是不正常的。【{}】。", JsonUtil.obj2String(segmentRelationDo));
+          return;
+        }
+        linkedHashSet = JsonUtil.string2Obj(segmentIds, LinkedHashSet.class);
+        linkedHashSet.add(jsonObject.toString());
+        segmentRelationDo.setSegmentIds(JsonUtil.obj2String(linkedHashSet));
+        int updateResult = segmentRelationDao.updateByPrimaryKeySelective(segmentRelationDo);
+        if (1 != updateResult) {
+          log.error("开始执行 AiitKafkaConsumer # saveGlobalTraceIdAndSegmentIds()方法，将全局traceId和对应的segmentIds更新到表中失败。【{}】。", JsonUtil.obj2String(segmentRelationDo));
         }
       }
     } catch (Exception e) {
@@ -705,7 +691,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
   // private void reorganizingSpans(SegmentDo segment, List<Span> spanList, LinkedList<MsAuditLogDo> auditLogFromSkywalkingAgent) {
   //   if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-  //     // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+  //     // log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
   //     return;
   //   }
   //
@@ -1058,7 +1044,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void insertSegmentBySingle(SegmentDo segment) {
     int insertResult = segmentDao.insertSelective(segment);
     if (1 != insertResult) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
+      log.error("开始执行 AiitKafkaConsumer # insertSegmentBySingle()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
     }
   }
 
@@ -1187,26 +1173,20 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   //   }
   // }
 
+  /**
+   * <B>方法名称：insertSegment</B>
+   * <B>概要说明：将原始的用户访问行为信息插入到表中</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年08月23日 14:08:17
+   * @Param [segment, segmentObject, parentSegmentId]
+   **/
   private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
     // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
     if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
       // log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
-    } else if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isNotBlank(segment.getToken())) {
-      // 如果用户名为空，但token不为空，此时要把这个token对应的用户名补全；2022-04-21 08:45:30
-      boolean flag = setUserNameByToken(segment);
-      if (false == flag) {
-        insertToken(segment);
-      } else {
-        insertUserNameAndTokenAndGlobalTraceId(segment);
-      }
-    } else if (StringUtil.isNotBlank(segment.getUserName()) && StringUtil.isNotBlank(segment.getToken())) {
-      // 如果用户名和token都不为空，那么就把用户名和token插入到表中；2022-04-21 08:46:07
-      insertUserNameAndToken(segment);
-    }
-    if (!StringUtil.isBlank(segment.getUserName())) {
-      // 更新用户名为空的记录；2022-05-17 16:10:34
-      updateUserName(segment);
     }
 
     int insertResult = segmentDao.insertSelective(segment);
@@ -1215,176 +1195,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } else {
       // 将全局 trace_id 和 segment_ids保存到表里，其目的是，将用户与这条访问链路上的各个segment绑定到一起；2022-04-24 17:32:06
       saveGlobalTraceIdAndSegmentIds(segmentObject, parentSegmentId, segment.getUserName(), segment.getToken());
-    }
-  }
-
-  /**
-   * <B>方法名称：setUserNameByToken</B>
-   * <B>概要说明：根据token，给segment实例设置用户名</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年04月21日 09:04:47
-   * @Param [segment]
-   **/
-  private boolean setUserNameByToken(SegmentDo segment) {
-    String token = segment.getToken();
-    UserTokenDo userTokenDo = userTokenDao.selectByToken(token);
-    if (null == userTokenDo) {
-      String globalTraceId = segment.getGlobalTraceId();
-      if (StringUtil.isNotBlank(globalTraceId)) {
-        List<SegmentDo> segmentDoList = segmentDao.selectByGlobalTraceId(globalTraceId);
-        if (null != segmentDoList && 0 < segmentDoList.size()) {
-          for (SegmentDo segmentDo : segmentDoList) {
-            if (StringUtil.isNotBlank(segmentDo.getUserName()) && StringUtil.isBlank(segment.getUserName())) {
-              segment.setUserName(segmentDo.getUserName());
-              insertUserNameAndToken(segment);
-              return true;
-            }
-          }
-        }
-      }
-    } else {
-      String userName = userTokenDo.getUserName();
-      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        segment.setUserName(userName);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * <B>方法名称：insertUserNameAndToken</B>
-   * <B>概要说明：将token信息插入到表中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年04月21日 08:04:30
-   * @Param [segment]
-   **/
-  private void insertToken(SegmentDo segment) {
-    UserTokenDo userTokenDo = new UserTokenDo();
-    try {
-      String token = segment.getToken();
-      userTokenDo.setToken(token);
-      String globalTraceId1 = segment.getGlobalTraceId();
-      userTokenDo.setGlobalTraceId(globalTraceId1);
-      String userName = segment.getUserName();
-      UserTokenDo userTokenDo1 = null;
-      if (StringUtil.isNotBlank(token) && StringUtil.isNotBlank(userName)) {
-        userTokenDo1 = userTokenDao.selectByUserNameAndToken(userTokenDo);
-      } else if (StringUtil.isNotBlank(token) && StringUtil.isBlank(userName)) {
-        userTokenDo1 = userTokenDao.selectByToken(token);
-      }
-
-      if (null == userTokenDo1) {
-        String globalTraceId = segment.getGlobalTraceId();
-        if (StringUtil.isNotBlank(globalTraceId)) {
-          UserTokenDo userTokenDo2 = userTokenDao.selectByGlobalTraceIdUserNameIsNotNull(globalTraceId);
-          if (null != userTokenDo2) {
-            userTokenDo.setUserName(userTokenDo2.getUserName());
-          }
-        }
-        int insertResult = userTokenDao.insertSelective(userTokenDo);
-        if (1 != insertResult) {
-          log.error("开始执行 AiitKafkaConsumer # insertUserNameAndToken()方法，将用户名和token信息【{}】插入到表中失败。", JsonUtil.obj2String(userTokenDo));
-        }
-      }
-    } catch (Exception e) {
-      log.error("将用户的信息  = 【{}】插入到表中出现了异常。", JsonUtil.obj2String(userTokenDo), e);
-    }
-  }
-
-  /**
-   * <B>方法名称：updateUserNameAndToken</B>
-   * <B>概要说明：更新用户名为空的记录</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年04月21日 08:04:30
-   * @Param [segment]
-   **/
-  private void updateUserName(SegmentDo segment) {
-    String userName = segment.getUserName();
-    String token = segment.getToken();
-    String globalTraceId = segment.getGlobalTraceId();
-    try {
-      if (StringUtil.isNotBlank(userName)) {
-        List<UserTokenDo> userList = userTokenDao.selectByGlobalTraceIdUserNameIsNull(globalTraceId);
-        if (null != userList && 0 < userList.size()) {
-          // 根据全局追踪id找到了用户名为null的记录，此时将用户名补全；2022-05-17 16:27:55
-          for (UserTokenDo tokenDo : userList) {
-            tokenDo.setUserName(userName);
-            int updateResult = userTokenDao.updateByPrimaryKeySelective(tokenDo);
-            if (1 != updateResult) {
-              log.error("将用户信息  = 【{}】更新到用户token表中失败。", JsonUtil.obj2String(tokenDo));
-            }
-          }
-        }
-        if (StringUtil.isNotBlank(token)) {
-          List<UserTokenDo> tokenList = userTokenDao.selectByTokenUserNameIsNull(token);
-          if (null != tokenList && 0 < tokenList.size()) {
-            // 根据token找到了用户名为null的记录，此时将用户名补全；2022-05-17 16:27:55
-            for (UserTokenDo tokenDo : tokenList) {
-              tokenDo.setUserName(userName);
-              int updateResult = userTokenDao.updateByPrimaryKeySelective(tokenDo);
-              if (1 != updateResult) {
-                log.error("将用户信息  = 【{}】更新到用户token表中失败。", JsonUtil.obj2String(tokenDo));
-              }
-            }
-          }
-        }
-      }
-    } catch (Exception e) {
-      log.error("根据全局追踪id  = 【{}】更新到用户名 = 【{}】时，出现了异常。", globalTraceId, userName, e);
-    }
-  }
-
-  /**
-   * <B>方法名称：insertUserNameAndToken</B>
-   * <B>概要说明：将用户名和token信息插入到表中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年04月21日 08:04:30
-   * @Param [segment]
-   **/
-  private void insertUserNameAndToken(SegmentDo segment) {
-    UserTokenDo userTokenDo = new UserTokenDo();
-    try {
-      userTokenDo.setUserName(segment.getUserName());
-      userTokenDo.setToken(segment.getToken());
-      userTokenDo.setGlobalTraceId(segment.getGlobalTraceId());
-      UserTokenDo userTokenDo1 = userTokenDao.selectByUserNameAndToken(userTokenDo);
-      if (null == userTokenDo1) {
-        int insertResult = userTokenDao.insertSelective(userTokenDo);
-        if (1 != insertResult) {
-          log.error("开始执行 AiitKafkaConsumer # insertUserNameAndToken()方法，将用户名和token信息【{}】插入到表中失败。", JsonUtil.obj2String(userTokenDo));
-        }
-      }
-    } catch (Exception e) {
-      log.error("将用户的信息  = 【{}】插入到表中出现了异常。", JsonUtil.obj2String(userTokenDo), e);
-    }
-  }
-
-  private void insertUserNameAndTokenAndGlobalTraceId(SegmentDo segment) {
-    UserTokenDo userTokenDo = new UserTokenDo();
-    try {
-      userTokenDo.setUserName(segment.getUserName());
-      userTokenDo.setToken(segment.getToken());
-      userTokenDo.setGlobalTraceId(segment.getGlobalTraceId());
-      UserTokenDo userTokenDo1 = userTokenDao.selectByUserNameAndTokenAndGlobalTraceId(userTokenDo);
-      if (null == userTokenDo1) {
-        int insertResult = userTokenDao.insertSelective(userTokenDo);
-        if (1 != insertResult) {
-          log.error("开始执行 AiitKafkaConsumer # insertUserNameAndToken()方法，将用户名和token信息【{}】插入到表中失败。", JsonUtil.obj2String(userTokenDo));
-        }
-      } else {
-        // log.info("根据用户名 = 【{}】和token = 【{}】在表里找到了记录。", segment.getUserName(), segment.getToken());
-      }
-    } catch (Exception e) {
-      log.error("将用户的信息  = 【{}】插入到表中出现了异常。", JsonUtil.obj2String(userTokenDo), e);
     }
   }
 
