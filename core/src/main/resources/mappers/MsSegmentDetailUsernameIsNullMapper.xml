@@ -24,9 +24,6 @@
     <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName"/>
     <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName"/>
     <result column="end_time" jdbcType="TIMESTAMP" property="endTime"/>
-    <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT" property="userPortraitFlagByVisitedTime"/>
-    <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT"
-            property="userPortraitFlagByVisitedTableEveryday"/>
     <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId"/>
     <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
@@ -36,8 +33,7 @@
     , user_name, service_code, start_time, db_type, db_user_name, operation_name, token,
     global_trace_id, parent_segment_id, operation_type, ms_table_name, db_instance, gmt_create,
     gmt_modified, is_delete, span_id, component, peer, endpoint_name, service_instance_name,
-    end_time, user_portrait_flag_by_visited_time, user_portrait_flag_by_visited_table_everyday,
-    parent_span_id, current_segment_id, db_statement
+    end_time, parent_span_id, current_segment_id, db_statement
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -75,8 +71,6 @@
            endpoint_name,
            service_instance_name,
            end_time,
-           user_portrait_flag_by_visited_time,
-           user_portrait_flag_by_visited_table_everyday,
            parent_span_id,
            current_segment_id,
            db_statement
@@ -111,8 +105,7 @@
     ( user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-    db_user_name, db_statement, ms_table_name, operation_type, user_portrait_flag_by_visited_time,
-    user_portrait_flag_by_visited_table_everyday)
+    db_user_name, db_statement, ms_table_name, operation_type)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -135,10 +128,7 @@
       #{item.dbInstance,jdbcType=VARCHAR},
       #{item.dbUserName,jdbcType=VARCHAR},
       #{item.dbStatement,jdbcType=VARCHAR},
-      #{item.msTableName,jdbcType=VARCHAR},
-      #{item.operationType,jdbcType=VARCHAR},
-      #{item.userPortraitFlagByVisitedTime,jdbcType=INTEGER},
-      #{item.userPortraitFlagByVisitedTableEveryday,jdbcType=INTEGER}
+      #{item.msTableName,jdbcType=VARCHAR}
       )
     </foreach>
   </insert>
@@ -210,12 +200,6 @@
       </if>
       <if test="endTime != null">
         end_time,
-      </if>
-      <if test="userPortraitFlagByVisitedTime != null">
-        user_portrait_flag_by_visited_time,
-      </if>
-      <if test="userPortraitFlagByVisitedTableEveryday != null">
-        user_portrait_flag_by_visited_table_everyday,
       </if>
       <if test="parentSpanId != null">
         parent_span_id,
@@ -294,12 +278,6 @@
       <if test="endTime != null">
         #{endTime,jdbcType=TIMESTAMP},
       </if>
-      <if test="userPortraitFlagByVisitedTime != null">
-        #{userPortraitFlagByVisitedTime,jdbcType=TINYINT},
-      </if>
-      <if test="userPortraitFlagByVisitedTableEveryday != null">
-        #{userPortraitFlagByVisitedTableEveryday,jdbcType=TINYINT},
-      </if>
       <if test="parentSpanId != null">
         #{parentSpanId,jdbcType=INTEGER},
       </if>
@@ -376,12 +354,6 @@
       </if>
       <if test="endTime != null">
         end_time = #{endTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="userPortraitFlagByVisitedTime != null">
-        user_portrait_flag_by_visited_time = #{userPortraitFlagByVisitedTime,jdbcType=TINYINT},
-      </if>
-      <if test="userPortraitFlagByVisitedTableEveryday != null">
-        user_portrait_flag_by_visited_table_everyday = #{userPortraitFlagByVisitedTableEveryday,jdbcType=TINYINT},
       </if>
       <if test="parentSpanId != null">
         parent_span_id = #{parentSpanId,jdbcType=INTEGER},
