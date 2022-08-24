@@ -18,15 +18,15 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  **/
 @Configuration
 @ComponentScan(basePackages= {"com.mingshi.skyflying.db"})
-@PropertySource("classpath:/db.properties")
+@PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SpringConfig {
-	@Value("${db_url}")
+	@Value("${spring.datasource.url}")
 	private String url;
-	@Value("${db_username}")
+	@Value("${spring.datasource.username}")
 	private String username;
-	@Value("${db_password}")
+	@Value("${spring.datasource.password}")
 	private String password;
-	@Value("${db_driver}")
+	@Value("${spring.datasource.driver-class-name}")
 	private String driver;
 	@Bean
 	public DriverManagerDataSource driverManagerDataSource() {

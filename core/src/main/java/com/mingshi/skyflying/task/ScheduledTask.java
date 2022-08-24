@@ -188,21 +188,21 @@ public class ScheduledTask {
 
   /**
    * <B>方法名称：updateUserNameIsNullByGlobalTraceId</B>
-   * <B>概要说明：根据token更新用户名为空的记录</B>
+   * <B>概要说明：根据globalTraceId更新用户名为空的记录</B>
    *
    * @return void
    * @Author zm
    * @Date 2022年08月01日 15:08:12
    * @Param [userNameByToken, token]
    **/
-  private void updateUserNameIsNullByGlobalTraceId(String userNameByToken, String globalTraceId) {
+  private void updateUserNameIsNullByGlobalTraceId(String userName, String globalTraceId) {
     try {
       HashMap<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
-      map.put("userName", userNameByToken);
+      map.put("userName", userName);
       map.put("globalTraceId", globalTraceId);
       msSegmentDetailUsernameIsNullMapper.updateUserNameByGlobalTraceId(map);
     } catch (Exception e) {
-      log.error("# scheduledGetDmsAuditLog.updateUserNameIsNull() # 根据token更新用户名到表 ms_segment_detail_username_is_null 时，出现了异常。", e);
+      log.error("# scheduledGetDmsAuditLog.updateUserNameIsNull() # 根据globalTraceId更新用户名到表 ms_segment_detail_username_is_null 时，出现了异常。", e);
     }
   }
 

@@ -25,10 +25,11 @@ import java.time.Instant;
 @Slf4j
 // @RequestMapping("/api")
 public class TestController {
-  @Value("${data_name}")
-  private String dataName;
+  @Value("${spring.datasource.url}")
+  private String url;
   @Value("${doc_dir_path}")
   private String docDirPath;
+
   @Autowired
   DriverManagerDataSource driverManagerDataSource;
 
@@ -40,7 +41,6 @@ public class TestController {
   private AiitKafkaProducer aiitKafkaProducer;
 
   private String topic = "zm-test-topic-02";
-
   private Instant nowCpuMemory = Instant.now();
 
   /**
@@ -54,7 +54,8 @@ public class TestController {
   @ResponseBody
   @GetMapping(value = "/createDbDocument")
   public void createDbDocument() {
-    dbUtil.createWord(dataName, docDirPath);
+    String dataBaseName = url.split("/")[3].split("useUnicode")[0].replace("?","");
+    dbUtil.createWord(dataBaseName, docDirPath);
   }
 
   // @ResponseBody
