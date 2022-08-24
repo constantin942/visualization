@@ -11,7 +11,7 @@
  Target Server Version : 80027
  File Encoding         : 65001
 
- Date: 24/08/2022 09:17:57
+ Date: 24/08/2022 14:17:25
 */
 
 SET NAMES utf8mb4;
@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `ms_agent_information`;
 CREATE TABLE `ms_agent_information` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
   `agent_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '运维人员在服务启动时，设置的名称',
   `agent_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '监管方或者运维人员设置的服务名称',
@@ -39,7 +39,7 @@ DROP TABLE IF EXISTS `ms_alarm_information`;
 CREATE TABLE `ms_alarm_information` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
   `match_rule_id` int DEFAULT NULL COMMENT '命中规则id',
   `original_time` datetime DEFAULT NULL COMMENT '记录产生的时间',
@@ -57,7 +57,7 @@ DROP TABLE IF EXISTS `ms_config`;
 CREATE TABLE `ms_config` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
   `config` varchar(255) DEFAULT NULL COMMENT '配置项',
   `config_type` varchar(16) DEFAULT NULL COMMENT '配置类型',
@@ -89,7 +89,7 @@ CREATE TABLE `ms_dms_audit_log` (
   `elapsed_time` int DEFAULT NULL COMMENT '操作耗时，单位为毫秒。',
   `remark` varchar(255) DEFAULT NULL COMMENT '备注信息',
   `user_id` int DEFAULT NULL COMMENT '操作人ID',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
   `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
   `hash` varchar(128) DEFAULT NULL COMMENT '本条记录的hash值',
@@ -123,10 +123,10 @@ DROP TABLE IF EXISTS `ms_scheduled_task`;
 CREATE TABLE `ms_scheduled_task` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
   `start_time` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '开始时间',
-  `end_time` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT '' COMMENT '结束时间',
+  `end_time` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '结束时间',
   `page_size` int DEFAULT NULL COMMENT '每页数据量',
   `page_number` int DEFAULT NULL COMMENT '开始页码',
   `status` varchar(16) DEFAULT NULL COMMENT '执行结果',
