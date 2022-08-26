@@ -195,7 +195,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       ObjectNode jsonObject = JsonUtil.createJsonObject();
       jsonObject.put(Const.SERVICE_CODE, service);
       jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
-      long segmentStartTime = segmentObject.getSegmentStartTime();
+//      long segmentStartTime = segmentObject.getSegmentStartTime();
+      long segmentStartTime = 0L;
       String date = null;
       if(0L != segmentStartTime){
         date = DateTimeUtil.longToDate(segmentStartTime);

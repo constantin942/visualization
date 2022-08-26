@@ -1,7 +1,10 @@
 package com.mingshi.skyflying.anomaly_detection.domain;
 
+import lombok.Builder;
+
 import java.util.Date;
 
+@Builder
 public class CoarseSegmentDetailOnTimeDo {
     private Integer id;
 

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface MsSegmentDetailMapper {
 
-    List<MsSegmentDetailDo> getCoarseDetail();
+    List<MsSegmentDetailDo> getInfoForCoarseDetail();
 
 }

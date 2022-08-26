@@ -16,6 +16,7 @@ public class TestControllerA {
     private SegmentDetailServiceImpl segmentDetailService;
     @GetMapping("test")
     public void test() {
-        segmentDetailService.getYesterdaySegmentDetail();
+        segmentDetailService.createUserPortraitByTime();
     }
+
 }
