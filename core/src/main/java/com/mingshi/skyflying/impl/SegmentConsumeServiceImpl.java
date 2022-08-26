@@ -152,9 +152,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
     mingshiServerUtil.flushUserNameToRedis(userHashSet);
 
-    // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-    mingshiServerUtil.flushSkywalkingAgentInformationToDb();
-
     // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
     mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
@@ -198,8 +195,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       ObjectNode jsonObject = JsonUtil.createJsonObject();
       jsonObject.put(Const.SERVICE_CODE, service);
       jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
-      // todo：不应该用当前时间，如果当kafka中出现了消息积压时，那么这个时间就不是探针目前存活的时间。这个时间应该用消息本身的时间。2022-07-04 10:03:17
-      skywalkingAgentHeartBeatMap.put(jsonObject.toString(), DateTimeUtil.DateToStr(new Date()));
+      long segmentStartTime = segmentObject.getSegmentStartTime();
+      String date = null;
+      if(0L != segmentStartTime){
+        date = DateTimeUtil.longToDate(segmentStartTime);
+      }else{
+        date = DateTimeUtil.DateToStr(new Date());
+      }
+      skywalkingAgentHeartBeatMap.put(jsonObject.toString(), date);
+
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.getAgentServiceName() # 获取探针的名称时，出现了异常。", e);
     }

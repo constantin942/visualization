@@ -30,6 +30,8 @@ public class SkyflyingController {
   @Resource
   private MsMonitorBusinessSystemTablesService msMonitorBusinessSystemTablesService;
   @Resource
+  private MsAgentSwitchService msAgentSwitchService;
+  @Resource
   private SegmentDetailService segmentDetailService;
   @Resource
   private AuditLogService auditLogService;
@@ -43,6 +45,55 @@ public class SkyflyingController {
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
   private MsAgentInformationService msAgentInformationService;
+
+  /**
+   * <B>方法名称：allAgentOperationRecord</B>
+   * <B>概要说明：获取指定探针的操作记录</B>
+   *
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年08月25日 16:08:13
+   * @Param [serviceInstance, agentSwitch]
+   **/
+  @ResponseBody
+  @GetMapping(value = "/allAgentOperationRecord")
+  public ServerResponse<String> allAgentOperationRecord(@RequestParam(value = "serviceInstance") String serviceInstance,
+                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    ServerResponse<String> bySuccess = msAgentSwitchService.allAgentOperationRecord(serviceInstance.trim(), pageNo, pageSize);
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：queryAgentStatus</B>
+   * <B>概要说明：查询探针状态</B>
+   * @Author zm
+   * @Date 2022年08月26日 10:08:20
+   * @Param [serviceInstance]
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+   **/
+  @ResponseBody
+  @GetMapping(value = "/queryAgentStatus")
+  public ServerResponse<String> queryAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance) {
+    ServerResponse<String> bySuccess = msAgentSwitchService.queryAgentStatus(serviceInstance.trim());
+    return bySuccess;
+  }
+
+  /**
+   * <B>方法名称：updateAgentStatus</B>
+   * <B>概要说明：更新探针的状态：开关</B>
+   *
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年08月25日 10:08:53
+   * @Param [pageNo, pageSize]
+   **/
+  @ResponseBody
+  @PostMapping(value = "/updateAgentStatus")
+  public ServerResponse<String> updateAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance, @RequestParam(value = "agentSwitch") String agentSwitch) {
+    ServerResponse<String> bySuccess = msAgentSwitchService.updateAgentStatus(serviceInstance.trim(), agentSwitch.trim());
+    return bySuccess;
+  }
 
   /**
    * <B>方法名称：getAllMonitorTables</B>

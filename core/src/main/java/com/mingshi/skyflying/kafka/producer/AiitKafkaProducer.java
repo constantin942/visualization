@@ -1,6 +1,9 @@
 package com.mingshi.skyflying.kafka.producer;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +14,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @SuppressWarnings("ALL")
 @Component
@@ -24,8 +28,34 @@ public class AiitKafkaProducer {
   private String topic;
 
   /**
-  * 自定义topic
-  */
+   * 自定义topic
+   */
+  public Boolean sendWithSpecifyPartion(String topic, ObjectNode jsonNodes) {
+    //发送消息
+    try {
+      String serviceInstance = jsonNodes.get("serviceInstance").asText();
+      int length = serviceInstance.length();
+      // 根据topic获取所有的partition信息；
+      List<PartitionInfo> partitionInfos = kafkaTemplate.partitionsFor(topic);
+      // 获取指定的partition；2022-08-25 10:57:15
+      Integer partiton = length % partitionInfos.size();
+      // 根据指定的partition，将消息发送出去；2022-08-25 10:57:31
+      // 这里之所以指定partition，是因为需要将同一个探针的消息发送到同一个partition中。
+      // 考虑这样一个场景：在同一时刻，如果对同一个探针执行多次开关操作，为了顺序的执行这些开关操作，这里将同一个探针的开关信息发送到一个partition中。
+      //                探针那边是单线程在消费消息，这样一来，探针那边就可以顺序的执行开关操作了。如果将消息发送到多个partition中，会出现乱序的情况。
+      ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, partiton, serviceInstance, Bytes.wrap(jsonNodes.toString().getBytes()));
+      SendResult<String, Object> stringObjectSendResult = future.get();
+      RecordMetadata recordMetadata = stringObjectSendResult.getRecordMetadata();
+    } catch (Exception e) {
+      log.error("# AiitKafkaProducer.send() # 发送消息到topic【{}】出现了异常。", topic, e);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 自定义topic
+   */
   public void send(String topic, String obj) {
     //发送消息
     ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, Bytes.wrap(obj.getBytes()));

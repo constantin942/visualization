@@ -91,6 +91,10 @@ spring:
     consumer:
       topic: ${kafka_consumer_topic}
       group: ${kafka_consumer_group}
+      agent-switch-request-topic: agent-switch-request-topic
+      agent-switch-response-topic: agent-switch-response-topic
+      agent-switch-response-group: agent-switch-response-group
+
       # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
       auto-commit-interval: 1S
       # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：

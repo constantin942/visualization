@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.MsAgentSwitchMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+    <result column="service_instance" jdbcType="VARCHAR" property="serviceInstance"/>
+    <result column="agent_switch_status" jdbcType="VARCHAR" property="agentSwitchStatus"/>
+    <result column="operator" jdbcType="VARCHAR" property="operator"/>
+    <result column="send_kafka_request_params" jdbcType="VARCHAR" property="sendKafkaRequestParams"/>
+    <result column="send_kafka_status" jdbcType="VARCHAR" property="sendKafkaStatus"/>
+    <result column="receive_kafka_response_params" jdbcType="VARCHAR" property="receiveKafkaResponseParams"/>
+    <result column="receive_kafka_status" jdbcType="VARCHAR" property="receiveKafkaStatus"/>
+    <result column="request_id" jdbcType="VARCHAR" property="requestId"/>
+    <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id
+    , is_delete, gmt_create, gmt_modified, service_instance, agent_switch_status, operator,
+    send_kafka_request_params, send_kafka_status, receive_kafka_response_params, receive_kafka_status,
+    request_id, operation_type
+  </sql>
+  <select id="selectByServiceInstance" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_agent_switch
+    where service_instance = #{serviceInstance,jdbcType=VARCHAR}
+    order by id desc
+    <if test="pageNo != null and  pageSize != null   ">
+      LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
+  <select id="selectByServiceInstanceLatest" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM
+    ms_agent_switch
+    WHERE
+    service_instance = #{serviceInstance,jdbcType=VARCHAR}
+    AND send_kafka_status is not NULL
+    AND receive_kafka_status is not NULL
+    AND agent_switch_status is not NULL
+    ORDER BY id DESC
+    limit 1
+  </select>
+  <select id="selectByServiceInstanceCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*)
+    from ms_agent_switch
+    where service_instance = #{serviceInstance,jdbcType=VARCHAR}
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from ms_agent_switch
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+    insert into ms_agent_switch
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="serviceInstance != null">
+        service_instance,
+      </if>
+      <if test="agentSwitchStatus != null">
+        agent_switch_status,
+      </if>
+      <if test="operator != null">
+        operator,
+      </if>
+      <if test="sendKafkaRequestParams != null">
+        send_kafka_request_params,
+      </if>
+      <if test="sendKafkaStatus != null">
+        send_kafka_status,
+      </if>
+      <if test="receiveKafkaResponseParams != null">
+        receive_kafka_response_params,
+      </if>
+      <if test="receiveKafkaStatus != null">
+        receive_kafka_status,
+      </if>
+      <if test="requestId != null">
+        request_id,
+      </if>
+      <if test="operationType != null">
+        operation_type,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="serviceInstance != null">
+        #{serviceInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="agentSwitchStatus != null">
+        #{agentSwitchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="operator != null">
+        #{operator,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaRequestParams != null">
+        #{sendKafkaRequestParams,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaStatus != null">
+        #{sendKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaResponseParams != null">
+        #{receiveKafkaResponseParams,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaStatus != null">
+        #{receiveKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="requestId != null">
+        #{requestId,jdbcType=VARCHAR},
+      </if>
+      <if test="operationType != null">
+        #{operationType,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+    update ms_agent_switch
+    <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="serviceInstance != null">
+        service_instance = #{serviceInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="agentSwitchStatus != null">
+        agent_switch_status = #{agentSwitchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="operator != null">
+        operator = #{operator,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaRequestParams != null">
+        send_kafka_request_params = #{sendKafkaRequestParams,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaStatus != null">
+        send_kafka_status = #{sendKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaResponseParams != null">
+        receive_kafka_response_params = #{receiveKafkaResponseParams,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaStatus != null">
+        receive_kafka_status = #{receiveKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="requestId != null">
+        request_id = #{requestId,jdbcType=VARCHAR},
+      </if>
+      <if test="operationType != null">
+        operation_type = #{operationType,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByRequestId">
+    update ms_agent_switch
+    <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="serviceInstance != null">
+        service_instance = #{serviceInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="agentSwitchStatus != null">
+        agent_switch_status = #{agentSwitchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="operator != null">
+        operator = #{operator,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaRequestParams != null">
+        send_kafka_request_params = #{sendKafkaRequestParams,jdbcType=VARCHAR},
+      </if>
+      <if test="sendKafkaStatus != null">
+        send_kafka_status = #{sendKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaResponseParams != null">
+        receive_kafka_response_params = #{receiveKafkaResponseParams,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveKafkaStatus != null">
+        receive_kafka_status = #{receiveKafkaStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="operationType != null">
+        operation_type = #{operationType,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where request_id = #{requestId,jdbcType=VARCHAR}
+  </update>
+</mapper>

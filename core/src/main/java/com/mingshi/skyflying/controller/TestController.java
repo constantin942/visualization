@@ -27,7 +27,7 @@ import java.time.Instant;
 public class TestController {
   @Value("${spring.datasource.url}")
   private String url;
-  @Value("${doc_dir_path}")
+  // @Value("${doc_dir_path}")
   private String docDirPath;
 
   @Autowired
@@ -58,14 +58,15 @@ public class TestController {
     dbUtil.createWord(dataBaseName, docDirPath);
   }
 
-  // @ResponseBody
-  // @GetMapping(value = "/sendMsg")
-  // public void testSendMsgToKafka(){
-  //   for (int i = 0; i < 1000 * 10000; i++) {
-  //     System.out.println("开始发送第" + (i + 1) + "条消息：" + i);
-  //     aiitKafkaProducer.send(topic,i + "");
-  //   }
-  // }
+  @ResponseBody
+  @GetMapping(value = "/sendMsg")
+  public void testSendMsgToKafka(String topic){
+    for (int i = 0; i < 1; i++) {
+    // for (int i = 0; i < 1000 * 10000; i++) {
+      System.out.println("开始发送第" + (i + 1) + "条消息：" + i);
+      aiitKafkaProducer.send(topic,i + "");
+    }
+  }
   /**
    * <B>方法名称：test</B>
    * <B>概要说明：测试部署了skywalking探针对业务系统的影响有多少，从请求时间、CPU占用率、内存使用率三个维度来考量</B>

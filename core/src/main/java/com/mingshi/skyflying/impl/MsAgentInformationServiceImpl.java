@@ -3,12 +3,14 @@ package com.mingshi.skyflying.impl;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
+import com.mingshi.skyflying.common.domain.MsAgentSwitchDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsAgentInformationMapper;
+import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
 import com.mingshi.skyflying.service.MsAgentInformationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ import java.util.*;
 public class MsAgentInformationServiceImpl implements MsAgentInformationService {
   @Resource
   private MsAgentInformationMapper msAgentInformationMapper;
+  @Resource
+  private MsAgentSwitchMapper msAgentSwitchMapper;
   @Resource
   private RedisPoolUtil redisPoolUtil;
 
@@ -93,7 +97,6 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
   @Override
   public ServerResponse<String> getActiveSkywalkingAgent() {
     List<Map<String, String>> list = new LinkedList<>();
-    Integer count = 0;
     Map<Object, Object> hgetall = redisPoolUtil.hgetall(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST);
     if (null != hgetall && 0 < hgetall.size()) {
       Iterator<Object> iterator = hgetall.keySet().iterator();
@@ -102,16 +105,16 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
         String stringDate = String.valueOf(hgetall.get(key));
         long interval = DateTimeUtil.getSecondByDate(stringDate);
 
-        doActiveSkywalkingAgent(list, interval, key, count, stringDate);
+        doActiveSkywalkingAgent(list, interval, key, stringDate);
       }
     }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     bySuccess.setData(JsonUtil.obj2String(list));
-    log.info(" 执行完毕 # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针数量是【{}】。", count);
+    log.info(" 执行完毕 # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针数量是【{}】。", list.size());
     return bySuccess;
   }
 
-  private void doActiveSkywalkingAgent(List<Map<String, String>> list, long interval, String key, Integer count, String date) {
+  private void doActiveSkywalkingAgent(List<Map<String, String>> list, long interval, String key,String date) {
     if (interval > Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS) {
       try {
         redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
@@ -119,7 +122,6 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
         log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
       }
     } else {
-      ++count;
       Map<String, String> codeNameMap = JsonUtil.string2Obj(key, Map.class);
       if (null != codeNameMap) {
         Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
@@ -130,6 +132,21 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
         map.put("agentName", agentName);
         map.put("serviceInstanceName", serviceInstanceName);
         map.put("time", date);
+
+        // 获取探针状态；
+        MsAgentSwitchDo msAgentSwitchDo = msAgentSwitchMapper.selectByServiceInstanceLatest(serviceInstanceName);
+        if(null != msAgentSwitchDo){
+          String agentSwitch = msAgentSwitchDo.getAgentSwitchStatus();
+          String sendKafkaStatus = msAgentSwitchDo.getSendKafkaStatus();
+          String receiveKafkaStatus = msAgentSwitchDo.getReceiveKafkaStatus();
+          if(Const.SUCCESS.equals(sendKafkaStatus) && Const.SUCCESS.equals(receiveKafkaStatus)){
+            map.put("status", agentSwitch);
+          }else{
+            map.put("status", Const.AGENT_STATUS_UNKNOWN);
+          }
+        }else{
+          map.put("status", Const.AGENT_STATUS_ON);
+        }
         list.add(map);
       }
     }

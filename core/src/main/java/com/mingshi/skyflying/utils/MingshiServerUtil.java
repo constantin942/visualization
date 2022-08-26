@@ -639,13 +639,24 @@ public class MingshiServerUtil {
    * @Date 2022年06月27日 13:06:22
    * @Param [segmentDetailDoList]
    **/
-  public void flushSkywalkingAgentNameToRedis(Map<String, String> map) {
-    if (null != map && 0 < map.size()) {
+  public void flushSkywalkingAgentNameToRedis(Map<String, String> skywalkingAgentTimeMap) {
+    if (null != skywalkingAgentTimeMap && 0 < skywalkingAgentTimeMap.size()) {
       try {
+        Set<String> stringSet = skywalkingAgentTimeMap.keySet();
+        for (String set : stringSet) {
+          Map<String, String> map = JsonUtil.string2Obj(set, Map.class);
+          String serviceCode = map.get(Const.SERVICE_CODE);
+          String value = AgentInformationSingleton.get(serviceCode);
+          if(StringUtil.isBlank(value)){
+            AgentInformationSingleton.put(serviceCode, Const.DOLLAR);
+            AgentInformationSingleton.setAtomicBooleanToTrue();
+          }
+        }
+
         Instant now = Instant.now();
-        redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, map);
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", map.size(), DateTimeUtil.getTimeMillis(now));
-        map.clear();
+        redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, skywalkingAgentTimeMap);
+        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", skywalkingAgentTimeMap.size(), DateTimeUtil.getTimeMillis(now));
+        skywalkingAgentTimeMap.clear();
       } catch (Exception e) {
         log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
       }

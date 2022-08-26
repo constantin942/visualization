@@ -26,6 +26,10 @@ public class AgentInformationSingleton {
     atomicBoolean.set(false);
   }
 
+  public static void setAtomicBooleanToTrue(){
+    atomicBoolean.set(true);
+  }
+
   private AgentInformationSingleton() {
     copyOnWriteMap = new CopyOnWriteMap();
   }
@@ -46,7 +50,7 @@ public class AgentInformationSingleton {
     if(StringUtil.isBlank(key) || StringUtil.isBlank(value)){
       return;
     }
-    String ifAbsent = getInstance().put(key, value);
+    getInstance().put(key, value);
     atomicBoolean.set(true);
   }
 

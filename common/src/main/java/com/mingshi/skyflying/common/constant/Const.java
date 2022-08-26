@@ -20,6 +20,19 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
+  public static final String AGENT_STATUS_UNKNOWN = "状态未知";
+  public static final String AGENT_ON_OFF = "agent_on_off";
+  public static final String AGENT_QUERY = "agent_query";
+  public static final String AGENT_STATUS_ON = "on";
+  public static final String AGENT_STATUS_OFF = "off";
+
+  public static final String MSG = "msg";
+  public static final String RESPONSE_STATUS = "responseStatus";
+  public static final String AGENT_STATUS = "agentStatus";
+  public static final String SERVICE_INSTANCE = "serviceInstance";
+  public static final String REQUEST_ID = "requestId";
+  public static final String AGENT_OPERATION_TYPE = "operationType";
+
   public static final Integer NUMBER_EIGHT = 8;
   public static final String MYSQL = "mysql";
   public static final String FAIL = "FAIL";
@@ -41,7 +54,7 @@ public class Const {
   public static final String HTTP_METHOD = "http.method";
   public static final String TAGS = "tags";
   public static final Object USERNAME = "username";
-  public static final int NUMBER_ONE = 1;
+  public static final Integer NUMBER_ONE = 1;
   public static final String REDISSON_PING = "Redisson/PING";
   public static final String LETTUCE_SENTINEL = "Lettuce/SENTINEL";
   public static final String MYSQL_JDBI_CONNECTION_CLOSE = "Mysql/JDBI/Connection/close";
@@ -74,7 +87,7 @@ public class Const {
   public static final Integer NUMBER_ZERO = 0;
   public static final Integer IO_THREAD_QUEUE_SIZE = 5000;
   public static final Integer INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL = 5;
-  public static final Integer FLUSH_TO_ROCKETMQ_INTERVAL = 10;
+  public static final Integer FLUSH_TO_ROCKETMQ_INTERVAL = 1;
   public static final Integer CURRENT_TIME_RANDOM = 30;
   public static final String KEYS_ALL = "keys *";
   public static final CharSequence LIKE = "like";
@@ -84,6 +97,9 @@ public class Const {
   public static final String IS = "IS";
   public static final Object OPERATE = "operate";
   public static final Object RIGHT_EXPRESSION = "rightExpression";
+  public static final String ON = "on";
+  public static final String OFF = "off";
+  public static final String TRUE = "true";
 
   private Const() {
     throw new IllegalStateException("Const class");
@@ -218,7 +234,7 @@ public class Const {
   /**
    * 心跳间隔15分钟；2022-06-27 14:52:54
    */
-  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS = 15 * 60;
+  public static final Integer SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS = 1 * 60;
 
   /**
    * IoThread线程间隔多久输出一次日志；2022-06-01 10:29:01

@@ -18,15 +18,14 @@
 
 package com.mingshi.skyflying.common.utils;
 
+import org.apache.commons.lang3.Validate;
+
 import java.security.MessageDigest;
+import java.util.Random;
 
 public final class StringUtil {
   public static boolean isEmpty(String str) {
     return str == null || str.length() == 0;
-  }
-
-  public static boolean isNotEmpty(String str) {
-    return !isEmpty(str);
   }
 
   public static boolean isBlank(String str) {
@@ -37,19 +36,62 @@ public final class StringUtil {
     return !isBlank(str);
   }
 
+  public static final boolean IS_OS_WINDOWS;
+  private static final Random RANDOM = new Random();
+  private static final String COMMA = ",";
+  public static final String OS_NAME;
+
+  static {
+    IS_OS_WINDOWS = getOsMatchesName("Windows");
+    OS_NAME = getSystemProperty("os.name");
+  }
+
+  public static long nextLong(long startInclusive, long endExclusive) {
+    Validate.isTrue(endExclusive >= startInclusive, "Start value must be smaller or equal to end value.", new Object[0]);
+    Validate.isTrue(startInclusive >= 0L, "Both range values must be non-negative.", new Object[0]);
+    return startInclusive == endExclusive ? startInclusive : (long) nextDouble((double) startInclusive, (double) endExclusive);
+  }
+
+  public static double nextDouble(double startInclusive, double endInclusive) {
+    Validate.isTrue(endInclusive >= startInclusive, "Start value must be smaller or equal to end value.", new Object[0]);
+    Validate.isTrue(startInclusive >= 0.0D, "Both range values must be non-negative.", new Object[0]);
+    return startInclusive == endInclusive ? startInclusive : startInclusive + (endInclusive - startInclusive) * RANDOM.nextDouble();
+  }
+
+  private static boolean getOsMatchesName(String osNamePrefix) {
+    return isOSNameMatch(OS_NAME, osNamePrefix);
+  }
+
+  static boolean isOSNameMatch(String osName, String osNamePrefix) {
+    return osName == null ? false : osName.startsWith(osNamePrefix);
+  }
+
+  private static String getSystemProperty(String property) {
+    try {
+      return System.getProperty(property);
+    } catch (SecurityException var2) {
+      return null;
+    }
+  }
+
+  public static String getHostName() {
+    return IS_OS_WINDOWS ? System.getenv("COMPUTERNAME") : System.getenv("HOSTNAME");
+  }
+
   /**
    * <B>方法名称：recombination</B>
    * <B>概要说明：大写统一转换成消息、去掉多余的空格</B>
+   *
+   * @return java.lang.String
    * @Author zm
    * @Date 2022年05月27日 15:05:42
    * @Param [msSql, opTime, msSchemaName, sqlType]
-   * @return java.lang.String
    **/
   public static String recombination(String msSql, String opTime, String msSchemaName, String sqlType) {
     String strData = null;
-    if(StringUtil.isBlank(opTime)){
+    if (StringUtil.isBlank(opTime)) {
       strData = (msSql + msSchemaName + sqlType).toLowerCase().trim();
-    }else{
+    } else {
       strData = (msSql + opTime + msSchemaName + sqlType).toLowerCase().trim();
     }
 

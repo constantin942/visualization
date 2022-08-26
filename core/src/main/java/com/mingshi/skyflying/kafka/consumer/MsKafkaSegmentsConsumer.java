@@ -14,8 +14,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * <B>类名称：MsKafkaSegmentsConsumer</B>
+ * <B>概要说明：消费segment的消费者</B>
+ * @Author zm
+ * @Date 2022年08月25日 11:08:17
+ * @Param
+ * @return
+ **/
 @Slf4j
-public class MsKafkaConsumer extends Thread {
+public class MsKafkaSegmentsConsumer extends Thread {
 
   private String consumerTopic;
   private String consumerGroup;
@@ -25,11 +33,11 @@ public class MsKafkaConsumer extends Thread {
   /**
    * 初始化完成的标志；2022-07-28 17:12:32
    */
-  private AtomicBoolean isInitDone = new AtomicBoolean(false);
+  private volatile AtomicBoolean isInitDone = new AtomicBoolean(false);
 
   org.apache.kafka.clients.consumer.KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-  public MsKafkaConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
+  public MsKafkaSegmentsConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
     this.aiitKafkaConsumerUtil = aiitKafkaConsumerUtil;
     this.bootstrapServers = bootstrapServers;
     this.consumerTopic = consumerTopic;
@@ -78,12 +86,12 @@ public class MsKafkaConsumer extends Thread {
 
   @Override
   public void run() {
-    // init();
-    // if (false == isInitDone.get()) {
-    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-    //   return;
-    // }
-    // doRun();
+    init();
+    if (false == isInitDone.get()) {
+      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+      return;
+    }
+    doRun();
   }
 
   private void doRun() {
