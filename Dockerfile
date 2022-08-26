@@ -4,7 +4,7 @@ WORKDIR /home/apps/
 RUN set -ex \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
 
-COPY core/target/ROOT.jar .
+COPY web/target/ROOT.jar .
 
 ENV JAVA_OPTS=""
 

@@ -1,4 +1,4 @@
-package com.mingshi.skyflying;
+package com.mingshi.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.mybatis.spring.annotation.MapperScan;

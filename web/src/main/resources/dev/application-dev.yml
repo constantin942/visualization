@@ -151,7 +151,7 @@ mybatis:
     map-underscore-to-camel-case: true
     default-fetch-size: 100
     default-statement-timeout: 3000
-  mapper-locations: classpath:mappers/*xml
+  mapper-locations: classpath*:mappers/*xml
 
 logging:
   config: classpath:logback-spring.xml

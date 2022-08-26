@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTime">
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeDoMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="username" jdbcType="VARCHAR" property="username" />
     <result column="counts" jdbcType="INTEGER" property="counts" />
@@ -33,17 +33,17 @@
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3, 
-    time_interval_count_3_4, time_interval_count_4_5, time_interval_count_5_6, time_interval_count_6_7, 
-    time_interval_count_7_8, time_interval_count_8_9, time_interval_count_9_10, time_interval_count_10_11, 
-    time_interval_count_11_12, time_interval_count_12_13, time_interval_count_13_14, 
-    time_interval_count_14_15, time_interval_count_15_16, time_interval_count_16_17, 
-    time_interval_count_17_18, time_interval_count_18_19, time_interval_count_19_20, 
-    time_interval_count_20_21, time_interval_count_21_22, time_interval_count_22_23, 
+    id, username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3,
+    time_interval_count_3_4, time_interval_count_4_5, time_interval_count_5_6, time_interval_count_6_7,
+    time_interval_count_7_8, time_interval_count_8_9, time_interval_count_9_10, time_interval_count_10_11,
+    time_interval_count_11_12, time_interval_count_12_13, time_interval_count_13_14,
+    time_interval_count_14_15, time_interval_count_15_16, time_interval_count_16_17,
+    time_interval_count_17_18, time_interval_count_18_19, time_interval_count_19_20,
+    time_interval_count_20_21, time_interval_count_21_22, time_interval_count_22_23,
     time_interval_count_23_24, create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from coarse_segment_detail_on_time
     where id = #{id,jdbcType=INTEGER}
@@ -52,37 +52,37 @@
 <!--    delete from coarse_segment_detail_on_time-->
 <!--    where id = #{id,jdbcType=INTEGER}-->
 <!--  </delete>-->
-  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTime">
-    insert into coarse_segment_detail_on_time (id, username, counts, 
-      time_interval_count_0_1, time_interval_count_1_2, 
-      time_interval_count_2_3, time_interval_count_3_4, 
-      time_interval_count_4_5, time_interval_count_5_6, 
-      time_interval_count_6_7, time_interval_count_7_8, 
-      time_interval_count_8_9, time_interval_count_9_10, 
-      time_interval_count_10_11, time_interval_count_11_12, 
-      time_interval_count_12_13, time_interval_count_13_14, 
-      time_interval_count_14_15, time_interval_count_15_16, 
-      time_interval_count_16_17, time_interval_count_17_18, 
-      time_interval_count_18_19, time_interval_count_19_20, 
-      time_interval_count_20_21, time_interval_count_21_22, 
-      time_interval_count_22_23, time_interval_count_23_24, 
+  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+    insert into coarse_segment_detail_on_time (id, username, counts,
+      time_interval_count_0_1, time_interval_count_1_2,
+      time_interval_count_2_3, time_interval_count_3_4,
+      time_interval_count_4_5, time_interval_count_5_6,
+      time_interval_count_6_7, time_interval_count_7_8,
+      time_interval_count_8_9, time_interval_count_9_10,
+      time_interval_count_10_11, time_interval_count_11_12,
+      time_interval_count_12_13, time_interval_count_13_14,
+      time_interval_count_14_15, time_interval_count_15_16,
+      time_interval_count_16_17, time_interval_count_17_18,
+      time_interval_count_18_19, time_interval_count_19_20,
+      time_interval_count_20_21, time_interval_count_21_22,
+      time_interval_count_22_23, time_interval_count_23_24,
       create_time, update_time)
-    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{counts,jdbcType=INTEGER}, 
-      #{timeIntervalCount01,jdbcType=INTEGER}, #{timeIntervalCount12,jdbcType=INTEGER}, 
-      #{timeIntervalCount23,jdbcType=INTEGER}, #{timeIntervalCount34,jdbcType=INTEGER}, 
-      #{timeIntervalCount45,jdbcType=INTEGER}, #{timeIntervalCount56,jdbcType=INTEGER}, 
-      #{timeIntervalCount67,jdbcType=INTEGER}, #{timeIntervalCount78,jdbcType=INTEGER}, 
-      #{timeIntervalCount89,jdbcType=INTEGER}, #{timeIntervalCount910,jdbcType=INTEGER}, 
-      #{timeIntervalCount1011,jdbcType=INTEGER}, #{timeIntervalCount1112,jdbcType=INTEGER}, 
-      #{timeIntervalCount1213,jdbcType=INTEGER}, #{timeIntervalCount1314,jdbcType=INTEGER}, 
-      #{timeIntervalCount1415,jdbcType=INTEGER}, #{timeIntervalCount1516,jdbcType=INTEGER}, 
-      #{timeIntervalCount1617,jdbcType=INTEGER}, #{timeIntervalCount1718,jdbcType=INTEGER}, 
-      #{timeIntervalCount1819,jdbcType=INTEGER}, #{timeIntervalCount1920,jdbcType=INTEGER}, 
-      #{timeIntervalCount2021,jdbcType=INTEGER}, #{timeIntervalCount2122,jdbcType=INTEGER}, 
-      #{timeIntervalCount2223,jdbcType=INTEGER}, #{timeIntervalCount2324,jdbcType=INTEGER}, 
+    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{counts,jdbcType=INTEGER},
+      #{timeIntervalCount01,jdbcType=INTEGER}, #{timeIntervalCount12,jdbcType=INTEGER},
+      #{timeIntervalCount23,jdbcType=INTEGER}, #{timeIntervalCount34,jdbcType=INTEGER},
+      #{timeIntervalCount45,jdbcType=INTEGER}, #{timeIntervalCount56,jdbcType=INTEGER},
+      #{timeIntervalCount67,jdbcType=INTEGER}, #{timeIntervalCount78,jdbcType=INTEGER},
+      #{timeIntervalCount89,jdbcType=INTEGER}, #{timeIntervalCount910,jdbcType=INTEGER},
+      #{timeIntervalCount1011,jdbcType=INTEGER}, #{timeIntervalCount1112,jdbcType=INTEGER},
+      #{timeIntervalCount1213,jdbcType=INTEGER}, #{timeIntervalCount1314,jdbcType=INTEGER},
+      #{timeIntervalCount1415,jdbcType=INTEGER}, #{timeIntervalCount1516,jdbcType=INTEGER},
+      #{timeIntervalCount1617,jdbcType=INTEGER}, #{timeIntervalCount1718,jdbcType=INTEGER},
+      #{timeIntervalCount1819,jdbcType=INTEGER}, #{timeIntervalCount1920,jdbcType=INTEGER},
+      #{timeIntervalCount2021,jdbcType=INTEGER}, #{timeIntervalCount2122,jdbcType=INTEGER},
+      #{timeIntervalCount2223,jdbcType=INTEGER}, #{timeIntervalCount2324,jdbcType=INTEGER},
       #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTime">
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
     insert into coarse_segment_detail_on_time
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -268,7 +268,7 @@
     delete from coarse_segment_detail_on_time
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTime">
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
     update coarse_segment_detail_on_time
     <set>
       <if test="username != null">
@@ -361,7 +361,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTime">
+  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
     update coarse_segment_detail_on_time
     set username = #{username,jdbcType=VARCHAR},
       counts = #{counts,jdbcType=INTEGER},
