@@ -79,6 +79,8 @@ message SegmentObject {
   string userName = 8;
 
   string token = 9;
+
+  int64 segmentStartTime = 10;
 }
 
 // Segment reference represents the link between two existing segment.
