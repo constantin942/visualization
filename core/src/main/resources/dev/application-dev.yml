@@ -1,3 +1,6 @@
+# 生成数据库设计文档存放的路径
+doc_dir_path: /Users/apple/skywalking-mingshi-server
+
 spring:
   servlet:
     multipart:
@@ -17,6 +20,8 @@ spring:
 #    url: jdbc:mysql://10.0.107.46:3306/zm_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/mingshi-skywalking-demonstration?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/lanjing?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   jpa:
     show-sql: true
@@ -99,7 +104,10 @@ spring:
         retry.backoff.ms: 500
     consumer:
       topic: skywalking-segments
+      agent-switch-request-topic: agent-switch-request-topic
+      agent-switch-response-topic: agent-switch-response-topic
       group: skyflying-consumer-group
+      agent-switch-response-group: agent-switch-response-group
       # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
       auto-commit-interval: 1S
       # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：
@@ -118,7 +126,7 @@ spring:
       properties:
         max.poll.interval.ms: 1200000
         #最多拉取1000条数据
-        max.poll.records: 1000
+        max.poll.records: 10
     listener:
       # 当使用spring-kafka组件时，会用到这个参数。如果使用原生的kafka消费者代码来拉取消息，则用不到这个参数。
       # 这个参数的意思是：会创建 concurrency = 5个线程，这5个线程都会进入到各自的无限循环中，专门从kafka服务器上（批量的）拉取消息。
@@ -129,9 +137,11 @@ spring:
       # 兼顾一定的吞吐量：通过多线程，能够在一定程度上提高处理消息的吞吐量；
       # 减少用户代码的复杂度：用户为了尽量提高吞吐量，不用自己实现多个消费者（多线程），让spring-kafka组件来管理多个线程就行。
       # 2022-07-30 13:44:01
-      concurrency: 5
+      concurrency: 1
       #listner负责ack，每调用一次，就立即commit
       ack-mode: manual_immediate
+#      批量提交
+#      ack-mode: BATCH
       missing-topics-fatal: false
 mybatis:
   type-aliases-package: com.zhejiang.mobile.core.dao
@@ -152,22 +162,12 @@ server:
   compression:
     excluded-user-agents:
 
-# es启用状态；2022-07-13 08:22:04
-es:
-  enable: false
-# es 地址
-elasticsearch:
-  host: 10.0.107.5
-  # es 端口号
-  port: 9300
-
 reactor:
   processor:
-    enable: true
+    enable: false
     disruptor: false
     thread:
       count: 4
   iothread:
-#    disruptor: false
     thread:
       count: 6
