@@ -42,7 +42,6 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   public ServerResponse<String> allAgentOperationRecord(String serviceInstance, Integer pageNo, Integer pageSize) {
 
     HashMap hashMap = new HashMap();
-    // ObjectNode jsonObject = JsonUtil.createJsonObject();
     if (null == pageNo) {
       pageNo = 1;
     }
