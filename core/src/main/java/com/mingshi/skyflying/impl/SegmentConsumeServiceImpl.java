@@ -111,7 +111,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
-
+        // TODO: 告警改造
         AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
         AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
       }

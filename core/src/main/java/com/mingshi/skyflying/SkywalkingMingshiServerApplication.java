@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Log4j2
 @RestController
 @SpringBootApplication
-@ComponentScan(basePackages={"com.mingshi.skyflying.*"})
-@MapperScan("com.mingshi.skyflying.dao")
+@ComponentScan(basePackages = {"com.mingshi.skyflying.*"})
+@MapperScan({"com.mingshi.skyflying.dao", "com.mingshi.skyflying.anomaly_detection.dao"})
 public class SkywalkingMingshiServerApplication {
 
-  public static void main(String[] args) {
-    SpringApplication.run(SkywalkingMingshiServerApplication.class, args);
-  }
+    public static void main(String[] args) {
+        SpringApplication.run(SkywalkingMingshiServerApplication.class, args);
+    }
 
 }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId"/>
+        <result column="parent_segment_id" jdbcType="VARCHAR" property="parentSegmentId"/>
+        <result column="operation_name" jdbcType="VARCHAR" property="operationName"/>
+        <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+        <result column="span_id" jdbcType="INTEGER" property="spanId"/>
+        <result column="component" jdbcType="VARCHAR" property="component"/>
+        <result column="service_code" jdbcType="VARCHAR" property="serviceCode"/>
+        <result column="peer" jdbcType="VARCHAR" property="peer"/>
+        <result column="endpoint_name" jdbcType="VARCHAR" property="endpointName"/>
+        <result column="start_time" jdbcType="TIMESTAMP" property="startTime"/>
+        <result column="service_instance_name" jdbcType="VARCHAR" property="serviceInstanceName"/>
+        <result column="end_time" jdbcType="TIMESTAMP" property="endTime"/>
+        <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId"/>
+        <result column="db_type" jdbcType="VARCHAR" property="dbType"/>
+        <result column="db_instance" jdbcType="VARCHAR" property="dbInstance"/>
+        <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName"/>
+        <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
+        <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
+        <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT"
+                property="userPortraitFlagByVisitedTime"/>
+        <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT"
+                property="userPortraitFlagByVisitedTableEveryday"/>
+        <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
+        <result column="token" jdbcType="VARCHAR" property="token"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
+    start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
+    ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table_everyday
+    </sql>
+    <sql id="Blob_Column_List">
+        db_statement
+    </sql>
+    <sql id="coarse_list">
+        id
+        ,user_name, db_instance, ms_table_name, start_time
+    </sql>
+    <select id="getCoarseDetail" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+        select id, user_name, db_instance, ms_table_name, start_time
+        from ms_segment_detail
+        where 2 > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
+          and user_name is not null
+          and start_time is not null
+          and ms_segment_detail.global_trace_id not in (
+            select global_trace_id from ms_alarm_information where update_user_portrait
+            != 0
+            );
+    </select>
+</mapper>

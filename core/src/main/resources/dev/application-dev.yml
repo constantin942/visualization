@@ -13,13 +13,15 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: Aiit@123
+    password: root
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.102.64:3306/skywalking_mingshi?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/es_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/zm_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://127.0.0.1:3306/test_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi-skywalking-demonstration?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
 #    url: jdbc:mysql://10.0.107.46:3306/lanjing?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
@@ -144,7 +146,7 @@ spring:
 #      ack-mode: BATCH
       missing-topics-fatal: false
 mybatis:
-  type-aliases-package: com.zhejiang.mobile.core.dao
+  type-aliases-package: com.mingshi.skyflying.anomaly_detection.dao
   configuration:
 #    在控制台中输出SQL语句；2021-12-02 18:40:52
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -157,7 +159,7 @@ logging:
   config: classpath:logback-spring.xml
 
 server:
-  port: 9090
+  port: 9091
   address:
   compression:
     excluded-user-agents:
