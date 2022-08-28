@@ -1,39 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeDoMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="username" jdbcType="VARCHAR" property="username" />
-    <result column="counts" jdbcType="INTEGER" property="counts" />
-    <result column="time_interval_count_0_1" jdbcType="INTEGER" property="timeIntervalCount01" />
-    <result column="time_interval_count_1_2" jdbcType="INTEGER" property="timeIntervalCount12" />
-    <result column="time_interval_count_2_3" jdbcType="INTEGER" property="timeIntervalCount23" />
-    <result column="time_interval_count_3_4" jdbcType="INTEGER" property="timeIntervalCount34" />
-    <result column="time_interval_count_4_5" jdbcType="INTEGER" property="timeIntervalCount45" />
-    <result column="time_interval_count_5_6" jdbcType="INTEGER" property="timeIntervalCount56" />
-    <result column="time_interval_count_6_7" jdbcType="INTEGER" property="timeIntervalCount67" />
-    <result column="time_interval_count_7_8" jdbcType="INTEGER" property="timeIntervalCount78" />
-    <result column="time_interval_count_8_9" jdbcType="INTEGER" property="timeIntervalCount89" />
-    <result column="time_interval_count_9_10" jdbcType="INTEGER" property="timeIntervalCount910" />
-    <result column="time_interval_count_10_11" jdbcType="INTEGER" property="timeIntervalCount1011" />
-    <result column="time_interval_count_11_12" jdbcType="INTEGER" property="timeIntervalCount1112" />
-    <result column="time_interval_count_12_13" jdbcType="INTEGER" property="timeIntervalCount1213" />
-    <result column="time_interval_count_13_14" jdbcType="INTEGER" property="timeIntervalCount1314" />
-    <result column="time_interval_count_14_15" jdbcType="INTEGER" property="timeIntervalCount1415" />
-    <result column="time_interval_count_15_16" jdbcType="INTEGER" property="timeIntervalCount1516" />
-    <result column="time_interval_count_16_17" jdbcType="INTEGER" property="timeIntervalCount1617" />
-    <result column="time_interval_count_17_18" jdbcType="INTEGER" property="timeIntervalCount1718" />
-    <result column="time_interval_count_18_19" jdbcType="INTEGER" property="timeIntervalCount1819" />
-    <result column="time_interval_count_19_20" jdbcType="INTEGER" property="timeIntervalCount1920" />
-    <result column="time_interval_count_20_21" jdbcType="INTEGER" property="timeIntervalCount2021" />
-    <result column="time_interval_count_21_22" jdbcType="INTEGER" property="timeIntervalCount2122" />
-    <result column="time_interval_count_22_23" jdbcType="INTEGER" property="timeIntervalCount2223" />
-    <result column="time_interval_count_23_24" jdbcType="INTEGER" property="timeIntervalCount2324" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    id, username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3,
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="counts" jdbcType="INTEGER" property="counts"/>
+        <result column="time_interval_count_0_1" jdbcType="INTEGER" property="timeIntervalCount01"/>
+        <result column="time_interval_count_1_2" jdbcType="INTEGER" property="timeIntervalCount12"/>
+        <result column="time_interval_count_2_3" jdbcType="INTEGER" property="timeIntervalCount23"/>
+        <result column="time_interval_count_3_4" jdbcType="INTEGER" property="timeIntervalCount34"/>
+        <result column="time_interval_count_4_5" jdbcType="INTEGER" property="timeIntervalCount45"/>
+        <result column="time_interval_count_5_6" jdbcType="INTEGER" property="timeIntervalCount56"/>
+        <result column="time_interval_count_6_7" jdbcType="INTEGER" property="timeIntervalCount67"/>
+        <result column="time_interval_count_7_8" jdbcType="INTEGER" property="timeIntervalCount78"/>
+        <result column="time_interval_count_8_9" jdbcType="INTEGER" property="timeIntervalCount89"/>
+        <result column="time_interval_count_9_10" jdbcType="INTEGER" property="timeIntervalCount910"/>
+        <result column="time_interval_count_10_11" jdbcType="INTEGER" property="timeIntervalCount1011"/>
+        <result column="time_interval_count_11_12" jdbcType="INTEGER" property="timeIntervalCount1112"/>
+        <result column="time_interval_count_12_13" jdbcType="INTEGER" property="timeIntervalCount1213"/>
+        <result column="time_interval_count_13_14" jdbcType="INTEGER" property="timeIntervalCount1314"/>
+        <result column="time_interval_count_14_15" jdbcType="INTEGER" property="timeIntervalCount1415"/>
+        <result column="time_interval_count_15_16" jdbcType="INTEGER" property="timeIntervalCount1516"/>
+        <result column="time_interval_count_16_17" jdbcType="INTEGER" property="timeIntervalCount1617"/>
+        <result column="time_interval_count_17_18" jdbcType="INTEGER" property="timeIntervalCount1718"/>
+        <result column="time_interval_count_18_19" jdbcType="INTEGER" property="timeIntervalCount1819"/>
+        <result column="time_interval_count_19_20" jdbcType="INTEGER" property="timeIntervalCount1920"/>
+        <result column="time_interval_count_20_21" jdbcType="INTEGER" property="timeIntervalCount2021"/>
+        <result column="time_interval_count_21_22" jdbcType="INTEGER" property="timeIntervalCount2122"/>
+        <result column="time_interval_count_22_23" jdbcType="INTEGER" property="timeIntervalCount2223"/>
+        <result column="time_interval_count_23_24" jdbcType="INTEGER" property="timeIntervalCount2324"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3,
     time_interval_count_3_4, time_interval_count_4_5, time_interval_count_5_6, time_interval_count_6_7,
     time_interval_count_7_8, time_interval_count_8_9, time_interval_count_9_10, time_interval_count_10_11,
     time_interval_count_11_12, time_interval_count_12_13, time_interval_count_13_14,
@@ -41,357 +42,392 @@
     time_interval_count_17_18, time_interval_count_18_19, time_interval_count_19_20,
     time_interval_count_20_21, time_interval_count_21_22, time_interval_count_22_23,
     time_interval_count_23_24, create_time, update_time
-  </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from coarse_segment_detail_on_time
-    where id = #{id,jdbcType=INTEGER}
-  </select>
-<!--  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">-->
-<!--    delete from coarse_segment_detail_on_time-->
-<!--    where id = #{id,jdbcType=INTEGER}-->
-<!--  </delete>-->
-  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
-    insert into coarse_segment_detail_on_time (id, username, counts,
-      time_interval_count_0_1, time_interval_count_1_2,
-      time_interval_count_2_3, time_interval_count_3_4,
-      time_interval_count_4_5, time_interval_count_5_6,
-      time_interval_count_6_7, time_interval_count_7_8,
-      time_interval_count_8_9, time_interval_count_9_10,
-      time_interval_count_10_11, time_interval_count_11_12,
-      time_interval_count_12_13, time_interval_count_13_14,
-      time_interval_count_14_15, time_interval_count_15_16,
-      time_interval_count_16_17, time_interval_count_17_18,
-      time_interval_count_18_19, time_interval_count_19_20,
-      time_interval_count_20_21, time_interval_count_21_22,
-      time_interval_count_22_23, time_interval_count_23_24,
-      create_time, update_time)
-    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{counts,jdbcType=INTEGER},
-      #{timeIntervalCount01,jdbcType=INTEGER}, #{timeIntervalCount12,jdbcType=INTEGER},
-      #{timeIntervalCount23,jdbcType=INTEGER}, #{timeIntervalCount34,jdbcType=INTEGER},
-      #{timeIntervalCount45,jdbcType=INTEGER}, #{timeIntervalCount56,jdbcType=INTEGER},
-      #{timeIntervalCount67,jdbcType=INTEGER}, #{timeIntervalCount78,jdbcType=INTEGER},
-      #{timeIntervalCount89,jdbcType=INTEGER}, #{timeIntervalCount910,jdbcType=INTEGER},
-      #{timeIntervalCount1011,jdbcType=INTEGER}, #{timeIntervalCount1112,jdbcType=INTEGER},
-      #{timeIntervalCount1213,jdbcType=INTEGER}, #{timeIntervalCount1314,jdbcType=INTEGER},
-      #{timeIntervalCount1415,jdbcType=INTEGER}, #{timeIntervalCount1516,jdbcType=INTEGER},
-      #{timeIntervalCount1617,jdbcType=INTEGER}, #{timeIntervalCount1718,jdbcType=INTEGER},
-      #{timeIntervalCount1819,jdbcType=INTEGER}, #{timeIntervalCount1920,jdbcType=INTEGER},
-      #{timeIntervalCount2021,jdbcType=INTEGER}, #{timeIntervalCount2122,jdbcType=INTEGER},
-      #{timeIntervalCount2223,jdbcType=INTEGER}, #{timeIntervalCount2324,jdbcType=INTEGER},
-      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
-  </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
-    insert into coarse_segment_detail_on_time
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="username != null">
-        username,
-      </if>
-      <if test="counts != null">
-        counts,
-      </if>
-      <if test="timeIntervalCount01 != null">
-        time_interval_count_0_1,
-      </if>
-      <if test="timeIntervalCount12 != null">
-        time_interval_count_1_2,
-      </if>
-      <if test="timeIntervalCount23 != null">
-        time_interval_count_2_3,
-      </if>
-      <if test="timeIntervalCount34 != null">
-        time_interval_count_3_4,
-      </if>
-      <if test="timeIntervalCount45 != null">
-        time_interval_count_4_5,
-      </if>
-      <if test="timeIntervalCount56 != null">
-        time_interval_count_5_6,
-      </if>
-      <if test="timeIntervalCount67 != null">
-        time_interval_count_6_7,
-      </if>
-      <if test="timeIntervalCount78 != null">
-        time_interval_count_7_8,
-      </if>
-      <if test="timeIntervalCount89 != null">
-        time_interval_count_8_9,
-      </if>
-      <if test="timeIntervalCount910 != null">
-        time_interval_count_9_10,
-      </if>
-      <if test="timeIntervalCount1011 != null">
-        time_interval_count_10_11,
-      </if>
-      <if test="timeIntervalCount1112 != null">
-        time_interval_count_11_12,
-      </if>
-      <if test="timeIntervalCount1213 != null">
-        time_interval_count_12_13,
-      </if>
-      <if test="timeIntervalCount1314 != null">
-        time_interval_count_13_14,
-      </if>
-      <if test="timeIntervalCount1415 != null">
-        time_interval_count_14_15,
-      </if>
-      <if test="timeIntervalCount1516 != null">
-        time_interval_count_15_16,
-      </if>
-      <if test="timeIntervalCount1617 != null">
-        time_interval_count_16_17,
-      </if>
-      <if test="timeIntervalCount1718 != null">
-        time_interval_count_17_18,
-      </if>
-      <if test="timeIntervalCount1819 != null">
-        time_interval_count_18_19,
-      </if>
-      <if test="timeIntervalCount1920 != null">
-        time_interval_count_19_20,
-      </if>
-      <if test="timeIntervalCount2021 != null">
-        time_interval_count_20_21,
-      </if>
-      <if test="timeIntervalCount2122 != null">
-        time_interval_count_21_22,
-      </if>
-      <if test="timeIntervalCount2223 != null">
-        time_interval_count_22_23,
-      </if>
-      <if test="timeIntervalCount2324 != null">
-        time_interval_count_23_24,
-      </if>
-      <if test="createTime != null">
-        create_time,
-      </if>
-      <if test="updateTime != null">
-        update_time,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="username != null">
-        #{username,jdbcType=VARCHAR},
-      </if>
-      <if test="counts != null">
-        #{counts,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount01 != null">
-        #{timeIntervalCount01,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount12 != null">
-        #{timeIntervalCount12,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount23 != null">
-        #{timeIntervalCount23,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount34 != null">
-        #{timeIntervalCount34,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount45 != null">
-        #{timeIntervalCount45,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount56 != null">
-        #{timeIntervalCount56,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount67 != null">
-        #{timeIntervalCount67,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount78 != null">
-        #{timeIntervalCount78,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount89 != null">
-        #{timeIntervalCount89,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount910 != null">
-        #{timeIntervalCount910,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1011 != null">
-        #{timeIntervalCount1011,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1112 != null">
-        #{timeIntervalCount1112,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1213 != null">
-        #{timeIntervalCount1213,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1314 != null">
-        #{timeIntervalCount1314,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1415 != null">
-        #{timeIntervalCount1415,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1516 != null">
-        #{timeIntervalCount1516,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1617 != null">
-        #{timeIntervalCount1617,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1718 != null">
-        #{timeIntervalCount1718,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1819 != null">
-        #{timeIntervalCount1819,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1920 != null">
-        #{timeIntervalCount1920,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2021 != null">
-        #{timeIntervalCount2021,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2122 != null">
-        #{timeIntervalCount2122,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2223 != null">
-        #{timeIntervalCount2223,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2324 != null">
-        #{timeIntervalCount2324,jdbcType=INTEGER},
-      </if>
-      <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-    </trim>
-  </insert>
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from coarse_segment_detail_on_time
+        where id = #{id,jdbcType=INTEGER}
+    </select>
 
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from coarse_segment_detail_on_time
-    where id = #{id,jdbcType=INTEGER}
-  </delete>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
-    update coarse_segment_detail_on_time
-    <set>
-      <if test="username != null">
-        username = #{username,jdbcType=VARCHAR},
-      </if>
-      <if test="counts != null">
-        counts = #{counts,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount01 != null">
-        time_interval_count_0_1 = #{timeIntervalCount01,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount12 != null">
-        time_interval_count_1_2 = #{timeIntervalCount12,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount23 != null">
-        time_interval_count_2_3 = #{timeIntervalCount23,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount34 != null">
-        time_interval_count_3_4 = #{timeIntervalCount34,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount45 != null">
-        time_interval_count_4_5 = #{timeIntervalCount45,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount56 != null">
-        time_interval_count_5_6 = #{timeIntervalCount56,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount67 != null">
-        time_interval_count_6_7 = #{timeIntervalCount67,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount78 != null">
-        time_interval_count_7_8 = #{timeIntervalCount78,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount89 != null">
-        time_interval_count_8_9 = #{timeIntervalCount89,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount910 != null">
-        time_interval_count_9_10 = #{timeIntervalCount910,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1011 != null">
-        time_interval_count_10_11 = #{timeIntervalCount1011,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1112 != null">
-        time_interval_count_11_12 = #{timeIntervalCount1112,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1213 != null">
-        time_interval_count_12_13 = #{timeIntervalCount1213,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1314 != null">
-        time_interval_count_13_14 = #{timeIntervalCount1314,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1415 != null">
-        time_interval_count_14_15 = #{timeIntervalCount1415,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1516 != null">
-        time_interval_count_15_16 = #{timeIntervalCount1516,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1617 != null">
-        time_interval_count_16_17 = #{timeIntervalCount1617,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1718 != null">
-        time_interval_count_17_18 = #{timeIntervalCount1718,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1819 != null">
-        time_interval_count_18_19 = #{timeIntervalCount1819,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount1920 != null">
-        time_interval_count_19_20 = #{timeIntervalCount1920,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2021 != null">
-        time_interval_count_20_21 = #{timeIntervalCount2021,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2122 != null">
-        time_interval_count_21_22 = #{timeIntervalCount2122,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2223 != null">
-        time_interval_count_22_23 = #{timeIntervalCount2223,jdbcType=INTEGER},
-      </if>
-      <if test="timeIntervalCount2324 != null">
-        time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
-      </if>
-      <if test="createTime != null">
-        create_time = #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateTime != null">
-        update_time = #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="isDelete != null">
-        is_delete = #{isDelete,jdbcType=TINYINT},
-      </if>
-    </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
-    update coarse_segment_detail_on_time
-    set username = #{username,jdbcType=VARCHAR},
-      counts = #{counts,jdbcType=INTEGER},
-      time_interval_count_0_1 = #{timeIntervalCount01,jdbcType=INTEGER},
-      time_interval_count_1_2 = #{timeIntervalCount12,jdbcType=INTEGER},
-      time_interval_count_2_3 = #{timeIntervalCount23,jdbcType=INTEGER},
-      time_interval_count_3_4 = #{timeIntervalCount34,jdbcType=INTEGER},
-      time_interval_count_4_5 = #{timeIntervalCount45,jdbcType=INTEGER},
-      time_interval_count_5_6 = #{timeIntervalCount56,jdbcType=INTEGER},
-      time_interval_count_6_7 = #{timeIntervalCount67,jdbcType=INTEGER},
-      time_interval_count_7_8 = #{timeIntervalCount78,jdbcType=INTEGER},
-      time_interval_count_8_9 = #{timeIntervalCount89,jdbcType=INTEGER},
-      time_interval_count_9_10 = #{timeIntervalCount910,jdbcType=INTEGER},
-      time_interval_count_10_11 = #{timeIntervalCount1011,jdbcType=INTEGER},
-      time_interval_count_11_12 = #{timeIntervalCount1112,jdbcType=INTEGER},
-      time_interval_count_12_13 = #{timeIntervalCount1213,jdbcType=INTEGER},
-      time_interval_count_13_14 = #{timeIntervalCount1314,jdbcType=INTEGER},
-      time_interval_count_14_15 = #{timeIntervalCount1415,jdbcType=INTEGER},
-      time_interval_count_15_16 = #{timeIntervalCount1516,jdbcType=INTEGER},
-      time_interval_count_16_17 = #{timeIntervalCount1617,jdbcType=INTEGER},
-      time_interval_count_17_18 = #{timeIntervalCount1718,jdbcType=INTEGER},
-      time_interval_count_18_19 = #{timeIntervalCount1819,jdbcType=INTEGER},
-      time_interval_count_19_20 = #{timeIntervalCount1920,jdbcType=INTEGER},
-      time_interval_count_20_21 = #{timeIntervalCount2021,jdbcType=INTEGER},
-      time_interval_count_21_22 = #{timeIntervalCount2122,jdbcType=INTEGER},
-      time_interval_count_22_23 = #{timeIntervalCount2223,jdbcType=INTEGER},
-      time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
-      create_time = #{createTime,jdbcType=TIMESTAMP},
-      update_time = #{updateTime,jdbcType=TIMESTAMP},
-      is_delete = #{isDelete,jdbcType=TINYINT}
-    where id = #{id,jdbcType=INTEGER}
-  </update>
+    <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        insert into coarse_segment_detail_on_time (id, username, counts,
+                                                   time_interval_count_0_1, time_interval_count_1_2,
+                                                   time_interval_count_2_3, time_interval_count_3_4,
+                                                   time_interval_count_4_5, time_interval_count_5_6,
+                                                   time_interval_count_6_7, time_interval_count_7_8,
+                                                   time_interval_count_8_9, time_interval_count_9_10,
+                                                   time_interval_count_10_11, time_interval_count_11_12,
+                                                   time_interval_count_12_13, time_interval_count_13_14,
+                                                   time_interval_count_14_15, time_interval_count_15_16,
+                                                   time_interval_count_16_17, time_interval_count_17_18,
+                                                   time_interval_count_18_19, time_interval_count_19_20,
+                                                   time_interval_count_20_21, time_interval_count_21_22,
+                                                   time_interval_count_22_23, time_interval_count_23_24,
+                                                   create_time, update_time)
+        values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{counts,jdbcType=INTEGER},
+                #{timeIntervalCount01,jdbcType=INTEGER}, #{timeIntervalCount12,jdbcType=INTEGER},
+                #{timeIntervalCount23,jdbcType=INTEGER}, #{timeIntervalCount34,jdbcType=INTEGER},
+                #{timeIntervalCount45,jdbcType=INTEGER}, #{timeIntervalCount56,jdbcType=INTEGER},
+                #{timeIntervalCount67,jdbcType=INTEGER}, #{timeIntervalCount78,jdbcType=INTEGER},
+                #{timeIntervalCount89,jdbcType=INTEGER}, #{timeIntervalCount910,jdbcType=INTEGER},
+                #{timeIntervalCount1011,jdbcType=INTEGER}, #{timeIntervalCount1112,jdbcType=INTEGER},
+                #{timeIntervalCount1213,jdbcType=INTEGER}, #{timeIntervalCount1314,jdbcType=INTEGER},
+                #{timeIntervalCount1415,jdbcType=INTEGER}, #{timeIntervalCount1516,jdbcType=INTEGER},
+                #{timeIntervalCount1617,jdbcType=INTEGER}, #{timeIntervalCount1718,jdbcType=INTEGER},
+                #{timeIntervalCount1819,jdbcType=INTEGER}, #{timeIntervalCount1920,jdbcType=INTEGER},
+                #{timeIntervalCount2021,jdbcType=INTEGER}, #{timeIntervalCount2122,jdbcType=INTEGER},
+                #{timeIntervalCount2223,jdbcType=INTEGER}, #{timeIntervalCount2324,jdbcType=INTEGER},
+                #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="insertSelective"
+            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        insert into coarse_segment_detail_on_time
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="username != null">
+                username,
+            </if>
+            <if test="counts != null">
+                counts,
+            </if>
+            <if test="timeIntervalCount01 != null">
+                time_interval_count_0_1,
+            </if>
+            <if test="timeIntervalCount12 != null">
+                time_interval_count_1_2,
+            </if>
+            <if test="timeIntervalCount23 != null">
+                time_interval_count_2_3,
+            </if>
+            <if test="timeIntervalCount34 != null">
+                time_interval_count_3_4,
+            </if>
+            <if test="timeIntervalCount45 != null">
+                time_interval_count_4_5,
+            </if>
+            <if test="timeIntervalCount56 != null">
+                time_interval_count_5_6,
+            </if>
+            <if test="timeIntervalCount67 != null">
+                time_interval_count_6_7,
+            </if>
+            <if test="timeIntervalCount78 != null">
+                time_interval_count_7_8,
+            </if>
+            <if test="timeIntervalCount89 != null">
+                time_interval_count_8_9,
+            </if>
+            <if test="timeIntervalCount910 != null">
+                time_interval_count_9_10,
+            </if>
+            <if test="timeIntervalCount1011 != null">
+                time_interval_count_10_11,
+            </if>
+            <if test="timeIntervalCount1112 != null">
+                time_interval_count_11_12,
+            </if>
+            <if test="timeIntervalCount1213 != null">
+                time_interval_count_12_13,
+            </if>
+            <if test="timeIntervalCount1314 != null">
+                time_interval_count_13_14,
+            </if>
+            <if test="timeIntervalCount1415 != null">
+                time_interval_count_14_15,
+            </if>
+            <if test="timeIntervalCount1516 != null">
+                time_interval_count_15_16,
+            </if>
+            <if test="timeIntervalCount1617 != null">
+                time_interval_count_16_17,
+            </if>
+            <if test="timeIntervalCount1718 != null">
+                time_interval_count_17_18,
+            </if>
+            <if test="timeIntervalCount1819 != null">
+                time_interval_count_18_19,
+            </if>
+            <if test="timeIntervalCount1920 != null">
+                time_interval_count_19_20,
+            </if>
+            <if test="timeIntervalCount2021 != null">
+                time_interval_count_20_21,
+            </if>
+            <if test="timeIntervalCount2122 != null">
+                time_interval_count_21_22,
+            </if>
+            <if test="timeIntervalCount2223 != null">
+                time_interval_count_22_23,
+            </if>
+            <if test="timeIntervalCount2324 != null">
+                time_interval_count_23_24,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="username != null">
+                #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="counts != null">
+                #{counts,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount01 != null">
+                #{timeIntervalCount01,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount12 != null">
+                #{timeIntervalCount12,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount23 != null">
+                #{timeIntervalCount23,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount34 != null">
+                #{timeIntervalCount34,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount45 != null">
+                #{timeIntervalCount45,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount56 != null">
+                #{timeIntervalCount56,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount67 != null">
+                #{timeIntervalCount67,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount78 != null">
+                #{timeIntervalCount78,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount89 != null">
+                #{timeIntervalCount89,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount910 != null">
+                #{timeIntervalCount910,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1011 != null">
+                #{timeIntervalCount1011,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1112 != null">
+                #{timeIntervalCount1112,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1213 != null">
+                #{timeIntervalCount1213,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1314 != null">
+                #{timeIntervalCount1314,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1415 != null">
+                #{timeIntervalCount1415,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1516 != null">
+                #{timeIntervalCount1516,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1617 != null">
+                #{timeIntervalCount1617,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1718 != null">
+                #{timeIntervalCount1718,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1819 != null">
+                #{timeIntervalCount1819,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1920 != null">
+                #{timeIntervalCount1920,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2021 != null">
+                #{timeIntervalCount2021,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2122 != null">
+                #{timeIntervalCount2122,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2223 != null">
+                #{timeIntervalCount2223,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2324 != null">
+                #{timeIntervalCount2324,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from coarse_segment_detail_on_time
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <update id="updateByPrimaryKeySelective"
+            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        update coarse_segment_detail_on_time
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="counts != null">
+                counts = #{counts,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount01 != null">
+                time_interval_count_0_1 = #{timeIntervalCount01,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount12 != null">
+                time_interval_count_1_2 = #{timeIntervalCount12,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount23 != null">
+                time_interval_count_2_3 = #{timeIntervalCount23,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount34 != null">
+                time_interval_count_3_4 = #{timeIntervalCount34,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount45 != null">
+                time_interval_count_4_5 = #{timeIntervalCount45,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount56 != null">
+                time_interval_count_5_6 = #{timeIntervalCount56,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount67 != null">
+                time_interval_count_6_7 = #{timeIntervalCount67,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount78 != null">
+                time_interval_count_7_8 = #{timeIntervalCount78,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount89 != null">
+                time_interval_count_8_9 = #{timeIntervalCount89,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount910 != null">
+                time_interval_count_9_10 = #{timeIntervalCount910,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1011 != null">
+                time_interval_count_10_11 = #{timeIntervalCount1011,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1112 != null">
+                time_interval_count_11_12 = #{timeIntervalCount1112,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1213 != null">
+                time_interval_count_12_13 = #{timeIntervalCount1213,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1314 != null">
+                time_interval_count_13_14 = #{timeIntervalCount1314,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1415 != null">
+                time_interval_count_14_15 = #{timeIntervalCount1415,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1516 != null">
+                time_interval_count_15_16 = #{timeIntervalCount1516,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1617 != null">
+                time_interval_count_16_17 = #{timeIntervalCount1617,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1718 != null">
+                time_interval_count_17_18 = #{timeIntervalCount1718,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1819 != null">
+                time_interval_count_18_19 = #{timeIntervalCount1819,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount1920 != null">
+                time_interval_count_19_20 = #{timeIntervalCount1920,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2021 != null">
+                time_interval_count_20_21 = #{timeIntervalCount2021,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2122 != null">
+                time_interval_count_21_22 = #{timeIntervalCount2122,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2223 != null">
+                time_interval_count_22_23 = #{timeIntervalCount2223,jdbcType=INTEGER},
+            </if>
+            <if test="timeIntervalCount2324 != null">
+                time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=TINYINT},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey"
+            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        update coarse_segment_detail_on_time
+        set username                  = #{username,jdbcType=VARCHAR},
+            counts                    = #{counts,jdbcType=INTEGER},
+            time_interval_count_0_1   = #{timeIntervalCount01,jdbcType=INTEGER},
+            time_interval_count_1_2   = #{timeIntervalCount12,jdbcType=INTEGER},
+            time_interval_count_2_3   = #{timeIntervalCount23,jdbcType=INTEGER},
+            time_interval_count_3_4   = #{timeIntervalCount34,jdbcType=INTEGER},
+            time_interval_count_4_5   = #{timeIntervalCount45,jdbcType=INTEGER},
+            time_interval_count_5_6   = #{timeIntervalCount56,jdbcType=INTEGER},
+            time_interval_count_6_7   = #{timeIntervalCount67,jdbcType=INTEGER},
+            time_interval_count_7_8   = #{timeIntervalCount78,jdbcType=INTEGER},
+            time_interval_count_8_9   = #{timeIntervalCount89,jdbcType=INTEGER},
+            time_interval_count_9_10  = #{timeIntervalCount910,jdbcType=INTEGER},
+            time_interval_count_10_11 = #{timeIntervalCount1011,jdbcType=INTEGER},
+            time_interval_count_11_12 = #{timeIntervalCount1112,jdbcType=INTEGER},
+            time_interval_count_12_13 = #{timeIntervalCount1213,jdbcType=INTEGER},
+            time_interval_count_13_14 = #{timeIntervalCount1314,jdbcType=INTEGER},
+            time_interval_count_14_15 = #{timeIntervalCount1415,jdbcType=INTEGER},
+            time_interval_count_15_16 = #{timeIntervalCount1516,jdbcType=INTEGER},
+            time_interval_count_16_17 = #{timeIntervalCount1617,jdbcType=INTEGER},
+            time_interval_count_17_18 = #{timeIntervalCount1718,jdbcType=INTEGER},
+            time_interval_count_18_19 = #{timeIntervalCount1819,jdbcType=INTEGER},
+            time_interval_count_19_20 = #{timeIntervalCount1920,jdbcType=INTEGER},
+            time_interval_count_20_21 = #{timeIntervalCount2021,jdbcType=INTEGER},
+            time_interval_count_21_22 = #{timeIntervalCount2122,jdbcType=INTEGER},
+            time_interval_count_22_23 = #{timeIntervalCount2223,jdbcType=INTEGER},
+            time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
+            create_time               = #{createTime,jdbcType=TIMESTAMP},
+            update_time               = #{updateTime,jdbcType=TIMESTAMP},
+            is_delete                 = #{isDelete,jdbcType=TINYINT}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <insert id="insertSelectiveBatch" parameterType="java.util.List">
+        insert into coarse_segment_detail_on_time
+        (username, counts,
+        time_interval_count_0_1, time_interval_count_1_2,
+        time_interval_count_2_3, time_interval_count_3_4,
+        time_interval_count_4_5, time_interval_count_5_6,
+        time_interval_count_6_7, time_interval_count_7_8,
+        time_interval_count_8_9, time_interval_count_9_10,
+        time_interval_count_10_11, time_interval_count_11_12,
+        time_interval_count_12_13, time_interval_count_13_14,
+        time_interval_count_14_15, time_interval_count_15_16,
+        time_interval_count_16_17, time_interval_count_17_18,
+        time_interval_count_18_19, time_interval_count_19_20,
+        time_interval_count_20_21, time_interval_count_21_22,
+        time_interval_count_22_23, time_interval_count_23_24)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.username,jdbcType=VARCHAR}, #{item.counts,jdbcType=INTEGER},
+            #{item.timeIntervalCount01,jdbcType=INTEGER}, #{item.timeIntervalCount12,jdbcType=INTEGER},
+            #{item.timeIntervalCount23,jdbcType=INTEGER}, #{item.timeIntervalCount34,jdbcType=INTEGER},
+            #{item.timeIntervalCount45,jdbcType=INTEGER}, #{item.timeIntervalCount56,jdbcType=INTEGER},
+            #{item.timeIntervalCount67,jdbcType=INTEGER}, #{item.timeIntervalCount78,jdbcType=INTEGER},
+            #{item.timeIntervalCount89,jdbcType=INTEGER}, #{item.timeIntervalCount910,jdbcType=INTEGER},
+            #{item.timeIntervalCount1011,jdbcType=INTEGER}, #{item.timeIntervalCount1112,jdbcType=INTEGER},
+            #{item.timeIntervalCount1213,jdbcType=INTEGER}, #{item.timeIntervalCount1314,jdbcType=INTEGER},
+            #{item.timeIntervalCount1415,jdbcType=INTEGER}, #{item.timeIntervalCount1516,jdbcType=INTEGER},
+            #{item.timeIntervalCount1617,jdbcType=INTEGER}, #{item.timeIntervalCount1718,jdbcType=INTEGER},
+            #{item.timeIntervalCount1819,jdbcType=INTEGER}, #{item.timeIntervalCount1920,jdbcType=INTEGER},
+            #{item.timeIntervalCount2021,jdbcType=INTEGER}, #{item.timeIntervalCount2122,jdbcType=INTEGER},
+            #{item.timeIntervalCount2223,jdbcType=INTEGER}, #{item.timeIntervalCount2324,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
 </mapper>

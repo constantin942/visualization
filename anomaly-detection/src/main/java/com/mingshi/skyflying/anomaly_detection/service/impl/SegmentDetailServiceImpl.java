@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.service.impl;
 
+import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
@@ -24,9 +25,13 @@ public class SegmentDetailServiceImpl implements ParentService<SegmentDetailDo, 
     @Resource
     private MsSegmentDetailMapper segmentDetailMapper;
 
+    @Resource
+    CoarseSegmentDetailOnTimeMapper coarseSegmentDetailOnTimeMapper;
+
     public void createUserPortraitByTime() {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
-        List<CoarseSegmentDetailOnTimeDo> coarseSegmentDetailOnTime = getCoarseSegmentDetailOnTime(segmentDetails);
+        List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
+        coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
     }
 
     /**

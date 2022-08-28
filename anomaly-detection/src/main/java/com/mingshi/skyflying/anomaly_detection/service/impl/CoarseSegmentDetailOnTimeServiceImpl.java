@@ -2,7 +2,6 @@ package com.mingshi.skyflying.anomaly_detection.service.impl;
 
 import com.mingshi.skyflying.anomaly_detection.service.CoarseSegmentDetailOnTimeService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**

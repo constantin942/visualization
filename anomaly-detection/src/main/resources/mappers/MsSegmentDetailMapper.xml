@@ -49,7 +49,7 @@
     <select id="getInfoForCoarseDetail" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
         from ms_segment_detail
-        where 2 > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
+        where 4 > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
           and user_name is not null
           and start_time is not null
           and ms_segment_detail.global_trace_id not in (
