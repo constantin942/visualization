@@ -1,128 +1,142 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeDoMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="username" jdbcType="VARCHAR" property="username" />
-    <result column="morning_rate" jdbcType="DOUBLE" property="morningRate" />
-    <result column="afternoon_rate" jdbcType="DOUBLE" property="afternoonRate" />
-    <result column="night_rate" jdbcType="DOUBLE" property="nightRate" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    id, username, morning_rate, afternoon_rate, night_rate, create_time, update_time,
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeMapper">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="morning_rate" jdbcType="DOUBLE" property="morningRate"/>
+        <result column="afternoon_rate" jdbcType="DOUBLE" property="afternoonRate"/>
+        <result column="night_rate" jdbcType="DOUBLE" property="nightRate"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , username, morning_rate, afternoon_rate, night_rate, create_time, update_time,
     is_delete
-  </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from user_portrait_by_time
-    where id = #{id,jdbcType=INTEGER}
-  </select>
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from user_portrait_by_time
-    where id = #{id,jdbcType=INTEGER}
-  </delete>
-  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
-    insert into user_portrait_by_time (id, username, morning_rate,
-      afternoon_rate, night_rate, create_time,
-      update_time, is_delete)
-    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{morningRate,jdbcType=DOUBLE},
-      #{afternoonRate,jdbcType=DOUBLE}, #{nightRate,jdbcType=DOUBLE}, #{createTime,jdbcType=TIMESTAMP},
-      #{updateTime,jdbcType=TIMESTAMP}, #{isDelete,jdbcType=TINYINT})
-  </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
-    insert into user_portrait_by_time
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="username != null">
-        username,
-      </if>
-      <if test="morningRate != null">
-        morning_rate,
-      </if>
-      <if test="afternoonRate != null">
-        afternoon_rate,
-      </if>
-      <if test="nightRate != null">
-        night_rate,
-      </if>
-      <if test="createTime != null">
-        create_time,
-      </if>
-      <if test="updateTime != null">
-        update_time,
-      </if>
-      <if test="isDelete != null">
-        is_delete,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="username != null">
-        #{username,jdbcType=VARCHAR},
-      </if>
-      <if test="morningRate != null">
-        #{morningRate,jdbcType=DOUBLE},
-      </if>
-      <if test="afternoonRate != null">
-        #{afternoonRate,jdbcType=DOUBLE},
-      </if>
-      <if test="nightRate != null">
-        #{nightRate,jdbcType=DOUBLE},
-      </if>
-      <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="isDelete != null">
-        #{isDelete,jdbcType=TINYINT},
-      </if>
-    </trim>
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
-    update user_portrait_by_time
-    <set>
-      <if test="username != null">
-        username = #{username,jdbcType=VARCHAR},
-      </if>
-      <if test="morningRate != null">
-        morning_rate = #{morningRate,jdbcType=DOUBLE},
-      </if>
-      <if test="afternoonRate != null">
-        afternoon_rate = #{afternoonRate,jdbcType=DOUBLE},
-      </if>
-      <if test="nightRate != null">
-        night_rate = #{nightRate,jdbcType=DOUBLE},
-      </if>
-      <if test="createTime != null">
-        create_time = #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateTime != null">
-        update_time = #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="isDelete != null">
-        is_delete = #{isDelete,jdbcType=TINYINT},
-      </if>
-    </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
-    update user_portrait_by_time
-    set username = #{username,jdbcType=VARCHAR},
-      morning_rate = #{morningRate,jdbcType=DOUBLE},
-      afternoon_rate = #{afternoonRate,jdbcType=DOUBLE},
-      night_rate = #{nightRate,jdbcType=DOUBLE},
-      create_time = #{createTime,jdbcType=TIMESTAMP},
-      update_time = #{updateTime,jdbcType=TIMESTAMP},
-      is_delete = #{isDelete,jdbcType=TINYINT}
-    where id = #{id,jdbcType=INTEGER}
-  </update>
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from user_portrait_by_time
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from user_portrait_by_time
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
+        insert into user_portrait_by_time (id, username, morning_rate,
+                                           afternoon_rate, night_rate, create_time,
+                                           update_time, is_delete)
+        values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{morningRate,jdbcType=DOUBLE},
+                #{afternoonRate,jdbcType=DOUBLE}, #{nightRate,jdbcType=DOUBLE}, #{createTime,jdbcType=TIMESTAMP},
+                #{updateTime,jdbcType=TIMESTAMP}, #{isDelete,jdbcType=TINYINT})
+    </insert>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
+        insert into user_portrait_by_time
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="username != null">
+                username,
+            </if>
+            <if test="morningRate != null">
+                morning_rate,
+            </if>
+            <if test="afternoonRate != null">
+                afternoon_rate,
+            </if>
+            <if test="nightRate != null">
+                night_rate,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="isDelete != null">
+                is_delete,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="username != null">
+                #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="morningRate != null">
+                #{morningRate,jdbcType=DOUBLE},
+            </if>
+            <if test="afternoonRate != null">
+                #{afternoonRate,jdbcType=DOUBLE},
+            </if>
+            <if test="nightRate != null">
+                #{nightRate,jdbcType=DOUBLE},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="isDelete != null">
+                #{isDelete,jdbcType=TINYINT},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective"
+            parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
+        update user_portrait_by_time
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="morningRate != null">
+                morning_rate = #{morningRate,jdbcType=DOUBLE},
+            </if>
+            <if test="afternoonRate != null">
+                afternoon_rate = #{afternoonRate,jdbcType=DOUBLE},
+            </if>
+            <if test="nightRate != null">
+                night_rate = #{nightRate,jdbcType=DOUBLE},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=TINYINT},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo">
+        update user_portrait_by_time
+        set username       = #{username,jdbcType=VARCHAR},
+            morning_rate   = #{morningRate,jdbcType=DOUBLE},
+            afternoon_rate = #{afternoonRate,jdbcType=DOUBLE},
+            night_rate     = #{nightRate,jdbcType=DOUBLE},
+            create_time    = #{createTime,jdbcType=TIMESTAMP},
+            update_time    = #{updateTime,jdbcType=TIMESTAMP},
+            is_delete      = #{isDelete,jdbcType=TINYINT}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into user_portrait_by_time (username, morning_rate,
+        afternoon_rate, night_rate)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.username,jdbcType=VARCHAR}, #{item.morningRate,jdbcType=DOUBLE},
+            #{item.afternoonRate,jdbcType=DOUBLE}, #{item.nightRate,jdbcType=DOUBLE}
+            )
+        </foreach>
+    </insert>
 </mapper>
