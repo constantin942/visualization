@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.redis;
+package com.mingshi.skyflying.common.redis;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

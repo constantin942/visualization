@@ -22,7 +22,6 @@ public class TestControllerA {
     UserPortraitByTimeTask timeTask;
     @GetMapping("test")
     public void test() {
-        timeTask.createUserPortraitByTime(15);
     }
 
 }

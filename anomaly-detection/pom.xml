@@ -8,6 +8,12 @@
       <artifactId>common</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>org.redisson</groupId>
+      <artifactId>redisson</artifactId>
+      <version>3.17.6</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
   <parent>
     <groupId>com.mingshi</groupId>
