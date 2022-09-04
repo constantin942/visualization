@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.anomaly_detection.service;
+package com.mingshi.skyflying.anomaly_detection.task;
 
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
@@ -11,7 +11,11 @@ import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -26,10 +30,9 @@ import java.util.Map;
  * @Description:
  * @Date: create in 2022/8/29
  */
-@Service
 @Slf4j
+@Component
 public class UserPortraitByTimeTask {
-
 
     @Resource
     private MsSegmentDetailMapper segmentDetailMapper;
@@ -41,36 +44,72 @@ public class UserPortraitByTimeTask {
     UserPortraitByTimeMapper userPortraitByTimeMapper;
 
     @Resource
-    RedisPoolUtil redisPoolUtil;
+    RedissonClient redissonClient;
 
     @Resource
-    RedissonClient redissonClient;
+    RedisPoolUtil redisPoolUtil;
 
 
     private final Integer portraitByTimePeriod = 30;
 
+    @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
+    private String PREFIX;
+
+    private final String MORNING = "morning";
+
+    private final String AFTERNOON = "afternoon";
+
+    private final String NIGHT = "night";
+
+    private final Integer EXPIRE = 100000;
+
     /**
      * Redis分布式锁Key
      */
-    public static final String REDIS_LOCK = "skywalking:anomaly_detection:insInfo2Coarse";
+    public static final String REDIS_LOCK = "anomaly_detection:insInfo2Coarse";
 
     /**
-     * 每日定时任务 : 全量表生成粗粒度表 -> 粗粒度表生成用户画像
+     * 每日定时任务 : 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis
      */
     private void createUserPortraitTask() {
-
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
             //1. 全量表生成粗粒度表
             insertYesterdayInfo2Coarse();
             //2. 粗粒度表生成用户画像
-            createUserPortraitByTime(portraitByTimePeriod);
+            List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitByTimePeriod);
+            //3. 放入Redis
+            cachePortraitByTime(userPortraitByTimeDos);
         } catch (Exception e) {
-            log.error("昨日全量信息表插入粗粒度表时发生异常");
+            log.error("生成用户画像异常");
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 放入Redis
+     * key : PREFIX + username + 时段(早中晚)
+     * value : 对应时段的访问频率
+     */
+    public void cachePortraitByTime(List<UserPortraitByTimeDo> userPortraitByTimeDos) {
+        for (UserPortraitByTimeDo userPortraitByTimeDo : userPortraitByTimeDos) {
+            String username = userPortraitByTimeDo.getUsername();
+            String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
+            String afternoonRate = String.valueOf(userPortraitByTimeDo.getAfternoonRate());
+            String nightRate = String.valueOf(userPortraitByTimeDo.getNightRate());
+            redisPoolUtil.set(buildRedisKey(username, MORNING), morningRate, EXPIRE);
+            redisPoolUtil.set(buildRedisKey(username, AFTERNOON), afternoonRate, EXPIRE);
+            redisPoolUtil.set(buildRedisKey(username, NIGHT), nightRate, EXPIRE);
+        }
+    }
+
+    /**
+     * 组装Redis的Key
+     */
+    private String buildRedisKey(String username, String interval) {
+        return PREFIX + username + ":" + interval;
     }
 
     /**
@@ -85,10 +124,11 @@ public class UserPortraitByTimeTask {
     /**
      * 获取画像周期内粗粒度表数据并生成用户画像
      */
-    public void createUserPortraitByTime(Integer portraitByTimePeriod) {
+    public List<UserPortraitByTimeDo> createUserPortraitByTime(Integer portraitByTimePeriod) {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
         userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
+        return userPortraitByTimeDoList;
     }
 
     /**
@@ -112,7 +152,7 @@ public class UserPortraitByTimeTask {
     /**
      * 全量信息生成粗粒度信息
      */
-    private List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
+    public List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
         //每个用户对应一个数组, 数组存储每个时段的访问次数
         HashMap<String, int[]> map = new HashMap<>();
         for (MsSegmentDetailDo coarseDetail : segmentDetails) {

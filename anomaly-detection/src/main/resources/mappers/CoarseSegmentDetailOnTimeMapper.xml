@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
-    <resultMap id="CountOnTimeIntervalMap" type="com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
+    <resultMap id="CountOnTimeIntervalMap"
+               type="com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
         <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="counts" jdbcType="INTEGER" property="counts"/>
         <result column="morning_count" jdbcType="INTEGER" property="morningCount"/>
@@ -439,24 +440,31 @@
     </insert>
     <select id="selectInfoInPeriod" parameterType="integer" resultMap="CountOnTimeIntervalMap">
         select username,
-               sum(counts)                                                          as counts,
-               (sum(time_interval_count_5_6)   + sum(time_interval_count_6_7) +
-                sum(time_interval_count_7_8)   + sum(time_interval_count_8_9) +
-                sum(time_interval_count_9_10)  + sum(time_interval_count_10_11) +
-                sum(time_interval_count_11_12) + sum(time_interval_count_12_13))    as morning_count,
+               sum(counts)                                                       as counts,
+               (sum(time_interval_count_5_6) + sum(time_interval_count_6_7) +
+                sum(time_interval_count_7_8) + sum(time_interval_count_8_9) +
+                sum(time_interval_count_9_10) + sum(time_interval_count_10_11) +
+                sum(time_interval_count_11_12) + sum(time_interval_count_12_13)) as morning_count,
 
                (sum(time_interval_count_13_14) + sum(time_interval_count_14_15) +
                 sum(time_interval_count_15_16) + sum(time_interval_count_16_17) +
                 sum(time_interval_count_17_18) + sum(time_interval_count_18_19) +
-                sum(time_interval_count_19_20) + sum(time_interval_count_20_21))    as afternoon_count,
+                sum(time_interval_count_19_20) + sum(time_interval_count_20_21)) as afternoon_count,
 
                (sum(time_interval_count_21_22) + sum(time_interval_count_22_23) +
                 sum(time_interval_count_23_24) + sum(time_interval_count_0_1) +
-                sum(time_interval_count_1_2)   + sum(time_interval_count_2_3) +
-                sum(time_interval_count_3_4)   + sum(time_interval_count_4_5))      as night_count
+                sum(time_interval_count_1_2) + sum(time_interval_count_2_3) +
+                sum(time_interval_count_3_4) + sum(time_interval_count_4_5))     as night_count
 
         from coarse_segment_detail_on_time
         where #{portraitByTimePeriod,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
         group by username
+    </select>
+    <select id="selectOneByUsername"
+            resultType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo"
+            parameterType="string">
+        select *
+        from coarse_segment_detail_on_time
+        where username = #{username,jdbcType=VARCHAR} limit 1
     </select>
 </mapper>

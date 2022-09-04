@@ -9,4 +9,7 @@ public interface CoarseSegmentDetailOnTimeMapper {
     void insertSelectiveBatch(List<CoarseSegmentDetailOnTimeDo> list);
 
     List<VisitCountOnTimeInterval> selectInfoInPeriod(Integer portraitByTimePeriod);
+
+    CoarseSegmentDetailOnTimeDo selectOneByUsername(String username);
+
 }

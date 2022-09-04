@@ -1,14 +1,12 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
-import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
-import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
-import com.mingshi.skyflying.anomaly_detection.service.UserPortraitByTimeTask;
-import com.mingshi.skyflying.anomaly_detection.service.impl.SegmentDetailServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
+import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,10 +16,18 @@ import java.util.List;
  */
 @RestController
 public class TestControllerA {
-    @Autowired
+
+    @Resource
     UserPortraitByTimeTask timeTask;
+
+
     @GetMapping("test")
     public void test() {
+        List<UserPortraitByTimeDo> list = new ArrayList<>();
+        list.add(UserPortraitByTimeDo.builder()
+                .username("testTzx")
+                .morningRate(0.2).afternoonRate(0.3).nightRate(0.5).build());
+        timeTask.cachePortraitByTime(list);
     }
 
 }
