@@ -350,14 +350,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
     msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
     msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
-    msSegmentDetailDo.setIp(segment.getIp());
+    msSegmentDetailDo.setUserLoginIp(segment.getIp());
     return msSegmentDetailDo;
   }
 
   private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
     if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
       MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-      msSegmentDetailDo.setIp(segment.getIp());
+      msSegmentDetailDo.setUserLoginIp(segment.getIp());
       msSegmentDetailDo.setUserName(segment.getUserName());
       msSegmentDetailDo.setToken(segment.getToken());
       msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());

@@ -30,11 +30,11 @@
             property="userPortraitFlagByVisitedTableEveryday"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
     <result column="token" jdbcType="VARCHAR" property="token"/>
-    <result column="ip" jdbcType="VARCHAR" property="ip"/>
+    <result column="user_login_ip" jdbcType="VARCHAR" property="userLoginIp"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    , user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
     ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table_everyday
@@ -602,7 +602,7 @@
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail
-    (ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    (user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
     db_user_name, db_statement, ms_table_name, operation_type, user_portrait_flag_by_visited_time,
@@ -610,7 +610,7 @@
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
-      #{item.ip,jdbcType=VARCHAR},
+      #{item.userLoginIp,jdbcType=VARCHAR},
       #{item.userName,jdbcType=VARCHAR},
       #{item.token,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=VARCHAR},
@@ -646,8 +646,8 @@
       <if test="userName != null">
         user_name,
       </if>
-      <if test="ip != null">
-        ip,
+      <if test="userLoginIp != null">
+        user_login_ip,
       </if>
       <if test="globalTraceId != null">
         global_trace_id,
@@ -724,8 +724,8 @@
       <if test="token != null">
         token,
       </if>
-      <if test="ip != null">
-        ip,
+      <if test="userLoginIp != null">
+        user_login_ip,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -735,8 +735,8 @@
       <if test="userName != null">
         #{userName,jdbcType=VARCHAR},
       </if>
-      <if test="ip != null">
-        #{ip,jdbcType=VARCHAR},
+      <if test="userLoginIp != null">
+        #{userLoginIp,jdbcType=VARCHAR},
       </if>
       <if test="globalTraceId != null">
         #{globalTraceId,jdbcType=VARCHAR},
@@ -813,8 +813,8 @@
       <if test="token != null">
         #{token,jdbcType=VARCHAR},
       </if>
-      <if test="ip != null">
-        #{ip,jdbcType=VARCHAR},
+      <if test="userLoginIp != null">
+        #{userLoginIp,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -855,8 +855,8 @@
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     update ms_segment_detail
     <set>
-      <if test="ip != null">
-        ip = #{ip,jdbcType=VARCHAR},
+      <if test="userLoginIp != null">
+        user_login_ip = #{userLoginIp,jdbcType=VARCHAR},
       </if>
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},

@@ -7,7 +7,7 @@ import java.util.Date;
 public class MsSegmentDetailDo {
     private Integer id;
 
-    private String ip;
+    private String userLoginIp;
 
     private String userName;
 
