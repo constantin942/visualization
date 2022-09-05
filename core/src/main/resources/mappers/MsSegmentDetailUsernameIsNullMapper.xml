@@ -27,10 +27,11 @@
     <result column="parent_span_id" jdbcType="INTEGER" property="parentSpanId"/>
     <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
+    <result column="ip" jdbcType="LONGVARCHAR" property="ip"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , user_name, service_code, start_time, db_type, db_user_name, operation_name, token,
+    , ip, user_name, service_code, start_time, db_type, db_user_name, operation_name, token,
     global_trace_id, parent_segment_id, operation_type, ms_table_name, db_instance, gmt_create,
     gmt_modified, is_delete, span_id, component, peer, endpoint_name, service_instance_name,
     end_time, parent_span_id, current_segment_id, db_statement
@@ -49,7 +50,7 @@
     group by token
   </select>
   <select id="selectAllUserNameIsNotNull" resultMap="BaseResultMap">
-    select id,
+    select id,ip,
            user_name,
            service_code,
            start_time,
@@ -102,13 +103,14 @@
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail_username_is_null
-    ( user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    (ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
     db_user_name, db_statement, ms_table_name, operation_type)
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
+      #{item.ip,jdbcType=VARCHAR},
       #{item.userName,jdbcType=VARCHAR},
       #{item.token,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=VARCHAR},
@@ -128,7 +130,8 @@
       #{item.dbInstance,jdbcType=VARCHAR},
       #{item.dbUserName,jdbcType=VARCHAR},
       #{item.dbStatement,jdbcType=VARCHAR},
-      #{item.msTableName,jdbcType=VARCHAR}
+      #{item.msTableName,jdbcType=VARCHAR},
+      #{item.operationType,jdbcType=VARCHAR}
       )
     </foreach>
   </insert>
@@ -210,6 +213,9 @@
       <if test="dbStatement != null">
         db_statement,
       </if>
+      <if test="ip != null">
+        ip,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -287,6 +293,9 @@
       <if test="dbStatement != null">
         #{dbStatement,jdbcType=LONGVARCHAR},
       </if>
+      <if test="ip != null">
+        #{ip,jdbcType=LONGVARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
@@ -363,6 +372,9 @@
       </if>
       <if test="dbStatement != null">
         db_statement = #{dbStatement,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="ip != null">
+        ip = #{ip,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}

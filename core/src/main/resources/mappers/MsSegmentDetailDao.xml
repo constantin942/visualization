@@ -26,13 +26,15 @@
     <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
     <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
     <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT" property="userPortraitFlagByVisitedTime"/>
-    <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT" property="userPortraitFlagByVisitedTableEveryday"/>
+    <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT"
+            property="userPortraitFlagByVisitedTableEveryday"/>
     <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
     <result column="token" jdbcType="VARCHAR" property="token"/>
+    <result column="ip" jdbcType="VARCHAR" property="ip"/>
   </resultMap>
   <sql id="Base_Column_List">
     id
-    , user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    , ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
     ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table_everyday
@@ -148,24 +150,24 @@
     from ms_segment_detail
     where user_name is not null and global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
     where db_type != 'url' and user_name is not null and ms_table_name is not null and operation_name != 'null'
-      <if test="userName != null and  userName != null   ">
-        and user_name = #{userName}
-      </if>
-      <if test="operationType != null and  operationType != null   ">
-        and operation_type = #{operationType}
-      </if>
-      <if test="dbType != null and  dbType != null   ">
-        and db_type = #{dbType}
-      </if>
-      <if test="startTime != null and  startTime != null   ">
-        and start_time <![CDATA[ >= ]]> #{startTime}
-      </if>
-      <if test="endTime != null and  endTime != null   ">
-        and end_time <![CDATA[ <= ]]> #{endTime}
-      </if>
-      <if test="msTableName != null and  msTableName != null   ">
-        and ms_table_name = #{msTableName}
-      </if>
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="endTime != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
     group by global_trace_id order by global_trace_id desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
@@ -202,24 +204,24 @@
     from ms_segment_detail
     where global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
     where db_type != 'url' and operation_name != 'null'
-      <if test="userName != null and  userName != null   ">
-        and user_name = #{userName}
-      </if>
-      <if test="operationType != null and  operationType != null   ">
-        and operation_type = #{operationType}
-      </if>
-      <if test="dbType != null and  dbType != null   ">
-        and db_type = #{dbType}
-      </if>
-      <if test="startTime != null and  startTime != null   ">
-        and start_time <![CDATA[ >= ]]> #{startTime}
-      </if>
-      <if test="endTime != null and  endTime != null   ">
-        and end_time <![CDATA[ <= ]]> #{endTime}
-      </if>
-      <if test="msTableName != null and  msTableName != null   ">
-        and ms_table_name = #{msTableName}
-      </if>
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="endTime != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
     group by global_trace_id order by global_trace_id desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
@@ -244,7 +246,7 @@
       and ms_table_name = #{msTableName}
     </if>
     -- 先注释掉，调试获取完整调用链路信息时，会用到；2022-06-14 18:05:20
---     and (db_type != 'url')
+    -- and (db_type != 'url')
     and operation_name != 'null'
     order by id desc;
   </select>
@@ -253,24 +255,24 @@
     from ms_segment_detail
     where user_name is not null and global_trace_id in ( select t1.* from (select global_trace_id from ms_segment_detail
     where user_name is not null
-      <if test="userName != null and  userName != null   ">
-        and user_name = #{userName}
-      </if>
-      <if test="operationType != null and  operationType != null   ">
-        and operation_type = #{operationType}
-      </if>
-      <if test="dbType != null and  dbType != null   ">
-        and db_type = #{dbType}
-      </if>
-      <if test="startTime != null and  startTime != null   ">
-        and start_time <![CDATA[ >= ]]> #{startTime}
-      </if>
-      <if test="endTime != null and  endTime != null   ">
-        and end_time <![CDATA[ <= ]]> #{endTime}
-      </if>
-      <if test="msTableName != null and  msTableName != null   ">
-        and ms_table_name = #{msTableName}
-      </if>
+    <if test="userName != null and  userName != null   ">
+      and user_name = #{userName}
+    </if>
+    <if test="operationType != null and  operationType != null   ">
+      and operation_type = #{operationType}
+    </if>
+    <if test="dbType != null and  dbType != null   ">
+      and db_type = #{dbType}
+    </if>
+    <if test="startTime != null and  startTime != null   ">
+      and start_time <![CDATA[ >= ]]> #{startTime}
+    </if>
+    <if test="endTime != null and  endTime != null   ">
+      and end_time <![CDATA[ <= ]]> #{endTime}
+    </if>
+    <if test="msTableName != null and  msTableName != null   ">
+      and ms_table_name = #{msTableName}
+    </if>
     group by global_trace_id order by global_trace_id desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
@@ -406,7 +408,8 @@
       and ms_table_name = #{msTableName}
     </if>
   </select>
-  <select id="selectCountsOfUserByPeerAndDbInstanceAndTableName" resultType="java.lang.Long" parameterType="java.util.Map">
+  <select id="selectCountsOfUserByPeerAndDbInstanceAndTableName" resultType="java.lang.Long"
+          parameterType="java.util.Map">
     select count(*) from ms_segment_detail
     where user_name is not null
     <if test="startTime != null and  startTime != null   ">
@@ -435,7 +438,8 @@
   <select id="selectCountOfOneUserByUserName" resultType="java.lang.Long" parameterType="java.lang.String">
     select count(*)
     from ms_segment_detail
-    where user_name = #{userName} and ms_table_name is not null
+    where user_name = #{userName}
+      and ms_table_name is not null
   </select>
 
   <select id="selectLastVisitedTime" resultType="java.lang.String" parameterType="java.util.Map">
@@ -453,25 +457,24 @@
     order by start_time desc limit 1
   </select>
 
-  <select id="selectUserUsualAndUnusualData" resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData" parameterType="java.util.Map">
+  <select id="selectUserUsualAndUnusualData"
+          resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData" parameterType="java.util.Map">
     SELECT user_name, visited_table as visited_data, SUM(visited_count) as visited_count
     FROM `user_portrait_by_visited_table_everyday`
-    where user_name is not null and user_name = #{userName}
+    where user_name is not null
+      and user_name = #{userName}
     GROUP BY visited_table
   </select>
 
   <select id="selectUserUsualAndUnusualDataByUserName" resultType="java.util.Map" parameterType="java.lang.String">
-    SELECT
-      ms_table_name as msTableName, peer, db_instance as dbInstance
-    FROM
-      ms_segment_detail
-    WHERE
-      user_name = #{userName} AND ms_table_name IS NOT NULL
-    GROUP BY
-      ms_table_name, peer, db_instance
-    ORDER BY
-      count( ms_table_name ) DESC
-    limit 1	;
+    SELECT ms_table_name as msTableName,
+           peer,
+           db_instance   as dbInstance
+    FROM ms_segment_detail
+    WHERE user_name = #{userName}
+      AND ms_table_name IS NOT NULL
+    GROUP BY ms_table_name, peer, db_instance
+    ORDER BY count(ms_table_name) DESC limit 1;
   </select>
 
   <select id="selectCountsOfAllRecentSevenDays" resultType="java.lang.Long" parameterType="java.util.Map">
@@ -499,12 +502,14 @@
   <select id="selectinformationCount" resultType="java.lang.Long">
     select count(*)
     from ms_segment_detail
-    where user_name is not null and ms_table_name is not null
+    where user_name is not null
+      and ms_table_name is not null
   </select>
   <select id="selectDbInstanceCount" resultType="java.lang.Long">
     select count(distinct db_instance)
     from ms_segment_detail
-    where db_instance is not null and user_name is not null
+    where db_instance is not null
+      and user_name is not null
   </select>
   <select id="selectTableCount" resultType="java.lang.Long">
     select count(distinct ms_table_name)
@@ -512,23 +517,21 @@
     where ms_table_name is not null
   </select>
   <select id="selectTableCountGroupByPeerDbinstanceTableName" resultType="java.util.Map">
-    SELECT
-      ms_table_name as msTableName,
-      db_instance dbInstance,
-      peer
-    FROM
-      ms_segment_detail
-    WHERE
-      ms_table_name IS NOT NULL and user_name is not null
-    GROUP BY
-      ms_table_name,
-      db_instance,
-      peer
+    SELECT ms_table_name as msTableName,
+           db_instance      dbInstance,
+           peer
+    FROM ms_segment_detail
+    WHERE ms_table_name IS NOT NULL
+      and user_name is not null
+    GROUP BY ms_table_name,
+             db_instance,
+             peer
   </select>
   <select id="selectUserCount" resultType="java.lang.Long">
     select count(distinct user_name)
     from ms_segment_detail
-    where user_name is not null and ms_table_name is not null
+    where user_name is not null
+      and ms_table_name is not null
   </select>
 
 
@@ -541,54 +544,65 @@
   <select id="selectCountOfOneTable" resultType="java.lang.Long" parameterType="java.lang.String">
     select count(*)
     from ms_segment_detail
-    where ms_table_name = #{tableName} and user_name is not null
+    where ms_table_name = #{tableName}
+      and user_name is not null
   </select>
 
   <select id="selectUserNameByToken" resultType="java.lang.String" parameterType="java.lang.String">
     select user_name
     from ms_segment_detail
-    where token = #{token} and user_name is not null order by id asc limit 1
+    where token = #{token}
+      and user_name is not null
+    order by id asc limit 1
   </select>
 
   <select id="selectUserNameByGlobalTraceId" resultType="java.lang.String" parameterType="java.lang.String">
     select user_name
     from ms_segment_detail
-    where global_trace_id = #{globalTraceId} and user_name is not null order by id asc limit 1
+    where global_trace_id = #{globalTraceId}
+      and user_name is not null
+    order by id asc limit 1
   </select>
 
   <select id="selectTableLastVisitedTime" resultType="java.lang.String" parameterType="java.lang.String">
     SELECT start_time
     from ms_segment_detail
-    where ms_table_name = #{tableName} and user_name is not null
+    where ms_table_name = #{tableName}
+      and user_name is not null
     order by start_time desc limit 1
   </select>
 
-  <select id="selectTableUsualAndUnusualData" resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData" parameterType="java.lang.String">
+  <select id="selectTableUsualAndUnusualData"
+          resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData"
+          parameterType="java.lang.String">
     select ms_table_name as visited_data, count(*) as visited_count, user_name
     from ms_segment_detail
-    where ms_table_name = #{tableName} and user_name is not null
+    where ms_table_name = #{tableName}
+      and user_name is not null
     group by user_name
-    order by count(*) desc
-      limit 1;
+    order by count(*) desc limit 1;
   </select>
   <select id="selectAlarmData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
     SELECT COUNT(*) as alarm_data, match_rule_id
     FROM ms_alarm_information
-    where match_rule_id is not NULL and update_user_portrait = 0 and is_delete = 0
+    where match_rule_id is not NULL
+      and update_user_portrait = 0
+      and is_delete = 0
     GROUP BY match_rule_id
   </select>
 
   <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.common.domain.UserAlarmData">
     SELECT count(*) as alarm_count, user_name
     from ms_alarm_information
-    where update_user_portrait = 0 and is_delete = 0
+    where update_user_portrait = 0
+      and is_delete = 0
     GROUP BY user_name
   </select>
 
 
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_segment_detail
-    ( user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+    (ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
     db_user_name, db_statement, ms_table_name, operation_type, user_portrait_flag_by_visited_time,
@@ -596,6 +610,7 @@
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
+      #{item.ip,jdbcType=VARCHAR},
       #{item.userName,jdbcType=VARCHAR},
       #{item.token,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=VARCHAR},
@@ -630,6 +645,9 @@
       </if>
       <if test="userName != null">
         user_name,
+      </if>
+      <if test="ip != null">
+        ip,
       </if>
       <if test="globalTraceId != null">
         global_trace_id,
@@ -706,6 +724,9 @@
       <if test="token != null">
         token,
       </if>
+      <if test="ip != null">
+        ip,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -713,6 +734,9 @@
       </if>
       <if test="userName != null">
         #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="ip != null">
+        #{ip,jdbcType=VARCHAR},
       </if>
       <if test="globalTraceId != null">
         #{globalTraceId,jdbcType=VARCHAR},
@@ -789,6 +813,9 @@
       <if test="token != null">
         #{token,jdbcType=VARCHAR},
       </if>
+      <if test="ip != null">
+        #{ip,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateBatch" parameterType="java.util.List">
@@ -828,6 +855,9 @@
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
     update ms_segment_detail
     <set>
+      <if test="ip != null">
+        ip = #{ip,jdbcType=VARCHAR},
+      </if>
       <if test="userName != null">
         user_name = #{userName,jdbcType=VARCHAR},
       </if>

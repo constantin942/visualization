@@ -32,6 +32,8 @@ public class SegmentDo {
 
   private String reorganizingSpans;
 
+  private String ip;
+
   /**
    * 基于访问时间维度的用户画像；
    */

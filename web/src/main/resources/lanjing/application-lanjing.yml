@@ -119,14 +119,13 @@ spring:
       missing-topics-fatal: false
 
 mybatis:
-  type-aliases-package: com.zhejiang.mobile.core.dao
   configuration:
 #    输出SQL语句；2021-12-02 18:40:52
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
     default-fetch-size: 100
     default-statement-timeout: 3000
-  mapper-locations: classpath:mappers/*xml
+  mapper-locations: classpath*:mappers/*xml
 
 logging:
   config: classpath:logback-spring.xml

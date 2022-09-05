@@ -54,6 +54,7 @@ public class Const {
   public static final String HTTP_METHOD = "http.method";
   public static final String TAGS = "tags";
   public static final Object USERNAME = "username";
+  public static final Object NICKNAME = "nickname";
   public static final Integer NUMBER_ONE = 1;
   public static final String REDISSON_PING = "Redisson/PING";
   public static final String LETTUCE_SENTINEL = "Lettuce/SENTINEL";

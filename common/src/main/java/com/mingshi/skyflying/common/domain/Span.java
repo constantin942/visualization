@@ -69,6 +69,8 @@ public class Span {
     private String userName;
     @Setter
     private String token;
+    @Setter
+    private String ip;
 
     public Span() {
         this.refs = new ArrayList<>();

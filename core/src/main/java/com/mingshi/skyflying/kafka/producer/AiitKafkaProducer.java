@@ -1,6 +1,8 @@
 package com.mingshi.skyflying.kafka.producer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.PartitionInfo;
@@ -70,6 +72,23 @@ public class AiitKafkaProducer {
       public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
         //成功的处理
         // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
+      }
+    });
+  }
+
+  public void send(MsSegmentDetailDo msSegmentDetailDo, String topic) {
+    //发送消息
+    ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, Bytes.wrap(JsonUtil.obj2String(msSegmentDetailDo).getBytes()));
+    future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
+      @Override
+      public void onFailure(Throwable throwable) {
+        //处理发送失败的情况；在这里做降级逻辑，将发送失败的消息要么存入到数据库中，要么写入本地磁盘中；
+        log.info("发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】", topic, throwable.getMessage());
+      }
+
+      @Override
+      public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
+        //成功的处理
       }
     });
   }

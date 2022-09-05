@@ -195,8 +195,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       ObjectNode jsonObject = JsonUtil.createJsonObject();
       jsonObject.put(Const.SERVICE_CODE, service);
       jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
-//      long segmentStartTime = segmentObject.getSegmentStartTime();
-      long segmentStartTime = 0L;
+      long segmentStartTime = segmentObject.getSegmentStartTime();
       String date = null;
       if(0L != segmentStartTime){
         date = DateTimeUtil.longToDate(segmentStartTime);
@@ -351,12 +350,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
     msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
     msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+    msSegmentDetailDo.setIp(segment.getIp());
     return msSegmentDetailDo;
   }
 
   private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
     if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
       MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+      msSegmentDetailDo.setIp(segment.getIp());
       msSegmentDetailDo.setUserName(segment.getUserName());
       msSegmentDetailDo.setToken(segment.getToken());
       msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
@@ -522,12 +523,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return null;
   }
 
-  private void reorganizingSpans(SegmentDo segment, List<Span> spanList) {
-    if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-      log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
+  private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
+    if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
+      // log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
 
+    LinkedHashSet<String> ipHashSet = new LinkedHashSet<>();
     List<String> linkedList = new LinkedList<>();
     if (CollectionUtils.isNotEmpty(spanList)) {
       List<Span> rootSpans = findRoot(spanList);
@@ -535,14 +537,27 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         List<Span> childrenSpan = new ArrayList<>();
         childrenSpan.add(span);
 
+        String ips = span.getIp();
+        if(StringUtil.isNotBlank(ips)){
+          if(ips.contains(",")){
+            String[] splits = ips.split(",");
+            for (String ip : splits) {
+              ipHashSet.add(ip);
+            }
+          }else{
+            ipHashSet.add(ips);
+          }
+        }
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        getData(segment, span, linkedList);
-        findChildrenDetail(segment, spanList, span, childrenSpan, linkedList);
+        getData(segmentDo, span, linkedList);
+        findChildrenDetail(segmentDo, spanList, span, childrenSpan, linkedList);
       }
     }
-
+    if(!ipHashSet.isEmpty()){
+      segmentDo.setIp(JsonUtil.obj2String(ipHashSet));
+    }
     String toString = linkedList.toString();
-    segment.setReorganizingSpans(toString);
+    segmentDo.setReorganizingSpans(toString);
   }
 
   private List<Span> findRoot(List<Span> spans) {
@@ -630,16 +645,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             } else if (key.equals(Const.URL)) {
               // 不再存储单纯的GET请求；2022-05-27 18:14:25
               url = tag.getValue();
-              if (!url.contains(Const.DING_TALK)) {
-                flag = true;
-                break;
-              }
-            } else if (key.equals(Const.HTTP_METHOD)) {
-              // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              if (StringUtil.isNotBlank(url) && !url.contains(Const.DING_TALK)) {
-                flag = true;
-                break;
-              }
             }
           }
 
@@ -674,7 +679,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if (null != commonResponse) {
           Object data = commonResponse.getData();
           if (null != data) {
-            String username = String.valueOf(((LinkedHashMap) data).get(Const.USERNAME));
+            String username = StringUtil.isBlank(String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME))) == true ? String.valueOf(((LinkedHashMap) data).get(Const.USERNAME)) : String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME));
             if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
               segmentDo.setUserName(username);
               setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
@@ -966,9 +971,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           userHashSet.add(userName);
         }
       }
+
       String token = segmentObject.getToken();
       if (StringUtil.isNotBlank(token)) {
         segment.setToken(token);
+      }
+
+      String ip = segmentObject.getIp();
+      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
+        segment.setIp(ip);
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
