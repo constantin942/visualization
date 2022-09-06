@@ -724,9 +724,6 @@
       <if test="token != null">
         token,
       </if>
-      <if test="userLoginIp != null">
-        user_login_ip,
-      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -812,9 +809,6 @@
       </if>
       <if test="token != null">
         #{token,jdbcType=VARCHAR},
-      </if>
-      <if test="userLoginIp != null">
-        #{userLoginIp,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>

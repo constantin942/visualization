@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.5.0</version>
+            <version>3.5.9</version>
         </dependency>
 
         <dependency>
@@ -123,5 +123,17 @@
             <artifactId>jsqlparser</artifactId>
             <version>4.4</version>
         </dependency>
+
+      <!--此依赖默认使用Hikari连接池-->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-jdbc</artifactId>
+      </dependency>
+      <!-- MybatisPlus 核心库 -->
+      <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus-boot-starter</artifactId>
+        <version>3.4.2</version>
+      </dependency>
     </dependencies>
 </project>
