@@ -17,11 +17,11 @@ import java.io.IOException;
 @Configuration
 public class RedissonConfig {
     @Value("${spring.redis.host}")
-    private static final String HOST = "10.0.107.46";
+    private String HOST;
     @Value("${spring.redis.port}")
-    private static final String PORT = "6380";
+    private String PORT;
     @Value("${spring.redis.password}")
-    private static final String PASSWORD = "Aiit@123";
+    private String PASSWORD;
 
     @Bean(destroyMethod = "shutdown")
     public RedissonClient redisson() throws IOException {
