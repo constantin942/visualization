@@ -20,6 +20,16 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
+  // 数据库字段长度限制
+  public static final Integer DATA_LENTGH = 128;
+  public static final String METHOD = "method";
+  public static final String PARAMS = "params";
+  public static final String ORDER_ID = "orderId";
+
+  public interface RedisCacheExtime {
+    int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
+  }
+
   public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
   public static final String SCHEDULED_UPDATE_USER_NAME_BY_TOKEN = "redisson:key:scheduledUpdateUserNameByToken";
   public static final String SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID = "redisson:key:scheduledUpdateUserNameByGlobalTraceId";
