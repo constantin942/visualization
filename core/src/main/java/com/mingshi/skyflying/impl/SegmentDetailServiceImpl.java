@@ -241,7 +241,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getCoarseCountsOfUser(Integer pageNo, Integer pageSize) {
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
 
     List<UserCoarseInfo> userCoarseInfos = new ArrayList<>();
@@ -301,7 +301,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfos);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(userCoarseInfos));
   }
 
   /**

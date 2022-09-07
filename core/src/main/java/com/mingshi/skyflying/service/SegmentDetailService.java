@@ -19,7 +19,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<List<String>> getUserOperationTypeCount(String userName);
 
-  ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(Integer pageNo, Integer pageSize);
+  ServerResponse<String> getCoarseCountsOfUser(Integer pageNo, Integer pageSize);
 
   ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize);
 

@@ -630,7 +630,7 @@ public class SkyflyingController {
 
   @ResponseBody
   @GetMapping(value = "/getCoarseCountsOfUser")
-  public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+  public ServerResponse<String> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
   }
