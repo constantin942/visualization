@@ -920,7 +920,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (null == segment) {
         segment = new SegmentDo();
       }
-      // segment.setSpans(JsonUtil.obj2String(spanList));
       if (null == spanList && 0 == spanList.size()) {
         return segment;
       }
