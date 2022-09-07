@@ -84,7 +84,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 设置segment_id、trace_id；2022-04-24 14:26:12
       getRef(segmentObject, segment);
       // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
-      setUserNameAndTokenFromSegmentObject(userHashSet, segment, segmentObject);
+      setUserNameAndTokenAndIpFromSegmentObject(userHashSet, segment, segmentObject);
       // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
       setUserNameTokenGlobalTraceIdToLocalMemory(segment);
 
@@ -730,7 +730,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
   /**
    * <B>方法名称：setUserNameTokenGlobalTraceIdToLocalMemory </B>
-   * <B>概要说明：将userName或者token，与globalTraceId关联起来 </B>
+   * <B>概要说明：将userName、token，与globalTraceId关联起来 </B>
    * 注：userName与token是等价的。当用户第一次登录时，如果用户校验成功，那么下次用户再访问其他接口时，会使用token来代替用户名。
    *
    * @return void
@@ -946,15 +946,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   }
 
   /**
-   * <B>方法名称：setUserNameAndTokenFromSegmentObject</B>
-   * <B>概要说明：从SegmentObject中获取用户名和token</B>
+   * <B>方法名称：setUserNameAndTokenAndIpFromSegmentObject</B>
+   * <B>概要说明：从SegmentObject中获取用户名、token和ip</B>
    *
    * @return com.mingshi.skyflying.common.domain.SegmentDo
    * @Author zm
    * @Date 2022年07月12日 10:07:59
    * @Param [spanList, segment]
    **/
-  private SegmentDo setUserNameAndTokenFromSegmentObject(HashSet<String> userHashSet, SegmentDo segment, SegmentObject segmentObject) {
+  private SegmentDo setUserNameAndTokenAndIpFromSegmentObject(HashSet<String> userHashSet, SegmentDo segment, SegmentObject segmentObject) {
     try {
       if (null == segment) {
         segment = new SegmentDo();
