@@ -11,6 +11,7 @@ import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
@@ -44,7 +45,8 @@ public class MingshiServerUtil {
   private boolean reactorProcessorDisruptor;
   @Value("${reactor.iothread.thread.count}")
   private Integer reactorIoThreadThreadCount;
-
+  @Resource
+  private AiitKafkaProducer aiitKafkaProducer;
   @Resource
   private ProcessorByDisruptor processorByDisruptor;
   @Resource
@@ -673,8 +675,21 @@ public class MingshiServerUtil {
    **/
   public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+
+      try {
+        for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
+          aiitKafkaProducer.send(msSegmentDetailDo,"flink-test-topic");
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
       Instant now = Instant.now();
-      msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+      try {
+        msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+      } catch (Exception e) {
+        log.error("#SegmentConsumeServiceImpl.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中出现了异常。", segmentDetailDoList.size(), e);
+      }
       // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
       flushSegmentDetailCountToRedis(segmentDetailDoList);
 

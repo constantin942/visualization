@@ -20,6 +20,13 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
+  public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
+  public static final String SCHEDULED_UPDATE_USER_NAME_BY_TOKEN = "redisson:key:scheduledUpdateUserNameByToken";
+  public static final String SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID = "redisson:key:scheduledUpdateUserNameByGlobalTraceId";
+  public static final String SCHEDULED_UPDATE_USER_PORTRAIT = "redisson:key:scheduledUpdateUserPortrait";
+  public static final String SCHEDULED_GET_NO_CHECK_ABNORMAL_RECORD = "redisson:key:scheduledGetNoCheckAbnormalRecord";
+  public static final String SCHEDULED_GET_DMS_AUDIT_LOG = "redisson:key:scheduledGetDmsAuditLog";
+
   public static final String AGENT_STATUS_UNKNOWN = "状态未知";
   public static final String AGENT_ON_OFF = "agent_on_off";
   public static final String AGENT_QUERY = "agent_query";
@@ -101,6 +108,7 @@ public class Const {
   public static final String ON = "on";
   public static final String OFF = "off";
   public static final String TRUE = "true";
+  public static final String INIT_TIME = "1990-01-01 00:00:00";
 
   private Const() {
     throw new IllegalStateException("Const class");
