@@ -764,7 +764,7 @@ public class MingshiServerUtil {
         LinkedList<MsMonitorBusinessSystemTablesDo> list = new LinkedList<>();
         for (String tables : keySet) {
           String[] splits = tables.split(Const.POUND_KEY);
-          if (3 == splits.length) {
+          if (Const.NUMBER_THREE == splits.length) {
             MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
             msMonitorBusinessSystemTablesDo.setDbAddress(splits[0]);
             msMonitorBusinessSystemTablesDo.setDbName(splits[1]);

@@ -109,6 +109,7 @@ public class Const {
   public static final String OFF = "off";
   public static final String TRUE = "true";
   public static final String INIT_TIME = "1990-01-01 00:00:00";
+  public static final Integer NUMBER_THREE = 3;
 
   private Const() {
     throw new IllegalStateException("Const class");

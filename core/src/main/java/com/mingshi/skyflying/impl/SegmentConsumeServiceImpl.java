@@ -105,8 +105,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 重组span数据，返回前端使用；2022-04-20 16:49:02
         reorganizingSpans(segment, spanList);
 
+        // 存放用户名不为空的链路信息；
         segmentDetaiDolList = new LinkedList<>();
+        // 存放用户名暂时为空的链路信息；
         segmentDetaiUserNameIsNullDolList = new LinkedList<>();
+        // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
         getSegmentDetaiDolList(segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
 
         // 判断是否是异常信息；2022-06-07 18:00:13
@@ -210,6 +213,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return skywalkingAgentHeartBeatMap;
   }
 
+  /**
+   * <B>方法名称：getSegmentDetaiDolList</B>
+   * <B>概要说明：组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理</B>
+   * @Author zm
+   * @Date 2022年09月07日 11:09:24
+   * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
+   * @return void
+   **/
   private void getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
     try {
       String reorganizingSpans = segment.getReorganizingSpans();
@@ -523,6 +534,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return null;
   }
 
+  /**
+   * <B>方法名称：reorganizingSpans</B>
+   * <B>概要说明：重组span数据，返回前端使用</B>
+   * @Author zm
+   * @Date 2022年09月07日 11:09:00
+   * @Param [segmentDo, spanList]
+   * @return void
+   **/
   private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
     if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
       // log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
@@ -537,17 +556,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         List<Span> childrenSpan = new ArrayList<>();
         childrenSpan.add(span);
 
-        String ips = span.getIp();
-        if(StringUtil.isNotBlank(ips)){
-          if(ips.contains(",")){
-            String[] splits = ips.split(",");
-            for (String ip : splits) {
-              ipHashSet.add(ip);
-            }
-          }else{
-            ipHashSet.add(ips);
-          }
-        }
+        // 获取用户登录的ip；2022-09-07 11:17:09
+        getIps(ipHashSet,span);
+
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
         getData(segmentDo, span, linkedList);
         findChildrenDetail(segmentDo, spanList, span, childrenSpan, linkedList);
@@ -558,6 +569,28 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
     String toString = linkedList.toString();
     segmentDo.setReorganizingSpans(toString);
+  }
+
+  /**
+   * <B>方法名称：getIps</B>
+   * <B>概要说明：获取用户登录的ip</B>
+   * @Author zm
+   * @Date 2022年09月07日 11:09:26
+   * @Param [ipHashSet, span]
+   * @return void
+   **/
+  private void getIps(LinkedHashSet<String> ipHashSet, Span span) {
+    String ips = span.getIp();
+    if(StringUtil.isNotBlank(ips)){
+      if(ips.contains(",")){
+        String[] splits = ips.split(",");
+        for (String ip : splits) {
+          ipHashSet.add(ip);
+        }
+      }else{
+        ipHashSet.add(ips);
+      }
+    }
   }
 
   private List<Span> findRoot(List<Span> spans) {
