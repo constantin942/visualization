@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.AiitUserLoginStatisticsMapper">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="is_delete" jdbcType="INTEGER" property="isDelete"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="password_error_count" jdbcType="INTEGER" property="passwordErrorCount"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, is_delete, gmt_create, gmt_modified, user_name, password_error_count, description
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+        <include refid="Base_Column_List"/>
+    from user_login_statistics
+    where id=#{id,jdbcType=INTEGER}
+  </select>
+    <select id="selectPasswordErrorCount" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from user_login_statistics
+        where is_delete=0 AND user_name=#{userName}
+    </select>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+        insert into user_login_statistics
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="isDelete != null">
+                is_delete,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified,
+            </if>
+            <if test="userName != null">
+                user_name,
+            </if>
+            <if test="passwordErrorCount != null">
+                password_error_count,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="isDelete != null">
+                #{isDelete,jdbcType=INTEGER},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="userName != null">
+                #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="passwordErrorCount != null">
+                #{passwordErrorCount,jdbcType=INTEGER},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+        update user_login_statistics
+        <set>
+            <if test="isDelete != null">
+                is_delete=#{isDelete,jdbcType=INTEGER},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create=#{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified=#{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="userName != null">
+                user_name=#{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="passwordErrorCount != null">
+                password_error_count=#{passwordErrorCount,jdbcType=INTEGER},
+            </if>
+            <if test="description != null">
+                description=#{description,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id=#{id,jdbcType=INTEGER}
+    </update>
+    <update id="updatePasswordErrorCount" parameterType="java.lang.String">
+        update user_login_statistics
+        set password_error_count=password_error_count + 1
+        where is_delete=0 and  user_name #{userName,jdbcType=VARCHAR}
+    </update>
+</mapper>

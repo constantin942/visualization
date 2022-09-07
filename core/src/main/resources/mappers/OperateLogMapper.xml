@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.dao.OperateLogMapper">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.OperateLog">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="login_ip" jdbcType="VARCHAR" property="loginIp"/>
+        <result column="method_name" jdbcType="VARCHAR" property="methodName"/>
+        <result column="request_url" jdbcType="VARCHAR" property="requestUrl"/>
+        <result column="request_params" jdbcType="VARCHAR" property="requestParams"/>
+        <result column="response_params" jdbcType="VARCHAR" property="responseParams"/>
+        <result column="order_id" jdbcType="VARCHAR" property="orderId"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id,
+    date_format(gmt_create, '%Y-%m-%d %H:%i:%s') as gmt_create,
+    date_format(gmt_modified, '%Y-%m-%d %H:%i:%s') as gmt_modified,
+    user_name,
+    login_ip,
+    method_name,
+    request_url,
+    request_params,
+    response_params,
+    order_id
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from operate_log
+        where id=#{id,jdbcType=BIGINT}
+    </select>
+    <select id="selectByOrderId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from operate_log
+        where is_delete=0 and  order_id=#{orderId,jdbcType=BIGINT}
+    </select>
+    <select id="selectAllOperationLog" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from operate_log
+        where is_delete=0
+        <if test="userName != null and  userName != ''">
+            AND user_name=#{userName}
+        </if>
+        <if test="loginIp != null and  loginIp != ''">
+            AND login_ip=#{loginIp}
+        </if>
+        <if test="methodName != null and  methodName != ''">
+            AND method_name=#{methodName}
+        </if>
+        <if test="createTimeStart != null and  createTimeStart != ''">
+            AND gmt_create <![CDATA[   >=  ]]> #{createTimeStart}
+        </if>
+        <if test="createTimeEnd != null and  createTimeEnd != ''">
+            AND gmt_create <![CDATA[   <  ]]> #{createTimeEnd}
+        </if>
+        <if test="orderId != null and  orderId != ''">
+            AND order_id=#{orderId}
+        </if>
+        order by id desc
+        <if test="pageNo != null and  pageSize != null   ">
+            LIMIT #{pageNo},#{pageSize}
+        </if>
+
+    </select>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.OperateLog">
+        insert into operate_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified,
+            </if>
+            <if test="userName != null">
+                user_name,
+            </if>
+            <if test="loginIp != null">
+                login_ip,
+            </if>
+            <if test="methodName != null">
+                method_name,
+            </if>
+            <if test="requestUrl != null">
+                request_url,
+            </if>
+            <if test="requestParams != null">
+                request_params,
+            </if>
+            <if test="responseParams != null">
+                response_params,
+            </if>
+            <if test="orderId != null">
+                order_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="userName != null">
+                #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="loginIp != null">
+                #{loginIp,jdbcType=VARCHAR},
+            </if>
+            <if test="methodName != null">
+                #{methodName,jdbcType=VARCHAR},
+            </if>
+            <if test="requestUrl != null">
+                #{requestUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="requestParams != null">
+                #{requestParams,jdbcType=VARCHAR},
+            </if>
+            <if test="responseParams != null">
+                #{responseParams,jdbcType=VARCHAR},
+            </if>
+            <if test="orderId != null">
+                #{orderId,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.OperateLog">
+        update operate_log
+        <set>
+            <if test="gmtCreate != null">
+                gmt_create=#{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified=#{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="userName != null">
+                user_name=#{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="loginIp != null">
+                login_ip=#{loginIp,jdbcType=VARCHAR},
+            </if>
+            <if test="methodName != null">
+                method_name=#{methodName,jdbcType=VARCHAR},
+            </if>
+            <if test="requestUrl != null">
+                request_url=#{requestUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="requestParams != null">
+                request_params=#{requestParams,jdbcType=VARCHAR},
+            </if>
+            <if test="responseParams != null">
+                response_params=#{responseParams,jdbcType=VARCHAR},
+            </if>
+            <if test="orderId != null">
+                order_id=#{orderId,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id=#{id,jdbcType=BIGINT}
+    </update>
+</mapper>

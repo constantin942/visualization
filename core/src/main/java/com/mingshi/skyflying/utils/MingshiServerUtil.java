@@ -66,6 +66,17 @@ public class MingshiServerUtil {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
 
+
+  /**
+   * 产生字符串类型的订单号
+   */
+  public String getOrderId(String orderId) {
+    if (StringUtil.isBlank(orderId)) {
+      orderId = SnowflakeIdWorker.generateStringId();
+    }
+    return orderId;
+  }
+
   /**
    * <B>方法名称：setDbTypeAndOperationType</B>
    * <B>概要说明：给MsSegmentDetailDo实例设置dbType类型和operationType类型</B>
