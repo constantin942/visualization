@@ -55,9 +55,9 @@ public class ScheduledTask {
   @Scheduled(cron = "0 */3 * * * ?")
   // 每隔2小时执行一次；
   // @Scheduled(cron = "0 0 0/2 * * ?")
-  // public void scheduledUpdateUserNameByToken() {
-  //   execitonScheduledTaskList.doScheduledUpdateUserNameByToken(Const.SCHEDULED_UPDATE_USER_NAME_BY_TOKEN);
-  // }
+  public void scheduledUpdateUserNameByToken() {
+    execitonScheduledTaskList.doScheduledUpdateUserNameByToken(Const.SCHEDULED_UPDATE_USER_NAME_BY_TOKEN);
+  }
 
   /**
    * <B>方法名称：scheduledUpdateUserNameByGlobalTraceId</B>
@@ -72,9 +72,9 @@ public class ScheduledTask {
   @Scheduled(cron = "0 */3 * * * ?")
   // 每隔2小时执行一次；
   // @Scheduled(cron = "0 0 0/2 * * ?")
-  // public void scheduledUpdateUserNameByGlobalTraceId() {
-  //   execitonScheduledTaskList.doScheduledUpdateUserNameByGlobalTraceId(Const.SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID);
-  // }
+  public void scheduledUpdateUserNameByGlobalTraceId() {
+    execitonScheduledTaskList.doScheduledUpdateUserNameByGlobalTraceId(Const.SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID);
+  }
 
   /**
    * <B>方法名称：scheduledUpdateUserPortraitByVisitedTime</B>
