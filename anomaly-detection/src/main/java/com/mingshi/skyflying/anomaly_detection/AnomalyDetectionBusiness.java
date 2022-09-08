@@ -39,7 +39,7 @@ public class AnomalyDetectionBusiness {
     CoarseSegmentDetailOnTimeMapper coarseSegmentDetailOnTimeMapper;
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
-    private String PREFIX;
+    private  String PREFIX;
 
     private final String MORNING = "morning";
 
@@ -52,10 +52,8 @@ public class AnomalyDetectionBusiness {
 
     /**
      * 判断是否告警
-     *
-     * @param segmentDetailDo
      */
-    private void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         if (segmentDetailDo.getUserName() == null) return;
         String userName = segmentDetailDo.getUserName();
         String time = segmentDetailDo.getStartTime();
@@ -155,6 +153,8 @@ public class AnomalyDetectionBusiness {
      */
     private Double getRateByInterVal(String username, String interval) {
         String redisKey = buildRedisKey(username, interval);
-        return (Double) redisPoolUtil.get(redisKey);
+        Object o = redisPoolUtil.get(redisKey);
+        if(o == null)   return null;
+        return Double.parseDouble((String) o);
     }
 }

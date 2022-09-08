@@ -1009,10 +1009,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         segment.setToken(token);
       }
 
-      String ip = segmentObject.getIp();
-      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
-        segment.setIp(ip);
-      }
+//      String ip = segmentObject.getIp();
+//      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
+//        segment.setIp(ip);
+//      }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
     }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper">
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into user_portrait_by_table (username, table_name, count)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.username,jdbcType=VARCHAR}, #{item.tableName,jdbcType=VARCHAR}, #{item.count,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

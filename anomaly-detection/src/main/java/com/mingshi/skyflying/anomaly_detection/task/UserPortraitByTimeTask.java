@@ -13,9 +13,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -66,7 +63,7 @@ public class UserPortraitByTimeTask {
     /**
      * Redis分布式锁Key
      */
-    public static final String REDIS_LOCK = "anomaly_detection:insInfo2Coarse";
+    public static final String REDIS_LOCK = "anomaly_detection:insInfo2CoarseOnTime";
 
     /**
      * 每日定时任务 : 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis
@@ -138,7 +135,12 @@ public class UserPortraitByTimeTask {
         List<UserPortraitByTimeDo> userPortraitByTimeDos = new ArrayList<>();
         for (VisitCountOnTimeInterval visitCountOnTimeInterval : countOnTimeIntervalList) {
             double counts = 1.0 * visitCountOnTimeInterval.getCounts();
-            userPortraitByTimeDos.add(UserPortraitByTimeDo.builder().username(visitCountOnTimeInterval.getUsername()).morningRate(calAccuracy(visitCountOnTimeInterval.getMorningCount() / counts)).afternoonRate(calAccuracy(visitCountOnTimeInterval.getAfternoonCount() / counts)).nightRate(calAccuracy(visitCountOnTimeInterval.getNightCount() / counts)).build());
+            userPortraitByTimeDos.add(UserPortraitByTimeDo.builder()
+                    .username(visitCountOnTimeInterval.getUsername())
+                    .morningRate(calAccuracy(visitCountOnTimeInterval.getMorningCount() / counts))
+                    .afternoonRate(calAccuracy(visitCountOnTimeInterval.getAfternoonCount() / counts))
+                    .nightRate(calAccuracy(visitCountOnTimeInterval.getNightCount() / counts))
+                    .build());
         }
         return userPortraitByTimeDos;
     }
@@ -185,6 +187,34 @@ public class UserPortraitByTimeTask {
         for (int i = 1; i < 24; i++) {
             sum += counter[i];
         }
-        return CoarseSegmentDetailOnTimeDo.builder().username(username).timeIntervalCount01(counter[0]).timeIntervalCount12(counter[1]).timeIntervalCount23(counter[2]).timeIntervalCount34(counter[3]).timeIntervalCount45(counter[4]).timeIntervalCount56(counter[5]).timeIntervalCount67(counter[6]).timeIntervalCount78(counter[7]).timeIntervalCount89(counter[8]).timeIntervalCount910(counter[9]).timeIntervalCount1011(counter[10]).timeIntervalCount1112(counter[11]).timeIntervalCount1213(counter[12]).timeIntervalCount1314(counter[13]).timeIntervalCount1415(counter[14]).timeIntervalCount1516(counter[15]).timeIntervalCount1617(counter[16]).timeIntervalCount1718(counter[17]).timeIntervalCount1819(counter[18]).timeIntervalCount1920(counter[19]).timeIntervalCount2021(counter[20]).timeIntervalCount2122(counter[21]).timeIntervalCount2223(counter[22]).timeIntervalCount2324(counter[23]).counts(sum).build();
+        return CoarseSegmentDetailOnTimeDo
+                .builder()
+                .username(username)
+                .timeIntervalCount01(counter[0])
+                .timeIntervalCount12(counter[1])
+                .timeIntervalCount23(counter[2])
+                .timeIntervalCount34(counter[3])
+                .timeIntervalCount45(counter[4])
+                .timeIntervalCount56(counter[5])
+                .timeIntervalCount67(counter[6])
+                .timeIntervalCount78(counter[7])
+                .timeIntervalCount89(counter[8])
+                .timeIntervalCount910(counter[9])
+                .timeIntervalCount1011(counter[10])
+                .timeIntervalCount1112(counter[11])
+                .timeIntervalCount1213(counter[12])
+                .timeIntervalCount1314(counter[13])
+                .timeIntervalCount1415(counter[14])
+                .timeIntervalCount1516(counter[15])
+                .timeIntervalCount1617(counter[16])
+                .timeIntervalCount1718(counter[17])
+                .timeIntervalCount1819(counter[18])
+                .timeIntervalCount1920(counter[19])
+                .timeIntervalCount2021(counter[20])
+                .timeIntervalCount2122(counter[21])
+                .timeIntervalCount2223(counter[22])
+                .timeIntervalCount2324(counter[23])
+                .counts(sum)
+                .build();
     }
 }
