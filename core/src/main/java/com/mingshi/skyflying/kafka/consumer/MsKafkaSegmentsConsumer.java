@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
@@ -34,7 +35,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
    */
   private volatile AtomicBoolean isInitDone = new AtomicBoolean(false);
 
-  org.apache.kafka.clients.consumer.KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
+  private KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
   public MsKafkaSegmentsConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
     this.aiitKafkaConsumerUtil = aiitKafkaConsumerUtil;
