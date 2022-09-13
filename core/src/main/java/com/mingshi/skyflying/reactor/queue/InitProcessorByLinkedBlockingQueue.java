@@ -104,6 +104,11 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
    * @Param []
    * @return com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue
    **/
+  public static ProcessorHandlerByLinkedBlockingQueue getProcessor(Integer partition) {
+    int index = ReactorUtil.indexFor(partition, processorSize);
+    return processorHandlerByLinkedBlockingQueueList.get(index);
+  }
+
   public static ProcessorHandlerByLinkedBlockingQueue getProcessor() {
     // 当自增的原子类实例自增到processor线程数量时，就重置为0；2021-10-20 14:26:25
     if (indexAtomicInteger.get() == processorSize) {
@@ -113,4 +118,5 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);
     return processorHandlerByLinkedBlockingQueueList.get(index);
   }
+
 }

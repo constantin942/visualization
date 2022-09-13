@@ -7,6 +7,8 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.utils.Bytes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -126,14 +128,14 @@ public class ProcessorByDisruptor implements ApplicationRunner {
    * @Date 2022年07月22日 20:07:29
    * @Param [data]
    **/
-  public boolean offer(byte[] data) {
+  public boolean offer(ConsumerRecord<String, Bytes> consumerRecord) {
     // 获取待存放元素的数组下标；2022-07-17 10:34:41
     long sequence = acceptorRingBuffer.next();
     try {
       // 根据下标，从数组中获取该下标位置的对象/实例；2022-07-17 10:36:01
       SegmentByByte segmentByByte = acceptorRingBuffer.get(sequence);
       // 给获取到的对象/实例赋值；2022-07-17 10:36:34
-      segmentByByte.setData(data);
+      segmentByByte.setRecord(consumerRecord);
       return true;
     } catch (Exception e) {
       log.error("当前线程【{}】往disruptor中存放数据时，出现了异常。", Thread.currentThread().getName());

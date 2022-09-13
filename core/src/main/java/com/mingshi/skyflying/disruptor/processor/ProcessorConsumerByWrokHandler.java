@@ -18,12 +18,12 @@ public class ProcessorConsumerByWrokHandler implements WorkHandler<SegmentByByte
 
   /**
    * 在多消费者的情况下使用。每个消费者只会消费其中一个消息。2021-12-23 07:53:11
-   * @param data
+   * @param segmentByByte
    */
   @Override
-  public void onEvent(SegmentByByte data) {
+  public void onEvent(SegmentByByte segmentByByte) {
     try {
-      segmentConsumerService.consumeByDisruptor(data,true);
+      segmentConsumerService.consumeByDisruptor(segmentByByte,true);
     } catch (Exception e) {
       log.error("# ConsumerByEventHandler.onEvent() # 出现了异常。", e);
     }

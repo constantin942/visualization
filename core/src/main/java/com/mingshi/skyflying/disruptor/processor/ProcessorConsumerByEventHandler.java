@@ -18,15 +18,15 @@ public class ProcessorConsumerByEventHandler implements EventHandler<SegmentByBy
 
   /**
    * 在单消费者的情况下使用。2021-12-23 07:53:11
-   * @param data
+   * @param segmentByByte
    * @param l
    * @param b
    * @throws Exception
    */
   @Override
-  public void onEvent(SegmentByByte data, long l, boolean b) throws Exception {
+  public void onEvent(SegmentByByte segmentByByte, long l, boolean b) throws Exception {
     try {
-      segmentConsumerService.consumeByDisruptor(data,true);
+      segmentConsumerService.consumeByDisruptor(segmentByByte,true);
     } catch (Exception e) {
       log.error("# ProcessorConsumerByEventHandler.onEvent() # 出现了异常。", e);
     }

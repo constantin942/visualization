@@ -1,6 +1,8 @@
 package com.mingshi.skyflying.disruptor.processor;
 
 import lombok.Data;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.utils.Bytes;
 
 /**
  * @ClassName FlowsDataWapper
@@ -12,12 +14,16 @@ import lombok.Data;
 @Data
 public class SegmentByByte {
 
-  private byte[] data;
+  // private byte[] data;
+  ConsumerRecord<String, Bytes> record;
 
   public SegmentByByte() {
   }
 
-  public void setSegmentByByte(byte[] data) {
-    this.data = data;
+  public void setSegmentByByte(ConsumerRecord<String, Bytes> record) {
+    this.record = record;
   }
+  // public void setSegmentByByte(byte[] data) {
+  //   this.data = data;
+  // }
 }

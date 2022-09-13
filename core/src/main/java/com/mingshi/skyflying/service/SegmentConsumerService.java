@@ -8,8 +8,8 @@ import org.apache.kafka.common.utils.Bytes;
 
 public interface SegmentConsumerService extends ParentService<SegmentDetailDo, Long> {
 
-  ServerResponse<String> consume(ConsumerRecord<String, Bytes> msg, Boolean enableReactorModelFlag);
+  ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception;
 
-  ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag);
+  ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception;
 
 }

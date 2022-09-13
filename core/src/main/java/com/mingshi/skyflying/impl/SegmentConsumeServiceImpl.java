@@ -51,32 +51,38 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private SegmentDao segmentDao;
 
   @Override
-  public ServerResponse<String> consume(ConsumerRecord<String, Bytes> record, Boolean enableReactorModelFlag) {
-    SegmentObject segmentObject = null;
-    try {
-      segmentObject = SegmentObject.parseFrom(record.value().get());
-      doConsume(segmentObject, enableReactorModelFlag);
-    } catch (InvalidProtocolBufferException e) {
-      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
-    }
+  public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+    doConsume(consumerRecord, enableReactorModelFlag);
+    // SegmentObject segmentObject = null;
+    // try {
+    //   segmentObject = SegmentObject.parseFrom(record.value().get());
+    //   doConsume(segmentObject, enableReactorModelFlag);
+    // } catch (InvalidProtocolBufferException e) {
+    //   log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+    // }
     return null;
   }
 
   @Override
-  public ServerResponse<String> consumeByDisruptor(SegmentByByte record, Boolean enableReactorModelFlag) {
-    SegmentObject segmentObject = null;
-    try {
-      if (null != record) {
-        segmentObject = SegmentObject.parseFrom(record.getData());
-        doConsume(segmentObject, enableReactorModelFlag);
-      }
-    } catch (InvalidProtocolBufferException e) {
-      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
-    }
+  public ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception {
+    ConsumerRecord<String, Bytes> record = segmentByByte.getRecord();
+    doConsume(record, enableReactorModelFlag);
+    // SegmentObject segmentObject = null;
+    // try {
+    //   if (null != record) {
+    //     segmentObject = SegmentObject.parseFrom(record.getData());
+    //     doConsume(segmentObject, enableReactorModelFlag);
+    //   }
+    // } catch (InvalidProtocolBufferException e) {
+    //   log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+    // }
     return null;
   }
 
-  private void doConsume(SegmentObject segmentObject, Boolean enableReactorModelFlag) {
+  private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+  // private void doConsume(SegmentObject segmentObject, Boolean enableReactorModelFlag) {
+    SegmentObject segmentObject = getSegmentObject(consumerRecord);
+
     HashSet<String> userHashSet = new HashSet<>();
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
@@ -132,6 +138,25 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
+  }
+
+  /**
+   * <B>方法名称：getSegmentObject</B>
+   * <B>概要说明：从ConsumerRecord实例中获取SegmentObject实例</B>
+   * @Author zm
+   * @Date 2022年09月13日 15:09:41
+   * @Param [record]
+   * @return org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
+   **/
+  private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception{
+    SegmentObject segmentObject = null;
+    try {
+      segmentObject = SegmentObject.parseFrom(record.value().get());
+    } catch (InvalidProtocolBufferException e) {
+      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+      throw new RuntimeException();
+    }
+    return segmentObject;
   }
 
   /**

@@ -45,6 +45,30 @@ public class MsKafkaSegmentsConsumer extends Thread {
   }
 
   /**
+   * <B>方法名称：getAiitKafkaConsumer</B>
+   * <B>概要说明：获取消费者线程</B>
+   * @Author zm
+   * @Date 2022年09月13日 13:09:48
+   * @Param
+   * @return
+   **/
+  public KafkaConsumer<String, Bytes> getAiitKafkaConsumer(){
+    return aiitKafkaConsumer;
+  }
+
+  /**
+   * <B>方法名称：getIsInitDone</B>
+   * <B>概要说明：消费者线程初始化完毕的标志</B>
+   * @Author zm
+   * @Date 2022年09月13日 13:09:29
+   * @Param []
+   * @return java.util.concurrent.atomic.AtomicBoolean
+   **/
+  public Boolean getIsInitDone(){
+    return isInitDone.get();
+  }
+
+  /**
    * <B>方法名称：init</B>
    * <B>概要说明：初始化消费者配置信息</B>
    *
@@ -86,12 +110,12 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
   @Override
   public void run() {
-    // init();
-    // if (false == isInitDone.get()) {
-    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-    //   return;
-    // }
-    // doRun();
+    init();
+    if (false == isInitDone.get()) {
+      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+      return;
+    }
+    doRun();
   }
 
   private void doRun() {

@@ -44,7 +44,7 @@ public class AiitKafkaConsumerUtil {
    * @Date 2022年07月22日 20:07:28
    * @Param [record]
    **/
-  public void useReactorModelByDisruptor(ConsumerRecord<String, Bytes> msg) {
+  public void useReactorModelByDisruptor(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
       while (Boolean.FALSE.equals(processorByDisruptor.getCreateProcessorsFinishedFlag())) {
         log.error("Disruptor还没有创建完毕，等待一会。");
@@ -53,7 +53,7 @@ public class AiitKafkaConsumerUtil {
     } catch (Exception e) {
       log.error("在等待创建Disruptor完毕时，出现了异常。", e);
     }
-    processorByDisruptor.offer(msg.value().get());
+    processorByDisruptor.offer(consumerRecord);
   }
 
   /**
@@ -65,28 +65,27 @@ public class AiitKafkaConsumerUtil {
    * @Date 2022年05月19日 17:05:03
    * @Param [record]
    **/
-  public void useNoReactorModel(ConsumerRecord<String, Bytes> msg) {
+  public void useNoReactorModel(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
-      segmentConsumerService.consume(msg, false);
+      segmentConsumerService.consume(consumerRecord, false);
     } catch (Exception e) {
       log.error("清洗调用链信息时，出现了异常。", e);
     }
   }
 
-  public void doOnMessage(ConsumerRecord<String, Bytes> msg) {
-    // 统计每秒钟kafka消费者能够拿到多少消息
+  public void doOnMessage(ConsumerRecord<String, Bytes> consumerRecord) {
     if (Boolean.TRUE.equals(reactorProcessorEnable)) {
       // 使用Reactor模式；
       if (Boolean.TRUE.equals(reactorProcessorByDisruptor)) {
         // 使用Disruptor无锁高性能队列；2022-07-22 20:57:02
-        useReactorModelByDisruptor(msg);
+        useReactorModelByDisruptor(consumerRecord);
       } else {
         // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
-        ReactorUtil.useReactorModelByLinkedBlockingQueue(msg);
+        ReactorUtil.useReactorModelByLinkedBlockingQueue(consumerRecord);
       }
     } else {
       // 不使用Reactor模式；
-      useNoReactorModel(msg);
+      useNoReactorModel(consumerRecord);
     }
   }
 }

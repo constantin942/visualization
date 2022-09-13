@@ -2,6 +2,8 @@ package com.mingshi.skyflying.kafka.consumer;
 
 import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.utils.Bytes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -33,9 +35,15 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
   private String agentSwitchResponseGroup;
   @Resource
   private MsAgentSwitchMapper msAgentSwitchMapper;
-
   @Resource
   private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
+
+  // 注意：当前项目只创建一个KafkaConsumer实例即可，使用批量拉取消息的方式。这种方式就能满足当前项目的需要，不用创建多个KafkaConsumer实例。2022-09-13 13:43:04
+  private KafkaConsumer<String, Bytes> kafkaConsumer = null;
+
+  public KafkaConsumer<String, Bytes> getKafkaConsumer(){
+    return kafkaConsumer;
+  }
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
@@ -83,5 +91,9 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
     MsKafkaSegmentsConsumer msKafkaSegmentsConsumer = new MsKafkaSegmentsConsumer(aiitKafkaConsumerUtil, bootstrapServers, segmentConsumerTopic, segmentConsumerGroup);
     msKafkaSegmentsConsumer.setName("aiit_kafka_consumer");
     msKafkaSegmentsConsumer.start();
+    // 获取创建好的KafkaConsumer实例。2022-09-13 13:45:21
+    while (true == msKafkaSegmentsConsumer.getIsInitDone() && null == kafkaConsumer){
+      kafkaConsumer = msKafkaSegmentsConsumer.getAiitKafkaConsumer();
+    }
   }
 }
