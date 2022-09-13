@@ -3,7 +3,7 @@ package com.mingshi.skyflying.common.domain;
 import lombok.Data;
 
 @Data
-public class OperateLog {
+public class OperationLog {
     private Long id;
 
     private String gmtCreate;
@@ -23,4 +23,6 @@ public class OperateLog {
     private String responseParams;
 
     private String orderId;
+
+    private String operationDesc;
 }

@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.impl;
 
-import com.mingshi.skyflying.common.domain.OperateLog;
+import com.mingshi.skyflying.common.domain.OperationLog;
 import com.mingshi.skyflying.dao.OperateLogMapper;
 import com.mingshi.skyflying.service.OperateLogService;
 import org.springframework.stereotype.Service;
@@ -16,28 +16,28 @@ import javax.annotation.Resource;
  * @return
  **/
 @Service("operateLogService")
-public class OperateLogServiceImpl extends ParentServiceImpl<OperateLog, Long> implements OperateLogService {
+public class OperateLogServiceImpl extends ParentServiceImpl<OperationLog, Long> implements OperateLogService {
 
     @Resource
     private OperateLogMapper aiitOperateLogMapper;
 
     @Override
-    public int insertSelective(OperateLog record) {
+    public int insertSelective(OperationLog record) {
         return aiitOperateLogMapper.insertSelective(record);
     }
 
     @Override
-    public OperateLog selectByPrimaryKey(Long id) {
+    public OperationLog selectByPrimaryKey(Long id) {
         return aiitOperateLogMapper.selectByPrimaryKey(id);
     }
 
     @Override
-    public OperateLog selectByOrderId(String orderId) {
+    public OperationLog selectByOrderId(String orderId) {
         return aiitOperateLogMapper.selectByOrderId(orderId);
     }
 
     @Override
-    public int updateByPrimaryKeySelective(OperateLog record) {
+    public int updateByPrimaryKeySelective(OperationLog record) {
         return aiitOperateLogMapper.updateByPrimaryKeySelective(record);
     }
 

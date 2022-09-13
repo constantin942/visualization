@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 // 将数据库连接池里的事务交给springboot管理；2022-09-05 17:51:18
 // @EnableTransactionManagement
-@ComponentScan(basePackages = {"com.mingshi.skyflying.*"})
+@ComponentScan(basePackages = {"com.mingshi.skyflying.*","com.mingshi.web.*"})
 @MapperScan({"com.mingshi.skyflying.dao", "com.mingshi.skyflying.anomaly_detection.dao"})
 public class SkywalkingMingshiServerApplication {
 

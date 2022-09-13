@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -12,12 +13,13 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @ClassName AspectUtil
- *
+ * <p>
  * Author apple
  * Date 2020/2/2 16:09
  * @Version 1.0
@@ -27,14 +29,14 @@ import java.util.Map;
 public class AspectUtil {
 
   // 方法执行超时时间
-  private final long maxReduceTime=1000;
+  private final long maxReduceTime = 1000;
 
 
   public ServerResponse<String> excute(ProceedingJoinPoint joinPoint) {
-    ServerResponse<String> resObj=null;
+    ServerResponse<String> resObj = null;
     try {
       //执行原方法
-      resObj=(ServerResponse<String>) joinPoint.proceed();
+      resObj = (ServerResponse<String>) joinPoint.proceed();
     } catch (Exception e) {
       log.error("方法执行异常!", e);
     } catch (Throwable throwable) {
@@ -52,32 +54,34 @@ public class AspectUtil {
    **/
   public Map<String, Object> getRequestLog(JoinPoint joinPoint) {
     //获取到请求的属性
-    ServletRequestAttributes attributes=(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     //获取到请求对象
-    HttpServletRequest request=attributes.getRequest();
-    Map<String, Object> map=new HashMap<>();
-    String methodType=request.getMethod();
-    String method=joinPoint.getSignature().getName();
-    String className=joinPoint.getSignature().getDeclaringTypeName();
+    HttpServletRequest request = attributes.getRequest();
+
+    ObjectNode jsonObject = JsonUtil.createJsonObject();
+    Enumeration<String> parameterNames = request.getParameterNames();
+    if (null != parameterNames) {
+      while (parameterNames.hasMoreElements()) {
+        String key = parameterNames.nextElement();
+        String parameter = request.getParameter(key);
+        jsonObject.put(key, parameter);
+      }
+    }
+
+    Map<String, Object> map = new HashMap<>();
+    String methodType = request.getMethod();
+    String method = joinPoint.getSignature().getName();
+    String className = joinPoint.getSignature().getDeclaringTypeName();
     //URL：根据请求对象拿到访问的地址
     map.put("url", request.getRequestURL());
+    map.put("params", jsonObject.toString());
 
-    String oldPassword=request.getParameter("oldPassword");
-    String newPassword=request.getParameter("newPassword");
-    String userName=request.getParameter("userName");
-    String addUserName=request.getParameter("addUserName");
-    String addPassword=request.getParameter("addPassword");
-    String addPhone=request.getParameter("addPhone");
-    if(null != request.getParameter("roleId")){
-      Integer roleId=Integer.valueOf(request.getParameter("roleId"));
+    String userName = request.getParameter("userName");
+    if (null != request.getParameter("roleId")) {
+      Integer roleId = Integer.valueOf(request.getParameter("roleId"));
       map.put("roleId", roleId);
     }
-    map.put("oldPassword", oldPassword);
-    map.put("newPassword", newPassword);
     map.put("userName", userName);
-    map.put("addUserName", addUserName);
-    map.put("addPassword", addPassword);
-    map.put("addPhone", addPhone);
     map.put("methodType", methodType);
     map.put("method", method);
     //ip：获取到访问
@@ -90,15 +94,15 @@ public class AspectUtil {
   }
 
   public ServerResponse<String> excute(ProceedingJoinPoint joinPoint, String phone) {
-    ServerResponse<String> resObj=null;
-    Object[] args=null;
+    ServerResponse<String> resObj = null;
+    Object[] args = null;
     try {
-      args=joinPoint.getArgs();
+      args = joinPoint.getArgs();
       // if(0 < args.length){
-        args[args.length - 1]=phone;
+      args[args.length - 1] = phone;
       // }
       //执行原方法
-      resObj=(ServerResponse<String>) joinPoint.proceed(args);
+      resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
       log.error("方法执行异常!", e);
     } catch (Throwable throwable) {
@@ -107,15 +111,15 @@ public class AspectUtil {
     return resObj;
   }
 
-  public ServerResponse<String> excute(ProceedingJoinPoint joinPoint,String oldPassword,String newPassword, String userName) {
-    ServerResponse<String> resObj=null;
+  public ServerResponse<String> excute(ProceedingJoinPoint joinPoint, String oldPassword, String newPassword, String userName) {
+    ServerResponse<String> resObj = null;
     try {
-      Object[] args=joinPoint.getArgs();
-      args[0]=oldPassword;
-      args[1]=newPassword;
-      args[2]=userName;
+      Object[] args = joinPoint.getArgs();
+      args[0] = oldPassword;
+      args[1] = newPassword;
+      args[2] = userName;
       //执行原方法
-      resObj=(ServerResponse<String>) joinPoint.proceed(args);
+      resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
       log.error("方法执行异常!", e);
     } catch (Throwable throwable) {
@@ -124,18 +128,18 @@ public class AspectUtil {
     return resObj;
   }
 
-  public ServerResponse<String> excute(ProceedingJoinPoint joinPoint,String creator, String addUserName,String addPassword,String addPhone,Integer ruleId, HttpServletRequest request) {
-    ServerResponse<String> resObj=null;
+  public ServerResponse<String> excute(ProceedingJoinPoint joinPoint, String creator, String addUserName, String addPassword, String addPhone, Integer ruleId, HttpServletRequest request) {
+    ServerResponse<String> resObj = null;
     try {
-      Object[] args=joinPoint.getArgs();
-      args[0]=addUserName;
-      args[1]=addPassword;
-      args[2]=addPhone;
-      args[3]=ruleId;
-      args[4]=creator;
-      args[5]=request;
+      Object[] args = joinPoint.getArgs();
+      args[0] = addUserName;
+      args[1] = addPassword;
+      args[2] = addPhone;
+      args[3] = ruleId;
+      args[4] = creator;
+      args[5] = request;
       //执行原方法
-      resObj=(ServerResponse<String>) joinPoint.proceed(args);
+      resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
       log.error("方法执行异常!", e);
     } catch (Throwable throwable) {
@@ -145,14 +149,14 @@ public class AspectUtil {
   }
 
 
-  public void outputLog(Instant startTime , Map<String, Object> map, String responseInfo, String methodName) {
+  public void outputLog(Instant startTime, Map<String, Object> map, String responseInfo, String methodName) {
     // 计算耗时
-    Long diffTime=this.getTimeMillis(startTime);
+    Long diffTime = this.getTimeMillis(startTime);
 
-    Map<String, Object> mapTemp=new HashMap<>();
+    Map<String, Object> mapTemp = new HashMap<>();
     mapTemp.put("requestInfo", map);
     mapTemp.put("responseInfo", responseInfo);
-    String temp="执行接口" + methodName + "所花时间";
+    String temp = "执行接口" + methodName + "所花时间";
     mapTemp.put(temp, diffTime + " ms");
 //    log.info("===================接口 " + methodName + " 执行结束===================" + JsonUtil.obj2String(mapTemp));
   }
@@ -166,7 +170,7 @@ public class AspectUtil {
    * @Param [instStart]
    **/
   public long getTimeMillis(Instant instStart) {
-    Instant instEnd=Instant.now();
+    Instant instEnd = Instant.now();
     return Duration.between(instStart, instEnd).toMillis();
   }
 

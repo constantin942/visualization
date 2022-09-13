@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class SysOperatorRole {
+public class SysMenuRole {
     private Integer id;
 
     private Byte isDelete;
@@ -18,7 +18,7 @@ public class SysOperatorRole {
 
     private String modifier;
 
-    private Integer operatorId;
+    private Integer menuId;
 
     private Integer roleId;
 }

@@ -1,33 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.SysOperatorRoleDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SysOperatorRole">
-    <id column="id" jdbcType="BIGINT" property="id" />
+<mapper namespace="com.mingshi.skyflying.dao.SysMenuDao">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SysMenu">
+    <id column="id" jdbcType="INTEGER" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
-    <result column="modifier" jdbcType="VARCHAR" property="modifier" />
-    <result column="operator_id" jdbcType="BIGINT" property="operatorId" />
-    <result column="role_id" jdbcType="BIGINT" property="roleId" />
+    <result column="type" jdbcType="TINYINT" property="type" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="href" jdbcType="VARCHAR" property="href" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, creator, modifier, operator_id, role_id
+    id, is_delete, gmt_create, gmt_modified, creator, type, title,
+    href
   </sql>
-  <select id="selectBySysOperatorId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from sys_operator_role
-    where operator_id=#{operatorId,jdbcType=BIGINT} and  is_delete=0
+    from sys_menu
+    where id=#{id,jdbcType=INTEGER} and  is_delete=0 order by id asc
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from sys_operator_role
-    where id=#{id,jdbcType=BIGINT} and  is_delete=0
-  </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SysOperatorRole">
-    insert into sys_operator_role
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SysMenu">
+    insert into sys_menu
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -44,19 +39,19 @@
       <if test="creator != null">
         creator,
       </if>
-      <if test="modifier != null">
-        modifier,
+      <if test="type != null">
+        type,
       </if>
-      <if test="operatorId != null">
-        operator_id,
+      <if test="title != null">
+        title,
       </if>
-      <if test="roleId != null">
-        role_id,
+      <if test="href != null">
+        href,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
-        #{id,jdbcType=BIGINT},
+        #{id,jdbcType=INTEGER},
       </if>
       <if test="isDelete != null">
         #{isDelete,jdbcType=TINYINT},
@@ -70,19 +65,25 @@
       <if test="creator != null">
         #{creator,jdbcType=VARCHAR},
       </if>
-      <if test="modifier != null">
-        #{modifier,jdbcType=VARCHAR},
+      <if test="type != null">
+        #{type,jdbcType=TINYINT},
       </if>
-      <if test="operatorId != null">
-        #{operatorId,jdbcType=BIGINT},
+      <if test="menuDesc != null">
+        #{menuDesc,jdbcType=VARCHAR},
       </if>
-      <if test="roleId != null">
-        #{roleId,jdbcType=BIGINT},
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="href != null">
+        #{href,jdbcType=VARCHAR},
+      </if>
+      <if test="isCurrent != null">
+        #{isCurrent,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SysOperatorRole">
-    update sys_operator_role
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SysMenu">
+    update sys_menu
     <set>
       <if test="isDelete != null">
         is_delete=#{isDelete,jdbcType=TINYINT},
@@ -96,16 +97,16 @@
       <if test="creator != null">
         creator=#{creator,jdbcType=VARCHAR},
       </if>
-      <if test="modifier != null">
-        modifier=#{modifier,jdbcType=VARCHAR},
+      <if test="type != null">
+        type=#{type,jdbcType=TINYINT},
       </if>
-      <if test="operatorId != null">
-        operator_id=#{operatorId,jdbcType=BIGINT},
+      <if test="title != null">
+        title=#{title,jdbcType=VARCHAR},
       </if>
-      <if test="roleId != null">
-        role_id=#{roleId,jdbcType=BIGINT},
+      <if test="href != null">
+        href=#{href,jdbcType=VARCHAR},
       </if>
     </set>
-    where id=#{id,jdbcType=BIGINT}
+    where id=#{id,jdbcType=INTEGER}
   </update>
 </mapper>

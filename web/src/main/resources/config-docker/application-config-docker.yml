@@ -152,6 +152,7 @@ server:
   address:
   compression:
     excluded-user-agents:
+  max-http-header-size: 40485760
 
 reactor:
   processor:

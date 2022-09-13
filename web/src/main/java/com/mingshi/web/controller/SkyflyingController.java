@@ -1,5 +1,6 @@
-package com.mingshi.skyflying.controller;
+package com.mingshi.web.controller;
 
+import com.mingshi.skyflying.aspect.AspectAnnotation;
 import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -45,6 +46,46 @@ public class SkyflyingController {
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
   private MsAgentInformationService msAgentInformationService;
+  @Resource
+  private SysMenuService sysMenuService;
+  @Resource
+  private OperationLogService operationLogService;
+
+  /**
+   * <B>方法名称：getHighDangerOperationLog</B>
+   * <B>概要说明：获取高危操作日志</B>
+   *
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+   * @Author zm
+   * @Date 2022年09月09日 15:09:50
+   * @Param [userName]
+   **/
+  @AspectAnnotation(isStart = true)
+  @ResponseBody
+  @GetMapping(value = "/getHighDangerOperationLog")
+  public ServerResponse<String> getHighDangerOperationLog(String userName,
+                                                          @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    ServerResponse<String> sysMenu = operationLogService.getOperationLog(userName, pageNo, pageSize);
+    return sysMenu;
+  }
+
+  /**
+   * <B>方法名称：getSysMenu</B>
+   * <B>概要说明：获取菜单</B>
+   *
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.Object>
+   * @Author zm
+   * @Date 2022年09月09日 09:09:54
+   * @Param [userName]
+   **/
+  @AspectAnnotation(isStart = true)
+  @ResponseBody
+  @RequestMapping(value = "/sysmenu", method = RequestMethod.POST)
+  public ServerResponse<String> getSysMenu(String userName) {
+    ServerResponse<String> sysMenu = sysMenuService.getSysMenu(userName);
+    return sysMenu;
+  }
 
   /**
    * <B>方法名称：allAgentOperationRecord</B>
@@ -67,10 +108,11 @@ public class SkyflyingController {
   /**
    * <B>方法名称：queryAgentStatus</B>
    * <B>概要说明：查询探针状态</B>
+   *
+   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
    * @Author zm
    * @Date 2022年08月26日 10:08:20
    * @Param [serviceInstance]
-   * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
    **/
   @ResponseBody
   @GetMapping(value = "/queryAgentStatus")
@@ -116,9 +158,11 @@ public class SkyflyingController {
     return bySuccess;
   }
 
+  // 记录操作日志的注解；
+  @AspectAnnotation(isStart = true)
   @ResponseBody
-  @GetMapping(value = "/updateMonitorTable")
-  public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc) {
+  @PostMapping(value = "/updateMonitorTableaDesc")
+  public ServerResponse<String> updateMonitorTableaDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
     return bySuccess;
   }
@@ -132,10 +176,12 @@ public class SkyflyingController {
    * @Date 2022年07月13日 14:07:42
    * @Param []
    **/
+  // 记录操作日志的注解；
+  @AspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
   public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
-                                                   @RequestParam(value = "isDelete") Integer isDelete) {
+                                                   @RequestParam(value = "isDelete") Integer isDelete, String tableName) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableInformation(id, isDelete);
     return bySuccess;
   }
@@ -149,11 +195,14 @@ public class SkyflyingController {
    * @Date 2022年06月29日 14:06:30
    * @Param [agentCode, pageNo, pageSize]
    **/
+  // 记录操作日志的注解；
+  @AspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/updateSkywalkingAgent")
   public ServerResponse<String> updateSkywalkingAgent(
     @RequestParam(value = "id") Integer id,
-    @RequestParam(value = "agentName") String agentName) {
+    @RequestParam(value = "agentName") String agentName,
+    String agentCode) {
     ServerResponse<String> bySuccess = msAgentInformationService.updateSkywalkingAgent(id, agentName);
     return bySuccess;
   }
@@ -631,7 +680,7 @@ public class SkyflyingController {
   @ResponseBody
   @GetMapping(value = "/getCoarseCountsOfUser")
   public ServerResponse<String> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
     return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
   }
 

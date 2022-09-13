@@ -1,16 +1,15 @@
 package com.mingshi.skyflying.kafka.consumer;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -86,12 +85,12 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
   @Override
   public void run() {
-    init();
-    if (false == isInitDone.get()) {
-      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-      return;
-    }
-    doRun();
+    // init();
+    // if (false == isInitDone.get()) {
+    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+    //   return;
+    // }
+    // doRun();
   }
 
   private void doRun() {
@@ -107,14 +106,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
         if (count > 0) {
           // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
-          aiitKafkaConsumer.commitAsync(new OffsetCommitCallback() {
-            @Override
-            public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
-              if (exception != null) {
-                log.error("# ConsumerTest.run() # 手动异步提交Kafka的offset = 【{}】失败，其异常信息是【{}】。", offsets, Arrays.toString(exception.getStackTrace()));
-              }
-            }
-          });
+          aiitKafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
         }
       } catch (Exception e) {
         log.error(" # ConsumerTest.run() # 消费消息时，出现了异常。", e);

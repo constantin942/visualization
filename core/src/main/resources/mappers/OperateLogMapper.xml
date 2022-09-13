@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.dao.OperateLogMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.OperateLog">
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.OperationLog">
         <id column="id" jdbcType="BIGINT" property="id"/>
         <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
         <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
@@ -12,6 +12,7 @@
         <result column="request_params" jdbcType="VARCHAR" property="requestParams"/>
         <result column="response_params" jdbcType="VARCHAR" property="responseParams"/>
         <result column="order_id" jdbcType="VARCHAR" property="orderId"/>
+        <result column="operation_desc" jdbcType="VARCHAR" property="operationDesc"/>
     </resultMap>
     <sql id="Base_Column_List">
     id,
@@ -23,7 +24,8 @@
     request_url,
     request_params,
     response_params,
-    order_id
+    order_id,
+    operation_desc
   </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
@@ -66,7 +68,7 @@
         </if>
 
     </select>
-    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.OperateLog">
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.OperationLog">
         insert into operate_log
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -98,6 +100,9 @@
             </if>
             <if test="orderId != null">
                 order_id,
+            </if>
+            <if test="operationDesc != null">
+                operation_desc,
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -131,9 +136,12 @@
             <if test="orderId != null">
                 #{orderId,jdbcType=VARCHAR},
             </if>
+            <if test="operationDesc != null">
+                #{operationDesc,jdbcType=VARCHAR},
+            </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.OperateLog">
+    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.OperationLog">
         update operate_log
         <set>
             <if test="gmtCreate != null">
@@ -162,6 +170,9 @@
             </if>
             <if test="orderId != null">
                 order_id=#{orderId,jdbcType=VARCHAR},
+            </if>
+            <if test="operationDesc != null">
+                operation_desc=#{operationDesc,jdbcType=VARCHAR},
             </if>
         </set>
         where id=#{id,jdbcType=BIGINT}

@@ -1,11 +1,10 @@
 package com.mingshi.skyflying.common.domain;
 
 import lombok.Data;
-
 import java.util.Date;
 
 @Data
-public class SysOperatorRole {
+public class SysMenu {
     private Integer id;
 
     private Byte isDelete;
@@ -16,9 +15,9 @@ public class SysOperatorRole {
 
     private String creator;
 
-    private String modifier;
+    private Byte type;
 
-    private Integer operatorId;
+    private String title;
 
-    private Integer roleId;
+    private String href;
 }

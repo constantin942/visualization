@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.controller;
+package com.mingshi.web.controller;
 
 import com.mingshi.skyflying.common.utils.DbUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;

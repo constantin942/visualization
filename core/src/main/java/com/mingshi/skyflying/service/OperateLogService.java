@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.common.domain.OperateLog;
+import com.mingshi.skyflying.common.domain.OperationLog;
 
 /**
  * <B>方法名称：OperateLogService</B>
@@ -10,14 +10,14 @@ import com.mingshi.skyflying.common.domain.OperateLog;
  * @Param
  * @return
  **/
-public interface OperateLogService extends ParentService<OperateLog, Long> {
+public interface OperateLogService extends ParentService<OperationLog, Long> {
 
-    int insertSelective(OperateLog record);
+    int insertSelective(OperationLog record);
 
-    OperateLog selectByPrimaryKey(Long id);
+    OperationLog selectByPrimaryKey(Long id);
 
-    OperateLog selectByOrderId(String orderId);
+    OperationLog selectByOrderId(String orderId);
 
-    int updateByPrimaryKeySelective(OperateLog record);
+    int updateByPrimaryKeySelective(OperationLog record);
 
 }

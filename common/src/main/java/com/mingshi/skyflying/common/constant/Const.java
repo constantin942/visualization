@@ -25,6 +25,13 @@ public class Const {
   public static final String METHOD = "method";
   public static final String PARAMS = "params";
   public static final String ORDER_ID = "orderId";
+  public static final String UPDATE_MONITOR_TABLE = "updateMonitorTable";
+  public static final String UPDATE_MONITOR_TABLE_DESC = "updateMonitorTableaDesc";
+  public static final String UPDATE_SKYWALKING_AGENT = "updateSkywalkingAgent";
+  public static final String IS_DELETE_OPRETION = "isDelete";
+  public static final String TABLE_DESC = "tableDesc";
+  public static final String AGENT_NAME = "agentName";
+  public static final String AGENT_CODE = "agentCode";
 
   public interface RedisCacheExtime {
     int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
@@ -166,6 +173,7 @@ public class Const {
 
   public static final String POUND_KEY = "#";
   public static final String COMMA = "#";
+  public static final String COLON = "：";
 
 
   public static final String START_TIME = "startTime";

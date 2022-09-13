@@ -11,12 +11,18 @@ import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.kafka.consumer.AiitOffsetCommitCallback;
 import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -31,9 +37,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <B>主类名称: mingshiServerUtil</B>
  * <B>概要说明：</B>
+ *
  * @Author zm
  * Date 2022/5/30 20:46
- *
  * @Version 1.0
  **/
 @Slf4j
@@ -66,6 +72,26 @@ public class MingshiServerUtil {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
 
+  /**
+   * <B>方法名称：ackImmediate</B>
+   * <B>概要说明：提交offset</B>
+   * @Author zm
+   * @Date 2022年09月13日 10:09:53
+   * @Param [record, aiitKafkaConsumer, syncCommits]
+   * @return void
+   **/
+  public void commitOffset(ConsumerRecord<String, Bytes> record, KafkaConsumer<String, Bytes> kafkaConsumer, Boolean syncCommits) {
+    Map<TopicPartition, OffsetAndMetadata> commits = Collections.singletonMap(
+      new TopicPartition(record.topic(), record.partition()),
+      new OffsetAndMetadata(record.offset() + 1));
+    if (syncCommits) {
+      // 同步提交offset；2022-09-13 10:59:24
+      kafkaConsumer.commitSync(commits);
+    } else {
+      // 异步提交offset；2022-09-13 10:59:24
+      kafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
+    }
+  }
 
   /**
    * 产生字符串类型的订单号
@@ -80,10 +106,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：setDbTypeAndOperationType</B>
    * <B>概要说明：给MsSegmentDetailDo实例设置dbType类型和operationType类型</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年08月19日 09:08:00
    * @Param [msSegmentDetailDo, dbType, operationType, value]
-   * @return void
    **/
   public void setDbTypeAndOperationType(MsSegmentDetailDo msSegmentDetailDo, String dbType, String operationType, String value) {
     msSegmentDetailDo.setDbType(dbType);
@@ -94,18 +121,19 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：doEnableReactorModel</B>
    * <B>概要说明：将数据组装一下，然后放入到公共队列中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年08月01日 15:08:05
    * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
-   * @return void
    **/
   public void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
-                                    List<Span> spanList,
-                                    SegmentDo segmentDo,
-                                    List<MsSegmentDetailDo> segmentDetaiDolList,
-                                    List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
-                                    List<MsAlarmInformationDo> msAlarmInformationDoList,
-                                    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
+                                   List<Span> spanList,
+                                   SegmentDo segmentDo,
+                                   List<MsSegmentDetailDo> segmentDetaiDolList,
+                                   List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
+                                   List<MsAlarmInformationDo> msAlarmInformationDoList,
+                                   Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
     try {
       ObjectNode jsonObject = JsonUtil.createJsonObject();
       // if (null != segmentDo) {
@@ -115,7 +143,7 @@ public class MingshiServerUtil {
       /**
        * 统计当前线程的QPS；2022-07-23 11:05:16
        */
-      if(null != map && 0 < map.size()){
+      if (null != map && 0 < map.size()) {
         jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
       }
       if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
@@ -660,7 +688,7 @@ public class MingshiServerUtil {
           Map<String, String> map = JsonUtil.string2Obj(set, Map.class);
           String serviceCode = map.get(Const.SERVICE_CODE);
           String value = AgentInformationSingleton.get(serviceCode);
-          if(StringUtil.isBlank(value)){
+          if (StringUtil.isBlank(value)) {
             AgentInformationSingleton.put(serviceCode, Const.DOLLAR);
             AgentInformationSingleton.setAtomicBooleanToTrue();
           }
@@ -679,17 +707,18 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：flushSegmentDetailToDb</B>
    * <B>概要说明：将用户操作信息保存到数据库中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年08月19日 16:08:43
    * @Param [segmentDetailDoList]
-   * @return void
    **/
   public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
     if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
 
       try {
         for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
-          aiitKafkaProducer.send(msSegmentDetailDo,"flink-test-topic");
+          aiitKafkaProducer.send(msSegmentDetailDo, "flink-test-topic");
         }
       } catch (Exception e) {
         e.printStackTrace();
@@ -712,10 +741,11 @@ public class MingshiServerUtil {
   /**
    * <B>方法名称：flushSegmentDetailUserNameIsNullToDB</B>
    * <B>概要说明：将用户名为空的记录，保存到表中</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年08月01日 14:08:28
    * @Param [segmentDetaiUserNameIsNullDolList]
-   * @return void
    **/
   public void flushSegmentDetailUserNameIsNullToDb(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
     if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {

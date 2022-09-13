@@ -1,18 +1,18 @@
 package com.mingshi.skyflying.dao;
 
-import com.mingshi.skyflying.common.domain.OperateLog;
+import com.mingshi.skyflying.common.domain.OperationLog;
 
 import java.util.List;
 import java.util.Map;
 
 public interface OperateLogMapper {
-    int insertSelective(OperateLog operateLog);
+    int insertSelective(OperationLog operationLog);
 
-    OperateLog selectByPrimaryKey(Long id);
+    OperationLog selectByPrimaryKey(Long id);
 
-    int updateByPrimaryKeySelective(OperateLog operateLog);
+    int updateByPrimaryKeySelective(OperationLog operationLog);
 
-    OperateLog selectByOrderId(String orderId);
+    OperationLog selectByOrderId(String orderId);
 
-    List<OperateLog> selectAllOperationLog(Map<String,Object> map);
+    List<OperationLog> selectAllOperationLog(Map<String,Object> map);
 }

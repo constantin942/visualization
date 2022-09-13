@@ -1,33 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.SysOperatorRoleDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SysOperatorRole">
+<mapper namespace="com.mingshi.skyflying.dao.SysMenuRoleDao">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SysMenuRole">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
     <result column="creator" jdbcType="VARCHAR" property="creator" />
     <result column="modifier" jdbcType="VARCHAR" property="modifier" />
-    <result column="operator_id" jdbcType="BIGINT" property="operatorId" />
+    <result column="menu_id" jdbcType="BIGINT" property="menuId" />
     <result column="role_id" jdbcType="BIGINT" property="roleId" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, creator, modifier, operator_id, role_id
+    id, is_delete, gmt_create, gmt_modified, creator, modifier, menu_id, role_id
   </sql>
-  <select id="selectBySysOperatorId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from sys_operator_role
-    where operator_id=#{operatorId,jdbcType=BIGINT} and  is_delete=0
-  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from sys_operator_role
+    from sys_menu_role
     where id=#{id,jdbcType=BIGINT} and  is_delete=0
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SysOperatorRole">
-    insert into sys_operator_role
+  <select id="selectReadOnly" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+    select
+    read_only
+    from sys_role
+    where id=#{id,jdbcType=BIGINT} and  is_delete=0
+  </select>
+  <select id="selectByRoleId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sys_menu_role
+    where role_id=#{roleId,jdbcType=BIGINT} and  is_delete=0
+  </select>
+  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SysMenuRole">
+    insert into sys_menu_role
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
         id,
@@ -47,8 +53,8 @@
       <if test="modifier != null">
         modifier,
       </if>
-      <if test="operatorId != null">
-        operator_id,
+      <if test="menuId != null">
+        menu_id,
       </if>
       <if test="roleId != null">
         role_id,
@@ -73,16 +79,16 @@
       <if test="modifier != null">
         #{modifier,jdbcType=VARCHAR},
       </if>
-      <if test="operatorId != null">
-        #{operatorId,jdbcType=BIGINT},
+      <if test="menuId != null">
+        #{menuId,jdbcType=BIGINT},
       </if>
       <if test="roleId != null">
         #{roleId,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SysOperatorRole">
-    update sys_operator_role
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SysMenuRole">
+    update sys_menu_role
     <set>
       <if test="isDelete != null">
         is_delete=#{isDelete,jdbcType=TINYINT},
@@ -99,8 +105,8 @@
       <if test="modifier != null">
         modifier=#{modifier,jdbcType=VARCHAR},
       </if>
-      <if test="operatorId != null">
-        operator_id=#{operatorId,jdbcType=BIGINT},
+      <if test="menuId != null">
+        menu_id=#{menuId,jdbcType=BIGINT},
       </if>
       <if test="roleId != null">
         role_id=#{roleId,jdbcType=BIGINT},
