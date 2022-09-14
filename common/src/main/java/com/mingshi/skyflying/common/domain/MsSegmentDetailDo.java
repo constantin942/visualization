@@ -1,10 +1,11 @@
 package com.mingshi.skyflying.common.domain;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
 @Data
-public class MsSegmentDetailDo {
+public class MsSegmentDetailDo implements Cloneable{
     private Integer id;
 
     private String userLoginIp;
@@ -60,4 +61,9 @@ public class MsSegmentDetailDo {
     private Integer userPortraitFlagByVisitedTime;
 
     private Integer userPortraitFlagByVisitedTableEveryday;
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }

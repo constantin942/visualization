@@ -2,6 +2,7 @@ package com.mingshi.skyflying.anomaly_detection.domain;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Tolerate;
 
 import java.util.Date;
 
@@ -24,4 +25,9 @@ public class UserPortraitByTableDo {
     private Date createTime;
 
     private Date updateTime;
+
+    @Tolerate
+    public UserPortraitByTableDo() {
+    }
+
 }

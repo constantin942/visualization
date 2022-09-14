@@ -58,4 +58,9 @@ public class TestControllerA {
     public void testInsertYesterdayInfo2Portrait() {
         tableTask.insertYesterdayInfo2Portrait();
     }
+
+    @GetMapping("cachePortraitByTable")
+    public void cachePortraitByTable() {
+        tableTask.cachePortraitByTable();
+    }
 }

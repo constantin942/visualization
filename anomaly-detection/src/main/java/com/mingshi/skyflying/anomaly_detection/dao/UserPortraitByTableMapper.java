@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface UserPortraitByTableMapper {
     void insertBatch(List<UserPortraitByTableDo> userPortraitByTableDoList);
+
+    List<UserPortraitByTableDo> selectPeriodInfo();
 }

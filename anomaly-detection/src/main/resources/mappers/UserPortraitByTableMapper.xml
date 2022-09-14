@@ -12,4 +12,9 @@
         </foreach>
     </insert>
 
+    <select id="selectPeriodInfo" resultType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo">
+        select username, table_name, count
+        from user_portrait_by_table
+        where 15 > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+    </select>
 </mapper>

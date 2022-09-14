@@ -7,10 +7,13 @@ import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +31,6 @@ import java.util.Map;
 @Component
 public class UserPortraitByTableTask {
 
-
     @Resource
     RedissonClient redissonClient;
 
@@ -38,6 +40,13 @@ public class UserPortraitByTableTask {
     @Resource
     private MsSegmentDetailMapper segmentDetailMapper;
 
+    @Resource
+    RedisPoolUtil redisPoolUtil;
+
+    @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTable:}")
+    private String PREFIX;
+
+    private final Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
      */
@@ -61,8 +70,40 @@ public class UserPortraitByTableTask {
         }
     }
 
-    private void cachePortraitByTable() {
-        
+    /**
+     * 放入Redis
+     * key : PREFIX + username + 表名
+     * value : 对应表的访问次数
+     */
+    public void cachePortraitByTable() {
+        List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo();
+        HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
+        portraitByTableList2Map(userPortraitByTableDos, outerMap);
+        for (Map.Entry<String, HashMap<String, Integer>> outerEntry : outerMap.entrySet()) {
+            String username = outerEntry.getKey();
+            for (Map.Entry<String, Integer> innerEntry : outerEntry.getValue().entrySet()) {
+                String redisKey = buildRedisKey(username, innerEntry.getKey());
+                redisPoolUtil.setNx(redisKey, innerEntry.getValue(), EXPIRE);
+            }
+        }
+    }
+
+    private String buildRedisKey(String username, String key) {
+        return PREFIX + username + ":" + key;
+    }
+
+    /**
+     * 周期内的访问数据列表转换map
+     */
+    private void portraitByTableList2Map(List<UserPortraitByTableDo> userPortraitByTableDos,
+                                                                              HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap) {
+        for (UserPortraitByTableDo userPortraitByTableDo : userPortraitByTableDos) {
+            String username = userPortraitByTableDo.getUsername();
+            HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
+            int count = innerMap.getOrDefault(userPortraitByTableDo.getTableName(), userPortraitByTableDo.getCount());
+            innerMap.put(userPortraitByTableDo.getTableName(), ++count);
+            outerMap.put(username, innerMap);
+        }
     }
 
     /**
@@ -70,8 +111,43 @@ public class UserPortraitByTableTask {
      */
     public void insertYesterdayInfo2Portrait() {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
+        segmentDetails = splitTable(segmentDetails);
         List<UserPortraitByTableDo> list = getUserPortraitByTable(segmentDetails);
-        userPortraitByTableMapper.insertBatch(list);
+        if (list.size() != 0) {
+            userPortraitByTableMapper.insertBatch(list);
+        }
+    }
+
+    /**
+     * 拆分全量信息表中的表名
+     */
+    public List<MsSegmentDetailDo> splitTable(List<MsSegmentDetailDo> segmentDetails) {
+        List<MsSegmentDetailDo> list = new ArrayList<>();
+        for (MsSegmentDetailDo segmentDetail : segmentDetails) {
+            String username = segmentDetail.getUserName();
+            String dbInstance = segmentDetail.getDbInstance();
+            String table = segmentDetail.getMsTableName();
+            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) continue;
+            if (!table.contains(",")) {
+                //只有一个表, 直接添加, 不用拆分
+                list.add(segmentDetail);
+                continue;
+            }
+            String[] tableNames = segmentDetail.getMsTableName().split(",");
+            for (String tableName : tableNames) {
+                MsSegmentDetailDo msSegmentDetailDo = null;
+                try {
+                    msSegmentDetailDo = (MsSegmentDetailDo) segmentDetail.clone();
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                    log.error("拆分全量信息表中的表名时深拷贝出现异常, {}", e.getMessage());
+                }
+                assert msSegmentDetailDo != null;
+                msSegmentDetailDo.setMsTableName(tableName);
+                list.add(msSegmentDetailDo);
+            }
+        }
+        return list;
     }
 
     /**
@@ -84,7 +160,6 @@ public class UserPortraitByTableTask {
             String dbInstance = segmentDetail.getDbInstance();
             String table = segmentDetail.getMsTableName();
             String tableName = dbInstance + "." + table;
-            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) continue;
             HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
             int count = innerMap.getOrDefault(tableName, 0);
             innerMap.put(tableName, ++count);

@@ -2,14 +2,17 @@ package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
+import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
+import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,13 +36,19 @@ public class AnomalyDetectionBusiness {
     UserPortraitByTimeTask userPortraitByTimeTask;
 
     @Resource
+    UserPortraitByTableTask userPortraitByTableTask;
+
+    @Resource
     RedisPoolUtil redisPoolUtil;
 
     @Resource
     CoarseSegmentDetailOnTimeMapper coarseSegmentDetailOnTimeMapper;
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
-    private  String PREFIX;
+    private String TIME_PREFIX;
+
+    @Value("${anomalyDetection.redisKey.portraitByTable.prefix:anomaly_detection:portraitByTable:}")
+    private String TABLE_PREFIX;
 
     private final String MORNING = "morning";
 
@@ -48,10 +57,101 @@ public class AnomalyDetectionBusiness {
     private final String NIGHT = "night";
 
     //TODO: 改成可配置
-    private final double rate = 0.3;
+    private final double visitRate = 0.3;
+
+    //TODO: 改成可配置
+    private final int visitCount = 5;
+
+    //TODO: 改成可配置
+    private final boolean enableTimeRule = true;
+
+    //TODO: 改成可配置
+    private final boolean enableTableRule = true;
 
     /**
      * 判断是否告警
+     */
+    public void userVisitedIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        if (enableTimeRule) {
+            userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+        }
+        if (enableTableRule) {
+            userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+        }
+    }
+
+    /**
+     * 判断是否告警-库表维度
+     */
+    public void userVisitedTableIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        String username = segmentDetailDo.getUserName();
+        String dbInstance = segmentDetailDo.getDbInstance();
+        String table = segmentDetailDo.getMsTableName();
+        if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
+        List<MsSegmentDetailDo> list = new ArrayList<>();
+        list.add(segmentDetailDo);
+        //一条信息包含多张表名, 拆分一下
+        List<MsSegmentDetailDo> msSegmentDetailDos = userPortraitByTableTask.splitTable(list);
+        for (MsSegmentDetailDo segmentDetail : msSegmentDetailDos) {
+            userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
+        }
+    }
+
+    private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
+        Integer count = getCountByTable(segmentDetail.getUserName(), tableName);
+        if (count == null) {
+            //没有用户画像
+            MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail, msAlarmInformationDoList);
+            if (msAlarmInformationDo != null) {
+                msAlarmInformationDoList.add(msAlarmInformationDo);
+            }
+        } else {
+            //有用户画像
+            if (count < visitCount) {
+                msAlarmInformationDoList.add(buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM));
+            }
+        }
+    }
+
+    /**
+     * 没有库表用户画像
+     */
+    private MsAlarmInformationDo doNoTablePortrait(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        if (isNewUser(segmentDetail.getUserName())) {
+            if (existNewUserAlarm(segmentDetail, msAlarmInformationDoList)) return null;
+            else {
+                return buildAlarmInfo(segmentDetail, AlarmEnum.NEW_USER);
+            }
+        }
+        //老用户但是没画像
+        //产生告警信息
+        return buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM);
+    }
+
+    /**
+     * 判断是否已存在新用户告警
+     */
+    private boolean existNewUserAlarm(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        String username = segmentDetail.getUserName();
+        for (MsAlarmInformationDo alarmInformationDo : msAlarmInformationDoList) {
+            if (alarmInformationDo.getUserName().equals(username) && alarmInformationDo.getAlarmContent().contains("首次出现")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Integer getCountByTable(String username, String tableName) {
+        String redisKey = buildTableRedisKey(username, tableName);
+        Object o = redisPoolUtil.get(redisKey);
+        if (o == null) return null;
+        return Integer.parseInt((String) o);
+    }
+
+
+    /**
+     * 判断是否告警-时间维度
      */
     public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         if (segmentDetailDo.getUserName() == null) return;
@@ -66,10 +166,10 @@ public class AnomalyDetectionBusiness {
         Double rateByInterVal = getRateByInterVal(userName, interval);
         if (rateByInterVal == null) {
             //没有用户画像
-            msAlarmInformationDoList.add(doNoUserPortrait(segmentDetailDo));
+            msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
         } else {
             //有用户画像
-            if (rateByInterVal < rate) {
+            if (rateByInterVal < visitRate) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
             }
         }
@@ -77,18 +177,14 @@ public class AnomalyDetectionBusiness {
 
 
     /**
-     * 没有用户画像
+     * 没有时间用户画像
      */
-    private MsAlarmInformationDo doNoUserPortrait(MsSegmentDetailDo segmentDetailDo) {
+    private MsAlarmInformationDo doNoTimePortrait(MsSegmentDetailDo segmentDetailDo) {
         if (isNewUser(segmentDetailDo.getUserName())) {
             return buildAlarmInfo(segmentDetailDo, AlarmEnum.NEW_USER);
         }
         //老用户但是没画像(上次访问距今已超过画像统计周期)
-        //1. 插入粗粒度表
-        List<MsSegmentDetailDo> list = new ArrayList<>();
-        List<CoarseSegmentDetailOnTimeDo> coarseSegmentDetailOnTime = userPortraitByTimeTask.getCoarseSegmentDetailOnTime(list);
-        coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(coarseSegmentDetailOnTime);
-        //2. 产生告警信息
+        //产生告警信息
         return buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM);
     }
 
@@ -122,8 +218,12 @@ public class AnomalyDetectionBusiness {
     /**
      * 组装Redis的Key
      */
-    private String buildRedisKey(String username, String interval) {
-        return PREFIX + username + ":" + interval;
+    private String buildTimeRedisKey(String username, String interval) {
+        return TIME_PREFIX + username + ":" + interval;
+    }
+
+    private String buildTableRedisKey(String username, String key) {
+        return TABLE_PREFIX + username + ":" + key;
     }
 
     /**
@@ -152,9 +252,9 @@ public class AnomalyDetectionBusiness {
      * 获取该用户画像所定义该时段正常访问频率
      */
     private Double getRateByInterVal(String username, String interval) {
-        String redisKey = buildRedisKey(username, interval);
+        String redisKey = buildTimeRedisKey(username, interval);
         Object o = redisPoolUtil.get(redisKey);
-        if(o == null)   return null;
+        if (o == null) return null;
         return Double.parseDouble((String) o);
     }
 }
