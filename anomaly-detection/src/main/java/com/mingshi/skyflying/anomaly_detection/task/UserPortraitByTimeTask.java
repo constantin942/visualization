@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +31,8 @@ import java.util.Map;
  * @Date: create in 2022/8/29
  */
 @Slf4j
-@Component
+@Configuration
+@EnableScheduling
 public class UserPortraitByTimeTask {
 
     @Resource
@@ -47,7 +51,8 @@ public class UserPortraitByTimeTask {
     RedisPoolUtil redisPoolUtil;
 
 
-    private final Integer portraitByTimePeriod = 30;
+    //TODO: 改成可配置
+    private final Integer portraitByTimePeriod = 15;
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
     private String PREFIX;
@@ -68,10 +73,12 @@ public class UserPortraitByTimeTask {
     /**
      * 每日定时任务 : 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis
      */
+    @Scheduled(cron = "0 0 2 * * ?")
     private void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
+            log.info("开始执行定时任务: 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis");
             //1. 全量表生成粗粒度表
             insertYesterdayInfo2Coarse();
             //2. 粗粒度表生成用户画像

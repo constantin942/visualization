@@ -14,6 +14,9 @@ import org.apache.kafka.common.protocol.types.Field;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +31,8 @@ import java.util.Map;
  * @Date: create in 2022/9/7
  */
 @Slf4j
-@Component
+@Configuration
+@EnableScheduling
 public class UserPortraitByTableTask {
 
     @Resource
@@ -47,6 +51,9 @@ public class UserPortraitByTableTask {
     private String PREFIX;
 
     private final Integer EXPIRE = 100000;
+
+    //TODO: 改成可配置
+    private final Integer portraitByTablePeriod = 15;
     /**
      * Redis分布式锁Key
      */
@@ -55,10 +62,12 @@ public class UserPortraitByTableTask {
     /**
      * 每日定时任务 : 全量表生成用户画像 -> 放入Redis
      */
+    @Scheduled(cron = "0 0 1 * * ?")
     private void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
+            log.info("开始执行定时任务: 全量表生成用户画像 -> 放入Redis");
             //1. 全量表生成用户画像
             insertYesterdayInfo2Portrait();
             //2. 放入Redis
@@ -76,7 +85,7 @@ public class UserPortraitByTableTask {
      * value : 对应表的访问次数
      */
     public void cachePortraitByTable() {
-        List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo();
+        List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitByTablePeriod);
         HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
         portraitByTableList2Map(userPortraitByTableDos, outerMap);
         for (Map.Entry<String, HashMap<String, Integer>> outerEntry : outerMap.entrySet()) {
@@ -96,7 +105,7 @@ public class UserPortraitByTableTask {
      * 周期内的访问数据列表转换map
      */
     private void portraitByTableList2Map(List<UserPortraitByTableDo> userPortraitByTableDos,
-                                                                              HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap) {
+                                         HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap) {
         for (UserPortraitByTableDo userPortraitByTableDo : userPortraitByTableDos) {
             String username = userPortraitByTableDo.getUsername();
             HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
@@ -113,7 +122,7 @@ public class UserPortraitByTableTask {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
         segmentDetails = splitTable(segmentDetails);
         List<UserPortraitByTableDo> list = getUserPortraitByTable(segmentDetails);
-        if (list.size() != 0) {
+        if (!list.isEmpty()) {
             userPortraitByTableMapper.insertBatch(list);
         }
     }

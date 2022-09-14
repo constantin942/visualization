@@ -458,6 +458,7 @@
 
         from coarse_segment_detail_on_time
         where #{portraitByTimePeriod,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+          and is_deleted = 0
         group by username
     </select>
     <select id="selectOneByUsername"
