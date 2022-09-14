@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
  **/
 @Slf4j
 public class ReactorUtil {
-
   private static volatile Boolean TWO_POWER_FLAG = null;
 
   /**
@@ -55,12 +54,6 @@ public class ReactorUtil {
    **/
   public static boolean isTwoPower(int n) {
     return n>0 && (n&(n-1)) == 0;
-  }
-
-  public static void main(String[] args) {
-    for (int i = 0; i < 10; i++){
-      System.out.println("i = " + i + "，" + isTwoPower(i));
-    }
   }
 
   public static void useReactorModelByLinkedBlockingQueue(ConsumerRecord<String, Bytes> consumerRecord) {
