@@ -66,8 +66,8 @@ public class SkyflyingController {
   public ServerResponse<String> getHighDangerOperationLog(String userName,
                                                           @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    ServerResponse<String> sysMenu = operationLogService.getOperationLog(userName, pageNo, pageSize);
-    return sysMenu;
+    ServerResponse<String> serverResponse = operationLogService.getOperationLog(userName, pageNo, pageSize);
+    return serverResponse;
   }
 
   /**

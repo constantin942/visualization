@@ -15,4 +15,6 @@ public interface OperateLogMapper {
     OperationLog selectByOrderId(String orderId);
 
     List<OperationLog> selectAllOperationLog(Map<String,Object> map);
+
+    Integer selectAllOperationLogCount(Map<String,Object> map);
 }

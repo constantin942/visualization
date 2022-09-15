@@ -66,7 +66,30 @@
         <if test="pageNo != null and  pageSize != null   ">
             LIMIT #{pageNo},#{pageSize}
         </if>
-
+    </select>
+    <select id="selectAllOperationLogCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select
+        count(id)
+        from operate_log
+        where is_delete=0
+        <if test="userName != null and  userName != ''">
+            AND user_name=#{userName}
+        </if>
+        <if test="loginIp != null and  loginIp != ''">
+            AND login_ip=#{loginIp}
+        </if>
+        <if test="methodName != null and  methodName != ''">
+            AND method_name=#{methodName}
+        </if>
+        <if test="createTimeStart != null and  createTimeStart != ''">
+            AND gmt_create <![CDATA[   >=  ]]> #{createTimeStart}
+        </if>
+        <if test="createTimeEnd != null and  createTimeEnd != ''">
+            AND gmt_create <![CDATA[   <  ]]> #{createTimeEnd}
+        </if>
+        <if test="orderId != null and  orderId != ''">
+            AND order_id=#{orderId}
+        </if>
     </select>
     <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.OperationLog">
         insert into operate_log
