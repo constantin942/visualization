@@ -92,7 +92,7 @@ public class UserController {
     String str = String.valueOf(redisPoolUtil.get(sessionId));
     if (StringUtil.equals(str, "null")) {
       log.info("用户登录已过期");
-      return new ServerResponse<String>(AiitExceptionCode.FAILURE);
+      return new ServerResponse<String>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
     }
     SysOperator aiitUsers = JsonUtil.string2Obj(str, SysOperator.class);
     String userName = aiitUsers.getUserName();
@@ -119,7 +119,7 @@ public class UserController {
     boolean str = redisPoolUtil.del(sessionId);
     if (false == str) {
       log.info("用户退出登录失败，因为根据sessionID将用户的信息从Redis中删除失败，sessionID={}", sessionId);
-      return new ServerResponse<String>(AiitExceptionCode.FAILURE);
+      return new ServerResponse<String>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
     }
     log.info("用户退出登录成功，sessionID={}", sessionId);
 
