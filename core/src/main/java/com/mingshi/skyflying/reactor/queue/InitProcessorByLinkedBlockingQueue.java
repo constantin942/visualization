@@ -49,12 +49,17 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   }
 
   private static Boolean shutdown = false;
-  public static Boolean getShutdown(){
+
+  public static Boolean getShutdown() {
     return shutdown;
   }
 
-  public static List<ProcessorHandlerByLinkedBlockingQueue> getProcessorHandlerByLinkedBlockingQueueList(){
+  public static List<ProcessorHandlerByLinkedBlockingQueue> getProcessorHandlerByLinkedBlockingQueueList() {
     return processorHandlerByLinkedBlockingQueueList;
+  }
+
+  public static Integer getProcessorSize(){
+    return processorSize;
   }
 
   @Override
@@ -63,8 +68,8 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   }
 
   private void doRun() {
-    if(true == reactorProcessorEnable && false == reactorProcessorByDisruptor){
-      if(null == reactorProcessorThreadCount || Const.NUMBER_ZERO > reactorProcessorThreadCount){
+    if (true == reactorProcessorEnable && false == reactorProcessorByDisruptor) {
+      if (null == reactorProcessorThreadCount || Const.NUMBER_ZERO > reactorProcessorThreadCount) {
         // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
         reactorProcessorThreadCount = Const.INITIAL_PROCESSOR_THREAD_COUNT;
       }
@@ -80,10 +85,11 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   /**
    * <B>方法名称：createProcessors</B>
    * <B>概要说明：项目启动成功后，创建指定数量的processor线程；</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年06月01日 09:06:24
    * @Param []
-   * @return void
    **/
   private void createProcessors() {
     for (int i = 0; i < processorSize; i++) {
@@ -99,14 +105,27 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
   /**
    * <B>方法名称：getProcessor</B>
    * <B>概要说明：获取processor线程</B>
+   *
+   * @return com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue
    * @Author zm
    * @Date 2022年06月01日 09:06:45
    * @Param []
-   * @return com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue
    **/
   public static ProcessorHandlerByLinkedBlockingQueue getProcessor(Integer partition) {
     int index = ReactorUtil.indexFor(partition, processorSize);
     return processorHandlerByLinkedBlockingQueueList.get(index);
+  }
+
+  /**
+   * <B>方法名称：getIndex</B>
+   * <B>概要说明：获取索引</B>
+   * @Author zm
+   * @Date 2022年09月14日 23:09:37
+   * @Param [partition]
+   * @return java.lang.Integer
+   **/
+  public static Integer getIndex(Integer partition){
+    return ReactorUtil.indexFor(partition, processorSize);
   }
 
   public static ProcessorHandlerByLinkedBlockingQueue getProcessor() {

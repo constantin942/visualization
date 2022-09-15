@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.utils;
 
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
@@ -56,9 +57,9 @@ public class ReactorUtil {
     return n>0 && (n&(n-1)) == 0;
   }
 
-  public static void useReactorModelByLinkedBlockingQueue(ConsumerRecord<String, Bytes> consumerRecord) {
+  public static void useReactorModelByLinkedBlockingQueue(RedisPoolUtil redisPoolUtil, ConsumerRecord<String, Bytes> consumerRecord) {
     // 将拉取到的消息放入到processor线程对应的队列里；2022-06-01 09:24:47
-    putRecordIntoBlockingQueue(consumerRecord);
+    putRecordIntoBlockingQueue(redisPoolUtil,consumerRecord);
   }
 
   /**
@@ -69,7 +70,7 @@ public class ReactorUtil {
    * @Param [record]
    * @return void
    **/
-  private static void putRecordIntoBlockingQueue(ConsumerRecord<String, Bytes> consumerRecord) {
+  private static void putRecordIntoBlockingQueue(RedisPoolUtil redisPoolUtil,ConsumerRecord<String, Bytes> consumerRecord) {
     // 等待创建processor线程；2022-06-01 09:20:19
     waitingCreateProcessorsThread();
     try {
@@ -77,7 +78,7 @@ public class ReactorUtil {
       boolean offerResult = false;
       // 获取消息所属的partition，根据partition决定将消息放入到那个LinkedBlockingQueue中。 2022-09-13 13:54:23
       Integer partition = consumerRecord.partition();
-      if(null != partition && 0 < partition){
+      if(null != partition && 0 <= partition){
         /** 使用put方法的优点：当前项目所在的服务器突然断电，或者是使用kill -9的方式关闭当前项目，此时在processor线程对应的内存队列中的消息和IoThread线程对应的内存队列里的消息会丢失。
                          不过这些消息的offset不会提交到Kafka服务端，只有已消费成功的消息才会提交Kafka服务端。
          使用put方法的缺点：性能低，因为processor线程有可能会出现倾斜的情况。
@@ -96,6 +97,9 @@ public class ReactorUtil {
          推荐使用的架构：
              1. 使用一个Disruptor（推荐使用，因为是无锁的）或者LinkedBlockingQueue（后面的多个消费者线程会竞争出队列的锁，有性能损耗）内存队列，这个队列的后面挂着多个消费者线程； 2022-09-13 15:13:01
         **/
+        Integer index = InitProcessorByLinkedBlockingQueue.getIndex(partition);
+        redisPoolUtil.hsetIncrBy("index-" + index,"partition-" + partition,  1L);
+
         processorHandlerByLinkedBlockingQueue = InitProcessorByLinkedBlockingQueue.getProcessor(partition);
         processorHandlerByLinkedBlockingQueue.put(consumerRecord);
       }else {

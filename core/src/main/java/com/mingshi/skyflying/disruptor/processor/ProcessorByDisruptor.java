@@ -100,7 +100,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
       ProcessorConsumerByEventHandler processorConsumerByEventHandler = new ProcessorConsumerByEventHandler(segmentConsumerService);
       // 将创建好消费对象/实例的handler与RingBuffer关联起来；2022-07-17 18:54:56
       disruptor.handleEventsWith(processorConsumerByEventHandler);
-    } else {
+    } else if (null != reactorProcessorThreadCount && 1 < reactorProcessorThreadCount) {
       // 使用多消费者模式.每个消费者只消费队列中一部分消息。类似于RocketMQ中集群消费模式。
       ProcessorConsumerByWrokHandler[] processorConsumerByWrokHandlerArray = new ProcessorConsumerByWrokHandler[reactorProcessorThreadCount];
       for (int i = 0; i < reactorProcessorThreadCount; i++) {

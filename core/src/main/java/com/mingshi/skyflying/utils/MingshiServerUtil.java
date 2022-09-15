@@ -11,7 +11,8 @@ import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.kafka.consumer.AiitOffsetCommitCallback;
+import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumerRunner;
+import com.mingshi.skyflying.kafka.consumer.MsKafkaSegmentsConsumer;
 import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
@@ -19,7 +20,6 @@ import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueu
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.utils.Bytes;
@@ -51,6 +51,11 @@ public class MingshiServerUtil {
   private boolean reactorProcessorDisruptor;
   @Value("${reactor.iothread.thread.count}")
   private Integer reactorIoThreadThreadCount;
+  @Value("${reactor.processor.graceful-shutdown}")
+  private boolean gracefulShutdown;
+  @Value("${reactor.processor.graceful-shutdown-queue-size}")
+  private Integer gracefulShutdownQueueSize;
+
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
   @Resource
@@ -71,27 +76,8 @@ public class MingshiServerUtil {
   private SegmentDao segmentDao;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
-
-  /**
-   * <B>方法名称：ackImmediate</B>
-   * <B>概要说明：提交offset</B>
-   * @Author zm
-   * @Date 2022年09月13日 10:09:53
-   * @Param [record, aiitKafkaConsumer, syncCommits]
-   * @return void
-   **/
-  public void commitOffset(ConsumerRecord<String, Bytes> record, KafkaConsumer<String, Bytes> kafkaConsumer, Boolean syncCommits) {
-    Map<TopicPartition, OffsetAndMetadata> commits = Collections.singletonMap(
-      new TopicPartition(record.topic(), record.partition()),
-      new OffsetAndMetadata(record.offset() + 1));
-    if (syncCommits) {
-      // 同步提交offset；2022-09-13 10:59:24
-      kafkaConsumer.commitSync(commits);
-    } else {
-      // 异步提交offset；2022-09-13 10:59:24
-      kafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
-    }
-  }
+  @Resource
+  private AiitKafkaConsumerRunner aiitKafkaConsumerRunner;
 
   /**
    * 产生字符串类型的订单号
@@ -127,7 +113,9 @@ public class MingshiServerUtil {
    * @Date 2022年08月01日 15:08:05
    * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
    **/
-  public void doEnableReactorModel(HashMap<String, Map<String, Integer>> map,
+  public void doEnableReactorModel(ConsumerRecord<String, Bytes> consumerRecord,
+                                   Integer partition,
+                                   HashMap<String, Map<String, Integer>> map,
                                    List<Span> spanList,
                                    SegmentDo segmentDo,
                                    List<MsSegmentDetailDo> segmentDetaiDolList,
@@ -159,18 +147,47 @@ public class MingshiServerUtil {
         jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
       }
 
+      ObjectNode topicPartitionOffsetJson = getTopicPartitionOffset(consumerRecord);
+      if (null != topicPartitionOffsetJson) {
+        jsonObject.put(Const.TOPIC_PARTITION_OFFSET, topicPartitionOffsetJson.toString());
+      }
+
       if (null != jsonObject && 0 < jsonObject.size()) {
-        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadThreadCount, 10, mingshiServerUtil);
+        Integer queueIndex = IoThreadBatchInsertByLinkedBlockingQueue.getQueueIndex(partition);
+        LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(gracefulShutdown, reactorIoThreadThreadCount, 10, mingshiServerUtil, partition);
         if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-          log.info("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+          log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
           String key = DateTimeUtil.dateToStr(new Date());
-          redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+          if (0 < linkedBlockingQueue.size()) {
+            redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
+          }
         }
+        // 当第二层队列满了后，这里会阻塞住；2022-09-14 19:14:41
         linkedBlockingQueue.put(jsonObject);
       }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
     }
+  }
+
+  /**
+   * <B>方法名称：getTopicPartitionOffset</B>
+   * <B>概要说明：将topic、partition、offset放到一个json对象里</B>
+   *
+   * @return com.fasterxml.jackson.databind.node.ObjectNode
+   * @Author zm
+   * @Date 2022年09月14日 16:09:54
+   * @Param [consumerRecord]
+   **/
+  private ObjectNode getTopicPartitionOffset(ConsumerRecord<String, Bytes> consumerRecord) {
+    if (null == consumerRecord) {
+      return null;
+    }
+    ObjectNode topicPartitionOffsetJson = JsonUtil.createJsonObject();
+    topicPartitionOffsetJson.put(Const.TOPIC, consumerRecord.topic());
+    topicPartitionOffsetJson.put(Const.PARTITION, consumerRecord.partition());
+    topicPartitionOffsetJson.put(Const.OFFSET, consumerRecord.offset());
+    return topicPartitionOffsetJson;
   }
 
   /**
@@ -664,7 +681,7 @@ public class MingshiServerUtil {
         msAgentInformationMapper.insertBatch(list);
         // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
         AgentInformationSingleton.setAtomicBooleanToFalse();
-        log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
+        // log.info("#SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
       }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
@@ -872,21 +889,37 @@ public class MingshiServerUtil {
    **/
   public void statisticsProcessorAndIoThreadQueueSize() {
     String name = Thread.currentThread().getName();
-    String key = DateTimeUtil.dateToStr(new Date()) + "-" + name;
+    // String key = DateTimeUtil.dateToStrYyyyMmDdHhMmSs(new Date());
+    String key = DateTimeUtil.dateToStrYyyyMmDdHhMmSs(new Date()) + "-" + name;
     if (true == reactorProcessorDisruptor) {
       long queueSize = processorByDisruptor.getQueueSize();
-      redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+      if (0 < queueSize) {
+        // redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+        redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+      }
     } else {
       List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
       if (null != processorHandlerByLinkedBlockingQueueList && 0 < processorHandlerByLinkedBlockingQueueList.size()) {
         for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
           Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
-          redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + i, key, Long.valueOf(queueSize));
+          if(0 < queueSize){
+            redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
+            // redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
+          }
         }
       }
     }
     if (true == reactorProcessorEnable) {
-      redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE, key, Long.valueOf(IoThreadBatchInsertByLinkedBlockingQueue.getQueueSize()));
+      List<LinkedBlockingQueue<ObjectNode>> linkedBlockingQueueList = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueueList();
+      if (null != linkedBlockingQueueList && 0 < linkedBlockingQueueList.size()) {
+        for (int i = 0; i < linkedBlockingQueueList.size(); i++) {
+          Integer size = linkedBlockingQueueList.get(i).size();
+          if (0 < size) {
+            redisPoolUtil.hsetIncrBy(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
+            // redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
+          }
+        }
+      }
     }
   }
 
@@ -899,7 +932,8 @@ public class MingshiServerUtil {
    * @Date 2022年07月27日 15:07:45
    * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
    **/
-  public void doInsertSegmentDetailIntoMySqlAndRedis(HashSet<String> userHashSet,
+  public void doInsertSegmentDetailIntoMySqlAndRedis(Map<String, Map<Integer, Long>> offsetsMap,
+                                                     HashSet<String> userHashSet,
                                                      Map<String, Map<String, Integer>> processorThreadQpsMap,
                                                      LinkedList<SegmentDo> segmentList,
                                                      LinkedList<Span> spanList,
@@ -934,5 +968,55 @@ public class MingshiServerUtil {
     flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
 
     flushAbnormalToDb(msAlarmInformationDoLinkedListist);
+
+    /**
+     * 提交这批消息的offset到Kafka服务端
+     */
+    aiitCommitOffset(offsetsMap);
+  }
+
+  /**
+   * <B>方法名称：aiitCommitOffset</B>
+   * <B>概要说明：提交offset到Kafka服务端</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年09月13日 16:09:09
+   * @Param [offsetsMap]
+   **/
+  private void aiitCommitOffset(Map<String, Map<Integer, Long>> offsetsMap) {
+    if (null != offsetsMap && 0 < offsetsMap.size()) {
+      try {
+        if (true == gracefulShutdown) {
+          MsKafkaSegmentsConsumer msKafkaSegmentsConsumer = aiitKafkaConsumerRunner.getMsKafkaSegmentsConsumer();
+          Map<TopicPartition, OffsetAndMetadata> topicPartitionOffsetAndMetadataMap = buildCommits(offsetsMap);
+          if (null != topicPartitionOffsetAndMetadataMap && 0 < topicPartitionOffsetAndMetadataMap.size()) {
+            // 注意：一旦队列满了后，当前线程就会丢弃这个topic对应的partition和offset。就算这里丢弃这个信息也没关系，因为后续过来的消息比这个消息新就可以了。
+            // 比如 topic = skywalking-segments，partition = 9，offset = 8763770。就算这条消息在队列满的情况下丢了也没关系，之后后续 这个topic = skywalking-segments，partition = 9中的offset > 8763770 就没关系。
+            // 极端情况下，后续没有比这个topic = skywalking-segments，partition = 9中的offset 大的数，最坏的情况就是重复消费一下这个topic = skywalking-segments，partition = 9，offset = 8763770之前的消息。为了不使得代码过于复杂，我们这里就不使用兜底方案了，丢了就丢了吧。我们允许存在少量的重复数据。2022-09-14 19:13:48
+            LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> offsetsLinkedBlockingQueue = msKafkaSegmentsConsumer.getOffsetsLinkedBlockingQueue();
+            boolean offer = offsetsLinkedBlockingQueue.offer(topicPartitionOffsetAndMetadataMap);
+            if (false == offer) {
+              log.error("# MingshiServerUtil.aiitCommitOffset() # 当前线程 = 【{}】将消费的partition【{}】放入到队列中失败，当前队列大小 = 【{}】，其容量 = 【{}】。", Thread.currentThread().getName(), JsonUtil.obj2String(offsetsMap), offsetsLinkedBlockingQueue.size(), gracefulShutdownQueueSize);
+            }
+          }
+        }
+        log.info("# MingshiServerUtil.aiitCommitOffset() # 当前线程 = 【{}】消费的partition有【{}】。", Thread.currentThread().getName(), JsonUtil.obj2String(offsetsMap));
+      } catch (Exception e) {
+        log.error("# MingshiServerUtil.aiitCommitOffset() # 当前线程 = 【{}】将消费的partition【{}】放入到队列中出现了异常。", Thread.currentThread().getName(), JsonUtil.obj2String(offsetsMap), e);
+      } finally {
+        offsetsMap.clear();
+      }
+    }
+  }
+
+  private Map<TopicPartition, OffsetAndMetadata> buildCommits(Map<String, Map<Integer, Long>> offsetsMap) {
+    Map<TopicPartition, OffsetAndMetadata> commits = new HashMap<>();
+    for (Map.Entry<String, Map<Integer, Long>> entry : offsetsMap.entrySet()) {
+      for (Map.Entry<Integer, Long> offset : entry.getValue().entrySet()) {
+        commits.put(new TopicPartition(entry.getKey(), offset.getKey()), new OffsetAndMetadata(offset.getValue() + 1));
+      }
+    }
+    return commits;
   }
 }

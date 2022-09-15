@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.kafka.consumer;
 
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.utils.ReactorUtil;
@@ -34,6 +35,8 @@ public class AiitKafkaConsumerUtil {
   private ProcessorByDisruptor processorByDisruptor;
   @Resource
   private SegmentConsumerService segmentConsumerService;
+  @Resource
+  private RedisPoolUtil redisPoolUtil;
 
   /**
    * <B>方法名称：useReactorModelByDisruptor</B>
@@ -81,7 +84,7 @@ public class AiitKafkaConsumerUtil {
         useReactorModelByDisruptor(consumerRecord);
       } else {
         // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
-        ReactorUtil.useReactorModelByLinkedBlockingQueue(consumerRecord);
+        ReactorUtil.useReactorModelByLinkedBlockingQueue(redisPoolUtil,consumerRecord);
       }
     } else {
       // 不使用Reactor模式；

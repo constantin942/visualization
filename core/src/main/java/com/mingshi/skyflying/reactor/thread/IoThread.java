@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -30,13 +31,16 @@ import java.util.concurrent.TimeUnit;
  **/
 @Slf4j
 public class IoThread extends Thread {
+
+  private final Map<String, Map<Integer, Long>> offsetsMap = new HashMap<>();
+
   /**
    * 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
    */
   private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
   private Instant currentTime = null;
 
-  private Integer flushToRocketMqInterval = Const.FLUSH_TO_ROCKETMQ_INTERVAL;
+  private Integer flushToRocketMqInterval = Const.FLUSH_TO_MQ_INTERVAL;
   private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
   private Map<String/* 线程名称 */, Map<String/* 时间 */, Integer/* 消费的数量 */>> processorThreadQpsMap = null;
   private LinkedList<SegmentDo> segmentList = null;
@@ -46,8 +50,9 @@ public class IoThread extends Thread {
   private LinkedList<Span> spanList = null;
   private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
   private MingshiServerUtil mingshiServerUtil;
+  private boolean gracefulShutdown;
 
-  public IoThread(LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+  public IoThread(boolean gracefulShutdown, LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
     currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
     // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
     skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -64,6 +69,7 @@ public class IoThread extends Thread {
     }
     this.linkedBlockingQueue = linkedBlockingQueue;
     this.mingshiServerUtil = mingshiServerUtil;
+    this.gracefulShutdown = gracefulShutdown;
   }
 
   @Override
@@ -92,6 +98,9 @@ public class IoThread extends Thread {
             // 从json实例中获取异常信息
             getAbnormalFromJsonObject(jsonObject);
 
+            // 从json实例中获取topic、partition、offset信息；
+            getTopicPartitionOffsetFromJsonObject(jsonObject);
+
             // 从json实例中获取segment的信息
             // getSegmentFromJSONObject(jsonObject);
           }
@@ -108,6 +117,24 @@ public class IoThread extends Thread {
       log.error("# IoThread.run() # IoThread线程要退出了。此时jvm关闭的标志位 = 【{}】，该线程对应的队列中元素的个数 = 【{}】。",
         InitProcessorByLinkedBlockingQueue.getShutdown(),
         linkedBlockingQueue.size());
+    }
+  }
+
+  private void getTopicPartitionOffsetFromJsonObject(ObjectNode jsonObject) {
+    JsonNode jsonNode = jsonObject.get(Const.TOPIC_PARTITION_OFFSET);
+    try {
+      if (null != jsonNode) {
+        String listString = jsonNode.asText();
+        ObjectNode jsonNodes = JsonUtil.string2Obj(listString, ObjectNode.class);
+        /**
+         * 在开启优雅关机的情况下，记录每个topic下的每个partition中的最大offset；2022-09-13 17:19:48
+         */
+        if(true == gracefulShutdown){
+          addOffset(jsonNodes);
+        }
+      }
+    } catch (Exception e) {
+      log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
     }
   }
 
@@ -312,12 +339,40 @@ public class IoThread extends Thread {
       long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
       if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
         // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-        mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
+        mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(offsetsMap, userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
         currentTime = Instant.now();
-        log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), DateTimeUtil.getTimeMillis(now));
+
+        long timeMillis = DateTimeUtil.getTimeMillis(now);
+        if(0 < timeMillis){
+          log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), timeMillis);
+        }
       }
     } catch (Exception e) {
       log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
+    }
+  }
+
+  /**
+   * <B>方法名称：addOffset</B>
+   * <B>概要说明：更新某个topic下，各个partition中最大的offset</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年09月13日 15:09:15
+   * @Param [record]
+   **/
+  private void addOffset(ObjectNode jsonNodes) {
+    if(null!= jsonNodes){
+      JsonNode topicJsonNode = jsonNodes.get(Const.TOPIC);
+      JsonNode partitionJsonNode = jsonNodes.get(Const.PARTITION);
+      JsonNode offsetJsonNode = jsonNodes.get(Const.OFFSET);
+      if(null != topicJsonNode && null != partitionJsonNode && null != offsetJsonNode){
+        String topic = topicJsonNode.asText();
+        String partition = partitionJsonNode.asText();
+        String offset = offsetJsonNode.asText();
+        this.offsetsMap.computeIfAbsent(topic, v -> new ConcurrentHashMap<>())
+          .compute(Integer.parseInt(partition.trim()), (k, v) -> v == null ? Long.parseLong(offset.trim()) : Math.max(v, Long.parseLong(offset.trim())));
+      }
     }
   }
 }

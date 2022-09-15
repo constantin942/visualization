@@ -1,22 +1,28 @@
 package com.mingshi.skyflying.kafka.consumer;
 
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <B>类名称：MsKafkaSegmentsConsumer</B>
  * <B>概要说明：消费segment的消费者</B>
+ *
  * @Author zm
  * @Date 2022年08月25日 11:08:17
  * @Param
@@ -29,6 +35,10 @@ public class MsKafkaSegmentsConsumer extends Thread {
   private String consumerGroup;
   private String bootstrapServers;
   private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
+  private boolean reactorProcessorEnable = false;
+  private boolean gracefulShutdown = false;
+  private LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> offsetsLinkedBlockingQueue;
+  private RedisPoolUtil redisPoolUtil;
 
   /**
    * 初始化完成的标志；2022-07-28 17:12:32
@@ -37,34 +47,36 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
   private KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-  public MsKafkaSegmentsConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
+  public MsKafkaSegmentsConsumer(RedisPoolUtil redisPoolUtil, LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> linkedBlockingQueue, boolean gracefulShutdown, boolean reactorProcessorEnable, AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
     this.aiitKafkaConsumerUtil = aiitKafkaConsumerUtil;
     this.bootstrapServers = bootstrapServers;
     this.consumerTopic = consumerTopic;
     this.consumerGroup = consumerGroup;
+    this.reactorProcessorEnable = reactorProcessorEnable;
+    this.gracefulShutdown = gracefulShutdown;
+    this.offsetsLinkedBlockingQueue = linkedBlockingQueue;
+    this.redisPoolUtil = redisPoolUtil;
   }
 
   /**
-   * <B>方法名称：getAiitKafkaConsumer</B>
-   * <B>概要说明：获取消费者线程</B>
-   * @Author zm
-   * @Date 2022年09月13日 13:09:48
-   * @Param
+   * 获取队列
+   *
    * @return
-   **/
-  public KafkaConsumer<String, Bytes> getAiitKafkaConsumer(){
-    return aiitKafkaConsumer;
+   */
+  public LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> getOffsetsLinkedBlockingQueue() {
+    return offsetsLinkedBlockingQueue;
   }
 
   /**
    * <B>方法名称：getIsInitDone</B>
    * <B>概要说明：消费者线程初始化完毕的标志</B>
+   *
+   * @return java.util.concurrent.atomic.AtomicBoolean
    * @Author zm
    * @Date 2022年09月13日 13:09:29
    * @Param []
-   * @return java.util.concurrent.atomic.AtomicBoolean
    **/
-  public Boolean getIsInitDone(){
+  public Boolean getIsInitDone() {
     return isInitDone.get();
   }
 
@@ -110,32 +122,89 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
   @Override
   public void run() {
-    // init();
-    // if (false == isInitDone.get()) {
-    //   log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
-    //   return;
-    // }
-    // doRun();
+    init();
+    if (false == isInitDone.get()) {
+      log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");
+      return;
+    }
+    doRun();
   }
 
   private void doRun() {
-    // todo：这里需要设置优雅关机。2022-07-28 17:34:52
     while (true) {
       try {
-        // poll(duration): 长轮询, 即duration时段内没拿到消息就一直重复尝试拿, 知道时间到或者拿到消息才返回结果
-        ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(1000));
+        ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(100));
+        Instant start = Instant.now();
         int count = records.count();
         for (ConsumerRecord<String, Bytes> record : records) {
           aiitKafkaConsumerUtil.doOnMessage(record);
         }
 
-        if (count > 0) {
-          // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
-          aiitKafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
-        }
+        // 根据配置情况，提交offset
+        commitAck(count, start);
       } catch (Exception e) {
         log.error(" # ConsumerTest.run() # 消费消息时，出现了异常。", e);
       }
+    }
+  }
+
+  /**
+   * <B>方法名称：commitAck</B>
+   * <B>概要说明：根据配置情况，提交offset</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年09月14日 16:09:59
+   * @Param [count]
+   **/
+  private void commitAck(int count, Instant start) {
+    long timeMillis = DateTimeUtil.getTimeMillis(start);
+    if (count > 0) {
+      if (false == reactorProcessorEnable) {
+        // 在不启用reactor模型的情况下，每消费完一批消息，就同步提交这批消息的offset；2022-09-13 17:04:03
+        aiitKafkaConsumer.commitSync();
+        log.info("# MsKafkaSegmentsConsumer.commitAck() # 使用非reactor模式，当消息处理完毕之后，才提交这批消息的offset。本次KafkaConsumer线程从Kafka服务端拉取到【{}】条消息。把这些消息放入到第一层队列里用时【{}】毫秒。从第三层队列里获取到要提交的offset，并提交到Kafka服务端用时【{}】毫秒。", count, timeMillis, (DateTimeUtil.getTimeMillis(start) - timeMillis));
+      } else if (false == gracefulShutdown) {
+        // 不启用优雅关机；2022-09-13 17:13:10
+        // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
+        aiitKafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
+      }
+    }
+    if (true == gracefulShutdown) {
+      // 优雅关机；2022-09-13 17:38:32
+      while (true) {
+        Map<TopicPartition, OffsetAndMetadata> offsetsMap = offsetsLinkedBlockingQueue.poll();
+        if (null != offsetsMap && 0 < offsetsMap.size()) {
+
+          Iterator<TopicPartition> iterator = offsetsMap.keySet().iterator();
+          while (iterator.hasNext()) {
+            TopicPartition key = iterator.next();
+            String topic = key.topic();
+            int partition = key.partition();
+            OffsetAndMetadata value = offsetsMap.get(key);
+            long offset = value.offset();
+            String item = topic + ":" + partition + ":" + offset;
+            Object hget = redisPoolUtil.hget(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item);
+            if (null != hget) {
+              log.error("根据 key = 【{}】，在表 = 【{}】中获取到了已提交过的offset = 【{}】。", item, Const.HASH_TEST_GRACEFUL_SHUTDOWN, offsetsMap);
+            } else {
+              redisPoolUtil.hset(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item, "existed");
+            }
+          }
+
+          // 优先提交offset；
+          aiitKafkaConsumer.commitSync(offsetsMap);
+          log.info("# MsKafkaSegmentsConsumer.commitAck() # 当消息处理完毕之后，才提交这批消息的offset = 【{}】。本次KafkaConsumer线程从Kafka服务端拉取到【{}】条消息。把这些消息放入到第一层队列里用时【{}】毫秒。从第三层队列里获取到要提交的offset，并提交到Kafka服务端用时【{}】毫秒。当前队列中元素的个数【{}】。",
+            offsetsMap,
+            count,
+            timeMillis,
+            (DateTimeUtil.getTimeMillis(start) - timeMillis),
+            offsetsLinkedBlockingQueue.size());
+          offsetsMap.clear();
+        }
+        break;
+      }
+
     }
   }
 }

@@ -1,3 +1,6 @@
+# 生成数据库设计文档存放的路径
+doc_dir_path: /Users/apple/skywalking-mingshi-server
+
 spring:
   servlet:
     multipart:
@@ -11,8 +14,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Aiit@123
-    url: jdbc:mysql://10.0.107.46:3306/lanjing?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-#    url: jdbc:mysql://114.55.211.161:3306/mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://10.0.107.46:3306/lanjing-online?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     hikari:
       # 连接池中允许的最小连接数。缺省值：10
       minimum-idle: 10
@@ -39,9 +41,11 @@ spring:
     # Redis服务器连接密码
     password: Aiit@123
     # Redis服务器地址
+    #    host: 10.0.102.64
     host: 10.0.107.46
     # Redis服务器连接端口
-    port: 6380
+    #    port: 6379
+    port: 6381
     jedis:
       #连接池中最大连接数，默认为 8。
       maxTotal: 10000
@@ -72,13 +76,14 @@ spring:
         min-idle: 50
         ## 连接池最大阻塞等待时间（使用负值表示没有限制） 默认 -1
         max-wait: -1
-#    sentinel:
-#      master: mymaster
-#      nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
+  #    sentinel:
+  #      master: mymaster
+  #      nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
+
   kafka:
-    rule-parsing-success-topic: rule_parsing_success_topic
+    bootstrap-servers: 114.55.211.161:9092
     producer:
-      bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+      topic: skywalking-segments
       # 发生错误后，消息重发的次数。
       retries: 5
       #当有多个消息需要被发送到同一个分区时，生产者会把它们放在同一个批次里。该参数指定了一个批次可以使用的内存大小，按照字节数计算。4194304B = 4MB。
@@ -89,7 +94,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       # 值的序列化方式
       value-serializer: org.apache.kafka.common.serialization.BytesSerializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       # acks=0 ： 生产者在成功写入消息之前不会等待任何来自服务器的响应。
       # acks=1 ： 只要集群的首领节点收到消息，生产者就会收到一个来自服务器成功响应。
       # acks=all ：只有当所有参与复制的节点全部收到消息时，生产者才会收到一个来自服务器的成功响应。
@@ -101,11 +106,15 @@ spring:
         # 最大可以发送一条4MB的消息到Broker端；4194304B = 4MB。
         max.request.size: 4194304
         # 发送一条消息出去，100毫秒内还没有凑成一个batch，则必须立即发送出去；
-        linger.ms: 500
+        linger.ms: 100
         # 每次重试间隔500毫秒；
         retry.backoff.ms: 500
     consumer:
-      bootstrap-servers: 114.55.211.161:9092
+      topic: skywalking-segments
+      agent-switch-request-topic: agent-switch-request-topic
+      agent-switch-response-topic: agent-switch-response-topic
+      group: skyflying-consumer-group
+      agent-switch-response-group: agent-switch-response-group
       # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
       auto-commit-interval: 1S
       # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：
@@ -121,22 +130,30 @@ spring:
       group-id: flows_match_group
       #最长1000毫秒
       fetch-max-wait: 1000
-      fetch-min-size: 1
       properties:
         max.poll.interval.ms: 1200000
         #最多拉取1000条数据
-        max.poll.records: 500
+        max.poll.records: 10
     listener:
-      # 在侦听器容器中运行的线程数。
-      concurrency: 5
+      # 当使用spring-kafka组件时，会用到这个参数。如果使用原生的kafka消费者代码来拉取消息，则用不到这个参数。
+      # 这个参数的意思是：会创建 concurrency = 5个线程，这5个线程都会进入到各自的无限循环中，专门从kafka服务器上（批量的）拉取消息。
+      # 消息拉取到之后，如果是批量拉取了多条消息，那么spring-kafka组件会遍历每一条消息，然后接着调用咱们自己实现的 onMessage() 方法来处理消息。
+      # 也就是说，spring-kafka这个组件要实现的效果是：通过concurrency这个参数来设置并发度，使用多线程从kafka服务端拉取消息，并把拉取到的消息逐条交给用户自己实现的onMessage()方法来消费。
+      # spring-kafka这个组件非常适合的场景：
+      # 消息可靠性场景：消息零丢失或者消息很少丢失的场景；
+      # 兼顾一定的吞吐量：通过多线程，能够在一定程度上提高处理消息的吞吐量；
+      # 减少用户代码的复杂度：用户为了尽量提高吞吐量，不用自己实现多个消费者（多线程），让spring-kafka组件来管理多个线程就行。
+      # 2022-07-30 13:44:01
+      concurrency: 1
       #listner负责ack，每调用一次，就立即commit
       ack-mode: manual_immediate
+      #      批量提交
+      #      ack-mode: BATCH
       missing-topics-fatal: false
-
 mybatis-plus:
   configuration:
-#    输出SQL语句；2021-12-02 18:40:52
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #    在控制台中输出SQL语句；2021-12-02 18:40:52
+    #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
     default-fetch-size: 100
     default-statement-timeout: 3000
@@ -146,14 +163,21 @@ logging:
   config: classpath:logback-spring.xml
 
 server:
-  port: 9090
-
-es:
-  enable: false
+  port: 9091
+  address:
+  compression:
+    excluded-user-agents:
+  max-http-header-size: 40485760
 
 reactor:
   processor:
     enable: true
+    #    是否启用优雅关机
+    graceful-shutdown: true
+    graceful-shutdown-queue-size: 300
     disruptor: true
     thread:
-      count: 4
+      count: 2
+  iothread:
+    thread:
+      count: 2

@@ -1,11 +1,16 @@
 package com.mingshi.skyflying.common.domain;
 
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
 @Data
 public class MsSegmentDetailDo implements Cloneable{
+    private String topic;
+
+    private Integer parition;
+
+    private Long offset;
+
     private Integer id;
 
     private String userLoginIp;

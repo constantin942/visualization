@@ -45,6 +45,7 @@ import java.util.*;
 @Service("SegmentConsumerService")
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
+
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
@@ -53,13 +54,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
     doConsume(consumerRecord, enableReactorModelFlag);
-    // SegmentObject segmentObject = null;
-    // try {
-    //   segmentObject = SegmentObject.parseFrom(record.value().get());
-    //   doConsume(segmentObject, enableReactorModelFlag);
-    // } catch (InvalidProtocolBufferException e) {
-    //   log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
-    // }
     return null;
   }
 
@@ -67,21 +61,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   public ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception {
     ConsumerRecord<String, Bytes> record = segmentByByte.getRecord();
     doConsume(record, enableReactorModelFlag);
-    // SegmentObject segmentObject = null;
-    // try {
-    //   if (null != record) {
-    //     segmentObject = SegmentObject.parseFrom(record.getData());
-    //     doConsume(segmentObject, enableReactorModelFlag);
-    //   }
-    // } catch (InvalidProtocolBufferException e) {
-    //   log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
-    // }
     return null;
   }
 
   private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
-  // private void doConsume(SegmentObject segmentObject, Boolean enableReactorModelFlag) {
     SegmentObject segmentObject = getSegmentObject(consumerRecord);
+
+    Integer partition = consumerRecord.partition();
 
     HashSet<String> userHashSet = new HashSet<>();
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
@@ -116,7 +102,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 存放用户名暂时为空的链路信息；
         segmentDetaiUserNameIsNullDolList = new LinkedList<>();
         // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
-        getSegmentDetaiDolList(segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
+        getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
 
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
@@ -131,7 +117,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        mingshiServerUtil.doEnableReactorModel(consumerRecord, partition, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
         disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
       }
@@ -143,12 +129,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：getSegmentObject</B>
    * <B>概要说明：从ConsumerRecord实例中获取SegmentObject实例</B>
+   *
+   * @return org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
    * @Author zm
    * @Date 2022年09月13日 15:09:41
    * @Param [record]
-   * @return org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
    **/
-  private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception{
+  private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception {
     SegmentObject segmentObject = null;
     try {
       segmentObject = SegmentObject.parseFrom(record.value().get());
@@ -225,9 +212,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
       long segmentStartTime = segmentObject.getSegmentStartTime();
       String date = null;
-      if(0L != segmentStartTime){
+      if (0L != segmentStartTime) {
         date = DateTimeUtil.longToDate(segmentStartTime);
-      }else{
+      } else {
         date = DateTimeUtil.DateToStr(new Date());
       }
       skywalkingAgentHeartBeatMap.put(jsonObject.toString(), date);
@@ -241,21 +228,22 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：getSegmentDetaiDolList</B>
    * <B>概要说明：组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年09月07日 11:09:24
    * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
-   * @return void
    **/
-  private void getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
+  private void getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
     try {
       String reorganizingSpans = segment.getReorganizingSpans();
       if (StringUtil.isBlank(reorganizingSpans)) {
-        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+        putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
         return;
       }
       List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
       if (null == list || 0 == list.size() || 1 == list.size()) {
-        putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+        putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
         return;
       }
       MsSegmentDetailDo msSegmentDetailDo = null;
@@ -263,7 +251,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         LinkedHashMap map = list.get(i);
 
         // 给MsSegmentDetailDo实例赋值
-        msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
+        msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
         String logs = String.valueOf(map.get(Const.LOGS));
         Boolean isError = false;
 
@@ -354,9 +342,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Date 2022年08月19日 08:08:49
    * @Param [msSegmentDetailDo, map, segment]
    **/
-  private MsSegmentDetailDo getMsSegmentDetailDo(LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
+  private MsSegmentDetailDo getMsSegmentDetailDo(ConsumerRecord<String, Bytes> consumerRecord, LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
     Object url = map1.get(Const.URL);
     MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+    msSegmentDetailDo.setTopic(consumerRecord.topic());
+    msSegmentDetailDo.setParition(consumerRecord.partition());
+    msSegmentDetailDo.setOffset(consumerRecord.offset());
+
     msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
     msSegmentDetailDo.setOperationName(String.valueOf(url));
 
@@ -390,9 +382,22 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return msSegmentDetailDo;
   }
 
-  private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
+  /**
+   * <B>方法名称：putSegmentDetailDoIntoList</B>
+   * <B>概要说明：组装MsSegmentDetailDo实例</B>
+   *
+   * @return void
+   * @Author zm
+   * @Date 2022年09月13日 16:09:09
+   * @Param [consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject]
+   **/
+  private void putSegmentDetailDoIntoList(ConsumerRecord<String, Bytes> consumerRecord, SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
     if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
       MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+      msSegmentDetailDo.setTopic(consumerRecord.topic());
+      msSegmentDetailDo.setParition(consumerRecord.partition());
+      msSegmentDetailDo.setOffset(consumerRecord.offset());
+
       msSegmentDetailDo.setUserLoginIp(segment.getIp());
       msSegmentDetailDo.setUserName(segment.getUserName());
       msSegmentDetailDo.setToken(segment.getToken());
@@ -562,10 +567,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：reorganizingSpans</B>
    * <B>概要说明：重组span数据，返回前端使用</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年09月07日 11:09:00
    * @Param [segmentDo, spanList]
-   * @return void
    **/
   private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
     if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
@@ -582,14 +588,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         childrenSpan.add(span);
 
         // 获取用户登录的ip；2022-09-07 11:17:09
-        getIps(ipHashSet,span);
+        getIps(ipHashSet, span);
 
         // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
         getData(segmentDo, span, linkedList);
         findChildrenDetail(segmentDo, spanList, span, childrenSpan, linkedList);
       }
     }
-    if(!ipHashSet.isEmpty()){
+    if (!ipHashSet.isEmpty()) {
       segmentDo.setIp(JsonUtil.obj2String(ipHashSet));
     }
     String toString = linkedList.toString();
@@ -599,20 +605,21 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：getIps</B>
    * <B>概要说明：获取用户登录的ip</B>
+   *
+   * @return void
    * @Author zm
    * @Date 2022年09月07日 11:09:26
    * @Param [ipHashSet, span]
-   * @return void
    **/
   private void getIps(LinkedHashSet<String> ipHashSet, Span span) {
     String ips = span.getIp();
-    if(StringUtil.isNotBlank(ips)){
-      if(ips.contains(",")){
+    if (StringUtil.isNotBlank(ips)) {
+      if (ips.contains(",")) {
         String[] splits = ips.split(",");
         for (String ip : splits) {
           ipHashSet.add(ip);
         }
-      }else{
+      } else {
         ipHashSet.add(ips);
       }
     }
@@ -1034,10 +1041,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         segment.setToken(token);
       }
 
-//      String ip = segmentObject.getIp();
-//      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
-//        segment.setIp(ip);
-//      }
+     String ip = segmentObject.getIp();
+     if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
+       segment.setIp(ip);
+     }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
     }

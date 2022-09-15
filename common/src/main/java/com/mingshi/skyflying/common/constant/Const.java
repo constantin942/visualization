@@ -32,6 +32,11 @@ public class Const {
   public static final String TABLE_DESC = "tableDesc";
   public static final String AGENT_NAME = "agentName";
   public static final String AGENT_CODE = "agentCode";
+  public static final String TOPIC = "topic";
+  public static final String PARTITION = "partition";
+  public static final String OFFSET = "offset";
+  public static final String TOPIC_PARTITION_OFFSET = "topic-partition-offset";
+  public static final String HASH_TEST_GRACEFUL_SHUTDOWN = "hash-test-graceful-shutdown";
 
   public interface RedisCacheExtime {
     int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
@@ -112,7 +117,7 @@ public class Const {
   public static final Integer NUMBER_ZERO = 0;
   public static final Integer IO_THREAD_QUEUE_SIZE = 5000;
   public static final Integer INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL = 5;
-  public static final Integer FLUSH_TO_ROCKETMQ_INTERVAL = 1;
+  public static final Integer FLUSH_TO_MQ_INTERVAL = 5;
   public static final Integer CURRENT_TIME_RANDOM = 30;
   public static final String KEYS_ALL = "keys *";
   public static final CharSequence LIKE = "like";
@@ -131,7 +136,6 @@ public class Const {
   private Const() {
     throw new IllegalStateException("Const class");
   }
-
 
   public static final String DB_TYPE = "db.type";
   public static final String DB_INSTANCE = "db.instance";
