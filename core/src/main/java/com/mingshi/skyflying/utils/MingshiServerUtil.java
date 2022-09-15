@@ -114,7 +114,6 @@ public class MingshiServerUtil {
    * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
    **/
   public void doEnableReactorModel(ConsumerRecord<String, Bytes> consumerRecord,
-                                   Integer partition,
                                    HashMap<String, Map<String, Integer>> map,
                                    List<Span> spanList,
                                    SegmentDo segmentDo,
@@ -151,19 +150,21 @@ public class MingshiServerUtil {
       if (null != topicPartitionOffsetJson) {
         jsonObject.put(Const.TOPIC_PARTITION_OFFSET, topicPartitionOffsetJson.toString());
       }
-
-      if (null != jsonObject && 0 < jsonObject.size() && null != partition) {
+      Integer partition = consumerRecord.partition();
+      if (null != jsonObject && 0 < jsonObject.size()) {
         Integer queueIndex = IoThreadBatchInsertByLinkedBlockingQueue.getQueueIndex(partition);
         LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(gracefulShutdown, reactorIoThreadThreadCount, 10, mingshiServerUtil, partition);
-        if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-          // log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
-          String key = DateTimeUtil.dateToStr(new Date());
-          if (0 < linkedBlockingQueue.size()) {
-            redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
+        if(null != linkedBlockingQueue){
+          if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
+            // log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+            String key = DateTimeUtil.dateToStr(new Date());
+            if (0 < linkedBlockingQueue.size()) {
+              redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
+            }
           }
+          // 当第二层队列满了后，这里会阻塞住；2022-09-14 19:14:41
+          linkedBlockingQueue.put(jsonObject);
         }
-        // 当第二层队列满了后，这里会阻塞住；2022-09-14 19:14:41
-        linkedBlockingQueue.put(jsonObject);
       }
     } catch (Exception e) {
       log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
@@ -594,35 +595,35 @@ public class MingshiServerUtil {
         // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
         redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
         // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-        redisPoolUtil.incrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+        redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
         // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-        redisPoolUtil.incrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
+        redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
 
         // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-        redisPoolUtil.incrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
+        redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
         // 记录每一个数据库表最后的被访问的时间；
         redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-        // redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+        // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
         LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
       }
     } else {
       // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
       redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
       // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-      redisPoolUtil.incrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+      redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
       // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-      redisPoolUtil.incrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
+      redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
 
       // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-      redisPoolUtil.incrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
+      redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
       // 记录每一个数据库表最后的被访问的时间；
       redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
       // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
-      // redisPoolUtil.incrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
+      // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
       LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
     }
     // 有序集合：统计每个用户操作类型次数；
-    redisPoolUtil.incrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
+    redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
 
   }
 
@@ -867,9 +868,9 @@ public class MingshiServerUtil {
           String time = iterator1.next();
           Integer count = map.get(time);
           // 统计每个Processor线程自己的QPS；2022-07-27 10:16:09
-          // redisPoolUtil.incrementScore(threadName, time, Long.valueOf(count));
+          // redisPoolUtil.zSetIncrementScore(threadName, time, Long.valueOf(count));
           // 统计所有Processor线程总的QPS；2022-07-27 10:16:30
-          redisPoolUtil.incrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
+          redisPoolUtil.zSetIncrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
         }
       }
       processorThreadQpsMap.clear();
@@ -894,8 +895,7 @@ public class MingshiServerUtil {
     if (true == reactorProcessorDisruptor) {
       long queueSize = processorByDisruptor.getQueueSize();
       if (0 < queueSize) {
-        redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Double.valueOf(queueSize));
-        // redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+        redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Double.valueOf(queueSize));
       }
     } else {
       List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
@@ -903,8 +903,7 @@ public class MingshiServerUtil {
         for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
           Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
           if(0 < queueSize){
-            // redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
-            redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Double.valueOf(queueSize));
+            redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Double.valueOf(queueSize));
           }
         }
       }
@@ -915,8 +914,7 @@ public class MingshiServerUtil {
         for (int i = 0; i < linkedBlockingQueueList.size(); i++) {
           Integer size = linkedBlockingQueueList.get(i).size();
           if (0 < size) {
-            // redisPoolUtil.hsetIncrBy(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
-            redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.doubleValue());
+            redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.doubleValue());
           }
         }
       }

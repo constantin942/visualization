@@ -67,8 +67,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
     SegmentObject segmentObject = getSegmentObject(consumerRecord);
 
-    Integer partition = consumerRecord.partition();
-
     HashSet<String> userHashSet = new HashSet<>();
     Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
     try {
@@ -117,7 +115,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       // 将组装好的segment插入到表中；2022-04-20 16:34:01
       if (true == enableReactorModelFlag) {
         // 使用reactor模型；2022-05-30 21:04:05
-        mingshiServerUtil.doEnableReactorModel(consumerRecord, partition, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+        mingshiServerUtil.doEnableReactorModel(consumerRecord, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
       } else {
         disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
       }
@@ -246,12 +244,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
         return;
       }
-      MsSegmentDetailDo msSegmentDetailDo = null;
       for (int i = 1; i < list.size(); i++) {
         LinkedHashMap map = list.get(i);
 
         // 给MsSegmentDetailDo实例赋值
-        msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
+        MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
         String logs = String.valueOf(map.get(Const.LOGS));
         Boolean isError = false;
 

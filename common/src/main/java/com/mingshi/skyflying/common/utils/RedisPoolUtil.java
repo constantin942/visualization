@@ -1418,7 +1418,7 @@ public class RedisPoolUtil {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
     }, fallbackMethod = "incrementScoreFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
-  public void incrementScore(String key, String value, double scoure) {
+  public void zSetIncrementScore(String key, String value, double scoure) {
     try {
       ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
       stringStringZsetOperations.incrementScore(key, value, scoure);

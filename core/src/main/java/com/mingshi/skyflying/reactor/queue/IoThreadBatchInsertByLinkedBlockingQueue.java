@@ -51,7 +51,7 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
    * @param flushToRocketMqInterval
    * @param mingshiServerUtil
    */
-  public IoThreadBatchInsertByLinkedBlockingQueue(boolean gracefulShutdown,Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+  public IoThreadBatchInsertByLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
     log.info("开始执行方法OperatorRedisFailureBuffer（）。");
     if (0 < SINGLE_CASE_COUNT.get()) {
       log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
@@ -77,30 +77,37 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
    * @return
    */
   public static LinkedBlockingQueue getLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, Integer partition) {
-    if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
-      synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
-        if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
-          log.info("获取单例LinkedBlockingQueue。");
-          new IoThreadBatchInsertByLinkedBlockingQueue(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+    try {
+      if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+        synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
+          if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+            log.info("获取单例LinkedBlockingQueue。");
+            new IoThreadBatchInsertByLinkedBlockingQueue(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+          }
         }
       }
+      Integer index = 0;
+      if (null != partition) {
+        index = indexFor(partition, linkedBlockingQueueList.size());
+      }
+      return linkedBlockingQueueList.get(index);
+    } catch (Exception e) {
+      log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 根据partition = 【{}】获取所属内存队列时，出现了异常。", partition, e);
     }
-
-    Integer index = indexFor(partition, linkedBlockingQueueList.size());
-
-    return linkedBlockingQueueList.get(index);
+    return null;
   }
 
   /**
    * <B>方法名称：getQueueIndex</B>
    * <B>概要说明：根据partition获取对应的队列</B>
+   *
+   * @return java.lang.Integer
    * @Author zm
    * @Date 2022年09月14日 19:09:54
    * @Param [partition]
-   * @return java.lang.Integer
    **/
-  public static Integer getQueueIndex(Integer partition){
-    if(0 < linkedBlockingQueueList.size() && null != partition && -1 < partition){
+  public static Integer getQueueIndex(Integer partition) {
+    if (0 < linkedBlockingQueueList.size() && null != partition && -1 < partition) {
       return indexFor(partition, linkedBlockingQueueList.size());
     }
     return -1000;
