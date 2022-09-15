@@ -152,11 +152,11 @@ public class MingshiServerUtil {
         jsonObject.put(Const.TOPIC_PARTITION_OFFSET, topicPartitionOffsetJson.toString());
       }
 
-      if (null != jsonObject && 0 < jsonObject.size()) {
+      if (null != jsonObject && 0 < jsonObject.size() && null != partition) {
         Integer queueIndex = IoThreadBatchInsertByLinkedBlockingQueue.getQueueIndex(partition);
         LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(gracefulShutdown, reactorIoThreadThreadCount, 10, mingshiServerUtil, partition);
         if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-          log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+          // log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
           String key = DateTimeUtil.dateToStr(new Date());
           if (0 < linkedBlockingQueue.size()) {
             redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
@@ -894,8 +894,8 @@ public class MingshiServerUtil {
     if (true == reactorProcessorDisruptor) {
       long queueSize = processorByDisruptor.getQueueSize();
       if (0 < queueSize) {
-        // redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
-        redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
+        redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Double.valueOf(queueSize));
+        // redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR, key, Long.valueOf(queueSize));
       }
     } else {
       List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
@@ -903,8 +903,8 @@ public class MingshiServerUtil {
         for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
           Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
           if(0 < queueSize){
-            redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
-            // redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
+            // redisPoolUtil.hsetIncrBy(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Long.valueOf(queueSize));
+            redisPoolUtil.zAdd(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Double.valueOf(queueSize));
           }
         }
       }
@@ -915,8 +915,8 @@ public class MingshiServerUtil {
         for (int i = 0; i < linkedBlockingQueueList.size(); i++) {
           Integer size = linkedBlockingQueueList.get(i).size();
           if (0 < size) {
-            redisPoolUtil.hsetIncrBy(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
-            // redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
+            // redisPoolUtil.hsetIncrBy(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.longValue());
+            redisPoolUtil.zAdd(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.doubleValue());
           }
         }
       }

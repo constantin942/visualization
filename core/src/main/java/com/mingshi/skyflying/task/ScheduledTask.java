@@ -125,7 +125,7 @@ public class ScheduledTask {
   /**
    * 每隔30分钟执行一次：
    */
-  @Scheduled(cron = "0 */30 * * * ?")
+  // @Scheduled(cron = "0 */30 * * * ?")
   public void scheduledGetDmsAuditLog() {
     execitonScheduledTaskList.doScheduledGetDmsAuditLog(Const.SCHEDULED_GET_DMS_AUDIT_LOG);
   }

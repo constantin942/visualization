@@ -320,10 +320,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             segmentDetaiDolList.add(msSegmentDetailDo);
           } else {
             // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
-            if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken())) {
+            if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
               segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
-            } else {
-              log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));
             }
           }
         }
@@ -420,7 +418,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         segmentDetaiDolList.add(msSegmentDetailDo);
       } else {
         // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
-        if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken())) {
+        if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
           segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
         } else {
           log.error("# SegmentConsumeServiceImpl.putSegmentDetailDoIntoList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));

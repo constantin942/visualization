@@ -65,6 +65,7 @@ public class ExecitonScheduledTaskList {
       // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
       List<MsSegmentDetailDo> tokenList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
       while (null != tokenList && 0 < tokenList.size()) {
+        // todo：获取到用户名不为空的记录后，记得要走异常检测，等郑翔做好异常检测之后，再把这个功能加上去；2022-09-15 16:22:18
         // 将从表 ms_segment_detail_username_is_null 获取到用户名不为空的记录，放入到公共队列中，让其IoThread线程进行持久化操作（在Redis中统计以及保存到MySQL中）；2022-08-01 15:50:47
         mingshiServerUtil.doEnableReactorModel(null, null, null, null, null, tokenList, null, null, null);
         // 从表 ms_segment_detail_username_is_null 将用户名不为空的记录删除。这里有个丢数据的场景：当数据放入到公共队列后 ，此时当前服务宕机了，那么在队列里还没来得及进行持久化的数据就丢失了。2022-08-01 15:59:12
