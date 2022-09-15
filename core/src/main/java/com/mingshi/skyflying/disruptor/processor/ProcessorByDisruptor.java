@@ -49,7 +49,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   @Value("${reactor.processor.thread.count}")
   private Integer reactorProcessorThreadCount;
 
-  private Integer queueSize = 8192;
+  private Integer queueSize = 2048;
   private RingBuffer<SegmentByByte> acceptorRingBuffer;
 
   private volatile Boolean createProcessorsFinishedFlag = false;
