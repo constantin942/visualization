@@ -114,7 +114,9 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
     log.info(" 执行完毕 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 更新表【{}】的状态值【{}】成功。", tableId, isDelete);
 
     // 在本地内存中更新表的状态；2022-07-13 13:57:54
-    LoadAllEnableMonitorTablesFromDb.put(msMonitorBusinessSystemTablesDo.getTableName(), isDelete);
+    // mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
+    String key = mingshiServerUtil.doGetTableName(msMonitorBusinessSystemTablesDo.getDbAddress(), msMonitorBusinessSystemTablesDo.getDbName(), msMonitorBusinessSystemTablesDo.getTableName());
+    LoadAllEnableMonitorTablesFromDb.put(key, isDelete);
     return bySuccess;
   }
 

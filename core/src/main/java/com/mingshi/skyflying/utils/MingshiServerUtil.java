@@ -604,7 +604,7 @@ public class MingshiServerUtil {
         // 记录每一个数据库表最后的被访问的时间；
         redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
         // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
-        LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
+        LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
       }
     } else {
       // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
@@ -620,7 +620,7 @@ public class MingshiServerUtil {
       redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
       // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
       // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
-      LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue, true);
+      LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
     }
     // 有序集合：统计每个用户操作类型次数；
     redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);

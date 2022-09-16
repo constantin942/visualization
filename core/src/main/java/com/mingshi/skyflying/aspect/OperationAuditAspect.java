@@ -211,9 +211,6 @@ public class OperationAuditAspect {
       operationLog.setRequestParams(params);
       operationLog.setMethodName(methodName);
       operationLog.setRequestUrl(url);
-      if (url.equals("http://10.0.107.22:8081/api/skyflying/sysmenu")) {
-        System.out.println("");
-      }
       operationLog.setRequestParams(params);
       operationLog.setOrderId(orderId);
       Integer insertResult = operateLogService.insertSelective(operationLog);
