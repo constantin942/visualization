@@ -445,7 +445,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           for (String splitTableName : splits) {
             key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
             // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-            tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key, false);
+            tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
             if (null != tableEnableStatus && 1 == tableEnableStatus) {
               // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
               return null;
@@ -454,7 +454,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         } else {
           key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
           // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-          tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key, false);
+          tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
           if (null != tableEnableStatus && 1 == tableEnableStatus) {
             // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
             return null;

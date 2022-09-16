@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.impl;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.OperationLog;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -46,10 +47,16 @@ public class OperationLogServiceImpl extends ParentServiceImpl<OperationLog, Lon
       hashMap.put(Const.USER_NAME, userName);
     }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-    List<OperationLog> operationLogs = operateLogMapper.selectAllOperationLog(hashMap);
-    if (null != operationLogs && 0 < operationLogs.size()) {
-      bySuccess.setData(JsonUtil.obj2String(operationLogs));
+    List<OperationLog> list = operateLogMapper.selectAllOperationLog(hashMap);
+
+    Integer count = operateLogMapper.selectAllOperationLogCount(hashMap);
+    ObjectNode context = JsonUtil.createJsonObject();
+    if (null != list && !list.isEmpty()) {
+      context.put("rows", JsonUtil.object2String(list));
     }
+    context.put("total", count);
+    bySuccess.setData(JsonUtil.object2String(context));
+
     log.info("# OperationLogServiceImpl.getOperationLog() # 根据查询条件【{}】，获取高危操作日志成功。", hashMap);
     return bySuccess;
   }

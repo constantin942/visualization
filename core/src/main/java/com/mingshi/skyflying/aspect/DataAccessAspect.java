@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.aspect;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.OperationLog;
 import com.mingshi.skyflying.common.domain.SysOperator;
@@ -10,7 +9,6 @@ import com.mingshi.skyflying.common.utils.AspectUtil;
 import com.mingshi.skyflying.common.utils.DateUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.init.UpdateOperationRecord;
 import com.mingshi.skyflying.service.OperateLogService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import jodd.util.StringUtil;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -29,6 +26,7 @@ import javax.servlet.http.HttpSession;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -53,17 +51,24 @@ public class DataAccessAspect {
 
   private ThreadLocal<String> orderIdThreadLocal = new ThreadLocal<>();
 
+  private static final Map<String,String> methodMap = new ConcurrentHashMap<>();
+  static {
+    methodMap.put("getHighDangerOperationLog","getHighDangerOperationLog");
+    methodMap.put("getSysMenu","getSysMenu");
+  }
+
+
   /**
    * 对类ServerlessCheckController中所有方法调用之前，进行登录校验；这种方式不需要在类的头部加注解
    */
   private final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
 
   /**
-   * 只对加了@AspectAnnotation注解的方法进行拦截；
+   * 只对加了@DataAccessAspectAnnotation注解的方法进行拦截；
    */
-  @Pointcut("@annotation(com.mingshi.skyflying.aspect.AspectAnnotation)")
-  private void annotationPointCut() {
-  }
+  // @Pointcut("@annotation(com.mingshi.skyflying.aspect.DataAccessAspectAnnotation)")
+  // private void annotationPointCut() {
+  // }
 
   /**
    * @return java.lang.Object
@@ -72,8 +77,8 @@ public class DataAccessAspect {
    * @Date 16:01 2020/1/31
    * @Param [joinPoint]
    **/
-  @Around("annotationPointCut()")
-  // @Around(executeExpr)
+  // @Around("annotationPointCut()")
+  @Around(executeExpr)
   public Object processLog(ProceedingJoinPoint joinPoint) {
     Instant instStart = Instant.now();
     //获取到请求的属性
@@ -90,7 +95,7 @@ public class DataAccessAspect {
 
       orderId = mingshiServerUtil.getOrderId(null);
       // 请求信息插入到数据库中
-      requestInfoIntoMysql(map, orderId);
+      // requestInfoIntoMysql(map, orderId);
 
       methodName = (String) map.get(Const.METHOD);
       // 获取用户名
@@ -111,7 +116,7 @@ public class DataAccessAspect {
       log.error("用户 = {} 调用接口 = {} 时，出现了异常", userName, methodName, e);
     } finally {
       // 将请求信息更新到表中
-      update(userName, orderId, resObj);
+      // update(userName, orderId, resObj);
       // 为了避免被前世的记忆干扰了今生的行为，最好使用完调用remove方法，将其删除；
       orderIdThreadLocal.remove();
     }
@@ -134,7 +139,8 @@ public class DataAccessAspect {
 
     String oldPassword = (String) map.get("oldPassword");
     String newPassword = (String) map.get("newPassword");
-    if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
+    if (methodMap.containsKey(methodName)) {
+    // if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
       /** 由于不能从前端传递用户的用户名过来，所以从这里把用户名传递过去（若是从前端传递用户名过来，不安全）*/
       resObj = aspectUtil.excute(joinPoint, userName);
     } else if (methodName.contains("changePassword")) {
@@ -203,7 +209,7 @@ public class DataAccessAspect {
       OperationLog operationLog = new OperationLog();
 
       /* 获取操作说明 */
-      getOperationDesc(params, operationLog, methodName);
+      // getOperationDesc(params, operationLog, methodName);
 
       operationLog.setUserName(userName);
       operationLog.setGmtCreate(DateUtil.dateStr4(new Date()));
@@ -219,57 +225,6 @@ public class DataAccessAspect {
       }
     } catch (Exception e) {
       log.error("# DataAccessAspect.requestInfoIntoMysql() # 将用户【{}】操作记录插入到表中出现了异常。", userName, e);
-    }
-  }
-
-  /**
-   * <B>方法名称：getOperationDesc</B>
-   * <B>概要说明：获取操作说明</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年09月09日 14:09:37
-   * @Param [params, operateLog, methodName]
-   **/
-  private void getOperationDesc(String params, OperationLog operationLog, String methodName) {
-    ObjectNode jsonNodes = JsonUtil.string2Obj(params, ObjectNode.class);
-    if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE)) {
-      if (null != jsonNodes.get(Const.IS_DELETE_OPRETION)) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecord.getValue(methodName, jsonNodes.get(Const.IS_DELETE_OPRETION).asText());
-        stringBuilder.append(value);
-        if (null != jsonNodes.get(Const.TABLE_NAME)) {
-          stringBuilder.append(Const.COLON);
-          stringBuilder.append(jsonNodes.get(Const.TABLE_NAME).asText());
-        }
-        operationLog.setOperationDesc(stringBuilder.toString());
-      }
-    } else if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE_DESC)) {
-      if (null != jsonNodes.get(Const.TABLE_DESC)) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecord.getValue(methodName, Const.TABLE_DESC);
-        stringBuilder.append(value);
-        String tableName = null;
-        if (null != jsonNodes.get(Const.TABLE_NAME)) {
-          tableName = jsonNodes.get(Const.TABLE_NAME).asText();
-          stringBuilder.append(Const.COLON);
-          stringBuilder.append(jsonNodes.get(Const.TABLE_DESC).asText());
-        }
-        operationLog.setOperationDesc(StringUtil.isBlank(tableName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.COMMA, tableName));
-      }
-    }else if(null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT)){
-      if (null != jsonNodes.get(Const.AGENT_NAME)) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecord.getValue(methodName, Const.AGENT_NAME);
-        stringBuilder.append(value);
-        String agentName = null;
-        if (null != jsonNodes.get(Const.AGENT_CODE)) {
-          agentName = jsonNodes.get(Const.AGENT_CODE).asText();
-          stringBuilder.append(Const.COLON);
-          stringBuilder.append(jsonNodes.get(Const.AGENT_NAME).asText());
-        }
-        operationLog.setOperationDesc(StringUtil.isBlank(agentName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.COMMA, agentName));
-      }
     }
   }
 

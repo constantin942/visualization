@@ -120,11 +120,14 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
    * @Date 2022年07月13日 11:07:30
    * @Param [tableName]
    **/
-  public static Integer getTableEnableStatus(String tableName, Boolean flag) {
+  public static Integer getTableEnableStatus(String tableName) {
     Integer status = concurrentHashMapIsDelete.get(tableName);
-    if (null == status && true == flag) {
+    if (null == status) {
+    // if (null == status && true == flag) {
       // 当获取表名时，如果当前表不在本地内存中，那么就将其插入到本地内存中。2022-07-13 14:03:14
-      isChangedMap.put(tableName, 0);
+      if(!isChangedMap.containsKey(tableName)){
+        isChangedMap.put(tableName, 0);
+      }
     }
     return status;
   }
