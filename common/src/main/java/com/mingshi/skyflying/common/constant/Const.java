@@ -26,17 +26,23 @@ public class Const {
   public static final String PARAMS = "params";
   public static final String ORDER_ID = "orderId";
   public static final String UPDATE_MONITOR_TABLE = "updateMonitorTable";
-  public static final String UPDATE_MONITOR_TABLE_DESC = "updateMonitorTableaDesc";
+  public static final String UPDATE_MONITOR_TABLE_DESC = "updateMonitorTableDesc";
   public static final String UPDATE_SKYWALKING_AGENT = "updateSkywalkingAgent";
+  public static final String UPDATE_SKYWALKING_AGENT_STATUS = "updateAgentStatus";
   public static final String IS_DELETE_OPRETION = "isDelete";
   public static final String TABLE_DESC = "tableDesc";
   public static final String AGENT_NAME = "agentName";
+  public static final String AGENT_SWITCH = "agentSwitch";
+  public static final String AGENT_ON_OFF = "agentOnOff";
   public static final String AGENT_CODE = "agentCode";
   public static final String TOPIC = "topic";
   public static final String PARTITION = "partition";
   public static final String OFFSET = "offset";
   public static final String TOPIC_PARTITION_OFFSET = "topic-partition-offset";
   public static final String HASH_TEST_GRACEFUL_SHUTDOWN = "hash-test-graceful-shutdown";
+  public static final String AGENT_STATUS_OFF_DESC = "关闭";
+  public static final String AGENT_STATUS_ON_DESC = "开启";
+  public static final String HANDLER = "handler";
 
   public interface RedisCacheExtime {
     int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
@@ -50,7 +56,6 @@ public class Const {
   public static final String SCHEDULED_GET_DMS_AUDIT_LOG = "redisson:key:scheduledGetDmsAuditLog";
 
   public static final String AGENT_STATUS_UNKNOWN = "状态未知";
-  public static final String AGENT_ON_OFF = "agent_on_off";
   public static final String AGENT_QUERY = "agent_query";
   public static final String AGENT_STATUS_ON = "on";
   public static final String AGENT_STATUS_OFF = "off";

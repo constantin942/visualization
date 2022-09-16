@@ -1,6 +1,6 @@
 package com.mingshi.web.controller;
 
-import com.mingshi.skyflying.aspect.AspectAnnotation;
+import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -60,12 +60,11 @@ public class SkyflyingController {
    * @Date 2022年09月09日 15:09:50
    * @Param [userName]
    **/
-  @AspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/getHighDangerOperationLog")
-  public ServerResponse<String> getHighDangerOperationLog(String userName,
-                                                          @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<String> getHighDangerOperationLog(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+                                                          String userName) {
     ServerResponse<String> serverResponse = operationLogService.getOperationLog(userName, pageNo, pageSize);
     return serverResponse;
   }
@@ -79,7 +78,6 @@ public class SkyflyingController {
    * @Date 2022年09月09日 09:09:54
    * @Param [userName]
    **/
-  @AspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/sysmenu", method = RequestMethod.POST)
   public ServerResponse<String> getSysMenu(String userName) {
@@ -130,6 +128,8 @@ public class SkyflyingController {
    * @Date 2022年08月25日 10:08:53
    * @Param [pageNo, pageSize]
    **/
+  // 记录操作日志的注解；
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateAgentStatus")
   public ServerResponse<String> updateAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance, @RequestParam(value = "agentSwitch") String agentSwitch) {
@@ -159,10 +159,10 @@ public class SkyflyingController {
   }
 
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
-  @PostMapping(value = "/updateMonitorTableaDesc")
-  public ServerResponse<String> updateMonitorTableaDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
+  @PostMapping(value = "/updateMonitorTableDesc")
+  public ServerResponse<String> updateMonitorTableDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
     return bySuccess;
   }
@@ -177,7 +177,7 @@ public class SkyflyingController {
    * @Param []
    **/
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
   public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
@@ -196,7 +196,7 @@ public class SkyflyingController {
    * @Param [agentCode, pageNo, pageSize]
    **/
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/updateSkywalkingAgent")
   public ServerResponse<String> updateSkywalkingAgent(
@@ -385,9 +385,10 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @GetMapping(value = "/getAnomalyDetectionInfo")
-  public ServerResponse<String> getAnomalyDetectionInfo(String userName,
-                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<String> getAnomalyDetectionInfo(
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+    String userName) {
     return msAlarmInformationService.getAllAlarmInfo(userName, pageNo, pageSize);
   }
 
@@ -448,9 +449,10 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @GetMapping(value = "/getAllUserPortraitByVisitedTime")
-  public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, /* 登录系统的名称 */
-                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<String> getAllUserPortraitByVisitedTime(
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+    String userName) {
     return userPortraitByTimeService.getAllUserPortraitByVisitedTime(userName, pageNo, pageSize);
   }
 
