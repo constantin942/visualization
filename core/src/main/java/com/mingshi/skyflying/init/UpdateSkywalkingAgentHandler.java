@@ -19,7 +19,7 @@ public class UpdateSkywalkingAgentHandler implements UpdateOperationRecord {
     if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT)) {
       if (null != jsonNodes.get(Const.AGENT_NAME)) {
         StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecordMap.getValue(methodName, Const.AGENT_NAME);
+        String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_NAME);
         stringBuilder.append(value);
         String agentName = null;
         if (null != jsonNodes.get(Const.AGENT_CODE)) {

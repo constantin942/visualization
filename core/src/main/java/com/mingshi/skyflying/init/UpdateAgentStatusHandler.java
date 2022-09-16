@@ -20,7 +20,7 @@ public class UpdateAgentStatusHandler implements UpdateOperationRecord {
       if (null != jsonNodes.get(Const.SERVICE_INSTANCE)) {
         String serviceInstance = jsonNodes.get(Const.SERVICE_INSTANCE).asText();
         StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecordMap.getValue(methodName, Const.AGENT_SWITCH);
+        String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_SWITCH);
         stringBuilder.append(value);
         String agentSwitch = null;
         if (null != jsonNodes.get(Const.AGENT_SWITCH)) {

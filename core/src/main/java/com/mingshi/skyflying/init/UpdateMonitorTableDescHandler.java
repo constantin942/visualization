@@ -19,7 +19,7 @@ public class UpdateMonitorTableDescHandler implements UpdateOperationRecord {
     if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE_DESC)) {
       if (null != jsonNodes.get(Const.TABLE_DESC)) {
         StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecordMap.getValue(methodName, Const.TABLE_DESC);
+        String value = UpdateOperationRecordFactory.getValue(methodName, Const.TABLE_DESC);
         stringBuilder.append(value);
         String tableName = null;
         if (null != jsonNodes.get(Const.TABLE_NAME)) {

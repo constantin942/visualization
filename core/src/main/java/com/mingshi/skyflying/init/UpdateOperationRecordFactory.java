@@ -15,13 +15,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @Version 1.0
  **/
-public class UpdateOperationRecordMap {
+public class UpdateOperationRecordFactory {
   private static final Map<String, Map<String, Object>> updateOperationRecordMap = new ConcurrentHashMap<>();
 
   static {
     Map<String, Object> updateMonitorTableMap = new ConcurrentHashMap<>();
-    updateMonitorTableMap.put("1", "禁用表");
-    updateMonitorTableMap.put("0", "启用表");
+    updateMonitorTableMap.put(Const.NUMBER_ONE_STR, "禁用表");
+    updateMonitorTableMap.put(Const.NUMBER_ZERO_STR, "启用表");
     updateMonitorTableMap.put(Const.HANDLER, new UpdateMonitorTableHandler());
     updateOperationRecordMap.put(Const.UPDATE_MONITOR_TABLE, updateMonitorTableMap);
 

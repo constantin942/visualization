@@ -17,7 +17,7 @@ public class UpdateMonitorTableHandler implements UpdateOperationRecord {
   public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
     if (null != jsonNodes.get(Const.IS_DELETE_OPRETION)) {
       StringBuilder stringBuilder = new StringBuilder();
-      String value = UpdateOperationRecordMap.getValue(methodName, jsonNodes.get(Const.IS_DELETE_OPRETION).asText());
+      String value = UpdateOperationRecordFactory.getValue(methodName, jsonNodes.get(Const.IS_DELETE_OPRETION).asText());
       stringBuilder.append(value);
       if (null != jsonNodes.get(Const.TABLE_NAME)) {
         stringBuilder.append(Const.COLON);

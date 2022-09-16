@@ -90,6 +90,8 @@ public class Const {
   public static final Object USERNAME = "username";
   public static final Object NICKNAME = "nickname";
   public static final Integer NUMBER_ONE = 1;
+  public static final String NUMBER_ONE_STR = "1";
+  public static final String NUMBER_ZERO_STR = "0";
   public static final String REDISSON_PING = "Redisson/PING";
   public static final String LETTUCE_SENTINEL = "Lettuce/SENTINEL";
   public static final String MYSQL_JDBI_CONNECTION_CLOSE = "Mysql/JDBI/Connection/close";

@@ -10,7 +10,7 @@ import com.mingshi.skyflying.common.utils.AspectUtil;
 import com.mingshi.skyflying.common.utils.DateUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.init.UpdateOperationRecordMap;
+import com.mingshi.skyflying.init.UpdateOperationRecordFactory;
 import com.mingshi.skyflying.service.OperateLogService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import jodd.util.StringUtil;
@@ -236,7 +236,7 @@ public class OperationAuditAspect {
    **/
   private void getOperationDesc(String params, OperationLog operationLog, String methodName) {
     ObjectNode jsonNodes = JsonUtil.string2Obj(params, ObjectNode.class);
-    UpdateOperationRecordMap.execute(jsonNodes, methodName, operationLog);
+    UpdateOperationRecordFactory.execute(jsonNodes, methodName, operationLog);
   }
 
   /**
