@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.impl;
 
-import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.UserPortraitByVisitedTableEverydayDo;
@@ -45,6 +46,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
+    @Resource
+    AnomalyDetectionBusiness anomalyDetectionBusiness;
 
     @Override
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
@@ -152,48 +155,30 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
      * @Param [userName, matchRuleId, originalTime]
      */
     public void updateAnomalyDetectionInfo(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
-//    if (null == id) {
-//      return ServerResponse.createByErrorMessage("id字段必传", "");
-//    }
-//    if (null == matchRuleId) {
-//      return ServerResponse.createByErrorMessage("命中规则字段必传", "");
-//    }
-//    if (StringUtil.isBlank("originalTime")) {
-//      return ServerResponse.createByErrorMessage("告警时间必传", "");
-//    }
-//    if (StringUtil.isBlank("userName")) {
-//      return ServerResponse.createByErrorMessage("用户名字段必传", "");
-//    }
-//    if (StringUtil.isBlank("alarmContent")) {
-//      return ServerResponse.createByErrorMessage("告警内容字段必传", "");
-//    }
-//    if (StringUtil.isBlank("flag")) {
-//      return ServerResponse.createByErrorMessage("处置字段必传", "");
-//    }
         if (!anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_DELETE) &&
                 !anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
             throw new AiitException("处置字段非法，处置字段要么是delete，要么是update");
-//      return ServerResponse.createByErrorMessage("处置字段非法，处置字段要么是delete，要么是update", "");
         }
 
         // 仅仅删除这条规则；2022-07-25 14:16:26
         if (anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_DELETE)) {
             deleteAnomalyDetection(anomalyDetectionInfoBo.getId());
         } else if (anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
-            // 更新用户画像，同时逻辑删除告警信息；
-//      if (StringUtil.isBlank("matchRuleId")) {
-//        return ServerResponse.createByErrorMessage("命中的告警规则字段必传", "");
-//      }
-            updateAnomalyDetection(anomalyDetectionInfoBo);
+            // 逻辑删除告警信息；
             updateAnomalyDetection(anomalyDetectionInfoBo.getId());
+            // 插入粗粒度表
+            anomalyDetectionBusiness.insertCoarse(anomalyDetectionInfoBo);
         }
     }
 
     @Override
     public ServerResponse<String> updateAnomalyDetectionInfos(List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+        //更新数据
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {
             updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
         }
+        //更新用户画像
+        anomalyDetectionBusiness.updatePortrait();
         return ServerResponse.createBySuccess();
     }
 
@@ -211,7 +196,6 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         String userName = anomalyDetectionInfoBo.getUserName();
         String originalTime = anomalyDetectionInfoBo.getOriginalTime();
         String alarmContent = anomalyDetectionInfoBo.getAlarmContent();
-
         if (matchRuleId.equals(1)) {
             // 处理基于访问时间的用户画像信息；2022-07-25 17:36:01
             updateOrInsertUserPortraitByVisitedTime(userName, originalTime);

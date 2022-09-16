@@ -8,4 +8,5 @@ public interface MsSegmentDetailMapper {
 
     List<MsSegmentDetailDo> getInfoForCoarseDetail();
 
+    MsSegmentDetailDo selectByGlobalTraceId(String traceId);
 }

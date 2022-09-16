@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.service;
 
-import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 

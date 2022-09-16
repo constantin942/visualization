@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.bo;
+package com.mingshi.skyflying.common.bo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -47,4 +47,10 @@ public class AnomalyDetectionInfoBo {
      */
     @NotNull(message = "处置字段必传")
     String flag;
+
+    /**
+     * 全局跟踪id
+     */
+    @NotNull(message = "全局跟踪id必传")
+    private String globalTraceId;
 }

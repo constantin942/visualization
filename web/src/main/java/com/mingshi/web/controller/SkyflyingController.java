@@ -1,7 +1,7 @@
 package com.mingshi.web.controller;
 
 import com.mingshi.skyflying.aspect.AspectAnnotation;
-import com.mingshi.skyflying.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.service.*;

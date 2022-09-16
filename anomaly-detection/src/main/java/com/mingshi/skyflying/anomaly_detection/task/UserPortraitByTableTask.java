@@ -9,6 +9,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.protocol.types.Field;
 import org.redisson.api.RLock;
@@ -20,10 +21,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @Author: 唐郑翔
@@ -194,5 +194,47 @@ public class UserPortraitByTableTask {
             }
         }
         return list;
+    }
+
+    /**
+     * 插入库表粗粒度表/画像表
+     */
+    public void insertTableCoarse(MsSegmentDetailDo segmentDetailDo) {
+        List<MsSegmentDetailDo> list = new ArrayList<>();
+        list.add(segmentDetailDo);
+        List<MsSegmentDetailDo> segmentDetails = splitTable(list);
+        for (MsSegmentDetailDo segmentDetail : segmentDetails) {
+            insertTableCoarseHelper(segmentDetail);
+        }
+    }
+
+    private void insertTableCoarseHelper(MsSegmentDetailDo segmentDetail) {
+        String username = segmentDetail.getUserName();
+        Date time = null;
+        try {
+            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(segmentDetail.getStartTime());
+        } catch (ParseException e) {
+            log.error("提取时间失败----{}", segmentDetail.getStartTime());
+            return;
+        }
+        String tableName = segmentDetail.getMsTableName() + "." + segmentDetail.getMsTableName();
+        UserPortraitByTableDo userPortraitByTable = userPortraitByTableMapper.selectByNameAndTime(username, time, tableName);
+        if (userPortraitByTable == null) {
+            // 没有该用户当天粗粒度/画像信息
+            userPortraitByTableMapper.insertOne(UserPortraitByTableDo.builder()
+                    .username(username).tableName(tableName).count(1).createTime(time)
+                    .build());
+        } else {
+            // 有该用户当天的粗粒度/画像信息
+            userPortraitByTable.setCount(userPortraitByTable.getCount() + 1);
+            userPortraitByTableMapper.updateByPrimaryKeySelective(userPortraitByTable);
+        }
+    }
+
+    /**
+     * 更新用户画像
+     */
+    public void updatePortrait() {
+        cachePortraitByTable();
     }
 }

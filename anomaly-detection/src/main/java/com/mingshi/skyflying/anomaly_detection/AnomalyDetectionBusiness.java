@@ -1,12 +1,14 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
+import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +46,10 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     CoarseSegmentDetailOnTimeMapper coarseSegmentDetailOnTimeMapper;
+
+    @Resource
+    MsSegmentDetailMapper segmentDetailMapper;
+
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
     private String TIME_PREFIX;
@@ -108,7 +115,7 @@ public class AnomalyDetectionBusiness {
             }
         } else {
             //有用户画像
-            if (count < visitCount) {
+            if (count > visitCount) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM));
             }
         }
@@ -191,17 +198,19 @@ public class AnomalyDetectionBusiness {
     private MsAlarmInformationDo buildAlarmInfo(MsSegmentDetailDo segmentDetailDo, AlarmEnum alarmEnum) {
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
         msAlarmInformationDo.setUserName(segmentDetailDo.getUserName());
-        msAlarmInformationDo.setMatchRuleId(AnomylyDetectionSingletonByVisitedTableEveryday.getVisitedTableRuleId());
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDetailDo.getStartTime()));
         msAlarmInformationDo.setGlobalTraceId(segmentDetailDo.getGlobalTraceId());
         String content = "";
         if (alarmEnum == AlarmEnum.NEW_USER) {
+            msAlarmInformationDo.setMatchRuleId(AlarmEnum.NEW_USER.getCode());
             content = "用户 " + segmentDetailDo.getUserName() + " 首次出现";
         }
         if (alarmEnum == AlarmEnum.TIME_ALARM) {
+            msAlarmInformationDo.setMatchRuleId(AlarmEnum.TIME_ALARM.getCode());
             content = "用户" + segmentDetailDo.getUserName() + "以往在该时段很少访问";
         }
         if (alarmEnum == AlarmEnum.TABLE_ALARM) {
+            msAlarmInformationDo.setMatchRuleId(AlarmEnum.TABLE_ALARM.getCode());
             content = "用户" + segmentDetailDo.getUserName() + "以往很少访问表" + segmentDetailDo.getDbInstance() + "." + segmentDetailDo.getMsTableName();
         }
         msAlarmInformationDo.setAlarmContent(content);
@@ -257,4 +266,33 @@ public class AnomalyDetectionBusiness {
         if (o == null) return null;
         return Double.parseDouble((String) o);
     }
+
+    /**
+     * 更新用户画像
+     */
+    public void updatePortrait() {
+        try {
+            // 时间维度
+            userPortraitByTimeTask.updatePortrait();
+            // 空间维度
+            userPortraitByTableTask.updatePortrait();
+        } catch (Exception e) {
+            log.error("更新画像发生异常");
+        }
+    }
+
+    /**
+     * 插入粗粒度表
+     */
+    public void insertCoarse(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
+        MsSegmentDetailDo segmentDetail = segmentDetailMapper.selectByGlobalTraceId(anomalyDetectionInfoBo.getGlobalTraceId());
+        if (segmentDetail == null)  return;
+        if(Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TIME_ALARM.getCode())) {
+            userPortraitByTimeTask.insertTimeCoarse(segmentDetail);
+        }
+        if(Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TABLE_ALARM.getCode())) {
+            userPortraitByTableTask.insertTableCoarse(segmentDetail);
+        }
+    }
+
 }

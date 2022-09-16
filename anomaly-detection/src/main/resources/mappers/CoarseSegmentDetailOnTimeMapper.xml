@@ -404,6 +404,7 @@
             is_delete                 = #{isDelete,jdbcType=TINYINT}
         where id = #{id,jdbcType=INTEGER}
     </update>
+
     <insert id="insertSelectiveBatch" parameterType="java.util.List">
         insert into coarse_segment_detail_on_time
         (username, counts,
@@ -467,5 +468,13 @@
         select *
         from coarse_segment_detail_on_time
         where username = #{username,jdbcType=VARCHAR} limit 1
+    </select>
+
+    <select id="selectOneByNameAndTime"
+            resultType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        select *
+        from coarse_segment_detail_on_time
+        where username = #{username,jdbcType=VARCHAR}
+          and 1 > to_days(#{time,jdbcType=DATE}) - TO_DAYS(`create_time`) limit 1
     </select>
 </mapper>

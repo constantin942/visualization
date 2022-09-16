@@ -60,4 +60,7 @@
             != 0
             );
     </select>
+    <select id="selectByGlobalTraceId" parameterType="string" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+        select * from ms_segment_detail where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
+    </select>
 </mapper>
