@@ -87,7 +87,7 @@ public class RedisPoolUtil {
       stringRedisTemplate.opsForHash().increment(key, value, incrementCount);
       return true;
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("# RedisPoolUtil.hsetIncrBy # 对key = 【{}】，value = 【{}】进行自增 = 【{}】时，出现了异常。", key, value, incrementCount);
       return false;
     }
   }
