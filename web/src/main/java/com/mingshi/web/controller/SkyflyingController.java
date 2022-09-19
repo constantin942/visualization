@@ -60,12 +60,11 @@ public class SkyflyingController {
    * @Date 2022年09月09日 15:09:50
    * @Param [userName]
    **/
-  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/getHighDangerOperationLog")
-  public ServerResponse<String> getHighDangerOperationLog(String userName,
-                                                          @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+  public ServerResponse<String> getHighDangerOperationLog(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+                                                          String userName) {
     ServerResponse<String> sysMenu = operationLogService.getOperationLog(userName, pageNo, pageSize);
     return sysMenu;
   }
@@ -79,7 +78,6 @@ public class SkyflyingController {
    * @Date 2022年09月09日 09:09:54
    * @Param [userName]
    **/
-  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/sysmenu", method = RequestMethod.POST)
   public ServerResponse<String> getSysMenu(String userName) {
@@ -130,6 +128,8 @@ public class SkyflyingController {
    * @Date 2022年08月25日 10:08:53
    * @Param [pageNo, pageSize]
    **/
+  // 记录操作日志的注解；
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateAgentStatus")
   public ServerResponse<String> updateAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance, @RequestParam(value = "agentSwitch") String agentSwitch) {
@@ -161,8 +161,8 @@ public class SkyflyingController {
   // 记录操作日志的注解；
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
-  @PostMapping(value = "/updateMonitorTableaDesc")
-  public ServerResponse<String> updateMonitorTableaDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
+  @PostMapping(value = "/updateMonitorTableDesc")
+  public ServerResponse<String> updateMonitorTableDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
     ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
     return bySuccess;
   }
