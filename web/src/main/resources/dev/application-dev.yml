@@ -185,7 +185,7 @@ reactor:
     graceful-shutdown-queue-size: 300
     disruptor: false
     thread:
-      count: 2
+      count: 1
   iothread:
     thread:
-      count: 4
+      count: 1
