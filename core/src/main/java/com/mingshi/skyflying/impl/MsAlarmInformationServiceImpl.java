@@ -18,6 +18,8 @@ import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.service.MsAlarmInformationService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -48,6 +50,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
+
 
     @Override
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
@@ -177,7 +180,6 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {
             updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
         }
-        //更新用户画像
         anomalyDetectionBusiness.updatePortrait();
         return ServerResponse.createBySuccess();
     }

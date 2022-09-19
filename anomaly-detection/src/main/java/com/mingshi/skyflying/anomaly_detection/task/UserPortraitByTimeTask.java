@@ -338,6 +338,8 @@ public class UserPortraitByTimeTask {
             case 23:
                 coarseSegmentDetailOnTime.setTimeIntervalCount2324(coarseSegmentDetailOnTime.getTimeIntervalCount2324() + 1);
                 break;
+            default:
+                break;
         }
     }
 

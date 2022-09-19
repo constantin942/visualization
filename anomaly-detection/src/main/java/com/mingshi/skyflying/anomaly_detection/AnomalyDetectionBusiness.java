@@ -16,6 +16,8 @@ import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +51,13 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     MsSegmentDetailMapper segmentDetailMapper;
+    @Resource
+    RedissonClient redissonClient;
+
+    /**
+     * Redis分布式锁Key
+     */
+    public static final String REDIS_LOCK = "anomaly_detection:updatePortrait";
 
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
@@ -271,13 +280,17 @@ public class AnomalyDetectionBusiness {
      * 更新用户画像
      */
     public void updatePortrait() {
+        RLock lock = redissonClient.getLock(REDIS_LOCK);
+        lock.lock();
         try {
             // 时间维度
             userPortraitByTimeTask.updatePortrait();
             // 空间维度
             userPortraitByTableTask.updatePortrait();
         } catch (Exception e) {
-            log.error("更新画像发生异常");
+            log.error("更新用户画像失败");
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -286,13 +299,12 @@ public class AnomalyDetectionBusiness {
      */
     public void insertCoarse(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
         MsSegmentDetailDo segmentDetail = segmentDetailMapper.selectByGlobalTraceId(anomalyDetectionInfoBo.getGlobalTraceId());
-        if (segmentDetail == null)  return;
-        if(Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TIME_ALARM.getCode())) {
+        if (segmentDetail == null) return;
+        if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TIME_ALARM.getCode())) {
             userPortraitByTimeTask.insertTimeCoarse(segmentDetail);
         }
-        if(Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TABLE_ALARM.getCode())) {
+        if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TABLE_ALARM.getCode())) {
             userPortraitByTableTask.insertTableCoarse(segmentDetail);
         }
     }
-
 }
