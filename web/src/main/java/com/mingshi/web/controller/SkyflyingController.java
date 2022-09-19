@@ -1,6 +1,6 @@
 package com.mingshi.web.controller;
 
-import com.mingshi.skyflying.aspect.AspectAnnotation;
+import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -60,7 +60,7 @@ public class SkyflyingController {
    * @Date 2022年09月09日 15:09:50
    * @Param [userName]
    **/
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/getHighDangerOperationLog")
   public ServerResponse<String> getHighDangerOperationLog(String userName,
@@ -79,7 +79,7 @@ public class SkyflyingController {
    * @Date 2022年09月09日 09:09:54
    * @Param [userName]
    **/
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/sysmenu", method = RequestMethod.POST)
   public ServerResponse<String> getSysMenu(String userName) {
@@ -159,7 +159,7 @@ public class SkyflyingController {
   }
 
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateMonitorTableaDesc")
   public ServerResponse<String> updateMonitorTableaDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
@@ -177,7 +177,7 @@ public class SkyflyingController {
    * @Param []
    **/
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
   public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
@@ -196,7 +196,7 @@ public class SkyflyingController {
    * @Param [agentCode, pageNo, pageSize]
    **/
   // 记录操作日志的注解；
-  @AspectAnnotation(isStart = true)
+  @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/updateSkywalkingAgent")
   public ServerResponse<String> updateSkywalkingAgent(
