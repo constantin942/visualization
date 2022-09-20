@@ -52,7 +52,7 @@ public class ConfigController {
 //    }
 
     @GetMapping("getConfigDic")
-    public ServerResponse<ArrayList<Integer>> getAllConfigDic(String typeName) {
+    public ServerResponse<ArrayList<String>> getAllConfigDic(@RequestParam String typeName) {
         return ServerResponse.createBySuccess(portraitConfigMapper.selectByName(typeName));
     }
 

@@ -33,7 +33,10 @@ public class TestControllerA {
     @Resource
     UserPortraitByTableTask tableTask;
 
-
+    @GetMapping("period")
+    public void testPeriod() {
+        anomalyDetectionBusiness.inPeriod("admin", 15);
+    }
 
     @GetMapping("cache")
     public void test() {

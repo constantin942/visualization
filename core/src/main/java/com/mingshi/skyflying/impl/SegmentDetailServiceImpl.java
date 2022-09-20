@@ -4,6 +4,8 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -45,6 +47,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   private MingshiServerUtil mingshiServerUtil;
   @Resource
   private UserPortraitRulesMapper userPortraitRulesMapper;
+  @Resource
+  AnomalyDetectionBusiness anomalyDetectionBusiness;
 
   @Override
   public ServerResponse<String> getAllSegmentsBySegmentRelation(String applicationUserName, String dbType, String msTableName, String startTime, String endTime, String dbUserName, String operationType, Integer pageNo, Integer pageSize) {
@@ -419,6 +423,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
   @Override
   public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String userName) {
+    PortraitConfig config = anomalyDetectionBusiness.getConfig();
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     queryMap.put(Const.USER_NAME, userName);
     List<UserUsualAndUnusualVisitedData> list = new LinkedList<>();

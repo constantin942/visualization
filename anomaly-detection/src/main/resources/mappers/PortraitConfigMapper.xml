@@ -7,7 +7,6 @@
         <result column="rule_table_count" jdbcType="INTEGER" property="ruleTableCount"/>
         <result column="rule_time_period" jdbcType="INTEGER" property="ruleTimePeriod"/>
         <result column="rule_time_rate" jdbcType="DOUBLE" property="ruleTimeRate"/>
-        <result column="is_deleted" jdbcType="INTEGER" property="isDeleted"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>
@@ -84,7 +83,7 @@
         from portrait_config
         where is_deleted = 0;
     </select>
-    <select id="selectByName" resultType="java.lang.Integer" parameterType="string">
+    <select id="selectByName" resultType="java.lang.String" parameterType="string">
         select `value` from dic_item where name = #{typeName,jdbcType=VARCHAR} order by sort
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">

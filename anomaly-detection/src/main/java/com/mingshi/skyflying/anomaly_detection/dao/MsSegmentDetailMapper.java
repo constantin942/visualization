@@ -2,6 +2,7 @@ package com.mingshi.skyflying.anomaly_detection.dao;
 
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 
+import java.util.Date;
 import java.util.List;
 
 public interface MsSegmentDetailMapper {
@@ -9,4 +10,6 @@ public interface MsSegmentDetailMapper {
     List<MsSegmentDetailDo> getInfoForCoarseDetail();
 
     MsSegmentDetailDo selectByGlobalTraceId(String traceId);
+
+    Date selectTimeGap(String username);
 }

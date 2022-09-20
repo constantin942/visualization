@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -111,10 +112,15 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-库表维度
      */
     public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
             String table = segmentDetailDo.getMsTableName();
+            //第一次访问距今是否在画像周期内
+            if (inPeriod(username, portraitConfig.getRuleTablePeriod())) {
+                continue;
+            }
             if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
             List<MsSegmentDetailDo> list = new ArrayList<>();
             list.add(segmentDetailDo);
@@ -124,6 +130,15 @@ public class AnomalyDetectionBusiness {
                 userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
             }
         }
+    }
+
+    /**
+     * 判断用户是否在周期内
+     */
+    public boolean inPeriod(String username, int period) {
+        Date date = segmentDetailMapper.selectTimeGap(username);
+        int betweenDays = (int) ((new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24) + 0.5);
+        return betweenDays <= period;
     }
 
     private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
@@ -148,12 +163,12 @@ public class AnomalyDetectionBusiness {
      * 没有库表用户画像
      */
     private MsAlarmInformationDo doNoTablePortrait(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (isNewUser(segmentDetail.getUserName())) {
-            if (existNewUserAlarm(segmentDetail, msAlarmInformationDoList)) return null;
-            else {
-                return buildAlarmInfo(segmentDetail, AlarmEnum.NEW_USER);
-            }
-        }
+//        if (isNewUser(segmentDetail.getUserName())) {
+//            if (existNewUserAlarm(segmentDetail, msAlarmInformationDoList)) return null;
+//            else {
+//                return buildAlarmInfo(segmentDetail, AlarmEnum.NEW_USER);
+//            }
+//        }
         //老用户但是没画像
         //产生告警信息
         return buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM);
@@ -187,7 +202,11 @@ public class AnomalyDetectionBusiness {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             if (segmentDetailDo.getUserName() == null) return;
+            //第一次访问距今是否在画像周期内
             String userName = segmentDetailDo.getUserName();
+            if (inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
+                continue;
+            }
             String time = segmentDetailDo.getStartTime();
             String interval = getInterval(time);
             if (interval == null || interval.length() == 0) {
@@ -214,9 +233,9 @@ public class AnomalyDetectionBusiness {
      * 没有时间用户画像
      */
     private MsAlarmInformationDo doNoTimePortrait(MsSegmentDetailDo segmentDetailDo) {
-        if (isNewUser(segmentDetailDo.getUserName())) {
-            return buildAlarmInfo(segmentDetailDo, AlarmEnum.NEW_USER);
-        }
+//        if (isNewUser(segmentDetailDo.getUserName())) {
+//            return buildAlarmInfo(segmentDetailDo, AlarmEnum.NEW_USER);
+//        }
         //老用户但是没画像(上次访问距今已超过画像统计周期)
         //产生告警信息
         return buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM);
@@ -324,5 +343,9 @@ public class AnomalyDetectionBusiness {
         if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TABLE_ALARM.getCode())) {
             userPortraitByTableTask.insertTableCoarse(segmentDetail);
         }
+    }
+
+    public PortraitConfig getConfig() {
+        return portraitConfigMapper.selectOne();
     }
 }

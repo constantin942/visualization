@@ -27,5 +27,5 @@ public interface PortraitConfigMapper {
 
     void deleteOld();
 
-    ArrayList<Integer> selectByName(String typeName);
+    ArrayList<String> selectByName(String typeName);
 }

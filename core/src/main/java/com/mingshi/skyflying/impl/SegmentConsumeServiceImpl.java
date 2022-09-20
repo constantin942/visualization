@@ -10,15 +10,14 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.type.KeyValue;
 import com.mingshi.skyflying.common.type.LogEntity;
 import com.mingshi.skyflying.common.type.RefType;
-import com.mingshi.skyflying.common.utils.CollectionUtils;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.dao.SegmentDao;
+import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentConsumerService;
+import com.mingshi.skyflying.service.UserPortraitRulesService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -46,152 +45,198 @@ import java.util.*;
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
-  @Resource
-  private MingshiServerUtil mingshiServerUtil;
-  @Resource
-  private SegmentDao segmentDao;
-  @Resource
-  private AnomalyDetectionBusiness anomalyDetectionBusiness;
+    @Resource
+    private MingshiServerUtil mingshiServerUtil;
+    @Resource
+    private SegmentDao segmentDao;
+    @Resource
+    private AnomalyDetectionBusiness anomalyDetectionBusiness;
+    @Resource
+    RedisPoolUtil redisPoolUtil;
+    @Resource
+    private UserPortraitRulesMapper userPortraitRulesMapper;
+    @Resource
+    private UserPortraitRulesService portraitRulesService;
 
-  @Override
-  public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
-    doConsume(consumerRecord, enableReactorModelFlag);
-    return null;
-  }
+    private String PREFIX = "anomaly_detection:enableRule:";
 
-  @Override
-  public ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception {
-    ConsumerRecord<String, Bytes> record = segmentByByte.getRecord();
-    doConsume(record, enableReactorModelFlag);
-    return null;
-  }
+    private static final String TIME_SUF = "time";
 
-  private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
-    SegmentObject segmentObject = getSegmentObject(consumerRecord);
+    private static final String TABLE_SUF = "table";
 
-    HashSet<String> userHashSet = new HashSet<>();
-    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
-    try {
-      SegmentDo segment = new SegmentDo();
-      // 设置segment_id、trace_id；2022-04-24 14:26:12
-      getRef(segmentObject, segment);
-      // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
-      setUserNameAndTokenAndIpFromSegmentObject(userHashSet, segment, segmentObject);
-      // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
-      setUserNameTokenGlobalTraceIdToLocalMemory(segment);
+    private static final Integer TABLE_ID = 2;
 
-      // 判断是否是异常信息；2022-06-07 18:00:13
-      LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
-      // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
-      LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
-      LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList = null;
-      // 获取探针的名称；2022-06-28 14:25:46
-      skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
+    private static final Integer TIME_ID = 1;
 
-      List<Span> spanList = buildSpanList(segmentObject, segment);
-
-      if (null != spanList && 0 < spanList.size()) {
-        // 组装segment；2022-04-20 16:33:48
-        segment = setUserNameAndTokenFromSpan(spanList, segment);
-
-        // 重组span数据，返回前端使用；2022-04-20 16:49:02
-        reorganizingSpans(segment, spanList);
-
-        // 存放用户名不为空的链路信息；
-        segmentDetaiDolList = new LinkedList<>();
-        // 存放用户名暂时为空的链路信息；
-        segmentDetaiUserNameIsNullDolList = new LinkedList<>();
-        // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
-        getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
-
-        // 判断是否是异常信息；2022-06-07 18:00:13
-        msAlarmInformationDoList = new LinkedList<>();
-        // TODO: 告警改造
-        // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-        // AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-        // anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-      }
-
-      HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
-      statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
-
-      // 将组装好的segment插入到表中；2022-04-20 16:34:01
-      if (true == enableReactorModelFlag) {
-        // 使用reactor模型；2022-05-30 21:04:05
-        mingshiServerUtil.doEnableReactorModel(consumerRecord, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
-      } else {
-        disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
-      }
-    } catch (Exception e) {
-      log.error("清洗调用链信息时，出现了异常。", e);
+    @Override
+    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+        doConsume(consumerRecord, enableReactorModelFlag);
+        return null;
     }
-  }
 
-  /**
-   * <B>方法名称：getSegmentObject</B>
-   * <B>概要说明：从ConsumerRecord实例中获取SegmentObject实例</B>
-   *
-   * @return org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
-   * @Author zm
-   * @Date 2022年09月13日 15:09:41
-   * @Param [record]
-   **/
-  private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception {
-    SegmentObject segmentObject = null;
-    try {
-      segmentObject = SegmentObject.parseFrom(record.value().get());
-    } catch (InvalidProtocolBufferException e) {
-      log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
-      throw new RuntimeException();
+    @Override
+    public ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception {
+        ConsumerRecord<String, Bytes> record = segmentByByte.getRecord();
+        doConsume(record, enableReactorModelFlag);
+        return null;
     }
-    return segmentObject;
-  }
 
-  /**
-   * <B>方法名称：disableReactorModel</B>
-   * <B>概要说明：不使用Reactor模型</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年08月19日 18:08:34
-   * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
-   **/
-  private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
-    // 将QPS信息刷入Redis中；2022-06-27 13:42:13
-    // mingshiServerUtil.flushQpsToRedis();
+    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+        SegmentObject segmentObject = getSegmentObject(consumerRecord);
 
-    // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-    mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+        HashSet<String> userHashSet = new HashSet<>();
+        Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
+        try {
+            SegmentDo segment = new SegmentDo();
+            // 设置segment_id、trace_id；2022-04-24 14:26:12
+            getRef(segmentObject, segment);
+            // 从SegmentObject实例中获取用户名和token；2022-07-12 10:22:53
+            setUserNameAndTokenAndIpFromSegmentObject(userHashSet, segment, segmentObject);
+            // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
+            setUserNameTokenGlobalTraceIdToLocalMemory(segment);
 
-    // 统计processor线程的QPS；2022-07-23 11:26:40
-    mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
+            // 判断是否是异常信息；2022-06-07 18:00:13
+            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
+            // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
+            LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+            LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList = null;
+            // 获取探针的名称；2022-06-28 14:25:46
+            skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
 
-    mingshiServerUtil.flushUserNameToRedis(userHashSet);
+            List<Span> spanList = buildSpanList(segmentObject, segment);
 
-    // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
-    mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+            if (null != spanList && 0 < spanList.size()) {
+                // 组装segment；2022-04-20 16:33:48
+                segment = setUserNameAndTokenFromSpan(spanList, segment);
 
-    // 插入segment数据；2022-05-23 10:15:22
-    // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-    // if (null != segment) {
-    //   segmentDoLinkedList.add(segment);
-    //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
-    // }
+                // 重组span数据，返回前端使用；2022-04-20 16:49:02
+                reorganizingSpans(segment, spanList);
 
-    // 将表名字插入到监管表中；2022-07-13 14:16:57
-    mingshiServerUtil.insertMonitorTables();
+                // 存放用户名不为空的链路信息；
+                segmentDetaiDolList = new LinkedList<>();
+                // 存放用户名暂时为空的链路信息；
+                segmentDetaiUserNameIsNullDolList = new LinkedList<>();
+                // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
+                getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
 
-    mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+                // 判断是否是异常信息；2022-06-07 18:00:13
+                msAlarmInformationDoList = new LinkedList<>();
+                // TODO: 告警改造
+                // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+                // AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                Boolean enableTimeRule = getEnableRule(TIME_SUF);
+                Boolean enableTableRule = getEnableRule(TABLE_SUF);
+                if (enableTableRule) {
+                    anomalyDetectionBusiness.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                }
+                if (enableTimeRule) {
+                    anomalyDetectionBusiness.userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                }
+            }
 
-    mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
+            HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
+            statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
 
-    // 将异常信息插入到MySQL中；2022-06-07 18:16:44
-    LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
-    if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
-      msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+            // 将组装好的segment插入到表中；2022-04-20 16:34:01
+            if (enableReactorModelFlag) {
+                // 使用reactor模型；2022-05-30 21:04:05
+                mingshiServerUtil.doEnableReactorModel(consumerRecord, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+            } else {
+                disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
+            }
+        } catch (Exception e) {
+            log.error("清洗调用链信息时，出现了异常。", e);
+        }
     }
-    mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
-  }
+
+
+    /**
+     * 获取规则开关
+     */
+    private Boolean getEnableRule(String suffix) {
+        Object o = redisPoolUtil.get(PREFIX + suffix);
+        if (o == null) {
+            cacheRuleEnable();
+        }
+        o = redisPoolUtil.get(PREFIX + suffix);
+        return Boolean.parseBoolean((String) o);
+    }
+
+    /**
+     * 从数据库查询开关存入Redis
+     */
+    private void cacheRuleEnable() {
+        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
+        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
+        portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
+        portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
+    }
+
+    /**
+     * <B>方法名称：getSegmentObject</B>
+     * <B>概要说明：从ConsumerRecord实例中获取SegmentObject实例</B>
+     *
+     * @return org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
+     * @Author zm
+     * @Date 2022年09月13日 15:09:41
+     * @Param [record]
+     **/
+    private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception {
+        SegmentObject segmentObject = null;
+        try {
+            segmentObject = SegmentObject.parseFrom(record.value().get());
+        } catch (InvalidProtocolBufferException e) {
+            log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
+            throw new RuntimeException();
+        }
+        return segmentObject;
+    }
+
+    /**
+     * <B>方法名称：disableReactorModel</B>
+     * <B>概要说明：不使用Reactor模型</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年08月19日 18:08:34
+     * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
+     **/
+    private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+        // 将QPS信息刷入Redis中；2022-06-27 13:42:13
+        // mingshiServerUtil.flushQpsToRedis();
+
+        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
+
+        // 统计processor线程的QPS；2022-07-23 11:26:40
+        mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
+
+        mingshiServerUtil.flushUserNameToRedis(userHashSet);
+
+        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
+        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
+
+        // 插入segment数据；2022-05-23 10:15:22
+        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
+        // if (null != segment) {
+        //   segmentDoLinkedList.add(segment);
+        //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
+        // }
+
+        // 将表名字插入到监管表中；2022-07-13 14:16:57
+        mingshiServerUtil.insertMonitorTables();
+
+        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+
+        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
+
+        // 将异常信息插入到MySQL中；2022-06-07 18:16:44
+        LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
+        if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+            msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
+        }
+        mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
+    }
 
   /**
    * <B>方法名称：getAgentServiceName</B>
@@ -226,156 +271,156 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     return skywalkingAgentHeartBeatMap;
   }
 
-  /**
-   * <B>方法名称：getSegmentDetaiDolList</B>
-   * <B>概要说明：组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年09月07日 11:09:24
-   * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
-   **/
-  private void getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
-    try {
-      String reorganizingSpans = segment.getReorganizingSpans();
-      if (StringUtil.isBlank(reorganizingSpans)) {
-        putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
-        return;
-      }
-      List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
-      if (null == list || 0 == list.size() || 1 == list.size()) {
-        putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
-        return;
-      }
-      for (int i = 1; i < list.size(); i++) {
-        LinkedHashMap map = list.get(i);
-
-        // 给MsSegmentDetailDo实例赋值
-        MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
-        String logs = String.valueOf(map.get(Const.LOGS));
-        Boolean isError = false;
-
-        String tags = String.valueOf(map.get(Const.TAGS));
-        List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
-        if (null != tagsList) {
-          String isSql = null;
-          String dingTalkContent = null;
-          for (KeyValue keyValue : tagsList) {
-            String key = keyValue.getKey();
-            String value = keyValue.getValue();
-            if (Const.FILE_OUTPUT.equals(key)) {
-              // 给MsSegmentDetailDo实例设置dbType类型和operationType类型
-              mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.FILE_OUTPUT, Const.FILE_OUTPUT, value);
-            } else if (Const.SEND_EMAIL.equals(key)) {
-              String address = JsonUtil.string2Obj(value, ObjectNode.class).get(Const.ADDREE).asText();
-              msSegmentDetailDo.setPeer(address);
-              mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.SEND_EMAIL, Const.SEND_EMAIL, value);
-            } else {
-              if (Const.OPERATION_TYPE_DING_TALK.equals(key)) {
-                dingTalkContent = value;
-              } else if (Const.DB_TYPE.equals(key)) {
-                isSql = value;
-                msSegmentDetailDo.setOperationType(value);
-              } else if (Const.DB_INSTANCE.equals(key)) {
-                msSegmentDetailDo.setDbInstance(value);
-              } else if (Const.DB_USER_NAME.equals(key)) {
-                msSegmentDetailDo.setDbUserName(value);
-              } else if (Const.DB_STATEMENT.equals(key)) {
-                if (Const.OPERATION_TYPE_SQL.equals(isSql)) {
-                  if ((StringUtil.isNotBlank(logs) && !logs.equals(Const.IS_NULL)) || StringUtil.isBlank(value)) {
-                    isError = true;
-                    // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
-                    break;
-                  }
-                  // 获取表名；2022-06-06 14:16:59
-                  String tableName = setTableName(value, msSegmentDetailDo);
-                  if (StringUtil.isNotBlank(tableName)) {
-                    msSegmentDetailDo.setMsTableName(tableName);
-                  }
-                }
-                msSegmentDetailDo.setDbStatement(value);
-              } else if (key.equals(Const.OPERATION_TYPE_URL)) {
-                if (value.contains(Const.OPERATION_TYPE_DINGTALK)) {
-                  msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DING_TALK);
-                  ObjectNode jsonObject = JsonUtil.createJsonObject();
-                  jsonObject.put(Const.IP, value);
-                  jsonObject.put(Const.CONTENT, dingTalkContent);
-                  msSegmentDetailDo.setDbStatement(jsonObject.toString());
-                  msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_DING_TALK);
-                } else {
-                  msSegmentDetailDo.setDbType(key);
-                  msSegmentDetailDo.setDbStatement(value);
-                }
-              }
+    /**
+     * <B>方法名称：getSegmentDetaiDolList</B>
+     * <B>概要说明：组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年09月07日 11:09:24
+     * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
+     **/
+    private void getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
+        try {
+            String reorganizingSpans = segment.getReorganizingSpans();
+            if (StringUtil.isBlank(reorganizingSpans)) {
+                putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+                return;
             }
-          }
-        }
-
-        if (false == isError) {
-          // 当没有出现sql异常时，才保存SQL信息；2022-07-01 14:41:31
-          if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
-            segmentDetaiDolList.add(msSegmentDetailDo);
-          } else {
-            // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
-            if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
-              segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+            List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
+            if (null == list || 0 == list.size() || 1 == list.size()) {
+                putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+                return;
             }
-          }
+            for (int i = 1; i < list.size(); i++) {
+                LinkedHashMap map = list.get(i);
+
+                // 给MsSegmentDetailDo实例赋值
+                MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
+                String logs = String.valueOf(map.get(Const.LOGS));
+                Boolean isError = false;
+
+                String tags = String.valueOf(map.get(Const.TAGS));
+                List<KeyValue> tagsList = JsonUtil.string2Obj(tags, List.class, KeyValue.class);
+                if (null != tagsList) {
+                    String isSql = null;
+                    String dingTalkContent = null;
+                    for (KeyValue keyValue : tagsList) {
+                        String key = keyValue.getKey();
+                        String value = keyValue.getValue();
+                        if (Const.FILE_OUTPUT.equals(key)) {
+                            // 给MsSegmentDetailDo实例设置dbType类型和operationType类型
+                            mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.FILE_OUTPUT, Const.FILE_OUTPUT, value);
+                        } else if (Const.SEND_EMAIL.equals(key)) {
+                            String address = JsonUtil.string2Obj(value, ObjectNode.class).get(Const.ADDREE).asText();
+                            msSegmentDetailDo.setPeer(address);
+                            mingshiServerUtil.setDbTypeAndOperationType(msSegmentDetailDo, Const.SEND_EMAIL, Const.SEND_EMAIL, value);
+                        } else {
+                            if (Const.OPERATION_TYPE_DING_TALK.equals(key)) {
+                                dingTalkContent = value;
+                            } else if (Const.DB_TYPE.equals(key)) {
+                                isSql = value;
+                                msSegmentDetailDo.setOperationType(value);
+                            } else if (Const.DB_INSTANCE.equals(key)) {
+                                msSegmentDetailDo.setDbInstance(value);
+                            } else if (Const.DB_USER_NAME.equals(key)) {
+                                msSegmentDetailDo.setDbUserName(value);
+                            } else if (Const.DB_STATEMENT.equals(key)) {
+                                if (Const.OPERATION_TYPE_SQL.equals(isSql)) {
+                                    if ((StringUtil.isNotBlank(logs) && !logs.equals(Const.IS_NULL)) || StringUtil.isBlank(value)) {
+                                        isError = true;
+                                        // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                                        break;
+                                    }
+                                    // 获取表名；2022-06-06 14:16:59
+                                    String tableName = setTableName(value, msSegmentDetailDo);
+                                    if (StringUtil.isNotBlank(tableName)) {
+                                        msSegmentDetailDo.setMsTableName(tableName);
+                                    }
+                                }
+                                msSegmentDetailDo.setDbStatement(value);
+                            } else if (key.equals(Const.OPERATION_TYPE_URL)) {
+                                if (value.contains(Const.OPERATION_TYPE_DINGTALK)) {
+                                    msSegmentDetailDo.setDbType(Const.OPERATION_TYPE_DING_TALK);
+                                    ObjectNode jsonObject = JsonUtil.createJsonObject();
+                                    jsonObject.put(Const.IP, value);
+                                    jsonObject.put(Const.CONTENT, dingTalkContent);
+                                    msSegmentDetailDo.setDbStatement(jsonObject.toString());
+                                    msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_DING_TALK);
+                                } else {
+                                    msSegmentDetailDo.setDbType(key);
+                                    msSegmentDetailDo.setDbStatement(value);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (false == isError) {
+                    // 当没有出现sql异常时，才保存SQL信息；2022-07-01 14:41:31
+                    if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
+                        segmentDetaiDolList.add(msSegmentDetailDo);
+                    } else {
+                        // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
+                        if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
+                            segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
         }
-      }
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
     }
-  }
 
-  /**
-   * <B>方法名称：getMsSegmentDetailDo</B>
-   * <B>概要说明：给MsSegmentDetailDo实例赋值</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年08月19日 08:08:49
-   * @Param [msSegmentDetailDo, map, segment]
-   **/
-  private MsSegmentDetailDo getMsSegmentDetailDo(ConsumerRecord<String, Bytes> consumerRecord, LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
-    Object url = map1.get(Const.URL);
-    MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-    msSegmentDetailDo.setTopic(consumerRecord.topic());
-    msSegmentDetailDo.setParition(consumerRecord.partition());
-    msSegmentDetailDo.setOffset(consumerRecord.offset());
+    /**
+     * <B>方法名称：getMsSegmentDetailDo</B>
+     * <B>概要说明：给MsSegmentDetailDo实例赋值</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年08月19日 08:08:49
+     * @Param [msSegmentDetailDo, map, segment]
+     **/
+    private MsSegmentDetailDo getMsSegmentDetailDo(ConsumerRecord<String, Bytes> consumerRecord, LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
+        Object url = map1.get(Const.URL);
+        MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+        msSegmentDetailDo.setTopic(consumerRecord.topic());
+        msSegmentDetailDo.setParition(consumerRecord.partition());
+        msSegmentDetailDo.setOffset(consumerRecord.offset());
 
-    msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
-    msSegmentDetailDo.setOperationName(String.valueOf(url));
+        msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
+        msSegmentDetailDo.setOperationName(String.valueOf(url));
 
-    Integer spanId = null;
-    if (null != map.get(Const.SPANID)) {
-      spanId = Integer.valueOf(String.valueOf(map.get(Const.SPANID)));
+        Integer spanId = null;
+        if (null != map.get(Const.SPANID)) {
+            spanId = Integer.valueOf(String.valueOf(map.get(Const.SPANID)));
+        }
+        String component = String.valueOf(map.get(Const.COMPONET));
+        String serviceCode = String.valueOf(map.get(Const.SERVICE_CODE));
+        String peer = String.valueOf(map.get(Const.PEER));
+        msSegmentDetailDo.setPeer(peer);
+        String endpointName = String.valueOf(map.get(Const.ENDPOINT_NAME));
+        msSegmentDetailDo.setEndpointName(endpointName);
+        Long startTime = Long.valueOf(String.valueOf(map.get(Const.START_TIME)));
+        String serviceInstanceName = String.valueOf(map.get(Const.SERVICE_INSTANCE_NAME));
+        Long endTime = Long.valueOf(String.valueOf(map.get(Const.END_TIME)));
+        Integer parentSpanId = Integer.valueOf(String.valueOf(map.get(Const.PARENT_SPAN_ID)));
+        msSegmentDetailDo.setToken(segment.getToken());
+        msSegmentDetailDo.setComponent(component);
+        msSegmentDetailDo.setSpanId(spanId);
+        msSegmentDetailDo.setServiceCode(serviceCode);
+        msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
+        msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
+        msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
+        msSegmentDetailDo.setParentSpanId(parentSpanId);
+        msSegmentDetailDo.setUserName(segment.getUserName());
+        msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+        msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
+        msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+        msSegmentDetailDo.setUserLoginIp(segment.getIp());
+        return msSegmentDetailDo;
     }
-    String component = String.valueOf(map.get(Const.COMPONET));
-    String serviceCode = String.valueOf(map.get(Const.SERVICE_CODE));
-    String peer = String.valueOf(map.get(Const.PEER));
-    msSegmentDetailDo.setPeer(peer);
-    String endpointName = String.valueOf(map.get(Const.ENDPOINT_NAME));
-    msSegmentDetailDo.setEndpointName(endpointName);
-    Long startTime = Long.valueOf(String.valueOf(map.get(Const.START_TIME)));
-    String serviceInstanceName = String.valueOf(map.get(Const.SERVICE_INSTANCE_NAME));
-    Long endTime = Long.valueOf(String.valueOf(map.get(Const.END_TIME)));
-    Integer parentSpanId = Integer.valueOf(String.valueOf(map.get(Const.PARENT_SPAN_ID)));
-    msSegmentDetailDo.setToken(segment.getToken());
-    msSegmentDetailDo.setComponent(component);
-    msSegmentDetailDo.setSpanId(spanId);
-    msSegmentDetailDo.setServiceCode(serviceCode);
-    msSegmentDetailDo.setStartTime(DateTimeUtil.longToDate(startTime));
-    msSegmentDetailDo.setServiceInstanceName(serviceInstanceName);
-    msSegmentDetailDo.setEndTime(DateTimeUtil.longToDate(endTime));
-    msSegmentDetailDo.setParentSpanId(parentSpanId);
-    msSegmentDetailDo.setUserName(segment.getUserName());
-    msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
-    msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
-    msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
-    msSegmentDetailDo.setUserLoginIp(segment.getIp());
-    return msSegmentDetailDo;
-  }
 
   /**
    * <B>方法名称：putSegmentDetailDoIntoList</B>
