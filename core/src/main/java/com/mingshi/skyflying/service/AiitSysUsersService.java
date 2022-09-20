@@ -10,11 +10,11 @@ import com.mingshi.skyflying.common.response.ServerResponse;
  */
 public interface AiitSysUsersService extends ParentService<SysOperator, Long> {
 
-  int insertSelective(SysOperator record);
+  int insertSelective(SysOperator sysOperator);
 
   SysOperator selectByPrimaryKey(Integer id);
 
-  int updateByPrimaryKeySelective(SysOperator record);
+  int updateByPrimaryKeySelective(SysOperator sysOperator);
 
   ServerResponse<String> addSysUser(String userName, String password, String phone, Integer roleId, String creator) throws Exception;
 

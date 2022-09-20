@@ -65,8 +65,7 @@ public class SkyflyingController {
   public ServerResponse<String> getHighDangerOperationLog(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
                                                           String userName) {
-    ServerResponse<String> sysMenu = operationLogService.getOperationLog(userName, pageNo, pageSize);
-    return sysMenu;
+    return operationLogService.getOperationLog(userName, pageNo, pageSize);
   }
 
   /**
@@ -79,10 +78,9 @@ public class SkyflyingController {
    * @Param [userName]
    **/
   @ResponseBody
-  @RequestMapping(value = "/sysmenu", method = RequestMethod.POST)
+  @PostMapping(value = "/sysmenu")
   public ServerResponse<String> getSysMenu(String userName) {
-    ServerResponse<String> sysMenu = sysMenuService.getSysMenu(userName);
-    return sysMenu;
+    return sysMenuService.getSysMenu(userName);
   }
 
   /**
@@ -99,8 +97,7 @@ public class SkyflyingController {
   public ServerResponse<String> allAgentOperationRecord(@RequestParam(value = "serviceInstance") String serviceInstance,
                                                         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    ServerResponse<String> bySuccess = msAgentSwitchService.allAgentOperationRecord(serviceInstance.trim(), pageNo, pageSize);
-    return bySuccess;
+    return msAgentSwitchService.allAgentOperationRecord(serviceInstance.trim(), pageNo, pageSize);
   }
 
   /**
@@ -115,8 +112,7 @@ public class SkyflyingController {
   @ResponseBody
   @GetMapping(value = "/queryAgentStatus")
   public ServerResponse<String> queryAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance) {
-    ServerResponse<String> bySuccess = msAgentSwitchService.queryAgentStatus(serviceInstance.trim());
-    return bySuccess;
+    return msAgentSwitchService.queryAgentStatus(serviceInstance.trim());
   }
 
   /**
@@ -132,8 +128,7 @@ public class SkyflyingController {
   @ResponseBody
   @PostMapping(value = "/updateAgentStatus")
   public ServerResponse<String> updateAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance, @RequestParam(value = "agentSwitch") String agentSwitch) {
-    ServerResponse<String> bySuccess = msAgentSwitchService.updateAgentStatus(serviceInstance.trim(), agentSwitch.trim());
-    return bySuccess;
+    return msAgentSwitchService.updateAgentStatus(serviceInstance.trim(), agentSwitch.trim());
   }
 
   /**
@@ -153,16 +148,14 @@ public class SkyflyingController {
     String dbAddress,
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.getAllTables(tableName, dbName, dbAddress, pageNo, pageSize);
-    return bySuccess;
+    return msMonitorBusinessSystemTablesService.getAllTables(tableName, dbName, dbAddress, pageNo, pageSize);
   }
 
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateMonitorTableDesc")
   public ServerResponse<String> updateMonitorTableDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
-    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
-    return bySuccess;
+    return msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
   }
 
   /**
@@ -176,11 +169,10 @@ public class SkyflyingController {
    **/
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
-  @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
+  @PostMapping(value = "/updateMonitorTable")
   public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
                                                    @RequestParam(value = "isDelete") Integer isDelete, String tableName) {
-    ServerResponse<String> bySuccess = msMonitorBusinessSystemTablesService.updateTableInformation(id, isDelete);
-    return bySuccess;
+    return msMonitorBusinessSystemTablesService.updateTableInformation(id, isDelete);
   }
 
   /**
@@ -199,8 +191,7 @@ public class SkyflyingController {
     @RequestParam(value = "id") Integer id,
     @RequestParam(value = "agentName") String agentName,
     String agentCode) {
-    ServerResponse<String> bySuccess = msAgentInformationService.updateSkywalkingAgent(id, agentName);
-    return bySuccess;
+    return msAgentInformationService.updateSkywalkingAgent(id, agentName);
   }
 
   /**
@@ -218,9 +209,7 @@ public class SkyflyingController {
     String agentCode,
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-
-    ServerResponse<String> bySuccess = msAgentInformationService.getAllSkywalkingAgent(agentCode, pageNo, pageSize);
-    return bySuccess;
+    return msAgentInformationService.getAllSkywalkingAgent(agentCode, pageNo, pageSize);
   }
 
   /**
@@ -264,7 +253,7 @@ public class SkyflyingController {
    * @Param []
    **/
   @ResponseBody
-  @RequestMapping(value = "/updateUserPortraitRule", method = RequestMethod.POST)
+  @PostMapping(value = "/updateUserPortraitRule")
   public ServerResponse<String> updateUserPortraitRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
     return userPortraitRulesService.updateUserPortraitRule(ruleId, isDelete);
   }

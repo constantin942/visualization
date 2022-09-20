@@ -29,11 +29,7 @@ import java.util.Map;
 @Component
 public class AspectUtil {
 
-  /**
-   * 方法执行超时时间
-   */
-  private final long maxReduceTime = 1000;
-
+  private static final String METHOD_ERROR = "方法执行异常!";
 
   public ServerResponse<String> excute(ProceedingJoinPoint joinPoint) {
     ServerResponse<String> resObj = null;
@@ -41,7 +37,7 @@ public class AspectUtil {
       //执行原方法
       resObj = (ServerResponse<String>) joinPoint.proceed();
     } catch (Exception e) {
-      log.error("方法执行异常!", e);
+      log.error(METHOD_ERROR, e);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
     }
@@ -101,13 +97,11 @@ public class AspectUtil {
     Object[] args = null;
     try {
       args = joinPoint.getArgs();
-      // if(0 < args.length){
       args[args.length - 1] = phone;
-      // }
       //执行原方法
       resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
-      log.error("方法执行异常!", e);
+      log.error(METHOD_ERROR, e);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
     }
@@ -124,7 +118,7 @@ public class AspectUtil {
       //执行原方法
       resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
-      log.error("方法执行异常!", e);
+      log.error(METHOD_ERROR, e);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
     }
@@ -144,7 +138,7 @@ public class AspectUtil {
       //执行原方法
       resObj = (ServerResponse<String>) joinPoint.proceed(args);
     } catch (Exception e) {
-      log.error("方法执行异常!", e);
+      log.error(METHOD_ERROR, e);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
     }
@@ -161,7 +155,7 @@ public class AspectUtil {
     mapTemp.put("responseInfo", responseInfo);
     String temp = "执行接口" + methodName + "所花时间";
     mapTemp.put(temp, diffTime + " ms");
-//    log.info("===================接口 " + methodName + " 执行结束===================" + JsonUtil.obj2String(mapTemp));
+    log.info("===================接口 " + methodName + " 执行结束===================" + JsonUtil.obj2String(mapTemp));
   }
 
 

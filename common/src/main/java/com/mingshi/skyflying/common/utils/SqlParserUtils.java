@@ -47,6 +47,8 @@ public class SqlParserUtils {
 
   static final Map<Class, String> CLASS_MAP = new HashMap<>();
 
+  private SqlParserUtils(){}
+
   static {
     CLASS_MAP.put(Alter.class, Const.SQL_TYPE_ALTER);
     CLASS_MAP.put(CreateIndex.class, Const.SQL_TYPE_CREATEINDEX);
@@ -95,10 +97,9 @@ public class SqlParserUtils {
    */
   public static List<Join> getJoins(SelectBody selectBody) {
     if (selectBody instanceof PlainSelect) {
-      List<Join> joins = ((PlainSelect) selectBody).getJoins();
-      return joins;
+      return ((PlainSelect) selectBody).getJoins();
     }
-    return new ArrayList<Join>();
+    return new ArrayList<>();
   }
 
   /**
@@ -107,10 +108,9 @@ public class SqlParserUtils {
    */
   public static List<Table> getIntoTables(SelectBody selectBody) {
     if (selectBody instanceof PlainSelect) {
-      List<Table> tables = ((PlainSelect) selectBody).getIntoTables();
-      return tables;
+      return ((PlainSelect) selectBody).getIntoTables();
     }
-    return new ArrayList<Table>();
+    return new ArrayList<>();
   }
 
   /**
@@ -131,8 +131,7 @@ public class SqlParserUtils {
    */
   public static Limit getLimit(SelectBody selectBody) {
     if (selectBody instanceof PlainSelect) {
-      Limit limit = ((PlainSelect) selectBody).getLimit();
-      return limit;
+      return ((PlainSelect) selectBody).getLimit();
     }
     return null;
   }
@@ -159,8 +158,7 @@ public class SqlParserUtils {
    */
   public static List<SelectItem> getSelectItems(SelectBody selectBody) {
     if (selectBody instanceof PlainSelect) {
-      List<SelectItem> selectItems = ((PlainSelect) selectBody).getSelectItems();
-      return selectItems;
+      return ((PlainSelect) selectBody).getSelectItems();
     }
     return null;
   }
@@ -274,7 +272,7 @@ public class SqlParserUtils {
     Select selectStatement = (Select) statement;
     PlainSelect plain = (PlainSelect) selectStatement.getSelectBody();
     List<Join> joinList = plain.getJoins();
-    List<String> tablewithjoin = new ArrayList<String>();
+    List<String> tablewithjoin = new ArrayList<>();
     if (joinList != null) {
       for (Join join : joinList) {
         join.setLeft(true);
@@ -396,28 +394,6 @@ public class SqlParserUtils {
 
 
   /**
-   * @Description: 查询 group by
-   * @Author: ywj
-   * @Param: [sql]
-   * @Return: java.util.List<java.lang.String>
-   * @Date: 2020/12/25 15:10
-   **/
-  // public static List<String> selectGroupby(String sql)
-  //   throws JSQLParserException {
-  //   CCJSqlParserManager parserManager = new CCJSqlParserManager();
-  //   Select select = (Select) parserManager.parse(new StringReader(sql));
-  //   PlainSelect plain = (PlainSelect) select.getSelectBody();
-  //   List<Expression> groupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
-  //   List<String> strGroupby = new ArrayList<String>();
-  //   if (null != groupByColumnReferences) {
-  //     for (Expression groupByColumnReference : groupByColumnReferences) {
-  //       strGroupby.add(groupByColumnReference.toString());
-  //     }
-  //   }
-  //   return strGroupby;
-  // }
-
-  /**
    * @Description: 查询order by
    * @Author: ywj
    * @Param: [sql]
@@ -430,7 +406,7 @@ public class SqlParserUtils {
     Select select = (Select) parserManager.parse(new StringReader(sql));
     PlainSelect plain = (PlainSelect) select.getSelectBody();
     List<OrderByElement> orderByElements = plain.getOrderByElements();
-    List<String> strOrderby = new ArrayList<String>();
+    List<String> strOrderby = new ArrayList<>();
     if (orderByElements != null) {
       for (OrderByElement orderByElement : orderByElements) {
         strOrderby.add(orderByElement.toString());

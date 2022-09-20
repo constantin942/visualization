@@ -55,7 +55,7 @@ public class SysMenuServiceImpl extends BaseParentServiceImpl<SysMenu, Long> imp
     }
     // 根据用户角色id获取对应的菜单id；2021-06-09 10:02:53
     List<SysMenuRole> sysMenuRoleList = sysMenuRoleDao.selectByRoleId(sysOperatorRole.getRoleId());
-    if (null == sysMenuRoleList || 0 == sysMenuRoleList.size()) {
+    if (sysMenuRoleList.isEmpty()) {
       log.error("# SysMenuServiceImpl.getSysMenu() # 根据用户名=【{}】用户角色id=【{}】在系统菜单角色表中没有找到对应的角色对应的菜单信息。", userName, sysOperatorRole.getRoleId());
       return ServerResponse.createByErrorMessage(AiitExceptionCode.USERNAME_ROLE_MENU_NOT_EXIST.getMsgCn(), "");
     }

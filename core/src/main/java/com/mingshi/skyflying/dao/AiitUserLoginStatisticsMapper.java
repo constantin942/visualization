@@ -4,11 +4,11 @@ import com.mingshi.skyflying.common.domain.UserLoginStatistics;
 
 public interface AiitUserLoginStatisticsMapper {
 
-    int insertSelective(UserLoginStatistics record);
+    int insertSelective(UserLoginStatistics userLoginStatistics);
 
     UserLoginStatistics selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(UserLoginStatistics record);
+    int updateByPrimaryKeySelective(UserLoginStatistics userLoginStatistics);
 
     int updatePasswordErrorCount(String userName);
 

@@ -13,10 +13,7 @@ import com.mingshi.skyflying.service.UserLoginLogService;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -52,11 +49,11 @@ public class UserController {
      * @Param [request, userName, password]
      **/
     @ResponseBody
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @PostMapping(value = "/login")
     public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
         Instant instStart = Instant.now();
         ServerResponse<SysOperator> response = aiitSysUsersService.login(userName, password);
-        if (AiitExceptionCode.SUCCESS.getCode() == response.getCode() && !StringUtil.equals(null, String.valueOf(response.getData()))) {
+        if (AiitExceptionCode.SUCCESS.getCode().equals(response.getCode()) && !StringUtil.equals(null, String.valueOf(response.getData()))) {
             HttpSession oldSession = request.getSession(false);
             if (oldSession != null) {
                 oldSession.invalidate();
@@ -83,16 +80,16 @@ public class UserController {
    * @Param [userName, password, request, httpServletResponse]
    **/
   @ResponseBody
-  @RequestMapping(value = "/isLogin", method = RequestMethod.POST)
+  @PostMapping(value = "/isLogin")
   public ServerResponse<String> isLogin(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-    ServerResponse<String> serverResponse = new ServerResponse<String>(AiitExceptionCode.SUCCESS);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     HttpSession httpSession = request.getSession();
     String sessionId = httpSession.getId();
     log.info("判断用户是否已登录  sessionID={}", sessionId);
     String str = String.valueOf(redisPoolUtil.get(sessionId));
     if (StringUtil.equals(str, Const.IS_NULL)) {
       log.info("用户登录已过期");
-      return new ServerResponse<String>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
+      return new ServerResponse<>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
     }
     SysOperator aiitUsers = JsonUtil.string2Obj(str, SysOperator.class);
     String userName = aiitUsers.getUserName();
@@ -109,9 +106,9 @@ public class UserController {
    * @Param [request, httpServletResponse]
    **/
   @ResponseBody
-  @RequestMapping(value = "/loginOut", method = RequestMethod.POST)
+  @PostMapping(value = "/loginOut")
   public ServerResponse<String> loginOut(HttpServletRequest request) {
-    ServerResponse<String> serverResponse = new ServerResponse<String>(AiitExceptionCode.SUCCESS);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     HttpSession httpSession = request.getSession();
     String sessionId = httpSession.getId();
     log.info("用户退出登录  sessionID={}", sessionId);
@@ -119,7 +116,7 @@ public class UserController {
     boolean str = redisPoolUtil.del(sessionId);
     if (false == str) {
       log.info("用户退出登录失败，因为根据sessionID将用户的信息从Redis中删除失败，sessionID={}", sessionId);
-      return new ServerResponse<String>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
+      return new ServerResponse<>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
     }
     log.info("用户退出登录成功，sessionID={}", sessionId);
 

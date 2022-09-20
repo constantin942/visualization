@@ -16,7 +16,6 @@ public class UserUtil {
 
   public String getSalt() {
     byte[] saltBytes = DigestUtil.generateSalt(DigestUtil.DEFAULT_BYTES_SIZE);
-    String salt = DigestUtil.encodeHex(saltBytes);
-    return salt;
+    return DigestUtil.encodeHex(saltBytes);
   }
 }

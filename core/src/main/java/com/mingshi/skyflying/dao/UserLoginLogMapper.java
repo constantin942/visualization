@@ -9,5 +9,5 @@ public interface UserLoginLogMapper {
 
     UserLoginLog selectBySeesionId(String sessionId);
 
-    int updateByPrimaryKeySelective(UserLoginLog record);
+    int updateByPrimaryKeySelective(UserLoginLog userLoginLog);
 }

@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface SysOperatorDao {
-  int insertSelective(SysOperator record);
+  int insertSelective(SysOperator sysOperator);
 
   SysOperator selectByPrimaryKey(Integer id);
 
-  int updateByPrimaryKeySelective(SysOperator record);
+  int updateByPrimaryKeySelective(SysOperator sysOperator);
 
   SysOperator selectByUserName(String userName);
 

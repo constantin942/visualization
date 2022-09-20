@@ -20,8 +20,8 @@ public class UserLoginLogServiceImpl extends BaseParentServiceImpl<UserLoginLog,
   UserLoginLogMapper userLoginLogMapper;
 
 	@Override
-	public int insertSelective(UserLoginLog record) {
-		return userLoginLogMapper.insertSelective(record);
+	public int insertSelective(UserLoginLog userLoginLog) {
+		return userLoginLogMapper.insertSelective(userLoginLog);
 	}
 
 	@Override
@@ -35,8 +35,8 @@ public class UserLoginLogServiceImpl extends BaseParentServiceImpl<UserLoginLog,
 	}
 
 	@Override
-	public int updateByPrimaryKeySelective(UserLoginLog record) {
-		return userLoginLogMapper.updateByPrimaryKeySelective(record);
+	public int updateByPrimaryKeySelective(UserLoginLog userLoginLog) {
+		return userLoginLogMapper.updateByPrimaryKeySelective(userLoginLog);
 	}
 
 }

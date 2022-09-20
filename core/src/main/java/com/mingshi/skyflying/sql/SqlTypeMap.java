@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SqlTypeMap {
   private static final Map<String, SqlType> SQL_TYPE_MAP = new ConcurrentHashMap<>();
 
+  private SqlTypeMap(){}
+  
   static {
     SQL_TYPE_MAP.put(Const.SQL_TYPE_SELECT.toLowerCase(), new SelectType());
     SQL_TYPE_MAP.put(Const.SQL_TYPE_INSERT.toLowerCase(), new InsertType());

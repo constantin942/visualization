@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
@@ -46,8 +45,7 @@ public class AiitKafkaProducer {
       // 考虑这样一个场景：在同一时刻，如果对同一个探针执行多次开关操作，为了顺序的执行这些开关操作，这里将同一个探针的开关信息发送到一个partition中。
       //                探针那边是单线程在消费消息，这样一来，探针那边就可以顺序的执行开关操作了。如果将消息发送到多个partition中，会出现乱序的情况。
       ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, partiton, serviceInstance, Bytes.wrap(jsonNodes.toString().getBytes()));
-      SendResult<String, Object> stringObjectSendResult = future.get();
-      RecordMetadata recordMetadata = stringObjectSendResult.getRecordMetadata();
+      future.get();
     } catch (Exception e) {
       log.error("# AiitKafkaProducer.send() # 发送消息到topic【{}】出现了异常。", topic, e);
       return false;

@@ -20,8 +20,8 @@ public class UserLoginLogStatisticsImpl extends BaseParentServiceImpl<UserLoginS
   AiitUserLoginStatisticsMapper aiitUserLoginStatisticsMapper;
 
 	@Override
-	public int insertSelective(UserLoginStatistics record) {
-		return aiitUserLoginStatisticsMapper.insertSelective(record);
+	public int insertSelective(UserLoginStatistics userLoginStatistics) {
+		return aiitUserLoginStatisticsMapper.insertSelective(userLoginStatistics);
 	}
 
 	@Override
@@ -35,8 +35,8 @@ public class UserLoginLogStatisticsImpl extends BaseParentServiceImpl<UserLoginS
 	}
 
 	@Override
-	public int updateByPrimaryKeySelective(UserLoginStatistics record) {
-		return aiitUserLoginStatisticsMapper.updateByPrimaryKeySelective(record);
+	public int updateByPrimaryKeySelective(UserLoginStatistics userLoginStatistics) {
+		return aiitUserLoginStatisticsMapper.updateByPrimaryKeySelective(userLoginStatistics);
 	}
 
 	@Override

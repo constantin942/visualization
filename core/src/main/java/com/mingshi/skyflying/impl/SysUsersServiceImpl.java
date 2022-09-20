@@ -43,8 +43,8 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
   private UserLoginStatisticsService userLoginStatisticsService;
 
   @Override
-  public int insertSelective(SysOperator record) {
-    return sysOperatorDao.insertSelective(record);
+  public int insertSelective(SysOperator sysOperator) {
+    return sysOperatorDao.insertSelective(sysOperator);
   }
 
   @Override
@@ -53,8 +53,8 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
   }
 
   @Override
-  public int updateByPrimaryKeySelective(SysOperator record) {
-    return sysOperatorDao.updateByPrimaryKeySelective(record);
+  public int updateByPrimaryKeySelective(SysOperator sysOperator) {
+    return sysOperatorDao.updateByPrimaryKeySelective(sysOperator);
   }
 
   /**
@@ -67,18 +67,18 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ServerResponse<String> addSysUser(String userName, String password, String phone, Integer roleId, String creator) throws Exception {
-    ServerResponse<String> serverResponse = new ServerResponse<String>(AiitExceptionCode.SUCCESS);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     /** 判断传递的参数是否为空*/
     if (StringUtil.isBlank(password)) {
-      return new ServerResponse<String>(AiitExceptionCode.PASSWORD_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.PASSWORD_IS_EMPTY);
     }
     if (StringUtil.isBlank(userName)) {
-      return new ServerResponse<String>(AiitExceptionCode.USERNAME_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
     /** 判断用户名是否已被注册过*/
     SysOperator sysOperator = sysOperatorDao.selectByUserName(userName);
     if (null != sysOperator) {
-      return new ServerResponse<String>(AiitExceptionCode.USERNAME_IS_ALREADY_REGISTEDRED);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_ALREADY_REGISTEDRED);
     }
 
     /** 获取盐值*/
@@ -120,31 +120,31 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
   @Override
   public ServerResponse<String> changePassword(String userName, String oldPassword, String newPassword) {
-    ServerResponse<String> serverResponse = new ServerResponse<String>(AiitExceptionCode.SUCCESS);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     /** 判断传递的参数是否为空*/
     if (StringUtil.isBlank(oldPassword)) {
-      return new ServerResponse<String>(AiitExceptionCode.OLD_PASSWORD_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.OLD_PASSWORD_IS_EMPTY);
     }
     if (StringUtil.isBlank(newPassword)) {
-      return new ServerResponse<String>(AiitExceptionCode.NEW_PASSWORD_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.NEW_PASSWORD_IS_EMPTY);
     }
     if (StringUtil.isBlank(userName)) {
-      return new ServerResponse<String>(AiitExceptionCode.USERNAME_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
     /** 判断用户名是否存在*/
     SysOperator sysOperator = sysOperatorDao.selectByUserName(userName);
     if (null == sysOperator) {
-      return new ServerResponse<String>(AiitExceptionCode.USERNAME_DOES_NOT_EXIST);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_DOES_NOT_EXIST);
     }
 
     /** 判断新密码与旧密码是否一样*/
     if (StringUtil.equals(oldPassword, newPassword)) {
-      return new ServerResponse<String>(AiitExceptionCode.PASSWORD_IS_SAME);
+      return new ServerResponse<>(AiitExceptionCode.PASSWORD_IS_SAME);
     }
 
     /** 判断新密码长度是否太长*/
     if (newPassword.length() > Const.DATA_LENTGH) {
-      return new ServerResponse<String>(AiitExceptionCode.NEW_PASSWORD_TOO_LONG);
+      return new ServerResponse<>(AiitExceptionCode.NEW_PASSWORD_TOO_LONG);
     }
 
     /** 获取盐值*/
@@ -152,7 +152,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     /** 将密码与盐值一起加密，防止密码明文存储*/
     String oldPasswordSalt = userUtil.getPassword(oldPassword, salt);
     if (!StringUtil.equals(oldPasswordSalt, sysOperator.getPassword())) {
-      return new ServerResponse<String>(AiitExceptionCode.OLD_PASSWORD_IS_ERROR);
+      return new ServerResponse<>(AiitExceptionCode.OLD_PASSWORD_IS_ERROR);
     }
 
     String newPasswordSalt = userUtil.getPassword(newPassword, salt);
@@ -169,16 +169,16 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
   @Override
   public ServerResponse<SysOperator> login(String userName, String password) {
-    ServerResponse serverResponse = new ServerResponse<SysOperator>(AiitExceptionCode.SUCCESS);
+    ServerResponse<SysOperator> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     if (StringUtil.isBlank(userName)) {
-      return new ServerResponse<SysOperator>(AiitExceptionCode.USERNAME_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
     if (StringUtil.isBlank(password)) {
-      return new ServerResponse<SysOperator>(AiitExceptionCode.PASSWORD_IS_EMPTY);
+      return new ServerResponse<>(AiitExceptionCode.PASSWORD_IS_EMPTY);
     }
     SysOperator aiitUsers = sysOperatorDao.selectByUserName(userName);
     if (null == aiitUsers) {
-      return new ServerResponse<SysOperator>(AiitExceptionCode.USERNAME_DOES_NOT_EXIST);
+      return new ServerResponse<>(AiitExceptionCode.USERNAME_DOES_NOT_EXIST);
     }
 
 
@@ -208,7 +208,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     if (StringUtils.equals(passwordCurrent, sysOperator.getPassword())) {
 
       /**用户输入的密码错误次数超过5次且距离最近一次的密码错误时间小于1小时，那么不可以在登录了*/
-      ServerResponse serverResponse = isExpired(userLoginStatistics);
+      ServerResponse<SysOperator> serverResponse = isExpired(userLoginStatistics);
       if (!StringUtil.equals(AiitExceptionCode.SUCCESS.getCode(), serverResponse.getCode())) {
         return serverResponse;
       }
@@ -240,7 +240,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
       }
     } else {
       /**用户输入的密码错误次数超过5次且距离最近一次的密码错误时间小于1小时，那么不可以在登录了*/
-      ServerResponse serverResponse = isExpired(userLoginStatistics);
+      ServerResponse<SysOperator> serverResponse = isExpired(userLoginStatistics);
       if (!StringUtil.equals(AiitExceptionCode.SUCCESS.getCode(), serverResponse.getCode())) {
         return serverResponse;
       }

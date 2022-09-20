@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UpdateOperationRecordFactory {
   private static final Map<String, Map<String, Object>> UPDATE_OPERATION_RECORD_MAP = new ConcurrentHashMap<>();
 
+  private UpdateOperationRecordFactory(){}
   static {
     Map<String, Object> updateMonitorTableMap = new ConcurrentHashMap<>();
     updateMonitorTableMap.put(Const.NUMBER_ONE_STR, "禁用表");

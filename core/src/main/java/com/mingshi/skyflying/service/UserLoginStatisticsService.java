@@ -10,13 +10,13 @@ import com.mingshi.skyflying.common.domain.UserLoginStatistics;
  */
 public interface UserLoginStatisticsService extends ParentService<UserLoginStatistics, Long> {
 
-	int insertSelective(UserLoginStatistics record);
+	int insertSelective(UserLoginStatistics userLoginStatistics);
 
 	UserLoginStatistics selectByPrimaryKey(Integer id);
 
 	UserLoginStatistics selectPasswordErrorCount(String userName);
 
-	int updateByPrimaryKeySelective(UserLoginStatistics record);
+	int updateByPrimaryKeySelective(UserLoginStatistics userLoginStatistics);
 
 	int updatePasswordErrorCount(String userName);
 

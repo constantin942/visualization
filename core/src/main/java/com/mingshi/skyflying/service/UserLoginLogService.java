@@ -17,7 +17,7 @@ public interface UserLoginLogService extends ParentService<UserLoginLog, Long> {
 
 	UserLoginLog selectBySeesionId(String sessionId);
 
-	int updateByPrimaryKeySelective(UserLoginLog record);
+	int updateByPrimaryKeySelective(UserLoginLog userLoginLog);
 
 }
 
