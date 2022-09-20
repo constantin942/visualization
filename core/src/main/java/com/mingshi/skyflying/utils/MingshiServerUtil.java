@@ -273,7 +273,10 @@ public class MingshiServerUtil {
   public String getSqlType(String msSql) {
     String sqlTypeFromLibrary = null;
     try {
-      sqlTypeFromLibrary = SqlParserUtils.getSqlType(msSql).toLowerCase();
+      String sqlType = SqlParserUtils.getSqlType(msSql);
+      if(StringUtil.isNotBlank(sqlType)){
+        sqlTypeFromLibrary = sqlType.toLowerCase();
+      }
     } catch (JSQLParserException e) {
       log.error("# MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】获取sql类型时，出现了异常。", e);
     }
@@ -409,21 +412,7 @@ public class MingshiServerUtil {
       return tableNameList;
     }
 
-    tableNameList = SqlTypeMap.getSqlTable(sqlType, msSql);
-
-    // 以下是测试代码，测试好了记得去掉；2022-09-19 17:44:07
-    if (null == tableNameList) {
-      if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
-        tableNameList = SqlParserUtils.selectTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
-        tableNameList = SqlParserUtils.insertTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
-        tableNameList = SqlParserUtils.updateTable(msSql);
-      } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
-        tableNameList = SqlParserUtils.deleteTable(msSql);
-      }
-    }
-    return tableNameList;
+    return SqlTypeMap.getSqlTable(sqlType, msSql);
   }
 
   /**

@@ -38,7 +38,6 @@ public final class StringUtil {
 
   public static final boolean IS_OS_WINDOWS;
   private static final Random RANDOM = new Random();
-  private static final String COMMA = ",";
   public static final String OS_NAME;
 
   static {

@@ -3,20 +3,19 @@ package com.mingshi.skyflying.anomaly_detection.task;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.*;
+import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
+import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.protocol.types.Field;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
@@ -139,12 +138,12 @@ public class UserPortraitByTableTask {
             String dbInstance = segmentDetail.getDbInstance();
             String table = segmentDetail.getMsTableName();
             if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) continue;
-            if (!table.contains(",")) {
+            if (!table.contains(Const.EN_COMMA)) {
                 //只有一个表, 直接添加, 不用拆分
                 list.add(segmentDetail);
                 continue;
             }
-            String[] tableNames = segmentDetail.getMsTableName().split(",");
+            String[] tableNames = segmentDetail.getMsTableName().split(Const.EN_COMMA);
             for (String tableName : tableNames) {
                 MsSegmentDetailDo msSegmentDetailDo = null;
                 try {

@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.enums.SqlType;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.*;
@@ -46,23 +45,23 @@ import java.util.Map;
 @Slf4j
 public class SqlParserUtils {
 
-  static final Map<Class, SqlType> classMap = new HashMap<>();
+  static final Map<Class, String> classMap = new HashMap<>();
 
   static {
-    classMap.put(Alter.class, SqlType.ALTER);
-    classMap.put(CreateIndex.class, SqlType.CREATEINDEX);
-    classMap.put(CreateTable.class, SqlType.CREATETABLE);
-    classMap.put(CreateView.class, SqlType.CREATEVIEW);
-    classMap.put(Delete.class, SqlType.DELETE);
-    classMap.put(Drop.class, SqlType.DROP);
-    classMap.put(Execute.class, SqlType.EXECUTE);
-    classMap.put(Insert.class, SqlType.INSERT);
-    classMap.put(Merge.class, SqlType.MERGE);
-    classMap.put(Replace.class, SqlType.REPLACE);
-    classMap.put(Select.class, SqlType.SELECT);
-    classMap.put(Truncate.class, SqlType.TRUNCATE);
-    classMap.put(Update.class, SqlType.UPDATE);
-    classMap.put(Upsert.class, SqlType.UPSERT);
+    classMap.put(Alter.class, Const.SQL_TYPE_ALTER);
+    classMap.put(CreateIndex.class, Const.SQL_TYPE_CREATEINDEX);
+    classMap.put(CreateTable.class, Const.SQL_TYPE_CREATETABLE);
+    classMap.put(CreateView.class, Const.SQL_TYPE_CREATEVIEW);
+    classMap.put(Delete.class, Const.SQL_TYPE_DELETE);
+    classMap.put(Drop.class, Const.SQL_TYPE_DROP);
+    classMap.put(Execute.class, Const.SQL_TYPE_EXECUTE);
+    classMap.put(Insert.class, Const.SQL_TYPE_INSERT);
+    classMap.put(Merge.class, Const.SQL_TYPE_MERGE);
+    classMap.put(Replace.class, Const.SQL_TYPE_REPLACE);
+    classMap.put(Select.class, Const.SQL_TYPE_SELECT);
+    classMap.put(Truncate.class, Const.SQL_TYPE_TRUNCATE);
+    classMap.put(Update.class, Const.SQL_TYPE_UPDATE);
+    classMap.put(Upsert.class, Const.SQL_TYPE_UPSERT);
   }
 
   /**
@@ -75,14 +74,17 @@ public class SqlParserUtils {
   public static String getSqlType(String sql) throws JSQLParserException {
     Statement sqlStmt = CCJSqlParserUtil.parse(new StringReader(sql));
 
-    SqlType sqlType = null;
+    String sqlType = null;
     try {
       sqlType = classMap.get(sqlStmt.getClass());
     } catch (Exception e) {
       log.error("# SqlParserTool.getSqlType() # 根据SQL = 【{}】获取sql类型时，出现了异常。", e);
-      return SqlType.NONE.toString().trim();
+      return Const.SQL_TYPE_NONE.trim();
     }
-    return sqlType.toString().trim();
+    if(null != sqlType){
+      return sqlType.trim();
+    }
+    return null;
   }
 
   /**

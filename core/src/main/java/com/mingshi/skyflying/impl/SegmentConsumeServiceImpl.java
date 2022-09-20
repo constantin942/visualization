@@ -292,13 +292,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                   if (StringUtil.isNotBlank(tableName)) {
                     msSegmentDetailDo.setMsTableName(tableName);
                   }
-                  // 这里获取不到表名，有可能这条SQL语句就不是增删改查。2022-09-20 09:26:45
-                  // if (StringUtil.isBlank(tableName)) {
-                  //   isError = true;
-                  //   // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
-                  //   break;
-                  // }
-                  // msSegmentDetailDo.setMsTableName(tableName);
                 }
                 msSegmentDetailDo.setDbStatement(value);
               } else if (key.equals(Const.OPERATION_TYPE_URL)) {
@@ -432,6 +425,14 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
   }
 
+  /**
+   * <B>方法名称：setTableName</B>
+   * <B>概要说明：获取SQL语句中表的名字</B>
+   * @Author zm
+   * @Date 2022年09月20日 14:09:43
+   * @Param [value, msSegmentDetailDo]
+   * @return java.lang.String
+   **/
   private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
     List<String> tableNameList = null;
     String tableName = null;
@@ -448,8 +449,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
           String replaceTableName = tableNameTemp.replace("`", "");
           String key = null;
           Integer tableEnableStatus = null;
-          if (replaceTableName.contains(",")) {
-            String[] splits = replaceTableName.split(",");
+          if (replaceTableName.contains(Const.EN_COMMA)) {
+            String[] splits = replaceTableName.split(Const.EN_COMMA);
             for (String splitTableName : splits) {
               key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
               // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13

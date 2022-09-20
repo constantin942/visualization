@@ -185,7 +185,7 @@ public class Const {
   public static final String POUND_KEY = "#";
   public static final String COMMA = "#";
   public static final String COLON = "：";
-
+  public static final String EN_COMMA = ",";
 
   public static final String START_TIME = "startTime";
   public static final String END_TIME = "endTime";
@@ -361,5 +361,12 @@ public class Const {
   public static final String SQL_TYPE_SHOW = "SHOW";
   public static final String SQL_TYPE_START = "START";
   public static final String SQL_TYPE_COMMIT = "COMMIT";
+  public static final String SQL_TYPE_CREATETABLE = "CREATETABLE";
+  public static final String SQL_TYPE_CREATEVIEW = "CREATEVIEW";
+  public static final String SQL_TYPE_EXECUTE = "EXECUTE";
+  public static final String SQL_TYPE_TRUNCATE = "TRUNCATE";
+  public static final String SQL_TYPE_UPSERT = "UPSERT";
+  public static final String SQL_TYPE_NONE = "NONE";
   public static final String SQL_TYPE_RENAME = "RENAME";
+
 }

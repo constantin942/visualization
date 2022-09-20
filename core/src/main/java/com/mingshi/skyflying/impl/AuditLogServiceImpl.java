@@ -10,7 +10,6 @@ import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsConfigDo;
 import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
-import com.mingshi.skyflying.common.enums.SqlType;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
@@ -204,7 +203,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         String sqlType1 = mingshiServerUtil.getSqlType(msSql);
         // 获取表名；2022-06-06 14:11:21
-        if (!sqlType1.equals(SqlType.NONE.toString().trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(execState)) {
+        if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(execState)) {
           String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
           msDmsAuditLogDo.setMsTableName(tableName);
         }

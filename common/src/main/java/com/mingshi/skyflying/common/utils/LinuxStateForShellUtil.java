@@ -143,7 +143,7 @@ public class LinuxStateForShellUtil {
           if (line.startsWith("%Cpu(s):")) {
 
             try {
-              String us = line.split(":")[1].split(",")[0].replace("us", "").trim();
+              String us = line.split(":")[1].split(Const.EN_COMMA)[0].replace("us", "").trim();
               if(!"0.0".equals(us)){
                 String cpuStr = "CPU用户使用占有率:";
                 cpuStr += us;
@@ -162,7 +162,7 @@ public class LinuxStateForShellUtil {
               //   .replace("used", "已使用")
               //   .replace("free", "空闲")
               //   .replace("buff/cache", "缓存");
-              String trim = line.split(":")[1].replace("total", "").replace("free", "").replace("used", "").replace("buff/cache", "").split(",")[2].trim();
+              String trim = line.split(":")[1].replace("total", "").replace("free", "").replace("used", "").replace("buff/cache", "").split(Const.EN_COMMA)[2].trim();
               double v = Double.parseDouble(trim) / 1024 / 1024;
               DecimalFormat decimalFormat = new DecimalFormat("######0.00");
               memStr += decimalFormat.format(v) + " GB";

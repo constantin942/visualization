@@ -141,8 +141,8 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     List<InstanceTable> visitedTableList = userPortraitByVisitedTableEverydayMapper.selectAllVisitedTable();
 
     for (InstanceTable table : visitedTableList) {
-      if (table.getMsTableName().contains(",")) {
-        String[] split = table.getMsTableName().split(",");
+      if (table.getMsTableName().contains(Const.EN_COMMA)) {
+        String[] split = table.getMsTableName().split(Const.EN_COMMA);
         for (String s : split) {
           hashSet.add(new InstanceTable(table.getDbInstance(),s));
         }
