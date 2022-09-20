@@ -66,7 +66,9 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
   @Resource
   private RedisPoolUtil redisPoolUtil;
 
-  // 注意：当前项目只创建一个KafkaConsumer实例即可，使用批量拉取消息的方式。这种方式就能满足当前项目的需要，不用创建多个KafkaConsumer实例。2022-09-13 13:43:04
+  /**
+   *   注意：当前项目只创建一个KafkaConsumer实例即可，使用批量拉取消息的方式。这种方式就能满足当前项目的需要，不用创建多个KafkaConsumer实例。2022-09-13 13:43:04
+   */
   private KafkaConsumer<String, Bytes> kafkaConsumer = null;
 
   public MsKafkaSegmentsConsumer getMsKafkaSegmentsConsumer() {

@@ -20,7 +20,9 @@ package com.mingshi.skyflying.common.constant;
 
 public class Const {
 
-  // 数据库字段长度限制
+  /**
+   * 数据库字段长度限制
+   */
   public static final Integer DATA_LENTGH = 128;
   public static final String METHOD = "method";
   public static final String PARAMS = "params";
@@ -58,7 +60,11 @@ public class Const {
   public static final int INITAL_SIZE = 4;
   public static final String TABLE_NAME2 = "table_name";
   public static final String TABLE_COMMENT = "table_comment";
-  
+  public static final int NUMBER_SIX = 6;
+  public static final int NUMBER_EIGHTEEN = 18;
+  public static final int NUMBER_TWENTY_FOUR = 24;
+  public static final int NUMBER_TWELVE = 12;
+
   public interface RedisCacheExtime {
     int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
   }

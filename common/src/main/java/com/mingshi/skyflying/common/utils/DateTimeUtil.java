@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -577,13 +578,13 @@ public class DateTimeUtil {
     SimpleDateFormat df = new SimpleDateFormat(STANDARD_FORMAT_HH);
     String str = df.format(date);
     int a = Integer.parseInt(str);
-    if ((a >= 0 && a <= 6) || (a > 18 && a <= 24)) {
+    if ((a >= Const.NUMBER_ZERO && a <= Const.NUMBER_SIX) || (a > Const.NUMBER_EIGHTEEN && a <= Const.NUMBER_TWENTY_FOUR)) {
       return ConstantsCode.USER_PORTRAIT_NIGHT.getCode();
     }
-    if (a > 6 && a <= 12) {
+    if (a > Const.NUMBER_SIX && a <= Const.NUMBER_TWELVE) {
       return ConstantsCode.USER_PORTRAIT_FORENOON.getCode();
     }
-    if (a > 12 && a <= 18) {
+    if (a > Const.NUMBER_TWELVE && a <= Const.NUMBER_EIGHTEEN) {
       return ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode();
     }
     return null;
@@ -947,7 +948,10 @@ public class DateTimeUtil {
     return t;
   }
 
-  // 获取本周日的日期
+  /**
+   * 获取本周日的日期
+   * @return
+   */
   @SuppressWarnings("unused")
   public static String getCurrentWeekday() {
     int weeks = 0;

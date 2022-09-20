@@ -245,7 +245,10 @@ public class DateUtil {
     return preMonday;
   }
 
-  // 获得当前日期与本周日相差的天数
+  /**
+   * 获得当前日期与本周日相差的天数
+   * @return
+   */
   private static int getMondayPlus() {
     Calendar cd = Calendar.getInstance();
     // 获得今天是一周的第几天，星期日是第一天，星期二是第二天......
@@ -258,7 +261,10 @@ public class DateUtil {
     }
   }
 
-  // 获得本周一的日期
+  /**
+   * 获得本周一的日期
+   * @return
+   */
   @SuppressWarnings("unused")
   public static String getMondayOfWeek() {
     int weeks = 0;

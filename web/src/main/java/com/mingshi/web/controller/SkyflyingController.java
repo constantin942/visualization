@@ -128,7 +128,6 @@ public class SkyflyingController {
    * @Date 2022年08月25日 10:08:53
    * @Param [pageNo, pageSize]
    **/
-  // 记录操作日志的注解；
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateAgentStatus")
@@ -158,7 +157,6 @@ public class SkyflyingController {
     return bySuccess;
   }
 
-  // 记录操作日志的注解；
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @PostMapping(value = "/updateMonitorTableDesc")
@@ -176,7 +174,6 @@ public class SkyflyingController {
    * @Date 2022年07月13日 14:07:42
    * @Param []
    **/
-  // 记录操作日志的注解；
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @RequestMapping(value = "/updateMonitorTable", method = RequestMethod.POST)
@@ -195,7 +192,6 @@ public class SkyflyingController {
    * @Date 2022年06月29日 14:06:30
    * @Param [agentCode, pageNo, pageSize]
    **/
-  // 记录操作日志的注解；
   @OperationAuditAspectAnnotation(isStart = true)
   @ResponseBody
   @GetMapping(value = "/updateSkywalkingAgent")

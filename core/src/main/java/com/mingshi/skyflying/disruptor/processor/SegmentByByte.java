@@ -14,7 +14,6 @@ import org.apache.kafka.common.utils.Bytes;
 @Data
 public class SegmentByByte {
 
-  // private byte[] data;
   ConsumerRecord<String, Bytes> record;
 
   public SegmentByByte() {
@@ -23,7 +22,4 @@ public class SegmentByByte {
   public void setSegmentByByte(ConsumerRecord<String, Bytes> record) {
     this.record = record;
   }
-  // public void setSegmentByByte(byte[] data) {
-  //   this.data = data;
-  // }
 }

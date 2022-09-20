@@ -22,6 +22,8 @@ import java.util.Random;
  */
 @Slf4j
 public class SnowflakeIdWorker {
+  private static final CharSequence MAC = "mac";
+  private static final CharSequence LINUX = "linux";
 
   // ==============================Fields===========================================
   /**
@@ -200,9 +202,9 @@ public class SnowflakeIdWorker {
   private static Long getDataCenterId() {
     int[] ints;
     String operateSystem = getOsName();
-    if (operateSystem.contains("mac")) {
+    if (operateSystem.contains(MAC)) {
       ints = StringUtils.toCodePoints(getHostName());
-    } else if (operateSystem.contains("linux")) {
+    } else if (operateSystem.contains(LINUX)) {
       ints = StringUtils.toCodePoints(StringUtil.getHostName());
     } else {
       Random random = new Random();

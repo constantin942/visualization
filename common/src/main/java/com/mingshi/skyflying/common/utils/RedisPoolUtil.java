@@ -45,7 +45,7 @@ public class RedisPoolUtil {
        * 命令执行超时时间300毫秒
        */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmsetFallback")
   public boolean hsetBatch(String key, Map<String, String> map) {
     try {
       stringRedisTemplate.opsForHash().putAll(key, map);
@@ -56,6 +56,13 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param map
+   * @param throwable
+   * @return
+   */
   public boolean hmsetFallbackBatch(String key, Map<String, String> map, Throwable throwable) {
     log.error("hmsetFallbackBatch 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -81,7 +88,7 @@ public class RedisPoolUtil {
        * 命令执行超时时间300毫秒
        */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hsetIncrByFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hsetIncrByFallback")
   public boolean hsetIncrBy(String key, String value, Long incrementCount) {
     try {
       stringRedisTemplate.opsForHash().increment(key, value, incrementCount);
@@ -92,6 +99,14 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param value
+   * @param incrementCount
+   * @param throwable
+   * @return
+   */
   public boolean hsetIncrByFallback(String key, String value, Long incrementCount, Throwable throwable) {
     log.error("hsetIncrByFallback 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -108,7 +123,7 @@ public class RedisPoolUtil {
        * 命令执行超时时间300毫秒
        */
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmsetFallback2")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmsetFallback2")
   public boolean hsetBatch2(String key, Map<String, Integer> map) {
     try {
       stringRedisTemplate.opsForHash().putAll(key, map);
@@ -119,6 +134,13 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param map
+   * @param throwable
+   * @return
+   */
   public boolean hmsetFallbackBatch2(String key, Map<String, Integer> map, Throwable throwable) {
     log.error("hmsetFallbackBatch2 走降级策略啦。降级原因=【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -135,7 +157,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "insertRedisStringSetBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "insertRedisStringSetBatchFallback")
   public List<Object> insertRedisStringSetBatch(final Map<String, String> map) {
     List<Object> results = stringRedisTemplate.executePipelined(new RedisCallback<String>() {
       @Override
@@ -152,6 +174,12 @@ public class RedisPoolUtil {
     return results;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param map
+   * @param throwable
+   * @return
+   */
   public List<Object> insertRedisStringSetBatchFallback(Map<String, String> map, Throwable throwable) {
     log.error("insertRedisStringSetBatchFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -168,7 +196,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "insertRedisStringPipelineMsetBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "insertRedisStringPipelineMsetBatchFallback")
   public List<Object> insertRedisStringPipelineMsetBatch(final Map<String, String> map) {
     List<Object> results = stringRedisTemplate.executePipelined(new RedisCallback<String>() {
       @Override
@@ -186,6 +214,12 @@ public class RedisPoolUtil {
     return results;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param map
+   * @param throwable
+   * @return
+   */
   public List<Object> insertRedisStringPipelineMsetBatchFallback(Map<String, String> map, Throwable throwable) {
     log.error("insertRedisStringPipelineMsetBatchFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -208,11 +242,17 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "mgetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "mgetFallback")
   public List<String> mget(List<String> keys) {
     return stringRedisTemplate.opsForValue().multiGet(keys);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param keys
+   * @param throwable
+   * @return
+   */
   public List<String> mgetFallback(List<String> keys, Throwable throwable) {
     log.error("mgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -236,11 +276,16 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "mSetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "mSetFallback")
   public void mSet(final Map<String, String> map) {
     stringRedisTemplate.opsForValue().multiSet(map);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param map
+   * @param throwable
+   */
   public void mSetFallback(Map<String, String> map, Throwable throwable) {
     log.error("mSetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return;
@@ -264,11 +309,19 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hIncrByFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hIncrByFallback")
   public Long hIncrBy(String key, Object field, long increment) {
     return stringRedisTemplate.opsForHash().increment(key, field, increment);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param field
+   * @param increment
+   * @param throwable
+   * @return
+   */
   public Long hIncrByFallback(String key, Object field, long increment, Throwable throwable) {
     log.error("hIncrByFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -292,11 +345,19 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hIncrByFloatFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hIncrByFloatFallback")
   public Double hIncrByFloat(String key, Object field, double delta) {
     return stringRedisTemplate.opsForHash().increment(key, field, delta);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param field
+   * @param delta
+   * @param throwable
+   * @return
+   */
   public Double hIncrByFloatFallback(String key, Object field, double delta, Throwable throwable) {
     log.error("hIncrByFloatFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -320,7 +381,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "queryRedisStringBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "queryRedisStringBatchFallback")
   public List<Object> queryRedisStringBatch(final List<String> queryList) {
     List<Object> results = stringRedisTemplate.executePipelined(
       new RedisCallback<Object>() {
@@ -337,6 +398,12 @@ public class RedisPoolUtil {
     return results;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param queryList
+   * @param throwable
+   * @return
+   */
   public List<Object> queryRedisStringBatchFallback(List<String> queryList, Throwable throwable) {
     log.error("queryRedisStringBatchFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -359,7 +426,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "expireFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "expireFallback")
   public boolean expire(String key, long time) {
     try {
       if (time > 0) {
@@ -372,6 +439,13 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param time
+   * @param throwable
+   * @return
+   */
   public boolean expireFallback(String key, long time, Throwable throwable) {
     log.error("expireFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -393,11 +467,17 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "getExpireFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "getExpireFallback")
   public long getExpire(String key) {
     return stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param throwable
+   * @return
+   */
   public long getExpireFallback(String key, Throwable throwable) {
     log.error("getExpireFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return -1;
@@ -419,7 +499,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hasKeyFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hasKeyFallback")
   public boolean hasKey(String key) {
     try {
       return stringRedisTemplate.hasKey(key);
@@ -430,6 +510,12 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param throwable
+   * @return
+   */
   public boolean hasKeyFallback(String key, Throwable throwable) {
     log.error("hasKeyFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -450,7 +536,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "getFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "getFallback")
   public void del(String... key) {
     if (key != null && key.length > 0) {
       if (key.length == 1) {
@@ -461,6 +547,10 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   */
   public void delFallback(String... key) {
     log.error("delFallback 走降级策略啦。");
     return;
@@ -480,13 +570,17 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "delBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "delBatchFallback")
   public void delBatch(List<String> list) {
     if (null != list && list.size() > 0) {
       stringRedisTemplate.delete(list);
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param list
+   */
   public void delBatchFallback(List<String> list) {
     log.error("delBatchFallback 走降级策略啦。");
     return;
@@ -502,7 +596,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "delFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "delFallback")
   public boolean del(String key) {
     try {
       return stringRedisTemplate.delete(key);
@@ -512,6 +606,12 @@ public class RedisPoolUtil {
     return false;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param throwable
+   * @return
+   */
   public boolean delFallback(String key, Throwable throwable) {
     log.error("delFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -534,7 +634,7 @@ public class RedisPoolUtil {
   //   commandProperties = {
   //     //命令执行超时时间300毫秒
   //     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-  //   }, fallbackMethod = "getFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  //   }, fallbackMethod = "getFallback")
   public Object get(String key) {
     try {
       return key == null ? null : stringRedisTemplate.opsForValue().get(key);
@@ -544,6 +644,12 @@ public class RedisPoolUtil {
     return null;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param throwable
+   * @return
+   */
   public Object getFallback(String key, Throwable throwable) {
     log.error("getFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -566,7 +672,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "setFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "setFallback")
   public boolean set(String key, Object value) {
     try {
       stringRedisTemplate.opsForValue().set(key, String.valueOf(value));
@@ -578,6 +684,13 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param value
+   * @param throwable
+   * @return
+   */
   public boolean setFallback(String key, Object value, Throwable throwable) {
     log.error("setFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -593,7 +706,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "setNxFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "setNxFallback")
   public boolean setNx(String key, Object value) {
     try {
       return stringRedisTemplate.opsForValue().setIfAbsent(key, String.valueOf(value));
@@ -603,6 +716,13 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param value
+   * @param throwable
+   * @return
+   */
   public boolean setNxFallback(String key, Object value, Throwable throwable) {
     log.error("setNxFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -625,7 +745,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "setNxFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "setNxFallback")
   public boolean setNx(String key, Object value, int time) {
     try {
       return stringRedisTemplate.opsForValue().setIfAbsent(key, String.valueOf(value), time, TimeUnit.SECONDS);
@@ -635,6 +755,14 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param value
+   * @param time
+   * @param throwable
+   * @return
+   */
   public boolean setNxFallback(String key, Object value, int time, Throwable throwable) {
     log.error("setNxFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -658,7 +786,7 @@ public class RedisPoolUtil {
   //   commandProperties = {
   //     //命令执行超时时间300毫秒
   //     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-  //   }, fallbackMethod = "setFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+  //   }, fallbackMethod = "setFallback")
   public boolean set(String key, Object value, long time) {
     try {
       if (time > 0) {
@@ -673,6 +801,14 @@ public class RedisPoolUtil {
     }
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param value
+   * @param time
+   * @param throwable
+   * @return
+   */
   public boolean setFallback(String key, Object value, long time, Throwable throwable) {
     log.error("setFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return false;
@@ -694,7 +830,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "incrFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "incrFallback")
   public long incr(String key, long delta) {
     if (delta < 0) {
       throw new RuntimeException("递增因子必须大于0");
@@ -702,6 +838,13 @@ public class RedisPoolUtil {
     return stringRedisTemplate.opsForValue().increment(key, delta);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param delta
+   * @param throwable
+   * @return
+   */
   public long incrFallback(String key, long delta, Throwable throwable) {
     log.error("incrFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return -1;
@@ -723,7 +866,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "decrFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "decrFallback")
   public long decr(String key, long delta) {
     if (delta < 0) {
       throw new RuntimeException("递减因子必须大于0");
@@ -731,6 +874,13 @@ public class RedisPoolUtil {
     return stringRedisTemplate.opsForValue().increment(key, -delta);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param delta
+   * @param throwable
+   * @return
+   */
   public long decrFallback(String key, long delta, Throwable throwable) {
     log.error("decrFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return -1;
@@ -754,11 +904,18 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hgetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hgetFallback")
   public Object hget(String key, String item) {
     return stringRedisTemplate.opsForHash().get(key, item);
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param item
+   * @param throwable
+   * @return
+   */
   public Object hgetFallback(String key, String item, Throwable throwable) {
     log.error("hgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -783,12 +940,18 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hgetKeysFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hgetKeysFallback")
   public Set<Object> hgetKeys(String key) {
     Set<Object> keys = stringRedisTemplate.opsForHash().keys(key);
     return keys;
   }
 
+  /**
+   * 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+   * @param key
+   * @param throwable
+   * @return
+   */
   public Object hgetKeysFallback(String key, Throwable throwable) {
     log.error("hgetFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
     return null;
@@ -813,7 +976,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hgetSizeFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hgetSizeFallback")
   public Long hgetSize(String key) {
     return stringRedisTemplate.opsForHash().size(key);
   }
@@ -839,7 +1002,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmgetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmgetFallback")
   public Map<Object, Object> hmget(String key) {
     return stringRedisTemplate.opsForHash().entries(key);
   }
@@ -866,7 +1029,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmsetFallback")
   public boolean hmset(String key, Map<String, Object> map) {
     try {
       stringRedisTemplate.opsForHash().putAll(key, map);
@@ -900,7 +1063,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmsetFallback")
   public boolean hmset(String key, Map<String, Object> map, long time) {
     try {
       stringRedisTemplate.opsForHash().putAll(key, map);
@@ -937,7 +1100,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmsetFallback")
   public boolean hset(String key, String item, Object value) {
     try {
       stringRedisTemplate.opsForHash().put(key, item, value);
@@ -968,7 +1131,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "saddFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "saddFallback")
   public Long sadd(String setName, String value) {
     try {
       return stringRedisTemplate.opsForSet().add(setName, value);
@@ -997,7 +1160,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "setSizeFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "setSizeFallback")
   public Long setSize(String setName) {
     try {
       Long size = stringRedisTemplate.opsForSet().size(setName);
@@ -1027,7 +1190,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "smembersFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "smembersFallback")
   public Set<String> smembers(String setName) {
     try {
       return stringRedisTemplate.opsForSet().members(setName);
@@ -1057,7 +1220,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "isMemberFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "isMemberFallback")
   public Boolean isMember(String key, String member) {
     try {
       return stringRedisTemplate.opsForSet().isMember(key, member);
@@ -1090,7 +1253,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hDeleteFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hDeleteFallback")
   public Long hDelete(String key, Object... params) {
     try {
       return stringRedisTemplate.opsForHash().delete(key, params);
@@ -1123,7 +1286,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hgetallFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hgetallFallback")
   public Map<Object, Object> hgetall(String key) {
     try {
       return stringRedisTemplate.opsForHash().entries(key);
@@ -1155,7 +1318,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hgetallKeysFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hgetallKeysFallback")
   public Set<Object> hgetallKeys(String key) {
     try {
       return stringRedisTemplate.opsForHash().keys(key);
@@ -1180,7 +1343,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hmgetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hmgetFallback")
   public List<Object> hmget(String key, List<Object> set) {
     try {
       return stringRedisTemplate.opsForHash().multiGet(key, set);
@@ -1214,7 +1377,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hsetFallback")
   public boolean hset(String key, String item, Object value, long time) {
     try {
       stringRedisTemplate.opsForHash().put(key, item, value);
@@ -1249,7 +1412,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hdelFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hdelFallback")
   public void hdel(String key, Object... item) {
     stringRedisTemplate.opsForHash().delete(key, item);
   }
@@ -1276,7 +1439,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hHasKeyFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hHasKeyFallback")
   public boolean hHasKey(String key, String item) {
     return stringRedisTemplate.opsForHash().hasKey(key, item);
   }
@@ -1304,7 +1467,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hincrFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hincrFallback")
   public double hincr(String key, String item, double by) {
     return stringRedisTemplate.opsForHash().increment(key, item, by);
   }
@@ -1332,7 +1495,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "hdecrFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "hdecrFallback")
   public double hdecr(String key, String item, double by) {
     return stringRedisTemplate.opsForHash().increment(key, item, -by);
   }
@@ -1359,7 +1522,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "zAddFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "zAddFallback")
   public Boolean zAdd(String key, String value, double scoure) {
     try {
       ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
@@ -1385,7 +1548,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "zAddBatchFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "zAddBatchFallback")
   public Long zAddBatch(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
     try {
       ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
@@ -1417,7 +1580,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "incrementScoreFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "incrementScoreFallback")
   public void zSetIncrementScore(String key, String value, double scoure) {
     try {
       ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
@@ -1475,7 +1638,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "reverseRangeFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "reverseRangeFallback")
   public Set<String> reverseRange(String key, Long scoure, Long scoure1) {
     try {
       ZSetOperations<String, String> zset = stringRedisTemplate.opsForZSet();
@@ -1507,7 +1670,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "sizeFromZsetFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "sizeFromZsetFallback")
   public Long sizeFromZset(String key) {
     try {
       ZSetOperations<String, String> zset = stringRedisTemplate.opsForZSet();
@@ -1541,7 +1704,7 @@ public class RedisPoolUtil {
     commandProperties = {
       //命令执行超时时间300毫秒
       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-    }, fallbackMethod = "reverseRangeWithScoresFallback")// 当调用Redis缓存时，若是出现异常，则自动调用降级方法
+    }, fallbackMethod = "reverseRangeWithScoresFallback")
   public Set<ZSetOperations.TypedTuple<String>> reverseRangeWithScores(String key, Long scoure, Long scoure1) {
     try {
       ZSetOperations<String, String> zset = stringRedisTemplate.opsForZSet();

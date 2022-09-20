@@ -54,11 +54,6 @@ public class OperationAuditAspect {
   private ThreadLocal<String> orderIdThreadLocal = new ThreadLocal<>();
 
   /**
-   * 对类ServerlessCheckController中所有方法调用之前，进行登录校验；这种方式不需要在类的头部加注解
-   */
-  private final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
-
-  /**
    * 只对加了@AspectAnnotation注解的方法进行拦截；
    */
   @Pointcut("@annotation(com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation)")
@@ -73,7 +68,6 @@ public class OperationAuditAspect {
    * @Param [joinPoint]
    **/
   @Around("annotationPointCut()")
-  // @Around(executeExpr)
   public Object processLog(ProceedingJoinPoint joinPoint) {
     Instant instStart = Instant.now();
     //获取到请求的属性

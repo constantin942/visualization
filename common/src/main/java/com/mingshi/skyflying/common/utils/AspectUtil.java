@@ -29,7 +29,9 @@ import java.util.Map;
 @Component
 public class AspectUtil {
 
-  // 方法执行超时时间
+  /**
+   * 方法执行超时时间
+   */
   private final long maxReduceTime = 1000;
 
 
