@@ -17,8 +17,10 @@ import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadBatchInsertByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
+import com.mingshi.skyflying.sql.SqlTypeMap;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -154,7 +156,7 @@ public class MingshiServerUtil {
       if (null != jsonObject && 0 < jsonObject.size()) {
         Integer queueIndex = IoThreadBatchInsertByLinkedBlockingQueue.getQueueIndex(partition);
         LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(gracefulShutdown, reactorIoThreadThreadCount, 10, mingshiServerUtil, partition);
-        if(null != linkedBlockingQueue){
+        if (null != linkedBlockingQueue) {
           if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
             // log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
             String key = DateTimeUtil.dateToStr(new Date());
@@ -269,61 +271,98 @@ public class MingshiServerUtil {
    * @Param [msSql]
    **/
   public String getSqlType(String msSql) {
-    if (msSql.startsWith(Const.SQL_TYPE_SELECT) || msSql.startsWith(Const.SQL_TYPE_SELECT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SELECT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SELECT)) {
-      return Const.SQL_TYPE_SELECT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_INSERT) || msSql.startsWith(Const.SQL_TYPE_INSERT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_INSERT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_INSERT)) {
-      return Const.SQL_TYPE_INSERT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_UPDATE) || msSql.startsWith(Const.SQL_TYPE_UPDATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_UPDATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_UPDATE)) {
-      return Const.SQL_TYPE_UPDATE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DELETE) || msSql.startsWith(Const.SQL_TYPE_DELETE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DELETE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DELETE)) {
-      return Const.SQL_TYPE_DELETE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_LOGIN) || msSql.startsWith(Const.SQL_TYPE_LOGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGIN)) {
-      return Const.SQL_TYPE_LOGIN.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_LOGOUT) || msSql.startsWith(Const.SQL_TYPE_LOGOUT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGOUT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGOUT)) {
-      return Const.SQL_TYPE_LOGOUT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_MERGE) || msSql.startsWith(Const.SQL_TYPE_MERGE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_MERGE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_MERGE)) {
-      return Const.SQL_TYPE_MERGE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_ALTER) || msSql.startsWith(Const.SQL_TYPE_ALTER.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ALTER.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ALTER)) {
-      return Const.SQL_TYPE_ALTER.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CREATEINDEX) || msSql.startsWith(Const.SQL_TYPE_CREATEINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATEINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATEINDEX)) {
-      return Const.SQL_TYPE_CREATEINDEX.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DROPINDEX) || msSql.startsWith(Const.SQL_TYPE_DROPINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROPINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROPINDEX)) {
-      return Const.SQL_TYPE_DROPINDEX.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CREATE) || msSql.startsWith(Const.SQL_TYPE_CREATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATE)) {
-      return Const.SQL_TYPE_CREATE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DROP) || msSql.startsWith(Const.SQL_TYPE_DROP.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROP.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROP)) {
-      return Const.SQL_TYPE_DROP.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_SET) || msSql.startsWith(Const.SQL_TYPE_SET.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SET.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SET)) {
-      return Const.SQL_TYPE_SET.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DESC) || msSql.startsWith(Const.SQL_TYPE_DESC.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESC.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESC)) {
-      return Const.SQL_TYPE_DESC.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_REPLACE) || msSql.startsWith(Const.SQL_TYPE_REPLACE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REPLACE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REPLACE)) {
-      return Const.SQL_TYPE_REPLACE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_CALL) || msSql.startsWith(Const.SQL_TYPE_CALL.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CALL.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CALL)) {
-      return Const.SQL_TYPE_CALL.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_BEGIN) || msSql.startsWith(Const.SQL_TYPE_BEGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_BEGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_BEGIN)) {
-      return Const.SQL_TYPE_BEGIN.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_DESCRIBE) || msSql.startsWith(Const.SQL_TYPE_DESCRIBE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESCRIBE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESCRIBE)) {
-      return Const.SQL_TYPE_DESCRIBE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_ROLLBACK) || msSql.startsWith(Const.SQL_TYPE_ROLLBACK.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ROLLBACK.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ROLLBACK)) {
-      return Const.SQL_TYPE_ROLLBACK.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_FLUSH) || msSql.startsWith(Const.SQL_TYPE_FLUSH.toLowerCase()) || msSql.contains(Const.SQL_TYPE_FLUSH.toLowerCase()) || msSql.contains(Const.SQL_TYPE_FLUSH)) {
-      return Const.SQL_TYPE_FLUSH.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_USE) || msSql.startsWith(Const.SQL_TYPE_USE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_USE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_USE)) {
-      return Const.SQL_TYPE_USE.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_SHOW) || msSql.startsWith(Const.SQL_TYPE_SHOW.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SHOW.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SHOW)) {
-      return Const.SQL_TYPE_SHOW.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_START) || msSql.startsWith(Const.SQL_TYPE_START.toLowerCase()) || msSql.contains(Const.SQL_TYPE_START.toLowerCase()) || msSql.contains(Const.SQL_TYPE_START)) {
-      return Const.SQL_TYPE_START.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_COMMIT) || msSql.startsWith(Const.SQL_TYPE_COMMIT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_COMMIT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_COMMIT)) {
-      return Const.SQL_TYPE_COMMIT.toLowerCase();
-    } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME)) {
-      return Const.SQL_TYPE_RENAME.toLowerCase();
-    } else if (Const.KEYS_ALL.equals(msSql)) {
-      return null;
+    String sqlTypeFromLibrary = null;
+    try {
+      sqlTypeFromLibrary = SqlParserUtils.getSqlType(msSql).toLowerCase();
+    } catch (JSQLParserException e) {
+      log.error("# MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】获取sql类型时，出现了异常。", e);
     }
-    log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
-    return null;
+
+    String sqlType = null;
+    if (StringUtil.isBlank(sqlTypeFromLibrary)) {
+      sqlType = doGetSqlType(msSql);
+    }
+
+    // log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
+    if (StringUtil.isNotBlank(sqlType) && !sqlType.equals(sqlTypeFromLibrary)) {
+      log.error("#SegmentConsumeServiceImpl.getSqlType() # 根据SQL语句 = 【{}】从库里获取到的sql类型 = 【{}】与原生匹配到的sql类型 = 【{}】不一致。", msSql, sqlTypeFromLibrary, sqlType);
+    } else {
+      sqlType = sqlTypeFromLibrary;
+    }
+    return sqlType;
+  }
+
+  /**
+   * <B>方法名称：doGetSqlType</B>
+   * <B>概要说明：获取sql类型</B>
+   *
+   * @return java.lang.String
+   * @Author zm
+   * @Date 2022年09月20日 09:09:23
+   * @Param [msSql]
+   **/
+  private String doGetSqlType(String msSql) {
+    String sqlType = null;
+    if (msSql.startsWith(Const.SQL_TYPE_REVOKE) || msSql.startsWith(Const.SQL_TYPE_REVOKE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REVOKE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REVOKE)) {
+      sqlType = Const.SQL_TYPE_REVOKE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_GRANT) || msSql.startsWith(Const.SQL_TYPE_GRANT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_GRANT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_GRANT)) {
+      sqlType = Const.SQL_TYPE_GRANT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SELECT) || msSql.startsWith(Const.SQL_TYPE_SELECT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SELECT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SELECT)) {
+      sqlType = Const.SQL_TYPE_SELECT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_INSERT) || msSql.startsWith(Const.SQL_TYPE_INSERT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_INSERT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_INSERT)) {
+      sqlType = Const.SQL_TYPE_INSERT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_UPDATE) || msSql.startsWith(Const.SQL_TYPE_UPDATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_UPDATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_UPDATE)) {
+      sqlType = Const.SQL_TYPE_UPDATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DELETE) || msSql.startsWith(Const.SQL_TYPE_DELETE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DELETE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DELETE)) {
+      sqlType = Const.SQL_TYPE_DELETE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGIN) || msSql.startsWith(Const.SQL_TYPE_LOGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGIN)) {
+      sqlType = Const.SQL_TYPE_LOGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_LOGOUT) || msSql.startsWith(Const.SQL_TYPE_LOGOUT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGOUT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_LOGOUT)) {
+      sqlType = Const.SQL_TYPE_LOGOUT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_MERGE) || msSql.startsWith(Const.SQL_TYPE_MERGE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_MERGE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_MERGE)) {
+      sqlType = Const.SQL_TYPE_MERGE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ALTER) || msSql.startsWith(Const.SQL_TYPE_ALTER.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ALTER.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ALTER)) {
+      sqlType = Const.SQL_TYPE_ALTER.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATEINDEX) || msSql.startsWith(Const.SQL_TYPE_CREATEINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATEINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATEINDEX)) {
+      sqlType = Const.SQL_TYPE_CREATEINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROPINDEX) || msSql.startsWith(Const.SQL_TYPE_DROPINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROPINDEX.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROPINDEX)) {
+      sqlType = Const.SQL_TYPE_DROPINDEX.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CREATE) || msSql.startsWith(Const.SQL_TYPE_CREATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CREATE)) {
+      sqlType = Const.SQL_TYPE_CREATE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DROP) || msSql.startsWith(Const.SQL_TYPE_DROP.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROP.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DROP)) {
+      sqlType = Const.SQL_TYPE_DROP.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SET) || msSql.startsWith(Const.SQL_TYPE_SET.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SET.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SET)) {
+      sqlType = Const.SQL_TYPE_SET.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESC) || msSql.startsWith(Const.SQL_TYPE_DESC.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESC.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESC)) {
+      sqlType = Const.SQL_TYPE_DESC.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_REPLACE) || msSql.startsWith(Const.SQL_TYPE_REPLACE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REPLACE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_REPLACE)) {
+      sqlType = Const.SQL_TYPE_REPLACE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_CALL) || msSql.startsWith(Const.SQL_TYPE_CALL.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CALL.toLowerCase()) || msSql.contains(Const.SQL_TYPE_CALL)) {
+      sqlType = Const.SQL_TYPE_CALL.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_BEGIN) || msSql.startsWith(Const.SQL_TYPE_BEGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_BEGIN.toLowerCase()) || msSql.contains(Const.SQL_TYPE_BEGIN)) {
+      sqlType = Const.SQL_TYPE_BEGIN.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_DESCRIBE) || msSql.startsWith(Const.SQL_TYPE_DESCRIBE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESCRIBE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_DESCRIBE)) {
+      sqlType = Const.SQL_TYPE_DESCRIBE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_ROLLBACK) || msSql.startsWith(Const.SQL_TYPE_ROLLBACK.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ROLLBACK.toLowerCase()) || msSql.contains(Const.SQL_TYPE_ROLLBACK)) {
+      sqlType = Const.SQL_TYPE_ROLLBACK.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_FLUSH) || msSql.startsWith(Const.SQL_TYPE_FLUSH.toLowerCase()) || msSql.contains(Const.SQL_TYPE_FLUSH.toLowerCase()) || msSql.contains(Const.SQL_TYPE_FLUSH)) {
+      sqlType = Const.SQL_TYPE_FLUSH.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_USE) || msSql.startsWith(Const.SQL_TYPE_USE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_USE.toLowerCase()) || msSql.contains(Const.SQL_TYPE_USE)) {
+      sqlType = Const.SQL_TYPE_USE.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_SHOW) || msSql.startsWith(Const.SQL_TYPE_SHOW.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SHOW.toLowerCase()) || msSql.contains(Const.SQL_TYPE_SHOW)) {
+      sqlType = Const.SQL_TYPE_SHOW.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_START) || msSql.startsWith(Const.SQL_TYPE_START.toLowerCase()) || msSql.contains(Const.SQL_TYPE_START.toLowerCase()) || msSql.contains(Const.SQL_TYPE_START)) {
+      sqlType = Const.SQL_TYPE_START.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_COMMIT) || msSql.startsWith(Const.SQL_TYPE_COMMIT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_COMMIT.toLowerCase()) || msSql.contains(Const.SQL_TYPE_COMMIT)) {
+      sqlType = Const.SQL_TYPE_COMMIT.toLowerCase();
+    } else if (msSql.startsWith(Const.SQL_TYPE_RENAME) || msSql.startsWith(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME.toLowerCase()) || msSql.contains(Const.SQL_TYPE_RENAME)) {
+      sqlType = Const.SQL_TYPE_RENAME.toLowerCase();
+    } else if (Const.KEYS_ALL.equals(msSql)) {
+      sqlType = null;
+    } else {
+      sqlType = null;
+    }
+    return sqlType;
   }
 
   /**
@@ -369,14 +408,20 @@ public class MingshiServerUtil {
     if (StringUtil.isBlank(sqlType)) {
       return tableNameList;
     }
-    if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
-      tableNameList = SqlParserUtils.selectTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
-      tableNameList = SqlParserUtils.insertTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
-      tableNameList = SqlParserUtils.updateTable(msSql);
-    } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
-      tableNameList = SqlParserUtils.deleteTable(msSql);
+
+    tableNameList = SqlTypeMap.getSqlTable(sqlType, msSql);
+
+    // 以下是测试代码，测试好了记得去掉；2022-09-19 17:44:07
+    if (null == tableNameList) {
+      if (sqlType.equals(Const.SQL_TYPE_SELECT.toLowerCase())) {
+        tableNameList = SqlParserUtils.selectTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_INSERT.toLowerCase())) {
+        tableNameList = SqlParserUtils.insertTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_UPDATE.toLowerCase())) {
+        tableNameList = SqlParserUtils.updateTable(msSql);
+      } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
+        tableNameList = SqlParserUtils.deleteTable(msSql);
+      }
     }
     return tableNameList;
   }
@@ -902,7 +947,7 @@ public class MingshiServerUtil {
       if (null != processorHandlerByLinkedBlockingQueueList && 0 < processorHandlerByLinkedBlockingQueueList.size()) {
         for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
           Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
-          if(0 < queueSize){
+          if (0 < queueSize) {
             redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Double.valueOf(queueSize));
           }
         }

@@ -18,6 +18,13 @@
   </properties>
 
   <dependencies>
+    <!-- https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser -->
+    <dependency>
+      <groupId>com.github.jsqlparser</groupId>
+      <artifactId>jsqlparser</artifactId>
+      <version>4.5</version>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/com.jcraft/jsch -->
     <dependency>
       <groupId>com.jcraft</groupId>

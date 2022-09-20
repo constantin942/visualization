@@ -1,22 +1,31 @@
 package com.mingshi.skyflying.common.utils;
 
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.enums.SqlType;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
-import net.sf.jsqlparser.expression.Parenthesis;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ComparisonOperator;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.alter.Alter;
+import net.sf.jsqlparser.statement.create.index.CreateIndex;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.view.CreateView;
 import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.drop.Drop;
+import net.sf.jsqlparser.statement.execute.Execute;
 import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.merge.Merge;
+import net.sf.jsqlparser.statement.replace.Replace;
 import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
+import net.sf.jsqlparser.statement.upsert.Upsert;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +45,124 @@ import java.util.Map;
  */
 @Slf4j
 public class SqlParserUtils {
+
+  static final Map<Class, SqlType> classMap = new HashMap<>();
+
+  static {
+    classMap.put(Alter.class, SqlType.ALTER);
+    classMap.put(CreateIndex.class, SqlType.CREATEINDEX);
+    classMap.put(CreateTable.class, SqlType.CREATETABLE);
+    classMap.put(CreateView.class, SqlType.CREATEVIEW);
+    classMap.put(Delete.class, SqlType.DELETE);
+    classMap.put(Drop.class, SqlType.DROP);
+    classMap.put(Execute.class, SqlType.EXECUTE);
+    classMap.put(Insert.class, SqlType.INSERT);
+    classMap.put(Merge.class, SqlType.MERGE);
+    classMap.put(Replace.class, SqlType.REPLACE);
+    classMap.put(Select.class, SqlType.SELECT);
+    classMap.put(Truncate.class, SqlType.TRUNCATE);
+    classMap.put(Update.class, SqlType.UPDATE);
+    classMap.put(Upsert.class, SqlType.UPSERT);
+  }
+
+  /**
+   * 由于jsqlparser没有获取SQL类型的原始工具，并且在下面操作时需要知道SQL类型，所以编写此工具方法
+   *
+   * @param sql sql语句
+   * @return sql类型，
+   * @throws JSQLParserException
+   */
+  public static String getSqlType(String sql) throws JSQLParserException {
+    Statement sqlStmt = CCJSqlParserUtil.parse(new StringReader(sql));
+
+    SqlType sqlType = null;
+    try {
+      sqlType = classMap.get(sqlStmt.getClass());
+    } catch (Exception e) {
+      log.error("# SqlParserTool.getSqlType() # 根据SQL = 【{}】获取sql类型时，出现了异常。", e);
+      return SqlType.NONE.toString().trim();
+    }
+    return sqlType.toString().trim();
+  }
+
+  /**
+   * 获取join层级
+   *
+   * @param selectBody
+   * @return
+   */
+  public static List<Join> getJoins(SelectBody selectBody) {
+    if (selectBody instanceof PlainSelect) {
+      List<Join> joins = ((PlainSelect) selectBody).getJoins();
+      return joins;
+    }
+    return new ArrayList<Join>();
+  }
+
+  /**
+   * @param selectBody
+   * @return
+   */
+  public static List<Table> getIntoTables(SelectBody selectBody) {
+    if (selectBody instanceof PlainSelect) {
+      List<Table> tables = ((PlainSelect) selectBody).getIntoTables();
+      return tables;
+    }
+    return new ArrayList<Table>();
+  }
+
+  /**
+   * @param selectBody
+   * @return
+   */
+  public static void setIntoTables(SelectBody selectBody, List<Table> tables) {
+    if (selectBody instanceof PlainSelect) {
+      ((PlainSelect) selectBody).setIntoTables(tables);
+    }
+  }
+
+  /**
+   * 获取limit值
+   *
+   * @param selectBody
+   * @return
+   */
+  public static Limit getLimit(SelectBody selectBody) {
+    if (selectBody instanceof PlainSelect) {
+      Limit limit = ((PlainSelect) selectBody).getLimit();
+      return limit;
+    }
+    return null;
+  }
+
+  /**
+   * 为SQL增加limit值
+   *
+   * @param selectBody
+   * @param l
+   */
+  public static void setLimit(SelectBody selectBody, long l) {
+    if (selectBody instanceof PlainSelect) {
+      Limit limit = new Limit();
+      limit.setRowCount(new LongValue(String.valueOf(l)));
+      ((PlainSelect) selectBody).setLimit(limit);
+    }
+  }
+
+  /**
+   * 获取查询字段
+   *
+   * @param selectBody
+   * @return
+   */
+  public static List<SelectItem> getSelectItems(SelectBody selectBody) {
+    if (selectBody instanceof PlainSelect) {
+      List<SelectItem> selectItems = ((PlainSelect) selectBody).getSelectItems();
+      return selectItems;
+    }
+    return null;
+  }
+
   /**
    * @Description: 查询sql字段
    * @Author: ywj
@@ -71,11 +198,11 @@ public class SqlParserUtils {
     TablesNamesFinder tablesNamesFinder = null;
     try {
       Statement statement = null;
-        String newSql = null;
-      if(sql.contains(Const.LIKE)){
-        newSql = sql.replace("\"%\"","");
+      String newSql = null;
+      if (sql.contains(Const.LIKE)) {
+        newSql = sql.replace("\"%\"", "");
         statement = CCJSqlParserUtil.parse(newSql);
-      }else{
+      } else {
         statement = CCJSqlParserUtil.parse(sql);
       }
       selectStatement = (Select) statement;
@@ -273,20 +400,20 @@ public class SqlParserUtils {
    * @Return: java.util.List<java.lang.String>
    * @Date: 2020/12/25 15:10
    **/
-  public static List<String> selectGroupby(String sql)
-    throws JSQLParserException {
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
-    Select select = (Select) parserManager.parse(new StringReader(sql));
-    PlainSelect plain = (PlainSelect) select.getSelectBody();
-    List<Expression> groupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
-    List<String> strGroupby = new ArrayList<String>();
-    if (null != groupByColumnReferences) {
-      for (Expression groupByColumnReference : groupByColumnReferences) {
-        strGroupby.add(groupByColumnReference.toString());
-      }
-    }
-    return strGroupby;
-  }
+  // public static List<String> selectGroupby(String sql)
+  //   throws JSQLParserException {
+  //   CCJSqlParserManager parserManager = new CCJSqlParserManager();
+  //   Select select = (Select) parserManager.parse(new StringReader(sql));
+  //   PlainSelect plain = (PlainSelect) select.getSelectBody();
+  //   List<Expression> groupByColumnReferences = plain.getGroupBy().getGroupByExpressions();
+  //   List<String> strGroupby = new ArrayList<String>();
+  //   if (null != groupByColumnReferences) {
+  //     for (Expression groupByColumnReference : groupByColumnReferences) {
+  //       strGroupby.add(groupByColumnReference.toString());
+  //     }
+  //   }
+  //   return strGroupby;
+  // }
 
   /**
    * @Description: 查询order by
