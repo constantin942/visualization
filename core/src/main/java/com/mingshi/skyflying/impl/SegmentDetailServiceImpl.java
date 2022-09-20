@@ -866,13 +866,13 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
               // 根据表名，去数据库中查找这个表里是存储的什么数据；2022-06-22 09:32:12
               // 正常来说，应该在本地缓存里存储表的信息，每次根据表名获取表的信息时，从本地内存中直接获取即可；2022-06-22 09:36:34
               if (StringUtil.isNotBlank(tableName)) {
-                Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-                queryMap.put(Const.TABLE_NAME, tableName);
-                queryMap.put(Const.DB_NAME, dbInstance);
-                queryMap.put(Const.DB_ADDRESS, peer);
                 String getTableName = mingshiServerUtil.doGetTableName(peer, dbInstance, tableName);
                 String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
                 if (StringUtil.isBlank(tableDesc)) {
+                  Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+                  queryMap.put(Const.TABLE_NAME, tableName);
+                  queryMap.put(Const.DB_NAME, dbInstance);
+                  queryMap.put(Const.DB_ADDRESS, peer);
                   MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = msMonitorBusinessSystemTablesMapper.selectByQueryMap(queryMap);
                   if (null != msMonitorBusinessSystemTablesDo) {
                     String tableDesc1 = msMonitorBusinessSystemTablesDo.getTableDesc();
