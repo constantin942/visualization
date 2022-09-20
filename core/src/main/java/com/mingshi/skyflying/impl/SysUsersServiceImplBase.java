@@ -267,7 +267,7 @@ public class SysUsersServiceImplBase extends BaseParentServiceImpl<SysOperator, 
     }
     Map<String, Object> map = new HashMap<>();
     String userName = userLoginStatistics.getUserName();
-    Date errorTime = DateUtil.StrToDate(userLoginStatistics.getGmtModified(), DateUtil.DATE_TIME_SHORT);
+    Date errorTime = DateUtil.strToDate(userLoginStatistics.getGmtModified(), DateUtil.DATE_TIME_SHORT);
     Long hours = DateUtil.getNumberOfHoursBetween(errorTime, new Date());
     if (5 <= userLoginStatistics.getPasswordErrorCount() && hours < 1L) {
       log.error("用户={} 登录错误次数={} 已经超过5次，直接返回。", userName, userLoginStatistics.getPasswordErrorCount());

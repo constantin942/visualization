@@ -58,8 +58,8 @@ public class DigestUtil {
    * @param md5Str
    * @return
    */
-  public static String MD5_16(String md5Str) {
-    String md5 = MD5(md5Str);
+  public static String md516(String md5Str) {
+    String md5 = md5(md5Str);
     return StringUtils.substring(md5, 8, 24);
   }
 
@@ -69,7 +69,7 @@ public class DigestUtil {
    * @param md5Str
    * @return
    */
-  public static String MD5(String md5Str) {
+  public static String md5(String md5Str) {
     if (StringUtils.isBlank(md5Str)) {
       return null;
     }

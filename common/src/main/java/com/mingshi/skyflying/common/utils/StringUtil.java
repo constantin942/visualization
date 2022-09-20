@@ -58,10 +58,10 @@ public final class StringUtil {
   }
 
   private static boolean getOsMatchesName(String osNamePrefix) {
-    return isOSNameMatch(OS_NAME, osNamePrefix);
+    return isOsNameMatch(OS_NAME, osNamePrefix);
   }
 
-  static boolean isOSNameMatch(String osName, String osNamePrefix) {
+  static boolean isOsNameMatch(String osName, String osNamePrefix) {
     return osName == null ? false : osName.startsWith(osNamePrefix);
   }
 

@@ -17,16 +17,16 @@ import java.io.IOException;
 @Configuration
 public class RedissonConfig {
     @Value("${spring.redis.host}")
-    private String HOST;
+    private String host;
     @Value("${spring.redis.port}")
-    private String PORT;
+    private String port;
     @Value("${spring.redis.password}")
-    private String PASSWORD;
+    private String password;
 
     @Bean(destroyMethod = "shutdown")
     public RedissonClient redisson() throws IOException {
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://" + HOST + ":" + PORT).setPassword(PASSWORD);
+        config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);
         return Redisson.create(config);
     }
 }

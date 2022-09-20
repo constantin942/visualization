@@ -1173,7 +1173,7 @@ public class DateTimeUtil {
    * @param date
    * @return str
    */
-  public static String DateToStr(Date date) {
+  public static String date2Str(Date date) {
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     String str = format.format(date);
     return str;
@@ -1230,7 +1230,7 @@ public class DateTimeUtil {
   public static String strToDateToStr(String dateTimeStr, String formatStr) {
     DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(formatStr);
     DateTime dateTime = dateTimeFormatter.parseDateTime(dateTimeStr);
-    return DateToStr(dateTime.toDate());
+    return date2Str(dateTime.toDate());
   }
 
   public static String strToDateToStr2(String dateTimeStr, String formatStr) {

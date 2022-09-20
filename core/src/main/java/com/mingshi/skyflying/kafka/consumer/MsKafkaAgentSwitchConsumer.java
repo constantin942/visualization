@@ -157,8 +157,8 @@ public class MsKafkaAgentSwitchConsumer extends Thread {
       String operationType = jsonNodes.get(Const.AGENT_OPERATION_TYPE).asText();
       if(Const.AGENT_QUERY.equals(operationType)){
         if(null != jsonNodes.get(Const.AGENT_STATUS)){
-          String AGENT_STATUS = jsonNodes.get(Const.AGENT_STATUS).asText();
-          msAgentSwitchDo.setAgentSwitchStatus(Const.TRUE.equals(AGENT_STATUS) ? Const.AGENT_STATUS_ON : Const.AGENT_STATUS_OFF);
+          String agentStatus = jsonNodes.get(Const.AGENT_STATUS).asText();
+          msAgentSwitchDo.setAgentSwitchStatus(Const.TRUE.equals(agentStatus) ? Const.AGENT_STATUS_ON : Const.AGENT_STATUS_OFF);
         }
       }
 

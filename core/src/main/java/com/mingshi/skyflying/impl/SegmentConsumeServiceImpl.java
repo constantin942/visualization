@@ -216,7 +216,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       if (0L != segmentStartTime) {
         date = DateTimeUtil.longToDate(segmentStartTime);
       } else {
-        date = DateTimeUtil.DateToStr(new Date());
+        date = DateTimeUtil.date2Str(new Date());
       }
       skywalkingAgentHeartBeatMap.put(jsonObject.toString(), date);
 

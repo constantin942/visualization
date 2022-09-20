@@ -199,7 +199,7 @@ public class SnowflakeIdWorker {
 
   private static Long getDataCenterId() {
     int[] ints;
-    String operateSystem = getOSName();
+    String operateSystem = getOsName();
     if (operateSystem.contains("mac")) {
       ints = StringUtils.toCodePoints(getHostName());
     } else if (operateSystem.contains("linux")) {
@@ -238,7 +238,7 @@ public class SnowflakeIdWorker {
    * 获取当前操作系统名称.
    * return 操作系统名称 例如:windows xp,linux 等.
    */
-  public static String getOSName() {
+  public static String getOsName() {
     return System.getProperty("os.name").toLowerCase();
   }
 

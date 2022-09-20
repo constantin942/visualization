@@ -82,9 +82,9 @@ public class DbUtil {
       "select table_name,table_comment from information_schema.tables where table_schema = ?", data);
     Map<String, String[][]> datas = new HashMap<String, String[][]>();
     for (Map<String, Object> map : list) {
-      String table_name = map.get("table_name") + "";
-      String table_comment = map.get("table_comment") + "";
-      datas.put("表:" + table_name + ":" + table_comment, tableInfo(data + "." + table_name));
+      String tableName = map.get("table_name") + "";
+      String tableComment = map.get("table_comment") + "";
+      datas.put("表:" + tableName + ":" + tableComment, tableInfo(data + "." + tableName));
     }
     return datas;
   }
@@ -162,13 +162,13 @@ public class DbUtil {
     CTTc cttc = cell.getCTTc();
     CTTcPr cellPr = cttc.addNewTcPr();
     cellPr.addNewTcW().setW(BigInteger.valueOf(width));
-    XWPFParagraph pIO = cell.addParagraph();
+    XWPFParagraph pio = cell.addParagraph();
     cell.removeParagraph(0);
-    XWPFRun rIO = pIO.createRun();
-    rIO.setFontFamily("微软雅黑");
-    rIO.setColor("000000");
-    rIO.setFontSize(12);
-    rIO.setText(text);
+    XWPFRun rio = pio.createRun();
+    rio.setFontFamily("微软雅黑");
+    rio.setColor("000000");
+    rio.setFontSize(12);
+    rio.setText(text);
   }
 
   /**

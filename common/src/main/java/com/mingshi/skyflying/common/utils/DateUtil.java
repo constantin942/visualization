@@ -179,7 +179,7 @@ public class DateUtil {
    * @param date
    * @return
    */
-  public static Date formatDateToYYYYMMdd(Date date) {
+  public static Date formatDateToYyyyMmDd(Date date) {
     if (date == null) {
       return null;
     }
@@ -1190,7 +1190,7 @@ public class DateUtil {
 
   // 获得本周一的日期
   @SuppressWarnings("unused")
-  public static String getMondayOFWeek() {
+  public static String getMondayOfWeek() {
     int weeks = 0;
     int mondayPlus = DateUtil.getMondayPlus();
     GregorianCalendar currentDate = new GregorianCalendar();
@@ -1239,26 +1239,26 @@ public class DateUtil {
   /**
    * 获取指定年月的最后一天
    *
-   * @param year_time  指定年
-   * @param month_time 指定月
+   * @param yearTime  指定年
+   * @param monthTime 指定月
    * @return
    */
-  public static Date monthLastDay(int year_time, int month_time) {
+  public static Date monthLastDay(int yearTime, int monthTime) {
     Calendar cal = Calendar.getInstance();
-    cal.set(year_time, month_time, 0, 23, 59, 59);
+    cal.set(yearTime, monthTime, 0, 23, 59, 59);
     return cal.getTime();
   }
 
   /**
    * 获取指定年月的第一天
    *
-   * @param year_time  指定年
-   * @param month_time 指定月
+   * @param yearTime  指定年
+   * @param monthTime 指定月
    * @return
    */
-  public static Date monthFirstDay(int year_time, int month_time) {
+  public static Date monthFirstDay(int yearTime, int monthTime) {
     Calendar cal = Calendar.getInstance();
-    cal.set(year_time, month_time - 1, 1, 0, 0, 0);
+    cal.set(yearTime, monthTime - 1, 1, 0, 0, 0);
     return cal.getTime();
   }
 
@@ -1592,7 +1592,7 @@ public class DateUtil {
    * @param dateFormatStr
    * @return
    */
-  public static Date StrToDate(String str, String dateFormatStr) {
+  public static Date strToDate(String str, String dateFormatStr) {
     SimpleDateFormat format = new SimpleDateFormat(dateFormatStr);
     Date date = null;
     try {
