@@ -84,6 +84,9 @@
         from portrait_config
         where is_deleted = 0;
     </select>
+    <select id="selectByName" resultType="java.lang.Integer" parameterType="string">
+        select `value` from dic_item where name = #{typeName,jdbcType=VARCHAR} order by sort
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
         delete
         from portrait_config

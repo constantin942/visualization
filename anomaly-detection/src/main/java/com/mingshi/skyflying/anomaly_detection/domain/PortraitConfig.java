@@ -37,17 +37,4 @@ public class PortraitConfig {
     @NotNull(message = "时间画像告警阈值必传")
     private Double ruleTimeRate;
 
-    /**
-     * 是否启用库表规则
-     */
-    @NotNull(message = "是否启用库表规则必传")
-    private Boolean enableTableRule;
-
-    /**
-     * 是否启用时间规则
-     */
-    @NotNull(message = "是否启用时间规则必传")
-    private Boolean enableTimeRule;
-
-
 }

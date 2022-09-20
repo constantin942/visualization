@@ -34,6 +34,7 @@ public class TestControllerA {
     UserPortraitByTableTask tableTask;
 
 
+
     @GetMapping("cache")
     public void test() {
         List<UserPortraitByTimeDo> list = new ArrayList<>();
@@ -65,4 +66,5 @@ public class TestControllerA {
     public void cachePortraitByTable() {
         tableTask.cachePortraitByTable();
     }
+
 }

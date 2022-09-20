@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class AnomalyDetectionBusiness {
 
+
     @Resource
     UserPortraitByTimeTask userPortraitByTimeTask;
 
@@ -76,6 +77,7 @@ public class AnomalyDetectionBusiness {
 
     private final String NIGHT = "night";
 
+
 //    //TODO: 改成可配置
 //    private final double visitRate = 0.3;
 //
@@ -88,36 +90,39 @@ public class AnomalyDetectionBusiness {
 //    //TODO: 改成可配置
 //    private final boolean enableTableRule = true;
 
-    /**
-     * 判断是否告警
-     */
-    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
-            if (portraitConfig.getEnableTimeRule()) {
-                userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
-            }
-            if (portraitConfig.getEnableTableRule()) {
-                userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
-            }
-        }
+//    /**
+//     * 判断是否告警
+//     */
+//    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+//
+//        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
+//            if (Boolean.TRUE.equals(enableTimeRule)) {
+//                userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+//            }
+//            if (Boolean.TRUE.equals(enableTableRule)) {
+//                userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+//            }
+//        }
+//
+//    }
 
-    }
 
     /**
      * 判断是否告警-库表维度
      */
-    public void userVisitedTableIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        String username = segmentDetailDo.getUserName();
-        String dbInstance = segmentDetailDo.getDbInstance();
-        String table = segmentDetailDo.getMsTableName();
-        if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
-        List<MsSegmentDetailDo> list = new ArrayList<>();
-        list.add(segmentDetailDo);
-        //一条信息包含多张表名, 拆分一下
-        List<MsSegmentDetailDo> msSegmentDetailDos = userPortraitByTableTask.splitTable(list);
-        for (MsSegmentDetailDo segmentDetail : msSegmentDetailDos) {
-            userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
+    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
+            String username = segmentDetailDo.getUserName();
+            String dbInstance = segmentDetailDo.getDbInstance();
+            String table = segmentDetailDo.getMsTableName();
+            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
+            List<MsSegmentDetailDo> list = new ArrayList<>();
+            list.add(segmentDetailDo);
+            //一条信息包含多张表名, 拆分一下
+            List<MsSegmentDetailDo> msSegmentDetailDos = userPortraitByTableTask.splitTable(list);
+            for (MsSegmentDetailDo segmentDetail : msSegmentDetailDos) {
+                userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
+            }
         }
     }
 
@@ -178,27 +183,30 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-时间维度
      */
-    public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (segmentDetailDo.getUserName() == null) return;
-        String userName = segmentDetailDo.getUserName();
-        String time = segmentDetailDo.getStartTime();
-        String interval = getInterval(time);
+    public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        if (interval == null || interval.length() == 0) {
-            log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                    , time, segmentDetailDo.getGlobalTraceId());
-            return;
-        }
-        Double rateByInterVal = getRateByInterVal(userName, interval);
-        if (rateByInterVal == null) {
-            //没有用户画像
-            msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
-        } else {
-            //有用户画像
-            if (rateByInterVal < portraitConfig.getRuleTimeRate()) {
-                msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
+        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
+            if (segmentDetailDo.getUserName() == null) return;
+            String userName = segmentDetailDo.getUserName();
+            String time = segmentDetailDo.getStartTime();
+            String interval = getInterval(time);
+            if (interval == null || interval.length() == 0) {
+                log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
+                        , time, segmentDetailDo.getGlobalTraceId());
+                return;
+            }
+            Double rateByInterVal = getRateByInterVal(userName, interval);
+            if (rateByInterVal == null) {
+                //没有用户画像
+                msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
+            } else {
+                //有用户画像
+                if (rateByInterVal < portraitConfig.getRuleTimeRate()) {
+                    msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
+                }
             }
         }
+
     }
 
 

@@ -37,43 +37,44 @@ import java.util.Date;
 @RequestMapping("/api/user")
 public class UserController {
 
-  @Resource
-  private AiitSysUsersService aiitSysUsersService;
-  @Resource
-  private RedisPoolUtil redisPoolUtil;
-  @Resource
-  private UserLoginLogService userLoginLogService;
+    @Resource
+    private AiitSysUsersService aiitSysUsersService;
+    @Resource
+    private RedisPoolUtil redisPoolUtil;
+    @Resource
+    private UserLoginLogService userLoginLogService;
 
-  /**
-   * @return com.zhejiang.mobile.common.response.ServerResponse
-   * @Author zhaoming
-   * @Description 用户登录
-   * @Date 下午3:40 2021/6/8
-   * @Param [request, userName, password]
-   **/
-  @ResponseBody
-  @RequestMapping(value = "/login", method = RequestMethod.POST)
-  public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
-    Instant instStart = Instant.now();
-    ServerResponse<SysOperator> response = aiitSysUsersService.login(userName, password);
-    if (AiitExceptionCode.SUCCESS.getCode() == response.getCode() && !StringUtil.equals(null, String.valueOf(response.getData()))) {
-      HttpSession oldSession = request.getSession(false);
-      if (oldSession != null) {
-        oldSession.invalidate();
-      }
-      HttpSession httpSession = request.getSession(true);
-      String sessionId = httpSession.getId();
-      log.info("用户=【{}】登录  sessionID={}", userName, sessionId);
-      boolean flag = redisPoolUtil.set(sessionId, JsonUtil.obj2String(response.getData()), Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
-      log.info("用户 phone={} 登录成功，将用户的信息放入Redis中的结果={}", userName, flag);
-    } else {
-      log.info("用户 phone={} 登录失败。", userName);
-      return response;
+    /**
+     * @return com.zhejiang.mobile.common.response.ServerResponse
+     * @Author zhaoming
+     * @Description 用户登录
+     * @Date 下午3:40 2021/6/8
+     * @Param [request, userName, password]
+     **/
+    @ResponseBody
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
+        Instant instStart = Instant.now();
+        ServerResponse<SysOperator> response = aiitSysUsersService.login(userName, password);
+        if (AiitExceptionCode.SUCCESS.getCode() == response.getCode() && !StringUtil.equals(null, String.valueOf(response.getData()))) {
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) {
+                oldSession.invalidate();
+            }
+            HttpSession httpSession = request.getSession(true);
+            String sessionId = httpSession.getId();
+            log.info("用户=【{}】登录  sessionID={}", userName, sessionId);
+//      redisPoolUtil.set(sessionId, response.getData(), Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+            boolean flag = redisPoolUtil.set(sessionId, response.getData(), Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+            log.info("用户 phone={} 登录成功，将用户的信息放入Redis中的结果={}", userName, flag);
+        } else {
+            log.info("用户 phone={} 登录失败。", userName);
+            return response;
+        }
+
+        log.info("用户 phone={}登录结束，返回给前端的信息={}，接口执行时间={} 毫秒", userName, JsonUtil.obj2String(response), DateTimeUtil.getTimeMillis(instStart));
+        return response;
     }
-
-    log.info("用户 phone={}登录结束，返回给前端的信息={}，接口执行时间={} 毫秒", userName, JsonUtil.obj2String(response), DateTimeUtil.getTimeMillis(instStart));
-    return response;
-  }
 
   /**
    * @return com.serverless.common.response.ServerResponse<com.serverless.common.domain.AiitUsers>

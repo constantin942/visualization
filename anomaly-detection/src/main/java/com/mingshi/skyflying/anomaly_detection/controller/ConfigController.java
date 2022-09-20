@@ -31,24 +31,29 @@ public class ConfigController {
     @Resource
     PortraitConfigMapper portraitConfigMapper;
 
-    @GetMapping("getAllConfigDic")
-    public ServerResponse<Map<String, ArrayList<DicItem>>> getAllConfigDic() {
-        List<DicItem> configItems = dicItemMapper.selectAll();
-        Map<String, ArrayList<DicItem>> map = new HashMap<>();
-        for (DicItem configItem : configItems) {
-            ArrayList<DicItem> list = map.getOrDefault(configItem.getName(), new ArrayList<>());
-            list.add(configItem);
-            map.put(configItem.getName(), list);
-        }
-        for (Map.Entry<String, ArrayList<DicItem>> entry : map.entrySet()) {
-            entry.getValue().sort(new Comparator<DicItem>() {
-                @Override
-                public int compare(DicItem x, DicItem y) {
-                    return x.getSort() - y.getSort();
-                }
-            });
-        }
-        return ServerResponse.createBySuccess(map);
+//    @GetMapping("getAllConfigDic")
+//    public ServerResponse<Map<String, ArrayList<DicItem>>> getAllConfigDic() {
+//        List<DicItem> configItems = dicItemMapper.selectAll();
+//        Map<String, ArrayList<DicItem>> map = new HashMap<>();
+//        for (DicItem configItem : configItems) {
+//            ArrayList<DicItem> list = map.getOrDefault(configItem.getName(), new ArrayList<>());
+//            list.add(configItem);
+//            map.put(configItem.getName(), list);
+//        }
+//        for (Map.Entry<String, ArrayList<DicItem>> entry : map.entrySet()) {
+//            entry.getValue().sort(new Comparator<DicItem>() {
+//                @Override
+//                public int compare(DicItem x, DicItem y) {
+//                    return x.getSort() - y.getSort();
+//                }
+//            });
+//        }
+//        return ServerResponse.createBySuccess(map);
+//    }
+
+    @GetMapping("getConfigDic")
+    public ServerResponse<ArrayList<Integer>> getAllConfigDic(String typeName) {
+        return ServerResponse.createBySuccess(portraitConfigMapper.selectByName(typeName));
     }
 
     @GetMapping("getPortraitConfig")

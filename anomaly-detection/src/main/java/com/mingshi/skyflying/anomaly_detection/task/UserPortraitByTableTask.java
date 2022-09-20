@@ -93,7 +93,7 @@ public class UserPortraitByTableTask {
             String username = outerEntry.getKey();
             for (Map.Entry<String, Integer> innerEntry : outerEntry.getValue().entrySet()) {
                 String redisKey = buildRedisKey(username, innerEntry.getKey());
-                redisPoolUtil.setNx(redisKey, innerEntry.getValue(), EXPIRE);
+                redisPoolUtil.set(redisKey, innerEntry.getValue(), EXPIRE);
             }
         }
     }
