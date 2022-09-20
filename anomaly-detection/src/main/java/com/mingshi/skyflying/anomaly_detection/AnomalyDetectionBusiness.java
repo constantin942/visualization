@@ -91,14 +91,17 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    public void userVisitedIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        if (portraitConfig.getEnableTimeRule()) {
-            userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
+            if (portraitConfig.getEnableTimeRule()) {
+                userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+            }
+            if (portraitConfig.getEnableTableRule()) {
+                userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
+            }
         }
-        if (portraitConfig.getEnableTableRule()) {
-            userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
-        }
+
     }
 
     /**
