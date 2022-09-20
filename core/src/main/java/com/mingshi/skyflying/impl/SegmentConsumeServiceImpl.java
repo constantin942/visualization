@@ -543,32 +543,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    * @Param [operationName]
    **/
   private Boolean ignoreMethod(String operationName) {
-    if (operationName.equals(Const.REDISSON_PING) ||
-      operationName.equals(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME) ||
-      operationName.equals(Const.LETTUCE_SENTINEL) ||
-      operationName.equals(Const.MYSQL_JDBI_CONNECTION_CLOSE) ||
-      operationName.equals(Const.GET_DEVICES_NOTIFICATION) ||
-      operationName.equals(Const.GET_MANAGER_HTML) ||
-      operationName.equals(Const.BALANCER_USER_CHECKTOKEN) ||
-      operationName.equals(Const.GET1) ||
-      operationName.equals(Const.GET_ASSETS_FONTS_NUNITO_BOLD_WOFF2) ||
-      operationName.equals(Const.GET_TEMP_NULL) ||
-      operationName.equals(Const.GET_ASSETS_FONTS_NIOICON_TTF) ||
-      operationName.equals(Const.GET_ASSETS_FONTS_NUNITO_REGULAR_WOFF2) ||
-      operationName.equals(Const.GET_ASSETS_FONTS_ROBOTO_REGULAR_WOFF2) ||
-      operationName.equals(Const.GET_ASSETS_FONTS_ROBOTO_MEDIUM_WOFF2) ||
-      operationName.equals(Const.HIKARICP_CONNECTION_GETCONNECTION) ||
-      operationName.equals(Const.GET2) ||
-      operationName.equals(Const.GET_COMPANIES_COMPANYHEALTH_LIST) ||
-      operationName.equals(Const.NULL_NULL) ||
-      operationName.equals(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_UPDATE) ||
-      operationName.equals(Const.HIKARICP_CONNECTION_CLOSE) ||
-      operationName.equals(Const.POST_USERS_MENUSAUTHS) ||
-      operationName.equals(Const.GET_ZLB_GET_RURAL_COMMERCIAL_BANK_INFO) ||
-      operationName.equals(Const.MYSQL_JDBI_CONNECTION_COMMIT) ||
-      operationName.equals(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY) ||
-      operationName.startsWith(Const.SPRING_SCHEDULED) ||
-      operationName.equals(Const.POST_DEVICES_HEARTEAT)) {
+    if (Const.OPERATION_NAME_MAP.containsKey(operationName) || operationName.startsWith(Const.SPRING_SCHEDULED)) {
       return true;
     }
     return false;

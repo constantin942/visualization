@@ -169,7 +169,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
   @Override
   public ServerResponse<SysOperator> login(String userName, String password) {
-    ServerResponse<SysOperator> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
+    ServerResponse serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     if (StringUtil.isBlank(userName)) {
       return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
