@@ -69,7 +69,7 @@ public class MsCaffeine implements ApplicationRunner {
 
     // 获取7天之前的用户名、token、globalTraceId；2022-08-01 14:13:24
     List<MsSegmentDetailDo> list = msSegmentDetailDao.selectByTokenUserNameGlobalTraceIdIsNotNull(dateStr);
-    if (null == list || 0 == list.size()) {
+    if (list.isEmpty()) {
       return;
     }
     for (MsSegmentDetailDo msSegmentDetailDo : list) {

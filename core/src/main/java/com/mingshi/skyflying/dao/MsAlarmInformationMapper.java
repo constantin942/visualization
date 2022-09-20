@@ -7,13 +7,13 @@ import java.util.Map;
 
 public interface MsAlarmInformationMapper {
 
-    int insertSelective(MsAlarmInformationDo record);
+    int insertSelective(MsAlarmInformationDo msAlarmInformationDo);
 
     MsAlarmInformationDo selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(MsAlarmInformationDo record);
+    int updateByPrimaryKeySelective(MsAlarmInformationDo msAlarmInformationDo);
 
-    int updateByUserNameAndOriginalTime(MsAlarmInformationDo record);
+    int updateByUserNameAndOriginalTime(MsAlarmInformationDo msAlarmInformationDo);
 
     void insertSelectiveBatch(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist);
 

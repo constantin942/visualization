@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-
 /**
  * @Author: 唐郑翔
  * @Description:
@@ -24,7 +22,7 @@ public class RedissonConfig {
     private String password;
 
     @Bean(destroyMethod = "shutdown")
-    public RedissonClient redisson() throws IOException {
+    public RedissonClient redisson() {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);
         return Redisson.create(config);

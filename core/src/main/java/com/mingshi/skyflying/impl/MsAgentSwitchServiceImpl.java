@@ -41,7 +41,7 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   @Override
   public ServerResponse<String> allAgentOperationRecord(String serviceInstance, Integer pageNo, Integer pageSize) {
 
-    HashMap hashMap = new HashMap(Const.INITAL_SIZE);
+    HashMap<String, Object> hashMap = new HashMap(Const.INITAL_SIZE);
     if (null == pageNo) {
       pageNo = 1;
     }
@@ -139,7 +139,7 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   private void insertMsAgentSwitchDo(String serviceInstance, String agentSwitch, String requestId, Boolean sendResult, String sendKafkaRequestParams, String operationType) {
     try {
       MsAgentSwitchDo msAgentSwitchDo = new MsAgentSwitchDo();
-      if(StringUtil.isNotBlank(agentSwitch)){
+      if (StringUtil.isNotBlank(agentSwitch)) {
         msAgentSwitchDo.setAgentSwitchStatus(agentSwitch);
       }
       msAgentSwitchDo.setSendKafkaRequestParams(sendKafkaRequestParams);

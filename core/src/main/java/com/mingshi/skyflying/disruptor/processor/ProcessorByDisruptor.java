@@ -58,7 +58,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     return createProcessorsFinishedFlag;
   }
 
-  private void init(String applicationName) {
+  private void init() {
     this.acceptorRingBuffer = messageModelRingBuffer(queueSize);
     createProcessorsFinishedFlag = true;
   }
@@ -67,7 +67,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     if (true == reactorProcessorEnable && true == reactorProcessorByDisruptor) {
       log.info("开始执行 # ProcessorByDisruptor.run() # 项目启动，开始构造Disruptor实例。");
-      init("acceptor_");
+      init();
       log.info("执行完毕 # ProcessorByDisruptor.run() # 项目启动，构造Disruptor实例完毕。");
     }
   }
@@ -86,12 +86,6 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     // 这里使用单生产者还是多生产者，取决于kafka的消费者线程的数量。2022-07-28 16:35:59
     // 通过集成原生Kafka的消费端代码，手动创建了一个消费线程，从Kafka服务端拉取消息。所以这里可以指定使用单生产者模式。2022-07-28 17:44:13
     disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.SINGLE, new BlockingWaitStrategy());
-
-    // 使用多生产者；2022-07-28 14:42:07
-    // 消费者使用yield等待策略，在实测中，并不能提高QPS。同时会导致CPU一直飙高到100%，就算没有消息要消费，CPU也会一直飙升到100%。不建议使用.2022-07-28 16:31:52
-    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new YieldingWaitStrategy());
-    // 消费者使用blocking阻塞策略，在实测中，比较温和，在有消息要处理的情况下，CPU一般占据70%。推荐使用。2022-07-28 16:32:54
-    // disruptor = new Disruptor<>(factory, queueSize, producerFactory, ProducerType.MULTI, new BlockingWaitStrategy());
 
     if (null != reactorProcessorThreadCount && 1 == reactorProcessorThreadCount) {
       log.info("# ProcessorByDisruptor.messageModelRingBuffer() # 根据配置文件设置的Processor线程的数量 = 【{}】，由此创建单消费者线程。", reactorProcessorThreadCount);
@@ -114,9 +108,7 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     disruptor.start();
 
     // 获取ringbuffer环，用于接取生产者生产的事件
-    RingBuffer<SegmentByByte> ringBuffer = disruptor.getRingBuffer();
-
-    return ringBuffer;
+    return disruptor.getRingBuffer();
   }
 
   /**
@@ -143,14 +135,6 @@ public class ProcessorByDisruptor implements ApplicationRunner {
     } finally {
       // 将该下标位置的对象发布出去。也就是告诉消费者，队列里有数据了，可以来消费了。2022-07-17 10:37:00
       acceptorRingBuffer.publish(sequence);
-
-      // 间隔输出日志；2022-07-22 21:33:52
-      // Integer incrementAndGet = atomicInteger.incrementAndGet();
-      // int i = incrementAndGet & (1024 * 2 - 1);
-      // if (0 == i) {
-      //   log.info("当前线程【{}】将没有处理前的流量放入到FlowsMatchRingBuffer中，当前队列中元素个数【{}】，总容量【{}】。",
-      //     Thread.currentThread().getName(), getQueueSize(), queueSize);
-      // }
     }
   }
 

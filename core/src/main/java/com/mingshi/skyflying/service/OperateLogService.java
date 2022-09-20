@@ -12,12 +12,12 @@ import com.mingshi.skyflying.common.domain.OperationLog;
  **/
 public interface OperateLogService extends ParentService<OperationLog, Long> {
 
-    int insertSelective(OperationLog record);
+    int insertSelective(OperationLog operationLog);
 
     OperationLog selectByPrimaryKey(Long id);
 
     OperationLog selectByOrderId(String orderId);
 
-    int updateByPrimaryKeySelective(OperationLog record);
+    int updateByPrimaryKeySelective(OperationLog operationLog);
 
 }

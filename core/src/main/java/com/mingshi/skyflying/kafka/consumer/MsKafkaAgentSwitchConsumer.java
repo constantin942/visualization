@@ -96,8 +96,8 @@ public class MsKafkaAgentSwitchConsumer extends Thread {
         // poll(duration): 长轮询, 即duration时段内没拿到消息就一直重复尝试拿, 知道时间到或者拿到消息才返回结果
         ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(1000));
         int count = records.count();
-        for (ConsumerRecord<String, Bytes> record : records) {
-          byte[] bytes = record.value().get();
+        for (ConsumerRecord<String, Bytes> consumerRecord : records) {
+          byte[] bytes = consumerRecord.value().get();
           String value = new String(bytes);
           // 更新探针的状态
           updateMsAgentSwitchStatus(value);
@@ -155,8 +155,8 @@ public class MsKafkaAgentSwitchConsumer extends Thread {
       msAgentSwitchDo.setReceiveKafkaStatus(responseStatus);
 
       String operationType = jsonNodes.get(Const.AGENT_OPERATION_TYPE).asText();
-      if(Const.AGENT_QUERY.equals(operationType)){
-        if(null != jsonNodes.get(Const.AGENT_STATUS)){
+      if (Const.AGENT_QUERY.equals(operationType)) {
+        if (null != jsonNodes.get(Const.AGENT_STATUS)) {
           String agentStatus = jsonNodes.get(Const.AGENT_STATUS).asText();
           msAgentSwitchDo.setAgentSwitchStatus(Const.TRUE.equals(agentStatus) ? Const.AGENT_STATUS_ON : Const.AGENT_STATUS_OFF);
         }

@@ -24,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Const {
 
   public static final Map<String, String> OPERATION_NAME_MAP = new ConcurrentHashMap<>();
+  public static final String TOTAL = "total";
+  public static final String ROWS = "rows";
+  public static final String STATUS = "status";
 
   static {
     OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

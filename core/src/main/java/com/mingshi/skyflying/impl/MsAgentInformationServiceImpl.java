@@ -140,12 +140,12 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
           String sendKafkaStatus = msAgentSwitchDo.getSendKafkaStatus();
           String receiveKafkaStatus = msAgentSwitchDo.getReceiveKafkaStatus();
           if(Const.SUCCESS.equals(sendKafkaStatus) && Const.SUCCESS.equals(receiveKafkaStatus)){
-            map.put("status", agentSwitch);
+            map.put(Const.STATUS, agentSwitch);
           }else{
-            map.put("status", Const.AGENT_STATUS_UNKNOWN);
+            map.put(Const.STATUS, Const.AGENT_STATUS_UNKNOWN);
           }
         }else{
-          map.put("status", Const.AGENT_STATUS_ON);
+          map.put(Const.STATUS, Const.AGENT_STATUS_ON);
         }
         list.add(map);
       }

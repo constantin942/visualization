@@ -18,8 +18,6 @@ import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.service.MsAlarmInformationService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -56,7 +54,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         if (StringUtil.isNotBlank(userName)) {
-            queryMap.put("userName", userName);
+            queryMap.put(Const.USER_NAME, userName);
         }
         if (null != matchRuleId) {
             queryMap.put("matchRuleId", matchRuleId);
@@ -77,8 +75,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         Integer count = msAlarmInformationMapper.selectAllCount(queryMap);
 
         Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
-        context.put("rows", JsonUtil.obj2String(alarmInformationDoList));
-        context.put("total", count);
+        context.put(Const.ROWS, JsonUtil.obj2String(alarmInformationDoList));
+        context.put(Const.TOTAL, count);
 
         log.info("# MsAlarmInformationServiceImpl.getAllAlarmInfo() # 获取所有的告警信息，根据条件【{}】在数据库中查询到了【{}】条数据。", JsonUtil.obj2String(queryMap), alarmInformationDoList.size());
         ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
@@ -263,7 +261,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         queryMap.put("userName", userName);
         List<UserPortraitByVisitedTimeDo> userPortraitByVisitedTimeDoList = userPortraitByVisitedTimeMapper.selectByUserName(queryMap);
         UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo = null;
-        if (null == userPortraitByVisitedTimeDoList || 0 == userPortraitByVisitedTimeDoList.size()) {
+        if (userPortraitByVisitedTimeDoList.isEmpty()) {
             userPortraitByVisitedTimeDo = new UserPortraitByVisitedTimeDo();
             createUserPortraitByVisitedTimeDo(userPortraitByVisitedTimeDo, originalTime);
             userPortraitByVisitedTimeMapper.insertSelective(userPortraitByVisitedTimeDo);

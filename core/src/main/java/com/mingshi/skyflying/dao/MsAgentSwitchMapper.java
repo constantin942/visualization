@@ -6,15 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 
 public interface MsAgentSwitchMapper {
-    int insertSelective(MsAgentSwitchDo record);
+    int insertSelective(MsAgentSwitchDo msAgentSwitchDo);
 
     MsAgentSwitchDo selectByPrimaryKey(Integer id);
 
-    List<MsAgentSwitchDo> selectByServiceInstance(HashMap jsonObject);
+    List<MsAgentSwitchDo> selectByServiceInstance(HashMap<String, Object> jsonObject);
 
     MsAgentSwitchDo selectByServiceInstanceLatest(String serviceInstance);
 
-    Integer selectByServiceInstanceCount(HashMap jsonObject);
+    Integer selectByServiceInstanceCount(HashMap<String, Object> jsonObject);
 
     int updateByPrimaryKeySelective(MsAgentSwitchDo msAgentSwitchDo);
 

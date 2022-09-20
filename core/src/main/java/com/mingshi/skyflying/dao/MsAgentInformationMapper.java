@@ -8,13 +8,13 @@ import java.util.Map;
 
 public interface MsAgentInformationMapper {
 
-  int insertSelective(MsAgentInformationDo record);
+  int insertSelective(MsAgentInformationDo msAgentInformationDo);
 
   MsAgentInformationDo selectByPrimaryKey(Integer id);
 
   List<MsAgentInformationDo> selectAll();
 
-  int updateByPrimaryKeySelective(MsAgentInformationDo record);
+  int updateByPrimaryKeySelective(MsAgentInformationDo msAgentInformationDo);
 
   void insertBatch(LinkedList<MsAgentInformationDo> list);
 

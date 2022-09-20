@@ -22,8 +22,8 @@ public class OperateLogServiceImpl extends BaseParentServiceImpl<OperationLog, L
     private OperateLogMapper aiitOperateLogMapper;
 
     @Override
-    public int insertSelective(OperationLog record) {
-        return aiitOperateLogMapper.insertSelective(record);
+    public int insertSelective(OperationLog operationLog) {
+        return aiitOperateLogMapper.insertSelective(operationLog);
     }
 
     @Override
@@ -37,8 +37,8 @@ public class OperateLogServiceImpl extends BaseParentServiceImpl<OperationLog, L
     }
 
     @Override
-    public int updateByPrimaryKeySelective(OperationLog record) {
-        return aiitOperateLogMapper.updateByPrimaryKeySelective(record);
+    public int updateByPrimaryKeySelective(OperationLog operationLog) {
+        return aiitOperateLogMapper.updateByPrimaryKeySelective(operationLog);
     }
 
 }

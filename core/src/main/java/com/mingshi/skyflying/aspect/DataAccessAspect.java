@@ -60,7 +60,7 @@ public class DataAccessAspect {
   /**
    * 对类ServerlessCheckController中所有方法调用之前，进行登录校验；这种方式不需要在类的头部加注解
    */
-  private final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
+  private static final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
 
   /**
    * @return java.lang.Object
@@ -131,7 +131,6 @@ public class DataAccessAspect {
     String oldPassword = (String) map.get("oldPassword");
     String newPassword = (String) map.get("newPassword");
     if (METHOD_MAP.containsKey(methodName)) {
-    // if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
       /** 由于不能从前端传递用户的用户名过来，所以从这里把用户名传递过去（若是从前端传递用户名过来，不安全）*/
       resObj = aspectUtil.excute(joinPoint, userName);
     } else if (methodName.contains(Const.CHANGE_PASSWORD)) {

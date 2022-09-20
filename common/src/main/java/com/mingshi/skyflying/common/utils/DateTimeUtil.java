@@ -349,13 +349,6 @@ public class DateTimeUtil {
     return new SimpleDateFormat(format).format(date);
   }
 
-  public static String formatWithDateTimeHyphenAddDays(final Date date, int days) {
-    if (date == null) {
-      return "";
-    }
-    return formatDate(addDays(date, days), DEFAULT_PATTERN_WITH_HYPHEN);
-  }
-
   /**
    * Add specified number of days to the given date.
    *
@@ -367,30 +360,6 @@ public class DateTimeUtil {
     Calendar cal = GregorianCalendar.getInstance();
     cal.setTime(date);
     cal.add(Calendar.DAY_OF_MONTH, days);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-
-  public static Date addHoures(Date date, int hour) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(date);
-    cal.add(Calendar.HOUR, hour);
-    return cal.getTime();
-  }
-
-  public static Date addMins(final Date date, int mins) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-    cal.add(Calendar.MINUTE, mins);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-  public static Date addSeconds(final Date date, int seconds) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-    cal.add(Calendar.SECOND, seconds);
 
     return new Date(cal.getTime().getTime());
   }
@@ -409,62 +378,6 @@ public class DateTimeUtil {
     return null;
   }
 
-  /**
-   * 转换long类型到时,分,秒,毫秒的格式.
-   *
-   * @param time long type
-   * @return
-   */
-  public static String convert(long time) {
-    long ms = time % 1000;
-    time /= 1000;
-
-    int h = Integer.valueOf("" + (time / 3600));
-    int m = Integer.valueOf("" + ((time - h * 3600) / 60));
-    int s = Integer.valueOf("" + (time - h * 3600 - m * 60));
-
-    return h + "小时(H)" + m + "分(M)" + s + "秒(S)" + ms + "毫秒(MS)";
-  }
-
-  /**
-   * judge the srcDate is between startDate and endDate
-   *
-   * @param srcDate
-   * @param startDate
-   * @param endDate
-   * @return
-   */
-  public static boolean isBetweenDateRange(final Date srcDate, final Date startDate, final Date endDate) {
-    if (srcDate != null && startDate != null && endDate != null) {
-      return srcDate.getTime() >= startDate.getTime() && srcDate.getTime() <= endDate.getTime();
-    }
-    return false;
-  }
-
-  /**
-   * 获取指定的时间
-   *
-   * @param dayOffSet
-   * @param hourOffSet
-   * @param minuteOffSet
-   * @param secondsOffSet
-   * @return
-   */
-  public static Date getCertainDate(int dayOffSet, int hourOffSet, int minuteOffSet, int secondsOffSet) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, dayOffSet);
-    calendar.set(Calendar.HOUR, hourOffSet);
-    calendar.set(Calendar.MINUTE, minuteOffSet);
-    calendar.set(Calendar.SECOND, secondsOffSet);
-    return calendar.getTime();
-  }
-
-  public static Date getCentainOffDate(Date date, int dayOffSet) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(date);
-    calendar.add(Calendar.DATE, dayOffSet);
-    return calendar.getTime();
-  }
 
   /**
    * <B>方法名称：getSecondByDate</B>
@@ -608,80 +521,6 @@ public class DateTimeUtil {
   }
 
   /**
-   * Get date one day before specified one.
-   *
-   * @param date1 test date
-   * @param date2 date when
-   * @return true if date1 is before date2
-   */
-  public static boolean beforeDay(final Date date1, final Date date2) {
-    return getStartOfDate(date1).before(getStartOfDate(date2));
-  }
-
-  /**
-   * Get date one day after specified one.
-   *
-   * @param date1 Date 1
-   * @param date2 Date 2
-   * @return true if date1 after date2
-   */
-  public static boolean afterDay(final Date date1, final Date date2) {
-    return date1.after(date2);
-//        return getStartOfDate(date1).after(getStartOfDate(date2));
-  }
-
-  /**
-   * 返回当前日
-   *
-   * @return [dd]
-   */
-
-  public static String getDay(Date date) {
-    SimpleDateFormat formatter = new SimpleDateFormat("dd");
-    String pid = formatter.format(date);
-    return pid;
-  }
-
-  /**
-   * 返回当前月份,如果date为null则返回当前月份
-   *
-   * @return [MM]
-   */
-
-  public static String getMonth(Date date) {
-    if (date == null) {
-      date = new Date();
-    }
-    SimpleDateFormat formatter = new SimpleDateFormat("MM");
-    String pid = formatter.format(date);
-    return pid;
-  }
-
-  public static Integer getCurrentMonth(Date date) {
-    if (date == null) {
-      date = new Date();
-    }
-    SimpleDateFormat formatter = new SimpleDateFormat("MM");
-    String pid = formatter.format(date);
-    return Integer.valueOf(pid);
-  }
-
-  /**
-   * 返回当前年份,如果date为null则返回当前年份
-   *
-   * @return [MM]
-   */
-
-  public static String getYear(Date date) {
-    if (date == null) {
-      date = new Date();
-    }
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
-    String pid = formatter.format(date);
-    return pid;
-  }
-
-  /**
    * 返回一个Date默认最大值
    *
    * @return
@@ -709,18 +548,6 @@ public class DateTimeUtil {
     calendar.set(Calendar.SECOND, 0);
     calendar.set(Calendar.MILLISECOND, 0);
     return new Date(calendar.getTimeInMillis());
-  }
-
-  /**
-   * Get first day of month.
-   *
-   * @param date Date
-   * @return Date
-   */
-  public static Date getFirstOfMonth(final Date date) {
-    Date lastMonth = addMonths(date, -1);
-    lastMonth = getEndOfMonth(lastMonth);
-    return addDays(lastMonth, 1);
   }
 
   /**
@@ -759,86 +586,8 @@ public class DateTimeUtil {
     return elapsed / DAY;
   }
 
-  public static long getNumberOfDaysBetweenDates(final Date before, final Date end) {
-    Calendar cal1 = Calendar.getInstance();
-    cal1.setTime(before);
-    Calendar cal2 = Calendar.getInstance();
-    cal2.setTime(end);
-    return getNumberOfDaysBetween(cal1, cal2);
-  }
-
-  /**
-   * 返回两个时间间隔的小时数
-   *
-   * @param before 起始时间
-   * @param end    终止时间
-   * @return 小时数
-   */
-  public static long getNumberOfHoursBetween(final Date before, final Date end) {
-    long millisec = end.getTime() - before.getTime() + 1;
-    return millisec / (60 * 60 * 1000);
-  }
-
-  /**
-   * 返回两个时间间隔的分钟数
-   *
-   * @param before 起始时间
-   * @param end    终止时间
-   * @return 分钟数
-   */
-  public static long getNumberOfMinuteBetween(final Date before, final Date end) {
-    long millisec = end.getTime() - before.getTime();
-    return millisec / (60 * 1000);
-  }
-
-  public static int getNumberOfMonthsBetween(final Date before, final Date end) {
-    Calendar cal1 = Calendar.getInstance();
-    cal1.setTime(before);
-    Calendar cal2 = Calendar.getInstance();
-    cal2.setTime(end);
-    return (cal2.get(Calendar.YEAR) - cal1.get(Calendar.YEAR)) * 12
-      + (cal2.get(Calendar.MONTH) - cal1.get(Calendar.MONTH));
-  }
-
-  public static int getNumberOfSecondsBetween(final double end, final double start) {
-    if ((end == 0) || (start == 0)) {
-      return -1;
-    }
-
-    return (int) (Math.abs(end - start) / SECOND);
-  }
-
   public static Date getNowDate() {
     return new Date();
-  }
-
-  /**
-   * get date time as "yyyyMMddhhmmss"
-   *
-   * @return the current date with time component
-   */
-  public static String getNowYearMonthDay() {
-    return formatDate(new Date(), DEFAULT_PATTERN);
-  }
-
-  /**
-   * get date time as "yyyyMMddhhmmss"
-   *
-   * @return the current date with time component
-   */
-  public static String getNowYearMonthDay(Date date) {
-    return formatDate(date, DEFAULT_PATTERN);
-  }
-
-  public static String getDateTimeFullAll(Date date) {
-    if (date == null) {
-      return "";
-    }
-    try {
-      return formatDate(date, DATE_TIME_FULL_ALL);
-    } catch (Exception e) {
-      return "";
-    }
   }
 
   /**
@@ -851,23 +600,6 @@ public class DateTimeUtil {
     Date currDate = cal.getTime();
     return currDate;
   }
-
-  /**
-   * 日期转换为字符串 格式自定义
-   *
-   * @param date
-   * @param f
-   * @return
-   */
-  public static String dateStr(Date date, String f) {
-    SimpleDateFormat format = new SimpleDateFormat(f);
-    if (date != null) {
-      String str = format.format(date);
-      return str;
-    }
-    return "";
-  }
-
 
   /**
    * 将时间戳转换为Date
@@ -1027,20 +759,6 @@ public class DateTimeUtil {
   }
 
   /**
-   * 获取指定时间天的开始时间
-   *
-   * @return
-   */
-  public static Date getDayStartTime(Date day) {
-    Calendar cal = Calendar.getInstance();
-    if (day != null) {
-      cal.setTimeInMillis(day.getTime());
-    }
-    cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), 0, 0, 0);
-    return cal.getTime();
-  }
-
-  /**
    * 获取昨天 开始时间
    *
    * @return
@@ -1072,12 +790,6 @@ public class DateTimeUtil {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     return dateFormat.format(date);
-  }
-
-  private static void setToFirstDay(Calendar calendar) {
-    while (calendar.get(Calendar.DAY_OF_WEEK) != FIRST_DAY) {
-      calendar.add(Calendar.DATE, -1);
-    }
   }
 
 
@@ -1194,13 +906,6 @@ public class DateTimeUtil {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_YYYY_MM_DD_HHMMSSSSSSSS);
     String str = format.format(date);
     return str;
-  }
-
-  public static Long dateToStrYyyyMmDdHhMmSs2(Date date) {
-    SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_YYYYMMDDHHMMSSSSS);
-    String str = format.format(date);
-    Long aLong = Long.valueOf(str);
-    return aLong;
   }
 
   public static String dateToStrYyyyMmDd(Date date) {

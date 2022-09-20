@@ -19,6 +19,7 @@ import java.util.*;
 @Slf4j
 public class DateUtil {
 
+  private DateUtil(){}
   /**
    * milliseconds in a second.
    */
@@ -112,8 +113,7 @@ public class DateUtil {
    */
   public static Date getNow() {
     Calendar cal = Calendar.getInstance();
-    Date currDate = cal.getTime();
-    return currDate;
+    return cal.getTime();
   }
 
   /**
@@ -126,8 +126,7 @@ public class DateUtil {
   public static String dateStr(Date date, String f) {
     SimpleDateFormat format = new SimpleDateFormat(f);
     if (date != null) {
-      String str = format.format(date);
-      return str;
+      return format.format(date);
     }
     return "";
   }
@@ -184,8 +183,7 @@ public class DateUtil {
   public static Date valueOf(String str, String dateFormatStr) {
     SimpleDateFormat formatter = new SimpleDateFormat(dateFormatStr);
     ParsePosition pos = new ParsePosition(0);
-    Date strtoDate = formatter.parse(str, pos);
-    return strtoDate;
+    return formatter.parse(str, pos);
   }
 
   /**
@@ -194,8 +192,7 @@ public class DateUtil {
    * @return
    */
   public static String getNowTimeStr() {
-    String str = Long.toString(System.currentTimeMillis() / 1000);
-    return str;
+    return Long.toString(System.currentTimeMillis() / 1000);
   }
 
   public static Date getIntegralTime() {
@@ -217,34 +214,6 @@ public class DateUtil {
   }
 
 
-  public static long getTime(String format) {
-    long t = 0;
-    if (StringUtil.isBlank(format)) {
-      return t;
-    }
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    Date date;
-    try {
-      date = sdf.parse(format);
-      t = date.getTime() / 1000;
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-    return t;
-  }
-
-  public static String getCurrentWeekday() {
-    int weeks = 0;
-    int mondayPlus = DateUtil.getMondayPlus();
-    GregorianCalendar currentDate = new GregorianCalendar();
-    currentDate.add(GregorianCalendar.DATE, mondayPlus + 6);
-    Date monday = currentDate.getTime();
-
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    String preMonday = df.format(monday);
-    return preMonday;
-  }
-
   /**
    * 获得当前日期与本周日相差的天数
    * @return
@@ -259,23 +228,6 @@ public class DateUtil {
     } else {
       return 1 - dayOfWeek;
     }
-  }
-
-  /**
-   * 获得本周一的日期
-   * @return
-   */
-  @SuppressWarnings("unused")
-  public static String getMondayOfWeek() {
-    int weeks = 0;
-    int mondayPlus = DateUtil.getMondayPlus();
-    GregorianCalendar currentDate = new GregorianCalendar();
-    currentDate.add(GregorianCalendar.DATE, mondayPlus);
-    Date monday = currentDate.getTime();
-
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    String preMonday = df.format(monday);
-    return preMonday;
   }
 
   /**

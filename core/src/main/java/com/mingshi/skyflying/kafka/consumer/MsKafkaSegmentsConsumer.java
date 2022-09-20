@@ -136,8 +136,8 @@ public class MsKafkaSegmentsConsumer extends Thread {
         ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(100));
         Instant start = Instant.now();
         int count = records.count();
-        for (ConsumerRecord<String, Bytes> record : records) {
-          aiitKafkaConsumerUtil.doOnMessage(record);
+        for (ConsumerRecord<String, Bytes> consumerRecord : records) {
+          aiitKafkaConsumerUtil.doOnMessage(consumerRecord);
         }
 
         // 根据配置情况，提交offset
@@ -171,7 +171,6 @@ public class MsKafkaSegmentsConsumer extends Thread {
       }
     }
     if (true == gracefulShutdown) {
-      // 优雅关机；2022-09-13 17:38:32
       while (true) {
         Map<TopicPartition, OffsetAndMetadata> offsetsMap = offsetsLinkedBlockingQueue.poll();
         if (null != offsetsMap && 0 < offsetsMap.size()) {

@@ -35,7 +35,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
     this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
   }
 
-  public boolean put(ConsumerRecord<String, Bytes> record) {
+  public boolean put(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
       if (++count > (Const.RECORD_COUNT)) {
         // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
@@ -44,7 +44,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
       }
 
       // 这里之所以使用阻塞队列的put方法，是因为当队列满时，当前线程会被阻塞住。2022-09-13 14:00:28
-      linkedBlockingQueue.put(record);
+      linkedBlockingQueue.put(consumerRecord);
       return true;
     } catch (Exception e) {
       log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
@@ -52,7 +52,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
     }
   }
 
-  public boolean offer(ConsumerRecord<String, Bytes> record) {
+  public boolean offer(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
       if (++count > (Const.RECORD_COUNT)) {
         // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
@@ -61,7 +61,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
       }
 
       // 这里之所以使用阻塞队列的offer方法，是为了提升性能，提升性能的点：当队列满时，在不加锁的情况下，直接返回false。2022-06-01 09:44:53
-      return linkedBlockingQueue.offer(record);
+      return linkedBlockingQueue.offer(consumerRecord);
     } catch (Exception e) {
       log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
       return false;
@@ -80,8 +80,8 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   public void run() {
     while (false == InitProcessorByLinkedBlockingQueue.getShutdown()) {
       try {
-        ConsumerRecord<String, Bytes> record = linkedBlockingQueue.poll();
-        if (null == record) {
+        ConsumerRecord<String, Bytes> consumerRecord = linkedBlockingQueue.poll();
+        if (null == consumerRecord) {
           if (10 <= DateTimeUtil.getSecond(now)) {
             // 提升性能：当队列为空的时候，每10秒打印一次日志。2022-06-01 09:50:19
             log.info("当前 processor 线程【{}】对应的队列为空，休眠50毫秒。再尝试从队列里获取数据。", Thread.currentThread().getName());
@@ -89,7 +89,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
           }
           TimeUnit.MILLISECONDS.sleep(Const.SLEEP_INTERVAL);
         } else {
-          segmentConsumerService.consume(record, true);
+          segmentConsumerService.consume(consumerRecord, true);
         }
       } catch (Throwable e) {
         log.error("线程【{}】在清洗调用链信息时，出现了异常。", e);

@@ -116,7 +116,7 @@ public class MingshiServerUtil {
    * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
    **/
   public void doEnableReactorModel(ConsumerRecord<String, Bytes> consumerRecord,
-                                   HashMap<String, Map<String, Integer>> map,
+                                   Map<String, Map<String, Integer>> map,
                                    List<Span> spanList,
                                    SegmentDo segmentDo,
                                    List<MsSegmentDetailDo> segmentDetaiDolList,
@@ -135,13 +135,13 @@ public class MingshiServerUtil {
       if (null != map && 0 < map.size()) {
         jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
       }
-      if (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
+      if (!segmentDetaiDolList.isEmpty()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
-      if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
+      if (!segmentDetaiUserNameIsNullDolList.isEmpty()) {
         jsonObject.put(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST, JsonUtil.obj2String(segmentDetaiUserNameIsNullDolList));
       }
-      if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+      if (!msAlarmInformationDoList.isEmpty()) {
         jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
       }
       if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
@@ -160,7 +160,7 @@ public class MingshiServerUtil {
           if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
             log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
             String key = DateTimeUtil.dateToStr(new Date());
-            if (0 < linkedBlockingQueue.size()) {
+            if (!linkedBlockingQueue.isEmpty()) {
               redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
             }
           }
@@ -394,7 +394,7 @@ public class MingshiServerUtil {
     } else {
       log.error("# SegmentConsumeServiceImpl.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
     }
-    if (null != tableNameList && 0 < tableNameList.size()) {
+    if (!tableNameList.isEmpty()) {
       for (String table : tableNameList) {
         if (StringUtil.isBlank(tableName)) {
           tableName = table;
@@ -426,7 +426,7 @@ public class MingshiServerUtil {
    **/
   private void batchUpdateMsSegmentDetail(List<MsSegmentDetailDo> setmentDetailDoList) {
     try {
-      if (0 < setmentDetailDoList.size()) {
+      if (!setmentDetailDoList.isEmpty()) {
         Instant now = Instant.now();
         msSegmentDetailDao.updateBatch(setmentDetailDoList);
         log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
@@ -445,8 +445,8 @@ public class MingshiServerUtil {
    * @Date 2022年05月19日 18:05:20
    * @Param []
    **/
-  public void flushSegmentToDb(LinkedList<SegmentDo> segmentList) {
-    if (0 < segmentList.size()) {
+  public void flushSegmentToDb(List<SegmentDo> segmentList) {
+    if (!segmentList.isEmpty()) {
       try {
         Instant now = Instant.now();
         segmentDao.insertSelectiveBatch(segmentList);
@@ -467,9 +467,9 @@ public class MingshiServerUtil {
    * @Date 2022年07月18日 16:07:28
    * @Param [count]
    **/
-  public void flushSegmentDetailCountToRedis(LinkedList<MsSegmentDetailDo> list) {
+  public void flushSegmentDetailCountToRedis(List<MsSegmentDetailDo> list) {
     Instant now = Instant.now();
-    if (null != list && 0 < list.size()) {
+    if (!list.isEmpty()) {
       Integer count = list.size();
       try {
         Map<String, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
@@ -560,8 +560,8 @@ public class MingshiServerUtil {
    * @Date 2022年07月19日 10:07:28
    * @Param [userHashSet]
    **/
-  public void flushUserNameToRedis(HashSet<String> userHashSet) {
-    if (null != userHashSet && 0 < userHashSet.size()) {
+  public void flushUserNameToRedis(Set<String> userHashSet) {
+    if (!userHashSet.isEmpty()) {
       Integer count = userHashSet.size();
       try {
         Instant now = Instant.now();
@@ -616,7 +616,7 @@ public class MingshiServerUtil {
     // 累加用户对数据库表资源的访问次数；
     String zsetVlue = doGetTableName(peer, dbInstance, tableName);
     String serviceCodeName = AgentInformationSingleton.get(serviceCode);
-    serviceCode = serviceCodeName == Const.DOLLAR ? serviceCode : serviceCodeName;
+    serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
 
     Date date = DateTimeUtil.strToDate(startTime);
     String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
@@ -668,7 +668,7 @@ public class MingshiServerUtil {
    * @Param [segmentDetaiDolList]
    **/
   public void flushAbnormalToDb(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
-    if (0 < msAlarmInformationDoLinkedListist.size()) {
+    if (!msAlarmInformationDoLinkedListist.isEmpty()) {
       try {
         Instant now = Instant.now();
         msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
@@ -762,8 +762,8 @@ public class MingshiServerUtil {
    * @Date 2022年08月19日 16:08:43
    * @Param [segmentDetailDoList]
    **/
-  public void flushSegmentDetailToDb(LinkedList<MsSegmentDetailDo> segmentDetailDoList) {
-    if (null != segmentDetailDoList && 0 < segmentDetailDoList.size()) {
+  public void flushSegmentDetailToDb(List<MsSegmentDetailDo> segmentDetailDoList) {
+    if (!segmentDetailDoList.isEmpty()) {
 
       try {
         for (MsSegmentDetailDo msSegmentDetailDo : segmentDetailDoList) {
@@ -796,8 +796,8 @@ public class MingshiServerUtil {
    * @Date 2022年08月01日 14:08:28
    * @Param [segmentDetaiUserNameIsNullDolList]
    **/
-  public void flushSegmentDetailUserNameIsNullToDb(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
-    if (null != segmentDetaiUserNameIsNullDolList && 0 < segmentDetaiUserNameIsNullDolList.size()) {
+  public void flushSegmentDetailUserNameIsNullToDb(List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
+    if (!segmentDetaiUserNameIsNullDolList.isEmpty()) {
       msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
       segmentDetaiUserNameIsNullDolList.clear();
     }
@@ -862,7 +862,7 @@ public class MingshiServerUtil {
             list.add(msMonitorBusinessSystemTablesDo);
           }
         }
-        if (0 < list.size()) {
+        if (!list.isEmpty()) {
           msMonitorBusinessSystemTablesMapper.insertSelectiveBatch(list);
         }
         isChangedMap.clear();
@@ -927,7 +927,7 @@ public class MingshiServerUtil {
       }
     } else {
       List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
-      if (null != processorHandlerByLinkedBlockingQueueList && 0 < processorHandlerByLinkedBlockingQueueList.size()) {
+      if (!processorHandlerByLinkedBlockingQueueList.isEmpty()) {
         for (int i = 0; i < processorHandlerByLinkedBlockingQueueList.size(); i++) {
           Integer queueSize = processorHandlerByLinkedBlockingQueueList.get(i).getQueueSize();
           if (0 < queueSize) {
@@ -938,7 +938,7 @@ public class MingshiServerUtil {
     }
     if (true == reactorProcessorEnable) {
       List<LinkedBlockingQueue<ObjectNode>> linkedBlockingQueueList = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueueList();
-      if (null != linkedBlockingQueueList && 0 < linkedBlockingQueueList.size()) {
+      if (!linkedBlockingQueueList.isEmpty()) {
         for (int i = 0; i < linkedBlockingQueueList.size(); i++) {
           Integer size = linkedBlockingQueueList.get(i).size();
           if (0 < size) {
@@ -959,13 +959,13 @@ public class MingshiServerUtil {
    * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
    **/
   public void doInsertSegmentDetailIntoMySqlAndRedis(Map<String, Map<Integer, Long>> offsetsMap,
-                                                     HashSet<String> userHashSet,
+                                                     Set<String> userHashSet,
                                                      Map<String, Map<String, Integer>> processorThreadQpsMap,
-                                                     LinkedList<SegmentDo> segmentList,
-                                                     LinkedList<Span> spanList,
+                                                     List<SegmentDo> segmentList,
+                                                     List<Span> spanList,
                                                      Map<String, String> skywalkingAgentHeartBeatMap,
-                                                     LinkedList<MsSegmentDetailDo> segmentDetailDoList,
-                                                     LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList,
+                                                     List<MsSegmentDetailDo> segmentDetailDoList,
+                                                     List<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList,
                                                      List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
 
     flushUserNameToRedis(userHashSet);

@@ -201,7 +201,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年08月19日 18:08:34
      * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
      **/
-    private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+    private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
         // 将QPS信息刷入Redis中；2022-06-27 13:42:13
         // mingshiServerUtil.flushQpsToRedis();
 
