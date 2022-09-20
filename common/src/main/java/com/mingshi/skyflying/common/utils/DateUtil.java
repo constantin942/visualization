@@ -596,7 +596,8 @@ public class DateUtil {
    */
   public static List<Date> getDatesBetweenTwoDate(Date beginDate, Date endDate) {
     List<Date> lDate = new ArrayList<Date>();
-    lDate.add(beginDate);// 把开始时间加入集合
+    // 把开始时间加入集合
+    lDate.add(beginDate);
     Calendar cal = Calendar.getInstance();
     cal.setTime(beginDate);
     boolean bContinue = true;
@@ -608,7 +609,8 @@ public class DateUtil {
         break;
       }
     }
-    lDate.add(endDate);// 把结束时间加入集合
+    // 把结束时间加入集合
+    lDate.add(endDate);
     return lDate;
   }
 
@@ -1170,7 +1172,6 @@ public class DateUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus + 6);
     Date monday = currentDate.getTime();
 
-    //DateFormat df=DateFormat.getDateInstance();
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     String preMonday = df.format(monday);
     return preMonday;
@@ -1197,7 +1198,6 @@ public class DateUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus);
     Date monday = currentDate.getTime();
 
-    //DateFormat df=DateFormat.getDateInstance();
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     String preMonday = df.format(monday);
     return preMonday;

@@ -968,7 +968,8 @@ public class DateTimeUtil {
   private static int getMondayPlus() {
     Calendar cd = Calendar.getInstance();
     // 获得今天是一周的第几天，星期日是第一天，星期二是第二天......
-    int dayOfWeek = cd.get(Calendar.DAY_OF_WEEK) - 1; // 因为按中国礼拜一作为第一天所以这里减1
+    // 因为按中国礼拜一作为第一天所以这里减1
+    int dayOfWeek = cd.get(Calendar.DAY_OF_WEEK) - 1;
     if (dayOfWeek == 1) {
       return 0;
     } else {

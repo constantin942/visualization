@@ -370,7 +370,7 @@ public class IoThread extends Thread {
         String topic = topicJsonNode.asText();
         String partition = partitionJsonNode.asText();
         String offset = offsetJsonNode.asText();
-        this.offsetsMap.computeIfAbsent(topic, v -> new ConcurrentHashMap<>())
+        this.offsetsMap.computeIfAbsent(topic, v -> new ConcurrentHashMap<>(Const.INITAL_SIZE))
           .compute(Integer.parseInt(partition.trim()), (k, v) -> v == null ? Long.parseLong(offset.trim()) : Math.max(v, Long.parseLong(offset.trim())));
       }
     }

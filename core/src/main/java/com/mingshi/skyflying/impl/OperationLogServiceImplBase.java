@@ -33,7 +33,7 @@ public class OperationLogServiceImplBase extends BaseParentServiceImpl<Operation
 
   @Override
   public ServerResponse<String> getOperationLog(String userName, Integer pageNo, Integer pageSize) {
-    Map<String, Object> hashMap = new HashMap();
+    Map<String, Object> hashMap = new HashMap(Const.INITAL_SIZE);
     if (null == pageNo) {
       pageNo = 1;
     }
@@ -42,9 +42,6 @@ public class OperationLogServiceImplBase extends BaseParentServiceImpl<Operation
     }
     hashMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
     hashMap.put(Const.PAGE_SIZE, pageSize);
-    // if (StringUtil.isNotBlank(userName)) {
-    //   hashMap.put(Const.USER_NAME, userName);
-    // }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     List<OperationLog> list = operateLogMapper.selectAllOperationLog(hashMap);
 

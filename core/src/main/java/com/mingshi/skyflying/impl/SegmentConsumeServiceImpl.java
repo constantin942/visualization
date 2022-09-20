@@ -583,7 +583,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
    **/
   private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
     if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
-      // log.error("开始执行 AiitKafkaConsumer # reorganizingSpans()方法，该调用链 = 【{}】 不含有用户名或者token，不能插入到表中。", JsonUtil.obj2String(segment));
       return;
     }
 
@@ -622,8 +621,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private void getIps(LinkedHashSet<String> ipHashSet, Span span) {
     String ips = span.getIp();
     if (StringUtil.isNotBlank(ips)) {
-      if (ips.contains(",")) {
-        String[] splits = ips.split(",");
+      if (ips.contains(Const.EN_COMMA)) {
+        String[] splits = ips.split(Const.EN_COMMA);
         for (String ip : splits) {
           ipHashSet.add(ip);
         }

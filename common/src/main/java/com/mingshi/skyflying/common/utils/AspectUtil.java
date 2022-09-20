@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.common.utils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -68,27 +69,27 @@ public class AspectUtil {
       }
     }
 
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new HashMap<>(Const.INITAL_SIZE);
     String methodType = request.getMethod();
     String method = joinPoint.getSignature().getName();
     String className = joinPoint.getSignature().getDeclaringTypeName();
     //URL：根据请求对象拿到访问的地址
-    map.put("url", request.getRequestURL());
-    map.put("params", jsonObject.toString());
+    map.put(Const.URL, request.getRequestURL());
+    map.put(Const.PARAMS, jsonObject.toString());
 
-    String userName = request.getParameter("userName");
-    if (null != request.getParameter("roleId")) {
-      Integer roleId = Integer.valueOf(request.getParameter("roleId"));
-      map.put("roleId", roleId);
+    String userName = request.getParameter(Const.USER_NAME);
+    if (null != request.getParameter(Const.RULE_ID)) {
+      Integer roleId = Integer.valueOf(request.getParameter(Const.RULE_ID));
+      map.put(Const.RULE_ID, roleId);
     }
-    map.put("userName", userName);
-    map.put("methodType", methodType);
-    map.put("method", method);
+    map.put(Const.USER_NAME, userName);
+    map.put(Const.METHOD_TYPE, methodType);
+    map.put(Const.METHOD, method);
     //ip：获取到访问
-    map.put("ip", request.getRemoteAddr());
+    map.put(Const.IP, request.getRemoteAddr());
     //获取被拦截的类名和方法名
-    map.put("class.method", className + "." + method);
-    map.put("rqsTime", DateUtil.formatWithDateTimeShort(new Date()));
+    map.put(Const.CLASS_METHOD, className + "." + method);
+    map.put(Const.RQS_TIME, DateUtil.formatWithDateTimeShort(new Date()));
 
     return map;
   }
@@ -153,7 +154,7 @@ public class AspectUtil {
     // 计算耗时
     Long diffTime = this.getTimeMillis(startTime);
 
-    Map<String, Object> mapTemp = new HashMap<>();
+    Map<String, Object> mapTemp = new HashMap<>(Const.INITAL_SIZE);
     mapTemp.put("requestInfo", map);
     mapTemp.put("responseInfo", responseInfo);
     String temp = "执行接口" + methodName + "所花时间";

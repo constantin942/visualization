@@ -132,12 +132,12 @@ public class OperationAuditAspect {
     String userName = (String) map.get(Const.USER_NAME);
     ServerResponse<String> resObj = null;
 
-    String oldPassword = (String) map.get("oldPassword");
-    String newPassword = (String) map.get("newPassword");
-    if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
+    String oldPassword = (String) map.get(Const.OLD_PASSWORD);
+    String newPassword = (String) map.get(Const.NEW_PASSWORD);
+    if (methodName.contains(Const.GET_SYS_MENU) || methodName.contains(Const.SYS_ROLES)) {
       /** 由于不能从前端传递用户的用户名过来，所以从这里把用户名传递过去（若是从前端传递用户名过来，不安全）*/
       resObj = aspectUtil.excute(joinPoint, userName);
-    } else if (methodName.contains("changePassword")) {
+    } else if (methodName.contains(Const.CHANGE_PASSWORD)) {
       resObj = aspectUtil.excute(joinPoint, oldPassword, newPassword, userName);
     } else {
       resObj = aspectUtil.excute(joinPoint);
@@ -160,9 +160,9 @@ public class OperationAuditAspect {
     HttpSession httpSession = request.getSession();
     String sessionId = httpSession.getId();
     /**对登录接口不进行登录校验*/
-    if (!StringUtil.equals(methodName, "login")) {
+    if (!StringUtil.equals(methodName, Const.LOGIN)) {
       String str = String.valueOf(redisPoolUtil.get(sessionId));
-      if (StringUtil.equals(str, "null")) {
+      if (StringUtil.equals(str, Const.IS_NULL)) {
         ServerResponse<String> resObj = new ServerResponse<>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
         String errorStr = JsonUtil.obj2String(resObj);
         log.error("用户未登录 = {}，在Redis中没有获取到的用户的数据，返回给前端的数据 = {}", userName, errorStr);

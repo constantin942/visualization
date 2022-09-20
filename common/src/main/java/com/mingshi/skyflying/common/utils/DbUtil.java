@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.mingshi.skyflying.common.constant.Const;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
@@ -80,10 +81,10 @@ public class DbUtil {
   public Map<String, String[][]> dataInfo(String data) {
     List<Map<String, Object>> list = jdbcTemplate.queryForList(
       "select table_name,table_comment from information_schema.tables where table_schema = ?", data);
-    Map<String, String[][]> datas = new HashMap<String, String[][]>();
+    Map<String, String[][]> datas = new HashMap<>(Const.INITAL_SIZE);
     for (Map<String, Object> map : list) {
-      String tableName = map.get("table_name") + "";
-      String tableComment = map.get("table_comment") + "";
+      String tableName = map.get(Const.TABLE_NAME2) + "";
+      String tableComment = map.get(Const.TABLE_COMMENT) + "";
       datas.put("表:" + tableName + ":" + tableComment, tableInfo(data + "." + tableName));
     }
     return datas;

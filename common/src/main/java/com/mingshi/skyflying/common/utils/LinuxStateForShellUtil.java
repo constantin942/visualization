@@ -137,9 +137,6 @@ public class LinuxStateForShellUtil {
         String[] strings = commandResult.split(LINE_SEPARATOR);
         //将返回结果按换行符分割
         for (String line : strings) {
-          // line = line.toUpperCase();//转大写处理
-
-          //处理CPU Cpu(s): 10.8%us,  0.9%sy,  0.0%ni, 87.6%id,  0.7%wa,  0.0%hi,  0.0%si,  0.0%st
           if (line.startsWith("%Cpu(s):")) {
 
             try {
@@ -152,16 +149,9 @@ public class LinuxStateForShellUtil {
             } catch (Exception e) {
               log.error("# LinuxStateForShellUtil.disposeResultMessage() # 获取cpu用户使用占有率时，出现了异常。", e);
             }
-            //处理内存 Mem:  66100704k total, 65323404k used,   777300k free,    89940k buffers
           } else if (line.startsWith("KiB Mem")) {
             String memStr = "内存已使用:";
-            // String memStr = "内存使用情况:";
             try {
-              // memStr += line.split(":")[1]
-              //   .replace("total", "总计")
-              //   .replace("used", "已使用")
-              //   .replace("free", "空闲")
-              //   .replace("buff/cache", "缓存");
               String trim = line.split(":")[1].replace("total", "").replace("free", "").replace("used", "").replace("buff/cache", "").split(Const.EN_COMMA)[2].trim();
               double v = Double.parseDouble(trim) / 1024 / 1024;
               DecimalFormat decimalFormat = new DecimalFormat("######0.00");
@@ -176,16 +166,6 @@ public class LinuxStateForShellUtil {
             }
           }
         }
-      } else if (command.equals(FILES_SHELL)) {
-        //处理系统磁盘状态
-        // buffer.append("系统磁盘状态:");
-        // try {
-        //   buffer.append(disposeFilesSystem(commandResult)).append(LINE_SEPARATOR);
-        // } catch (Exception e) {
-        //   e.printStackTrace();
-        //   buffer.append("计算过程出错").append(LINE_SEPARATOR);
-        // log.error("# LinuxStateForShellUtil.disposeResultMessage() # 处理系统磁盘状态时，出现了异常。", e);
-        // }
       }
     }
 

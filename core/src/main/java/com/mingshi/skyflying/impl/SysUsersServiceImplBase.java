@@ -225,7 +225,7 @@ public class SysUsersServiceImplBase extends BaseParentServiceImpl<SysOperator, 
     }
 
     Integer passwordErrorCount = 1;
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new HashMap<>(Const.INITAL_SIZE);
 
     /**先判断在一小时内，密码的错误次数是否达到了5次，若是，则一小时后再登录*/
     if (null == userLoginStatistics) {
@@ -265,11 +265,11 @@ public class SysUsersServiceImplBase extends BaseParentServiceImpl<SysOperator, 
     if (null == userLoginStatistics) {
       return new ServerResponse<>(AiitExceptionCode.SUCCESS);
     }
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new HashMap<>(Const.INITAL_SIZE);
     String userName = userLoginStatistics.getUserName();
     Date errorTime = DateUtil.strToDate(userLoginStatistics.getGmtModified(), DateUtil.DATE_TIME_SHORT);
     Long hours = DateUtil.getNumberOfHoursBetween(errorTime, new Date());
-    if (5 <= userLoginStatistics.getPasswordErrorCount() && hours < 1L) {
+    if (Const.NUM_FIVE <= userLoginStatistics.getPasswordErrorCount() && hours < Const.NUM_ONE) {
       log.error("用户={} 登录错误次数={} 已经超过5次，直接返回。", userName, userLoginStatistics.getPasswordErrorCount());
       ServerResponse serverResponse = new ServerResponse<SysOperator>(AiitExceptionCode.PASSWORD_ERROR_MORE_THAN_FIVE_TIMES);
       map.put("passwordErrorCount", userLoginStatistics.getPasswordErrorCount());

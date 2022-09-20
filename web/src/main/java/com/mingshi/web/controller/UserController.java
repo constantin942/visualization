@@ -90,7 +90,7 @@ public class UserController {
     String sessionId = httpSession.getId();
     log.info("判断用户是否已登录  sessionID={}", sessionId);
     String str = String.valueOf(redisPoolUtil.get(sessionId));
-    if (StringUtil.equals(str, "null")) {
+    if (StringUtil.equals(str, Const.IS_NULL)) {
       log.info("用户登录已过期");
       return new ServerResponse<String>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
     }

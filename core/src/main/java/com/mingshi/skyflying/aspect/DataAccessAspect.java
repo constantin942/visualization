@@ -57,18 +57,10 @@ public class DataAccessAspect {
     METHOD_MAP.put("getSysMenu","getSysMenu");
   }
 
-
   /**
    * 对类ServerlessCheckController中所有方法调用之前，进行登录校验；这种方式不需要在类的头部加注解
    */
   private final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
-
-  /**
-   * 只对加了@DataAccessAspectAnnotation注解的方法进行拦截；
-   */
-  // @Pointcut("@annotation(com.mingshi.skyflying.aspect.DataAccessAspectAnnotation)")
-  // private void annotationPointCut() {
-  // }
 
   /**
    * @return java.lang.Object
@@ -77,7 +69,6 @@ public class DataAccessAspect {
    * @Date 16:01 2020/1/31
    * @Param [joinPoint]
    **/
-  // @Around("annotationPointCut()")
   @Around(executeExpr)
   public Object processLog(ProceedingJoinPoint joinPoint) {
     Instant instStart = Instant.now();
@@ -143,7 +134,7 @@ public class DataAccessAspect {
     // if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
       /** 由于不能从前端传递用户的用户名过来，所以从这里把用户名传递过去（若是从前端传递用户名过来，不安全）*/
       resObj = aspectUtil.excute(joinPoint, userName);
-    } else if (methodName.contains("changePassword")) {
+    } else if (methodName.contains(Const.CHANGE_PASSWORD)) {
       resObj = aspectUtil.excute(joinPoint, oldPassword, newPassword, userName);
     } else {
       resObj = aspectUtil.excute(joinPoint);
@@ -166,9 +157,9 @@ public class DataAccessAspect {
     HttpSession httpSession = request.getSession();
     String sessionId = httpSession.getId();
     /**对登录接口不进行登录校验*/
-    if (!StringUtil.equals(methodName, "login")) {
+    if (!StringUtil.equals(methodName, Const.LOGIN)) {
       String str = String.valueOf(redisPoolUtil.get(sessionId));
-      if (StringUtil.equals(str, "null")) {
+      if (StringUtil.equals(str, Const.IS_NULL)) {
         ServerResponse<String> resObj = new ServerResponse<>(AiitExceptionCode.USER_IS_NOT_LOGGED_IN);
         String errorStr = JsonUtil.obj2String(resObj);
         log.error("用户未登录 = {}，在Redis中没有获取到的用户的数据，返回给前端的数据 = {}", userName, errorStr);

@@ -637,7 +637,6 @@ public class MingshiServerUtil {
         redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
         // 记录每一个数据库表最后的被访问的时间；
         redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-        // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
         LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
       }
     } else {
@@ -652,8 +651,6 @@ public class MingshiServerUtil {
       redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
       // 记录每一个数据库表最后的被访问的时间；
       redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-      // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
-      // redisPoolUtil.zSetIncrementScore(Const.ZSET_HOW_MANY_TABLES, zsetVlue, 0);
       LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
     }
     // 有序集合：统计每个用户操作类型次数；
@@ -901,8 +898,6 @@ public class MingshiServerUtil {
         while (iterator1.hasNext()) {
           String time = iterator1.next();
           Integer count = map.get(time);
-          // 统计每个Processor线程自己的QPS；2022-07-27 10:16:09
-          // redisPoolUtil.zSetIncrementScore(threadName, time, Long.valueOf(count));
           // 统计所有Processor线程总的QPS；2022-07-27 10:16:30
           redisPoolUtil.zSetIncrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
         }
@@ -924,7 +919,6 @@ public class MingshiServerUtil {
    **/
   public void statisticsProcessorAndIoThreadQueueSize() {
     String name = Thread.currentThread().getName();
-    // String key = DateTimeUtil.dateToStrYyyyMmDdHhMmSs(new Date());
     String key = DateTimeUtil.dateToStrYyyyMmDdHhMmSs(new Date()) + "-" + name;
     if (true == reactorProcessorDisruptor) {
       long queueSize = processorByDisruptor.getQueueSize();
@@ -1043,7 +1037,7 @@ public class MingshiServerUtil {
   }
 
   private Map<TopicPartition, OffsetAndMetadata> buildCommits(Map<String, Map<Integer, Long>> offsetsMap) {
-    Map<TopicPartition, OffsetAndMetadata> commits = new HashMap<>();
+    Map<TopicPartition, OffsetAndMetadata> commits = new HashMap<>(Const.INITAL_SIZE);
     for (Map.Entry<String, Map<Integer, Long>> entry : offsetsMap.entrySet()) {
       for (Map.Entry<Integer, Long> offset : entry.getValue().entrySet()) {
         commits.put(new TopicPartition(entry.getKey(), offset.getKey()), new OffsetAndMetadata(offset.getValue() + 1));

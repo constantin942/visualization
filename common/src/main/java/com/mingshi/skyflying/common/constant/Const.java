@@ -43,7 +43,22 @@ public class Const {
   public static final String AGENT_STATUS_OFF_DESC = "关闭";
   public static final String AGENT_STATUS_ON_DESC = "开启";
   public static final String HANDLER = "handler";
-
+  public static final String RULE_ID = "roleId";
+  public static final String METHOD_TYPE = "methodType";
+  public static final String CLASS_METHOD = "class.method";
+  public static final String RQS_TIME = "rqsTime";
+  public static final CharSequence CHANGE_PASSWORD = "changePassword";
+  public static final String LOGIN = "login";
+  public static final String OLD_PASSWORD = "oldPassword";
+  public static final String NEW_PASSWORD = "newPassword";
+  public static final CharSequence GET_SYS_MENU = "getSysMenu";
+  public static final CharSequence SYS_ROLES = "sysroles";
+  public static final Integer NUM_FIVE = 5;
+  public static final Long NUM_ONE = 1l;
+  public static final int INITAL_SIZE = 4;
+  public static final String TABLE_NAME2 = "table_name";
+  public static final String TABLE_COMMENT = "table_comment";
+  
   public interface RedisCacheExtime {
     int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
   }
