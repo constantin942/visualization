@@ -2,7 +2,9 @@ package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
+import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
@@ -53,6 +55,8 @@ public class AnomalyDetectionBusiness {
     MsSegmentDetailMapper segmentDetailMapper;
     @Resource
     RedissonClient redissonClient;
+    @Resource
+    PortraitConfigMapper portraitConfigMapper;
 
     /**
      * Redis分布式锁Key
@@ -72,26 +76,27 @@ public class AnomalyDetectionBusiness {
 
     private final String NIGHT = "night";
 
-    //TODO: 改成可配置
-    private final double visitRate = 0.3;
-
-    //TODO: 改成可配置
-    private final int visitCount = 5;
-
-    //TODO: 改成可配置
-    private final boolean enableTimeRule = true;
-
-    //TODO: 改成可配置
-    private final boolean enableTableRule = true;
+//    //TODO: 改成可配置
+//    private final double visitRate = 0.3;
+//
+//    //TODO: 改成可配置
+//    private final int visitCount = 5;
+//
+//    //TODO: 改成可配置
+//    private final boolean enableTimeRule = true;
+//
+//    //TODO: 改成可配置
+//    private final boolean enableTableRule = true;
 
     /**
      * 判断是否告警
      */
     public void userVisitedIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (enableTimeRule) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        if (portraitConfig.getEnableTimeRule()) {
             userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
         }
-        if (enableTableRule) {
+        if (portraitConfig.getEnableTableRule()) {
             userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
         }
     }
@@ -114,6 +119,7 @@ public class AnomalyDetectionBusiness {
     }
 
     private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
         Integer count = getCountByTable(segmentDetail.getUserName(), tableName);
         if (count == null) {
@@ -124,7 +130,7 @@ public class AnomalyDetectionBusiness {
             }
         } else {
             //有用户画像
-            if (count > visitCount) {
+            if (count > portraitConfig.getRuleTableCount()) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM));
             }
         }
@@ -174,6 +180,7 @@ public class AnomalyDetectionBusiness {
         String userName = segmentDetailDo.getUserName();
         String time = segmentDetailDo.getStartTime();
         String interval = getInterval(time);
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
                     , time, segmentDetailDo.getGlobalTraceId());
@@ -185,7 +192,7 @@ public class AnomalyDetectionBusiness {
             msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
         } else {
             //有用户画像
-            if (rateByInterVal < visitRate) {
+            if (rateByInterVal < portraitConfig.getRuleTimeRate()) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
             }
         }

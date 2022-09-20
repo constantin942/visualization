@@ -49,8 +49,10 @@ public class TestControllerA {
         msSegmentDetailDo.setUserName(name);
         msSegmentDetailDo.setStartTime("2022-09-06 09:04:04");
         msSegmentDetailDo.setGlobalTraceId("94d2c1159fd44d06b81f4bcc1a35ee2f.43.16577678448421029");
+        msSegmentDetailDo.setDbInstance("zhejiang_mobile");
+        msSegmentDetailDo.setMsTableName("ms_distributed_firewall_rules");
         List<MsAlarmInformationDo> msAlarmInformationDoList = new ArrayList<>();
-        anomalyDetectionBusiness.userVisitedTimeIsAbnormal(msSegmentDetailDo, msAlarmInformationDoList);
+        anomalyDetectionBusiness.userVisitedIsAbnormal(msSegmentDetailDo, msAlarmInformationDoList);
         System.out.println(msAlarmInformationDoList.get(0));
     }
 

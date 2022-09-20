@@ -2,8 +2,10 @@ package com.mingshi.skyflying.anomaly_detection.task;
 
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
+import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
@@ -45,14 +47,17 @@ public class UserPortraitByTimeTask {
     UserPortraitByTimeMapper userPortraitByTimeMapper;
 
     @Resource
+    PortraitConfigMapper portraitConfigMapper;
+
+    @Resource
     RedissonClient redissonClient;
 
     @Resource
     RedisPoolUtil redisPoolUtil;
 
 
-    //TODO: 改成可配置
-    private final Integer portraitByTimePeriod = 15;
+//    //TODO: 改成可配置
+//    private final Integer portraitByTimePeriod = 15;
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
     private String PREFIX;
@@ -347,8 +352,9 @@ public class UserPortraitByTimeTask {
      * 更新用户画像
      */
     public void updatePortrait() {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         //2. 粗粒度表生成用户画像
-        List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitByTimePeriod);
+        List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());
         //3. 放入Redis
         cachePortraitByTime(userPortraitByTimeDos);
     }

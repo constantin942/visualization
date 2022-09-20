@@ -1,11 +1,9 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
-import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
+import com.mingshi.skyflying.anomaly_detection.domain.*;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -45,15 +43,18 @@ public class UserPortraitByTableTask {
     private MsSegmentDetailMapper segmentDetailMapper;
 
     @Resource
+    private PortraitConfigMapper portraitConfigMapper;
+
+    @Resource
     RedisPoolUtil redisPoolUtil;
 
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTable:}")
     private String PREFIX;
 
     private final Integer EXPIRE = 100000;
-
-    //TODO: 改成可配置
-    private final Integer portraitByTablePeriod = 15;
+//
+//    //TODO: 改成可配置
+//    private final Integer portraitByTablePeriod = 15;
     /**
      * Redis分布式锁Key
      */
@@ -85,7 +86,8 @@ public class UserPortraitByTableTask {
      * value : 对应表的访问次数
      */
     public void cachePortraitByTable() {
-        List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitByTablePeriod);
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitConfig.getRuleTablePeriod());
         HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
         portraitByTableList2Map(userPortraitByTableDos, outerMap);
         for (Map.Entry<String, HashMap<String, Integer>> outerEntry : outerMap.entrySet()) {
