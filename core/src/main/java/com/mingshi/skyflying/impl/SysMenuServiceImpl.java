@@ -28,7 +28,7 @@ import java.util.Set;
  */
 @Slf4j
 @Service("sysMenuService")
-public class SysMenuServiceImplBase extends BaseParentServiceImpl<SysMenu, Long> implements SysMenuService {
+public class SysMenuServiceImpl extends BaseParentServiceImpl<SysMenu, Long> implements SysMenuService {
 
   @Resource
   private SysOperatorDao sysOperatorDao;

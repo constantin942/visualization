@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class SysUsersServiceImplBase extends BaseParentServiceImpl<SysOperator, Long> implements AiitSysUsersService {
+public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long> implements AiitSysUsersService {
 
   @Resource
   private SysOperatorDao sysOperatorDao;

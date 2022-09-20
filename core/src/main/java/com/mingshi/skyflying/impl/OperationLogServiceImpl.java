@@ -26,7 +26,7 @@ import java.util.Map;
  **/
 @Slf4j
 @Service("operationLogService")
-public class OperationLogServiceImplBase extends BaseParentServiceImpl<OperationLog, Long> implements OperationLogService {
+public class OperationLogServiceImpl extends BaseParentServiceImpl<OperationLog, Long> implements OperationLogService {
 
   @Resource
   private OperateLogMapper operateLogMapper;

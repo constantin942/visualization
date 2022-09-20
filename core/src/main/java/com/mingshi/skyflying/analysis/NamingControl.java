@@ -37,9 +37,7 @@ public class NamingControl implements Service {
     private final EndpointNameGrouping endpointNameGrouping;
 
     /**
-     * Format endpoint name by using the length config in the core module. This is a global rule, every place including
-     * service as the {@link org.apache.skywalking.oap.server.core.source.Source} should follow this for any core module
-     * implementation.
+     * Format endpoint name by using the length config in the core module.
      *
      * @param serviceName raw data, literal string.
      * @return the string, which length less than or equals {@link #serviceNameMaxLength};
@@ -62,9 +60,7 @@ public class NamingControl implements Service {
     }
 
     /**
-     * Format endpoint name by using the length config in the core module. This is a global rule, every place including
-     * instance as the {@link org.apache.skywalking.oap.server.core.source.Source} should follow this for any core
-     * module implementation.
+     * Format endpoint name by using the length config in the core module.
      *
      * @param instanceName raw data, literal string.
      * @return the string, which length less than or equals {@link #instanceNameMaxLength};
@@ -87,9 +83,7 @@ public class NamingControl implements Service {
     }
 
     /**
-     * Format endpoint name by using the length config in the core module. This is a global rule, every {@link
-     * org.apache.skywalking.oap.server.core.source.Source} including endpoint should follow this for any core module
-     * implementation.
+     * Format endpoint name by using the length config in the core module.
      *
      * @param serviceName  the service of the given endpoint.
      * @param endpointName raw data, literal string.

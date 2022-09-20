@@ -56,7 +56,7 @@ public class Const {
   public static final CharSequence GET_SYS_MENU = "getSysMenu";
   public static final CharSequence SYS_ROLES = "sysroles";
   public static final Integer NUM_FIVE = 5;
-  public static final Long NUM_ONE = 1l;
+  public static final Long NUM_ONE = 1L;
   public static final int INITAL_SIZE = 4;
   public static final String TABLE_NAME2 = "table_name";
   public static final String TABLE_COMMENT = "table_comment";

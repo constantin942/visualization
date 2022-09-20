@@ -16,7 +16,7 @@ import javax.annotation.Resource;
  * @return
  **/
 @Service("operateLogService")
-public class OperateLogServiceImplBase extends BaseParentServiceImpl<OperationLog, Long> implements OperateLogService {
+public class OperateLogServiceImpl extends BaseParentServiceImpl<OperationLog, Long> implements OperateLogService {
 
     @Resource
     private OperateLogMapper aiitOperateLogMapper;

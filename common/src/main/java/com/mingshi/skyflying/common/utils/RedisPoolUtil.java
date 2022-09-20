@@ -624,17 +624,17 @@ public class RedisPoolUtil {
    * @param key 键
    * @return 值
    */
-  // @HystrixCommand(
-  //   threadPoolProperties = {
-  //     @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
-  //     @HystrixProperty(name = "maxQueueSize", value = "1500"),
-  //     @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
-  //   },
-  //
-  //   commandProperties = {
-  //     //命令执行超时时间300毫秒
-  //     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-  //   }, fallbackMethod = "getFallback")
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "getFallback")
   public Object get(String key) {
     try {
       return key == null ? null : stringRedisTemplate.opsForValue().get(key);
@@ -776,17 +776,17 @@ public class RedisPoolUtil {
    * @param time  时间(秒) time要大于0 如果time小于等于0 将设置无限期
    * @return true成功 false 失败
    */
-  // @HystrixCommand(
-  //   threadPoolProperties = {
-  //     @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
-  //     @HystrixProperty(name = "maxQueueSize", value = "1500"),
-  //     @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
-  //   },
-  //
-  //   commandProperties = {
-  //     //命令执行超时时间300毫秒
-  //     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
-  //   }, fallbackMethod = "setFallback")
+  @HystrixCommand(
+    threadPoolProperties = {
+      @HystrixProperty(name = "coreSize", value = "10"),// 线程池中最多有10个线程
+      @HystrixProperty(name = "maxQueueSize", value = "1500"),
+      @HystrixProperty(name = "queueSizeRejectionThreshold", value = "1000"),
+    },
+
+    commandProperties = {
+      //命令执行超时时间300毫秒
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+    }, fallbackMethod = "setFallback")
   public boolean set(String key, Object value, long time) {
     try {
       if (time > 0) {
