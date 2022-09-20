@@ -51,10 +51,10 @@ public class DataAccessAspect {
 
   private ThreadLocal<String> orderIdThreadLocal = new ThreadLocal<>();
 
-  private static final Map<String,String> methodMap = new ConcurrentHashMap<>();
+  private static final Map<String,String> METHOD_MAP = new ConcurrentHashMap<>();
   static {
-    methodMap.put("getHighDangerOperationLog","getHighDangerOperationLog");
-    methodMap.put("getSysMenu","getSysMenu");
+    METHOD_MAP.put("getHighDangerOperationLog","getHighDangerOperationLog");
+    METHOD_MAP.put("getSysMenu","getSysMenu");
   }
 
 
@@ -139,7 +139,7 @@ public class DataAccessAspect {
 
     String oldPassword = (String) map.get("oldPassword");
     String newPassword = (String) map.get("newPassword");
-    if (methodMap.containsKey(methodName)) {
+    if (METHOD_MAP.containsKey(methodName)) {
     // if (methodName.contains("getSysMenu") || methodName.contains("sysroles")) {
       /** 由于不能从前端传递用户的用户名过来，所以从这里把用户名传递过去（若是从前端传递用户名过来，不安全）*/
       resObj = aspectUtil.excute(joinPoint, userName);

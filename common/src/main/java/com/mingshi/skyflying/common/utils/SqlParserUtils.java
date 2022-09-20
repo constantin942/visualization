@@ -45,23 +45,23 @@ import java.util.Map;
 @Slf4j
 public class SqlParserUtils {
 
-  static final Map<Class, String> classMap = new HashMap<>();
+  static final Map<Class, String> CLASS_MAP = new HashMap<>();
 
   static {
-    classMap.put(Alter.class, Const.SQL_TYPE_ALTER);
-    classMap.put(CreateIndex.class, Const.SQL_TYPE_CREATEINDEX);
-    classMap.put(CreateTable.class, Const.SQL_TYPE_CREATETABLE);
-    classMap.put(CreateView.class, Const.SQL_TYPE_CREATEVIEW);
-    classMap.put(Delete.class, Const.SQL_TYPE_DELETE);
-    classMap.put(Drop.class, Const.SQL_TYPE_DROP);
-    classMap.put(Execute.class, Const.SQL_TYPE_EXECUTE);
-    classMap.put(Insert.class, Const.SQL_TYPE_INSERT);
-    classMap.put(Merge.class, Const.SQL_TYPE_MERGE);
-    classMap.put(Replace.class, Const.SQL_TYPE_REPLACE);
-    classMap.put(Select.class, Const.SQL_TYPE_SELECT);
-    classMap.put(Truncate.class, Const.SQL_TYPE_TRUNCATE);
-    classMap.put(Update.class, Const.SQL_TYPE_UPDATE);
-    classMap.put(Upsert.class, Const.SQL_TYPE_UPSERT);
+    CLASS_MAP.put(Alter.class, Const.SQL_TYPE_ALTER);
+    CLASS_MAP.put(CreateIndex.class, Const.SQL_TYPE_CREATEINDEX);
+    CLASS_MAP.put(CreateTable.class, Const.SQL_TYPE_CREATETABLE);
+    CLASS_MAP.put(CreateView.class, Const.SQL_TYPE_CREATEVIEW);
+    CLASS_MAP.put(Delete.class, Const.SQL_TYPE_DELETE);
+    CLASS_MAP.put(Drop.class, Const.SQL_TYPE_DROP);
+    CLASS_MAP.put(Execute.class, Const.SQL_TYPE_EXECUTE);
+    CLASS_MAP.put(Insert.class, Const.SQL_TYPE_INSERT);
+    CLASS_MAP.put(Merge.class, Const.SQL_TYPE_MERGE);
+    CLASS_MAP.put(Replace.class, Const.SQL_TYPE_REPLACE);
+    CLASS_MAP.put(Select.class, Const.SQL_TYPE_SELECT);
+    CLASS_MAP.put(Truncate.class, Const.SQL_TYPE_TRUNCATE);
+    CLASS_MAP.put(Update.class, Const.SQL_TYPE_UPDATE);
+    CLASS_MAP.put(Upsert.class, Const.SQL_TYPE_UPSERT);
   }
 
   /**
@@ -76,7 +76,7 @@ public class SqlParserUtils {
 
     String sqlType = null;
     try {
-      sqlType = classMap.get(sqlStmt.getClass());
+      sqlType = CLASS_MAP.get(sqlStmt.getClass());
     } catch (Exception e) {
       log.error("# SqlParserTool.getSqlType() # 根据SQL = 【{}】获取sql类型时，出现了异常。", e);
       return Const.SQL_TYPE_NONE.trim();

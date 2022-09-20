@@ -697,44 +697,6 @@ public class DateUtil {
 
 
   /**
-   * 根据单位字段比较两个时间
-   *
-   * @param date      时间1
-   * @param otherDate 时间2
-   * @param withUnit  单位字段，从Calendar field取值
-   * @return 等于返回0值, 大于返回大于0的值 小于返回小于0的值
-   */
-  public static int compareTime(Date date, Date otherDate, int withUnit) {
-    Calendar dateCal = Calendar.getInstance();
-    dateCal.setTime(date);
-    Calendar otherDateCal = Calendar.getInstance();
-    otherDateCal.setTime(otherDate);
-
-    dateCal.clear(Calendar.YEAR);
-    dateCal.clear(Calendar.MONTH);
-    dateCal.set(Calendar.DATE, 1);
-    otherDateCal.clear(Calendar.YEAR);
-    otherDateCal.clear(Calendar.MONTH);
-    otherDateCal.set(Calendar.DATE, 1);
-    switch (withUnit) {
-      case Calendar.HOUR:
-        dateCal.clear(Calendar.MINUTE);
-        otherDateCal.clear(Calendar.MINUTE);
-      case Calendar.MINUTE:
-        dateCal.clear(Calendar.SECOND);
-        otherDateCal.clear(Calendar.SECOND);
-      case Calendar.SECOND:
-        dateCal.clear(Calendar.MILLISECOND);
-        otherDateCal.clear(Calendar.MILLISECOND);
-      case Calendar.MILLISECOND:
-        break;
-      default:
-        throw new IllegalArgumentException("withUnit 单位字段 " + withUnit + " 不合法！！");
-    }
-    return dateCal.compareTo(otherDateCal);
-  }
-
-  /**
    * 获得当前的日期毫秒
    *
    * @return

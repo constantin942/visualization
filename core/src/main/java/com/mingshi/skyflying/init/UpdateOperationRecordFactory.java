@@ -16,33 +16,33 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Version 1.0
  **/
 public class UpdateOperationRecordFactory {
-  private static final Map<String, Map<String, Object>> updateOperationRecordMap = new ConcurrentHashMap<>();
+  private static final Map<String, Map<String, Object>> UPDATE_OPERATION_RECORD_MAP = new ConcurrentHashMap<>();
 
   static {
     Map<String, Object> updateMonitorTableMap = new ConcurrentHashMap<>();
     updateMonitorTableMap.put(Const.NUMBER_ONE_STR, "禁用表");
     updateMonitorTableMap.put(Const.NUMBER_ZERO_STR, "启用表");
     updateMonitorTableMap.put(Const.HANDLER, new UpdateMonitorTableHandler());
-    updateOperationRecordMap.put(Const.UPDATE_MONITOR_TABLE, updateMonitorTableMap);
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_MONITOR_TABLE, updateMonitorTableMap);
 
     Map<String, Object> updateMonitorTableaDescMap = new ConcurrentHashMap<>();
     updateMonitorTableaDescMap.put(Const.TABLE_DESC, "给表（" + Const.COMMA + "）起个中文名字");
     updateMonitorTableaDescMap.put(Const.HANDLER, new UpdateMonitorTableDescHandler());
-    updateOperationRecordMap.put(Const.UPDATE_MONITOR_TABLE_DESC, updateMonitorTableaDescMap);
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_MONITOR_TABLE_DESC, updateMonitorTableaDescMap);
 
     Map<String, Object> updateSkywalkingAgentDescMap = new ConcurrentHashMap<>();
     updateSkywalkingAgentDescMap.put(Const.AGENT_NAME, "给服务（" + Const.COMMA + "）起个中文名字");
     updateSkywalkingAgentDescMap.put(Const.HANDLER, new UpdateSkywalkingAgentHandler());
-    updateOperationRecordMap.put(Const.UPDATE_SKYWALKING_AGENT, updateSkywalkingAgentDescMap);
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_SKYWALKING_AGENT, updateSkywalkingAgentDescMap);
 
     Map<String, Object> updateSkywalkingAgentOnAndOffMap = new ConcurrentHashMap<>();
     updateSkywalkingAgentOnAndOffMap.put(Const.AGENT_SWITCH, "更新探针（" + Const.COMMA + "）状态");
     updateSkywalkingAgentOnAndOffMap.put(Const.HANDLER, new UpdateAgentStatusHandler());
-    updateOperationRecordMap.put(Const.UPDATE_SKYWALKING_AGENT_STATUS, updateSkywalkingAgentOnAndOffMap);
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_SKYWALKING_AGENT_STATUS, updateSkywalkingAgentOnAndOffMap);
   }
 
   public static String getValue(String key, String opreation) {
-    Map<String, Object> map = updateOperationRecordMap.get(key);
+    Map<String, Object> map = UPDATE_OPERATION_RECORD_MAP.get(key);
     if (null != map && map.containsKey(opreation)) {
       return (String) map.get(opreation);
     }
@@ -50,7 +50,7 @@ public class UpdateOperationRecordFactory {
   }
 
   public static void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    Map<String, Object> map = updateOperationRecordMap.get(methodName);
+    Map<String, Object> map = UPDATE_OPERATION_RECORD_MAP.get(methodName);
     if (null != map) {
       UpdateOperationRecord updateOperationRecord = (UpdateOperationRecord) map.get(Const.HANDLER);
       if (null != updateOperationRecord) {

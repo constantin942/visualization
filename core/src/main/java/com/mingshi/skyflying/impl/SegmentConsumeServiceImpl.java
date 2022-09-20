@@ -428,21 +428,23 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   /**
    * <B>方法名称：setTableName</B>
    * <B>概要说明：获取SQL语句中表的名字</B>
+   *
+   * @return java.lang.String
    * @Author zm
    * @Date 2022年09月20日 14:09:43
    * @Param [value, msSegmentDetailDo]
-   * @return java.lang.String
    **/
   private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
     List<String> tableNameList = null;
     String tableName = null;
+    StringBuilder tableNameBuilder = new StringBuilder();
     try {
       // sql类型；
       String sqlType = mingshiServerUtil.getSqlType(value);
       msSegmentDetailDo.setDbType(sqlType);
       // 获取表名；2022-06-06 14:11:21
       tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
-      if(null != tableNameList && 0 < tableNameList.size()){
+      if (null != tableNameList && 0 < tableNameList.size()) {
         for (String tableNameTemp : tableNameList) {
           String dbInstance = msSegmentDetailDo.getDbInstance();
           String peer = msSegmentDetailDo.getPeer();
@@ -469,6 +471,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               return null;
             }
           }
+
           if (StringUtil.isBlank(tableName)) {
             tableName = tableNameTemp;
           } else {
@@ -896,84 +899,98 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         continue;
       }
 
-      Span span = new Span();
-      span.setUserName(spanObject.getUserName());
-      span.setToken(spanObject.getToken());
-
-      span.setTraceId(segmentObject.getTraceId());
-      span.setSegmentId(segmentObject.getTraceSegmentId());
-      span.setSpanId(spanObject.getSpanId());
-      span.setParentSpanId(spanObject.getParentSpanId());
-      span.setStartTime(spanObject.getStartTime());
-      span.setEndTime(spanObject.getEndTime());
-      span.setError(spanObject.getIsError());
-      span.setLayer(spanObject.getSpanLayer().name());
-      span.setType(spanObject.getSpanType().name());
-
-      String segmentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getSpanId();
-      span.setSegmentSpanId(segmentSpanId);
-
-      String segmentParentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getParentSpanId();
-      span.setSegmentParentSpanId(segmentParentSpanId);
-
-      span.setPeer(spanObject.getPeer());
-
-      span.setEndpointName(operationName);
-
-      span.setServiceCode(segmentObject.getService());
-      span.setServiceInstanceName(segmentObject.getServiceInstance());
-
-      String component = ComponentsDefine.getComponentMap().get(spanObject.getComponentId());
-      if (!StringUtil.isBlank(component)) {
-        span.setComponent(component);
-      }
-
-      spanObject.getRefsList().forEach(reference -> {
-        Ref ref = new Ref();
-        ref.setTraceId(reference.getTraceId());
-        ref.setParentSegmentId(reference.getParentTraceSegmentId());
-
-        switch (reference.getRefType()) {
-          case CrossThread:
-            ref.setType(RefType.CROSS_THREAD);
-            break;
-          case CrossProcess:
-            ref.setType(RefType.CROSS_PROCESS);
-            break;
-        }
-        ref.setParentSpanId(reference.getParentSpanId());
-
-        span.setSegmentParentSpanId(
-          ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
-
-        span.getRefs().add(ref);
-      });
-
-      spanObject.getTagsList().forEach(tag -> {
-        KeyValue keyValue = new KeyValue();
-        keyValue.setKey(tag.getKey());
-        keyValue.setValue(tag.getValue());
-        span.getTags().add(keyValue);
-      });
-
-      spanObject.getLogsList().forEach(log -> {
-        LogEntity logEntity = new LogEntity();
-        logEntity.setTime(log.getTime());
-
-        log.getDataList().forEach(data -> {
-          KeyValue keyValue = new KeyValue();
-          keyValue.setKey(data.getKey());
-          keyValue.setValue(data.getValue());
-          logEntity.getData().add(keyValue);
-        });
-
-        span.getLogs().add(logEntity);
-      });
-
-      spans.add(span);
+      // 构建span；2022-09-20 14:30:47
+      doBuildSpan(segmentObject, spanObject, spans);
     }
 
     return spans;
+  }
+
+  /**
+   * <B>方法名称：doBuildSpan</B>
+   * <B>概要说明：构建span</B>
+   * @Author zm
+   * @Date 2022年09月20日 14:09:43
+   * @Param [segmentObject, spanObject, spans]
+   * @return void
+   **/
+  private void doBuildSpan(SegmentObject segmentObject, SpanObject spanObject, List<Span> spans) {
+    String operationName = spanObject.getOperationName();
+    Span span = new Span();
+    span.setUserName(spanObject.getUserName());
+    span.setToken(spanObject.getToken());
+
+    span.setTraceId(segmentObject.getTraceId());
+    span.setSegmentId(segmentObject.getTraceSegmentId());
+    span.setSpanId(spanObject.getSpanId());
+    span.setParentSpanId(spanObject.getParentSpanId());
+    span.setStartTime(spanObject.getStartTime());
+    span.setEndTime(spanObject.getEndTime());
+    span.setError(spanObject.getIsError());
+    span.setLayer(spanObject.getSpanLayer().name());
+    span.setType(spanObject.getSpanType().name());
+
+    String segmentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getSpanId();
+    span.setSegmentSpanId(segmentSpanId);
+
+    String segmentParentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getParentSpanId();
+    span.setSegmentParentSpanId(segmentParentSpanId);
+
+    span.setPeer(spanObject.getPeer());
+
+    span.setEndpointName(operationName);
+
+    span.setServiceCode(segmentObject.getService());
+    span.setServiceInstanceName(segmentObject.getServiceInstance());
+
+    String component = ComponentsDefine.getComponentMap().get(spanObject.getComponentId());
+    if (!StringUtil.isBlank(component)) {
+      span.setComponent(component);
+    }
+
+    spanObject.getRefsList().forEach(reference -> {
+      Ref ref = new Ref();
+      ref.setTraceId(reference.getTraceId());
+      ref.setParentSegmentId(reference.getParentTraceSegmentId());
+
+      switch (reference.getRefType()) {
+        case CrossThread:
+          ref.setType(RefType.CROSS_THREAD);
+          break;
+        case CrossProcess:
+          ref.setType(RefType.CROSS_PROCESS);
+          break;
+      }
+      ref.setParentSpanId(reference.getParentSpanId());
+
+      span.setSegmentParentSpanId(
+        ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
+
+      span.getRefs().add(ref);
+    });
+
+    spanObject.getTagsList().forEach(tag -> {
+      KeyValue keyValue = new KeyValue();
+      keyValue.setKey(tag.getKey());
+      keyValue.setValue(tag.getValue());
+      span.getTags().add(keyValue);
+    });
+
+    spanObject.getLogsList().forEach(log -> {
+      LogEntity logEntity = new LogEntity();
+      logEntity.setTime(log.getTime());
+
+      log.getDataList().forEach(data -> {
+        KeyValue keyValue = new KeyValue();
+        keyValue.setKey(data.getKey());
+        keyValue.setValue(data.getValue());
+        logEntity.getData().add(keyValue);
+      });
+
+      span.getLogs().add(logEntity);
+    });
+
+    spans.add(span);
   }
 
   /**
@@ -1046,10 +1063,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         segment.setToken(token);
       }
 
-     String ip = segmentObject.getIp();
-     if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
-       segment.setIp(ip);
-     }
+      String ip = segmentObject.getIp();
+      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
+        segment.setIp(ip);
+      }
     } catch (Exception e) {
       log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
     }

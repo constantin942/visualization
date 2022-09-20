@@ -14,7 +14,7 @@ import javax.annotation.Resource;
  *
  */
 @Service("aiitUserLoginStatisticsService")
-public class UserLoginLogStatisticsImpl extends ParentServiceImpl<UserLoginStatistics, Long> implements UserLoginStatisticsService {
+public class UserLoginLogStatisticsImplBase extends BaseParentServiceImpl<UserLoginStatistics, Long> implements UserLoginStatisticsService {
 
 	@Resource
   AiitUserLoginStatisticsMapper aiitUserLoginStatisticsMapper;
