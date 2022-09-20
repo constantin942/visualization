@@ -2,7 +2,7 @@ package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionUtil;
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
@@ -50,6 +50,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
   private MingshiServerUtil mingshiServerUtil;
   @Resource
   private SegmentDao segmentDao;
+  @Resource
+  private AnomalyDetectionBusiness anomalyDetectionBusiness;
 
   @Override
   public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
@@ -105,8 +107,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 判断是否是异常信息；2022-06-07 18:00:13
         msAlarmInformationDoList = new LinkedList<>();
         // TODO: 告警改造
-        AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-        AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
+        // AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
       }
 
       HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -286,12 +289,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                   }
                   // 获取表名；2022-06-06 14:16:59
                   String tableName = setTableName(value, msSegmentDetailDo);
-                  if (StringUtil.isBlank(tableName)) {
-                    isError = true;
-                    // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
-                    break;
+                  if (StringUtil.isNotBlank(tableName)) {
+                    msSegmentDetailDo.setMsTableName(tableName);
                   }
-                  msSegmentDetailDo.setMsTableName(tableName);
+                  // 这里获取不到表名，有可能这条SQL语句就不是增删改查。2022-09-20 09:26:45
+                  // if (StringUtil.isBlank(tableName)) {
+                  //   isError = true;
+                  //   // 出现了SQL异常，直接退出循环；2022-07-01 14:41:50
+                  //   break;
+                  // }
+                  // msSegmentDetailDo.setMsTableName(tableName);
                 }
                 msSegmentDetailDo.setDbStatement(value);
               } else if (key.equals(Const.OPERATION_TYPE_URL)) {
@@ -434,16 +441,26 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       msSegmentDetailDo.setDbType(sqlType);
       // 获取表名；2022-06-06 14:11:21
       tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
-      for (String tableNameTemp : tableNameList) {
-        String dbInstance = msSegmentDetailDo.getDbInstance();
-        String peer = msSegmentDetailDo.getPeer();
-        String replaceTableName = tableNameTemp.replace("`", "");
-        String key = null;
-        Integer tableEnableStatus = null;
-        if (replaceTableName.contains(",")) {
-          String[] splits = replaceTableName.split(",");
-          for (String splitTableName : splits) {
-            key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
+      if(null != tableNameList && 0 < tableNameList.size()){
+        for (String tableNameTemp : tableNameList) {
+          String dbInstance = msSegmentDetailDo.getDbInstance();
+          String peer = msSegmentDetailDo.getPeer();
+          String replaceTableName = tableNameTemp.replace("`", "");
+          String key = null;
+          Integer tableEnableStatus = null;
+          if (replaceTableName.contains(",")) {
+            String[] splits = replaceTableName.split(",");
+            for (String splitTableName : splits) {
+              key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
+              // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+              tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
+              if (null != tableEnableStatus && 1 == tableEnableStatus) {
+                // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+                return null;
+              }
+            }
+          } else {
+            key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
             // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
             tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
             if (null != tableEnableStatus && 1 == tableEnableStatus) {
@@ -451,19 +468,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
               return null;
             }
           }
-        } else {
-          key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
-          // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-          tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
-          if (null != tableEnableStatus && 1 == tableEnableStatus) {
-            // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
-            return null;
+          if (StringUtil.isBlank(tableName)) {
+            tableName = tableNameTemp;
+          } else {
+            tableName = tableName + "," + tableNameTemp;
           }
-        }
-        if (StringUtil.isBlank(tableName)) {
-          tableName = tableNameTemp;
-        } else {
-          tableName = tableName + "," + tableNameTemp;
         }
       }
     } catch (Exception e) {

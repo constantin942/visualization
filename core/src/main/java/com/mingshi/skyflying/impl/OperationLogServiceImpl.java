@@ -7,7 +7,6 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.dao.OperateLogMapper;
 import com.mingshi.skyflying.service.OperationLogService;
-import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -43,9 +42,9 @@ public class OperationLogServiceImpl extends ParentServiceImpl<OperationLog, Lon
     }
     hashMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
     hashMap.put(Const.PAGE_SIZE, pageSize);
-    if (StringUtil.isNotBlank(userName)) {
-      hashMap.put(Const.USER_NAME, userName);
-    }
+    // if (StringUtil.isNotBlank(userName)) {
+    //   hashMap.put(Const.USER_NAME, userName);
+    // }
     ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
     List<OperationLog> list = operateLogMapper.selectAllOperationLog(hashMap);
 

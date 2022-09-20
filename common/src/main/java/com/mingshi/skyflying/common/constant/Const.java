@@ -335,6 +335,8 @@ public class Const {
   /**
    * 判断skywalking Java探针发出的SQL语句的SQL类型；2022-05-28 12:56:57
    */
+  public static final String SQL_TYPE_REVOKE = "REVOKE";
+  public static final String SQL_TYPE_GRANT = "GRANT";
   public static final String SQL_TYPE_SELECT = "SELECT";
   public static final String SQL_TYPE_INSERT = "INSERT";
   public static final String SQL_TYPE_UPDATE = "UPDATE";
