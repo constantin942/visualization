@@ -1072,7 +1072,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
       }
       if (StringUtil.isNotBlank(userName)) {
         Boolean userIsExisted = InformationOverviewSingleton.userIsExisted(userName);
-        if (false == userIsExisted) {
+        if (!userIsExisted) {
           userHashSet.add(userName);
         }
       }

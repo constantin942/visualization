@@ -37,4 +37,5 @@ public class PortraitConfig {
     @NotNull(message = "时间画像告警阈值必传")
     private Double ruleTimeRate;
 
+    private Boolean isDeleted;
 }
