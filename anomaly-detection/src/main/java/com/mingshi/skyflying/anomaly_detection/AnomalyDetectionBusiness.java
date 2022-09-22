@@ -24,10 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,47 +62,12 @@ public class AnomalyDetectionBusiness {
      */
     public static final String REDIS_LOCK = "anomaly_detection:updatePortrait";
 
-
-    @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
-    private String TIME_PREFIX;
-
-    @Value("${anomalyDetection.redisKey.portraitByTable.prefix:anomaly_detection:portraitByTable:}")
-    private String TABLE_PREFIX;
-
     private final String MORNING = "morning";
 
     private final String AFTERNOON = "afternoon";
 
     private final String NIGHT = "night";
 
-
-//    //TODO: 改成可配置
-//    private final double visitRate = 0.3;
-//
-//    //TODO: 改成可配置
-//    private final int visitCount = 5;
-//
-//    //TODO: 改成可配置
-//    private final boolean enableTimeRule = true;
-//
-//    //TODO: 改成可配置
-//    private final boolean enableTableRule = true;
-
-//    /**
-//     * 判断是否告警
-//     */
-//    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-//
-//        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
-//            if (Boolean.TRUE.equals(enableTimeRule)) {
-//                userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
-//            }
-//            if (Boolean.TRUE.equals(enableTableRule)) {
-//                userVisitedTableIsAbnormal(segmentDetailDo, msAlarmInformationDoList);
-//            }
-//        }
-//
-//    }
 
 
     /**
@@ -188,7 +150,7 @@ public class AnomalyDetectionBusiness {
     }
 
     private Integer getCountByTable(String username, String tableName) {
-        String redisKey = buildTableRedisKey(username, tableName);
+        String redisKey = userPortraitByTableTask.buildRedisKey(username, tableName);
         Object o = redisPoolUtil.get(redisKey);
         if (o == null) return null;
         return Integer.parseInt((String) o);
@@ -214,7 +176,7 @@ public class AnomalyDetectionBusiness {
                         , time, segmentDetailDo.getGlobalTraceId());
                 return;
             }
-            Double rateByInterVal = getRateByInterVal(userName, interval);
+            Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
             if (rateByInterVal == null) {
                 //没有用户画像
                 msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
@@ -270,16 +232,6 @@ public class AnomalyDetectionBusiness {
         return coarseSegmentDetailOnTimeMapper.selectOneByUsername(userName) == null;
     }
 
-    /**
-     * 组装Redis的Key
-     */
-    private String buildTimeRedisKey(String username, String interval) {
-        return TIME_PREFIX + username + ":" + interval;
-    }
-
-    private String buildTableRedisKey(String username, String key) {
-        return TABLE_PREFIX + username + ":" + key;
-    }
 
     /**
      * 判断所属时段
@@ -303,15 +255,7 @@ public class AnomalyDetectionBusiness {
         return null;
     }
 
-    /**
-     * 获取该用户画像所定义该时段正常访问频率
-     */
-    private Double getRateByInterVal(String username, String interval) {
-        String redisKey = buildTimeRedisKey(username, interval);
-        Object o = redisPoolUtil.get(redisKey);
-        if (o == null) return null;
-        return Double.parseDouble((String) o);
-    }
+
 
     /**
      * 更新用户画像
@@ -348,4 +292,5 @@ public class AnomalyDetectionBusiness {
     public PortraitConfig getConfig() {
         return portraitConfigMapper.selectOne();
     }
+
 }

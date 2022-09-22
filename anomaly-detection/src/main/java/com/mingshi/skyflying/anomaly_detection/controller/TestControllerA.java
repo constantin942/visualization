@@ -70,4 +70,8 @@ public class TestControllerA {
         tableTask.cachePortraitByTable();
     }
 
+    @GetMapping("updatePortrait")
+    public void updatePortrait() {
+        timeTask.updatePortrait();
+    }
 }

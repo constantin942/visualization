@@ -69,7 +69,6 @@ public class UserPortraitByTimeTask {
     private final String NIGHT = "night";
 
     private final Integer EXPIRE = 100000;
-
     /**
      * Redis分布式锁Key
      */
@@ -119,6 +118,7 @@ public class UserPortraitByTimeTask {
     private String buildRedisKey(String username, String interval) {
         return PREFIX + username + ":" + interval;
     }
+
 
     /**
      * 昨日全量信息表插入粗粒度表
@@ -357,5 +357,29 @@ public class UserPortraitByTimeTask {
         List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());
         //3. 放入Redis
         cachePortraitByTime(userPortraitByTimeDos);
+    }
+
+    /**
+     * 获取该用户画像所定义该时段正常访问频率
+     */
+    public Double getRateByInterVal(String username, String interval) {
+        String redisKey = buildRedisKey(username, interval);
+        Object o = redisPoolUtil.get(redisKey);
+        if (o == null) return null;
+        return Double.parseDouble((String) o);
+    }
+
+    /**
+     * 获取用户访问频率
+     */
+    public Map<String, Double> getVisitRate(String username) {
+        Map<String, Double> map = new HashMap<>();
+        Double morningRate = getRateByInterVal(username, MORNING) == null ? 0.33 : getRateByInterVal(username, MORNING);
+        Double afternoonRate = getRateByInterVal(username, AFTERNOON) == null ? 0.33 : getRateByInterVal(username, AFTERNOON);
+        Double nightRate = getRateByInterVal(username, NIGHT) == null ? 0.33 : getRateByInterVal(username, NIGHT);
+        map.put("morning", morningRate);
+        map.put("afternoon", afternoonRate);
+        map.put("nightRate", nightRate);
+        return map;
     }
 }

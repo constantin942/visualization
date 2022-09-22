@@ -1,5 +1,8 @@
 package com.mingshi.web.controller;
 
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
+import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
@@ -14,6 +17,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author zhaoming
@@ -50,6 +54,8 @@ public class SkyflyingController {
   private SysMenuService sysMenuService;
   @Resource
   private OperationLogService operationLogService;
+  @Resource
+  private UserPortraitByTimeTask timeTask;
 
   /**
    * <B>方法名称：getHighDangerOperationLog</B>
@@ -875,4 +881,10 @@ public class SkyflyingController {
     return auditLogService.autoFetchAuditlogByDms(startTime, endTime);
   }
 
+
+  @ResponseBody
+  @GetMapping(value = "/getVisitRate")
+  public ServerResponse<Map<String, Double>> getVisitRate(@RequestParam("username") String username) {
+    return ServerResponse.createBySuccess(timeTask.getVisitRate(username));
+  }
 }

@@ -98,7 +98,7 @@ public class UserPortraitByTableTask {
         }
     }
 
-    private String buildRedisKey(String username, String key) {
+    public String buildRedisKey(String username, String key) {
         return PREFIX + username + ":" + key;
     }
 
