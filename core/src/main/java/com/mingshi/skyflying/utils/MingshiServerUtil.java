@@ -278,7 +278,7 @@ public class MingshiServerUtil {
         sqlTypeFromLibrary = sqlType.toLowerCase();
       }
     } catch (JSQLParserException e) {
-      log.error("# MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】获取sql类型时，出现了异常。", e);
+      // ignore
     }
 
     String sqlType = null;
@@ -286,7 +286,6 @@ public class MingshiServerUtil {
       sqlType = doGetSqlType(msSql);
     }
 
-    log.error("#SegmentConsumeServiceImpl.getSqlType() #没有匹配到SQL的类型，这是不正常的。需要好好的排查下，当前SQL = 【{}】。", msSql);
     if (StringUtil.isNotBlank(sqlType) && !sqlType.equals(sqlTypeFromLibrary)) {
       log.error("#SegmentConsumeServiceImpl.getSqlType() # 根据SQL语句 = 【{}】从库里获取到的sql类型 = 【{}】与原生匹配到的sql类型 = 【{}】不一致。", msSql, sqlTypeFromLibrary, sqlType);
     } else {

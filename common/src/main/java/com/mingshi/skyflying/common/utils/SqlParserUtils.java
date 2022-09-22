@@ -254,7 +254,8 @@ public class SqlParserUtils {
       tablesNamesFinder = new TablesNamesFinder();
       tableList = tablesNamesFinder.getTableList(deleteStatement);
     } catch (Exception e) {
-      log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
+      // ignore
+      // log.error("通过sql语句，解析表名时，出现了异常。sql = {}.", sql, e);
     }
     return tableList;
   }
