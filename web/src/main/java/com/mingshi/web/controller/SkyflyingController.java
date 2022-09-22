@@ -146,9 +146,10 @@ public class SkyflyingController {
     String tableName,
     String dbName,
     String dbAddress,
+    String tableDesc,
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return msMonitorBusinessSystemTablesService.getAllTables(tableName, dbName, dbAddress, pageNo, pageSize);
+    return msMonitorBusinessSystemTablesService.getAllTables(tableDesc, tableName, dbName, dbAddress, pageNo, pageSize);
   }
 
   @OperationAuditAspectAnnotation(isStart = true)
@@ -681,9 +682,11 @@ public class SkyflyingController {
    **/
   @ResponseBody
   @GetMapping(value = "/getCoarseCountsOfTableName")
-  public ServerResponse<String> getCoarseCountsOfTableName(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                           @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getCoarseCountsOfTableName(pageNo, pageSize);
+  public ServerResponse<String> getCoarseCountsOfTableName(
+    String tableName,
+    @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
   }
 
   /**

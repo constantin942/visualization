@@ -577,11 +577,14 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<String> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getCoarseCountsOfTableName(String tableName, Integer pageNo, Integer pageSize) {
     Instant now = Instant.now();
     log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
 
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+    if (StringUtil.isNotBlank(tableName)) {
+      queryMap.put(Const.TABLE_NAME, tableName);
+    }
     if (null == pageNo) {
       pageNo = 1;
     }
@@ -598,23 +601,23 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDoListFromMySql) {
       TableCoarseInfo tableCoarseInfo = new TableCoarseInfo();
-      String tableName = msMonitorBusinessSystemTablesDo.getTableName();
+      String msTableName = msMonitorBusinessSystemTablesDo.getTableName();
       String peer = msMonitorBusinessSystemTablesDo.getDbAddress();
       String dbName = msMonitorBusinessSystemTablesDo.getDbName();
 
       // 获取表对应的中文描述信息；2022-07-21 16:55:47
-      String getTableName = mingshiServerUtil.doGetTableName(peer, dbName, tableName);
+      String getTableName = mingshiServerUtil.doGetTableName(peer, dbName, msTableName);
       String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(getTableName);
       // 根据数据库表名获取用户对该表的访问次数
-      getVisitedCountByTableName(tableCoarseInfo, peer, dbName, tableName);
+      getVisitedCountByTableName(tableCoarseInfo, peer, dbName, msTableName);
       tableCoarseInfo.setTableName(getTableName);
-      tableCoarseInfo.setTableNameDesc(StringUtil.isBlank(tableDesc) == true ? tableName : tableDesc);
+      tableCoarseInfo.setTableNameDesc(StringUtil.isBlank(tableDesc) == true ? msTableName : tableDesc);
 
       // 根据表名获取最后被访问的时间
-      getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, tableName);
+      getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, msTableName);
 
       // 获取访问这个表次数最多的用户
-      getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, tableName);
+      getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, msTableName);
 
       tableCoarseInfoList.add(tableCoarseInfo);
     }
