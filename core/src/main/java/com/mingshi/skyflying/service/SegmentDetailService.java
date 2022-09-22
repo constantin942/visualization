@@ -31,7 +31,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<SystemOverview> getOverviewOfSystem();
 
-  ServerResponse<String> getCoarseCountsOfTableName(Integer pageNo, Integer pageSize);
+  ServerResponse<String> getCoarseCountsOfTableName(String tableName, Integer pageNo, Integer pageSize);
 
   ServerResponse<List<AlarmData>> getAlarmData();
 

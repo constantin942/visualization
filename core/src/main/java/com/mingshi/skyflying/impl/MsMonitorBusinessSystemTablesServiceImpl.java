@@ -45,9 +45,13 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
    * @Param []
    **/
   @Override
-  public ServerResponse<String> getAllTables(String tableName, String dbName, String dbAddress, Integer pageNo, Integer pageSize) {
+  public ServerResponse<String> getAllTables(String tableDesc, String tableName, String dbName, String dbAddress, Integer pageNo, Integer pageSize) {
     log.info(" 开始执行 # MsMonitorBusinessSystemTablesServiceImpl.updateTableInformation() # 获取所有的表。");
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+    if (StringUtil.isNotBlank(tableDesc)) {
+      tableDesc = tableDesc.trim().replace("\t", "");
+      queryMap.put("tableDesc", tableDesc);
+    }
     if (StringUtil.isNotBlank(tableName)) {
       tableName = tableName.trim().replace("\t", "");
       queryMap.put("tableName", tableName);
