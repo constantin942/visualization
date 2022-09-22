@@ -108,30 +108,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             if (null != spanList && 0 < spanList.size()) {
                 // 组装segment；2022-04-20 16:33:48
                 segment = setUserNameAndTokenFromSpan(spanList, segment);
-
                 // 重组span数据，返回前端使用；2022-04-20 16:49:02
                 reorganizingSpans(segment, spanList);
-
                 // 存放用户名不为空的链路信息；
                 segmentDetaiDolList = new LinkedList<>();
                 // 存放用户名暂时为空的链路信息；
                 segmentDetaiUserNameIsNullDolList = new LinkedList<>();
                 // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
                 getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
-
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
-                // TODO: 告警改造
-                // AnomalyDetectionUtil.userVisitedTimeIsAbnormal(segment, msAlarmInformationDoList);
-                // AnomalyDetectionUtil.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                Boolean enableTimeRule = getEnableRule(TIME_SUF);
-                Boolean enableTableRule = getEnableRule(TABLE_SUF);
-                if (enableTableRule) {
-                    anomalyDetectionBusiness.userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                }
-                if (enableTimeRule) {
-                    anomalyDetectionBusiness.userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                }
+                anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
+
             }
 
             HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -238,38 +226,38 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
     }
 
-  /**
-   * <B>方法名称：getAgentServiceName</B>
-   * <B>概要说明：获取探针的名称</B>
-   *
-   * @return java.util.Map<java.lang.String, java.lang.String>
-   * @Author zm
-   * @Date 2022年06月28日 14:06:38
-   * @Param [segmentObject]
-   **/
-  private Map<String, String> getAgentServiceName(SegmentObject segmentObject) {
-    Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
-    try {
-      skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
-      String service = segmentObject.getService();
-      String serviceInstance = segmentObject.getServiceInstance();
-      ObjectNode jsonObject = JsonUtil.createJsonObject();
-      jsonObject.put(Const.SERVICE_CODE, service);
-      jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
-      long segmentStartTime = segmentObject.getSegmentStartTime();
-      String date = null;
-      if (0L != segmentStartTime) {
-        date = DateTimeUtil.longToDate(segmentStartTime);
-      } else {
-        date = DateTimeUtil.date2Str(new Date());
-      }
-      skywalkingAgentHeartBeatMap.put(jsonObject.toString(), date);
+    /**
+     * <B>方法名称：getAgentServiceName</B>
+     * <B>概要说明：获取探针的名称</B>
+     *
+     * @return java.util.Map<java.lang.String, java.lang.String>
+     * @Author zm
+     * @Date 2022年06月28日 14:06:38
+     * @Param [segmentObject]
+     **/
+    private Map<String, String> getAgentServiceName(SegmentObject segmentObject) {
+        Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
+        try {
+            skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
+            String service = segmentObject.getService();
+            String serviceInstance = segmentObject.getServiceInstance();
+            ObjectNode jsonObject = JsonUtil.createJsonObject();
+            jsonObject.put(Const.SERVICE_CODE, service);
+            jsonObject.put(Const.SERVICE_INSTANCE_NAME, serviceInstance);
+            long segmentStartTime = segmentObject.getSegmentStartTime();
+            String date = null;
+            if (0L != segmentStartTime) {
+                date = DateTimeUtil.longToDate(segmentStartTime);
+            } else {
+                date = DateTimeUtil.date2Str(new Date());
+            }
+            skywalkingAgentHeartBeatMap.put(jsonObject.toString(), date);
 
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.getAgentServiceName() # 获取探针的名称时，出现了异常。", e);
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.getAgentServiceName() # 获取探针的名称时，出现了异常。", e);
+        }
+        return skywalkingAgentHeartBeatMap;
     }
-    return skywalkingAgentHeartBeatMap;
-  }
 
     /**
      * <B>方法名称：getSegmentDetaiDolList</B>
@@ -422,674 +410,675 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         return msSegmentDetailDo;
     }
 
-  /**
-   * <B>方法名称：putSegmentDetailDoIntoList</B>
-   * <B>概要说明：组装MsSegmentDetailDo实例</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年09月13日 16:09:09
-   * @Param [consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject]
-   **/
-  private void putSegmentDetailDoIntoList(ConsumerRecord<String, Bytes> consumerRecord, SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
-    if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
-      MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-      msSegmentDetailDo.setTopic(consumerRecord.topic());
-      msSegmentDetailDo.setParition(consumerRecord.partition());
-      msSegmentDetailDo.setOffset(consumerRecord.offset());
+    /**
+     * <B>方法名称：putSegmentDetailDoIntoList</B>
+     * <B>概要说明：组装MsSegmentDetailDo实例</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年09月13日 16:09:09
+     * @Param [consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject]
+     **/
+    private void putSegmentDetailDoIntoList(ConsumerRecord<String, Bytes> consumerRecord, SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
+        if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
+            MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
+            msSegmentDetailDo.setTopic(consumerRecord.topic());
+            msSegmentDetailDo.setParition(consumerRecord.partition());
+            msSegmentDetailDo.setOffset(consumerRecord.offset());
 
-      msSegmentDetailDo.setUserLoginIp(segment.getIp());
-      msSegmentDetailDo.setUserName(segment.getUserName());
-      msSegmentDetailDo.setToken(segment.getToken());
-      msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
-      msSegmentDetailDo.setOperationName(segment.getOperationName());
-      msSegmentDetailDo.setStartTime(segment.getRequestStartTime());
-      msSegmentDetailDo.setEndTime(segment.getRequestStartTime());
-      msSegmentDetailDo.setServiceCode(segmentObject.getService());
-      msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
-      String reorganizingSpans = segment.getReorganizingSpans();
-      List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
-      if (null != list && Const.NUMBER_ONE == list.size()) {
-        LinkedHashMap hashMap = (LinkedHashMap) list.get(0);
-        if (null != hashMap && null != hashMap.get(Const.OPERATION_TYPE_URL)) {
-          msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_URL_NO_DB_STATEMENT);
+            msSegmentDetailDo.setUserLoginIp(segment.getIp());
+            msSegmentDetailDo.setUserName(segment.getUserName());
+            msSegmentDetailDo.setToken(segment.getToken());
+            msSegmentDetailDo.setGlobalTraceId(segment.getGlobalTraceId());
+            msSegmentDetailDo.setOperationName(segment.getOperationName());
+            msSegmentDetailDo.setStartTime(segment.getRequestStartTime());
+            msSegmentDetailDo.setEndTime(segment.getRequestStartTime());
+            msSegmentDetailDo.setServiceCode(segmentObject.getService());
+            msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
+            String reorganizingSpans = segment.getReorganizingSpans();
+            List list = JsonUtil.string2Obj(reorganizingSpans, List.class);
+            if (null != list && Const.NUMBER_ONE == list.size()) {
+                LinkedHashMap hashMap = (LinkedHashMap) list.get(0);
+                if (null != hashMap && null != hashMap.get(Const.OPERATION_TYPE_URL)) {
+                    msSegmentDetailDo.setOperationType(Const.OPERATION_TYPE_URL_NO_DB_STATEMENT);
+                }
+            }
+            if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
+                // 用户名不为空；
+                segmentDetaiDolList.add(msSegmentDetailDo);
+            } else {
+                // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
+                if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
+                    segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+                } else {
+                    log.error("# SegmentConsumeServiceImpl.putSegmentDetailDoIntoList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));
+                }
+            }
+
         }
-      }
-      if (StringUtil.isNotBlank(msSegmentDetailDo.getUserName())) {
-        // 用户名不为空；
-        segmentDetaiDolList.add(msSegmentDetailDo);
-      } else {
-        // 用户名为空，但token和globalTraceId都不为空；2022-08-01 15:26:51
-        if (StringUtil.isNotBlank(msSegmentDetailDo.getGlobalTraceId()) && StringUtil.isNotBlank(msSegmentDetailDo.getToken()) && !msSegmentDetailDo.getDbType().equals(Const.URL)) {
-          segmentDetaiUserNameIsNullDolList.add(msSegmentDetailDo);
+    }
+
+    /**
+     * <B>方法名称：setTableName</B>
+     * <B>概要说明：获取SQL语句中表的名字</B>
+     *
+     * @return java.lang.String
+     * @Author zm
+     * @Date 2022年09月20日 14:09:43
+     * @Param [value, msSegmentDetailDo]
+     **/
+    private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
+        List<String> tableNameList = null;
+        String tableName = null;
+        StringBuilder tableNameBuilder = new StringBuilder();
+        try {
+            // sql类型；
+            String sqlType = mingshiServerUtil.getSqlType(value);
+            msSegmentDetailDo.setDbType(sqlType);
+            // 获取表名；2022-06-06 14:11:21
+            tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
+            if (null != tableNameList && 0 < tableNameList.size()) {
+                for (String tableNameTemp : tableNameList) {
+                    String dbInstance = msSegmentDetailDo.getDbInstance();
+                    String peer = msSegmentDetailDo.getPeer();
+                    String replaceTableName = tableNameTemp.replace("`", "");
+                    String key = null;
+                    Integer tableEnableStatus = null;
+                    if (replaceTableName.contains(Const.EN_COMMA)) {
+                        String[] splits = replaceTableName.split(Const.EN_COMMA);
+                        for (String splitTableName : splits) {
+                            key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
+                            // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+                            tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
+                            if (null != tableEnableStatus && 1 == tableEnableStatus) {
+                                // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+                                return null;
+                            }
+                        }
+                    } else {
+                        key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
+                        // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
+                        tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
+                        if (null != tableEnableStatus && 1 == tableEnableStatus) {
+                            // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
+                            return null;
+                        }
+                    }
+
+                    if (StringUtil.isBlank(tableName)) {
+                        tableName = tableNameTemp;
+                    } else {
+                        tableName = tableName + "," + tableNameTemp;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
+        }
+        if (StringUtil.isNotBlank(tableName)) {
+            tableName = tableName.replace("`", "");
+        }
+        return tableName;
+    }
+
+    /**
+     * <B>方法名称：ignoreMethod</B>
+     * <B>概要说明：判断是否可以过滤掉</B>
+     *
+     * @return java.lang.Boolean
+     * @Author zm
+     * @Date 2022年05月30日 20:05:06
+     * @Param [operationName]
+     **/
+    private Boolean ignoreMethod(String operationName) {
+        if (Const.OPERATION_NAME_MAP.containsKey(operationName) || operationName.startsWith(Const.SPRING_SCHEDULED)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * <B>方法名称：statisticsProcessorThreadQps</B>
+     * <B>概要说明：组装QPS数据</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年07月23日 11:07:33
+     * @Param [jsonObject]
+     **/
+    private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
+        HashMap<String, Integer> hashMap = new HashMap<>(Const.NUMBER_EIGHT);
+        hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
+        map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
+    }
+
+    /**
+     * <B>方法名称：getRef</B>
+     * <B>概要说明：获取TraceSegmentId</B>
+     *
+     * @return java.lang.String
+     * @Author zm
+     * @Date 2022年07月14日 15:07:12
+     * @Param [segmentObject, segment]
+     **/
+    private String getRef(SegmentObject segmentObject, SegmentDo segment) {
+        try {
+            segment.setServiceCode(segmentObject.getService());
+            segment.setServiceInstanceName(segmentObject.getServiceInstance());
+            segment.setCurrentSegmentId(segmentObject.getTraceSegmentId());
+            segment.setGlobalTraceId(segmentObject.getTraceId());
+            String ref = segmentObject.getRef();
+            if (!StringUtil.isBlank(ref)) {
+                TraceSegmentRef traceSegmentRef = JsonUtil.string2Obj(ref, TraceSegmentRef.class);
+                String parentSegmentId = traceSegmentRef.getTraceSegmentId();
+                segment.setParentSegmentId(parentSegmentId);
+                return parentSegmentId;
+            }
+        } catch (Exception e) {
+            log.error("# getRef() # 根据SegmentObject实例【{}】获取TraceSegmentId时，出现了异常。", segmentObject.toString(), e);
+        }
+        return null;
+    }
+
+    /**
+     * <B>方法名称：reorganizingSpans</B>
+     * <B>概要说明：重组span数据，返回前端使用</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年09月07日 11:09:00
+     * @Param [segmentDo, spanList]
+     **/
+    private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
+        if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
+            return;
+        }
+
+        LinkedHashSet<String> ipHashSet = new LinkedHashSet<>();
+        List<String> linkedList = new LinkedList<>();
+        if (CollectionUtils.isNotEmpty(spanList)) {
+            List<Span> rootSpans = findRoot(spanList);
+            for (Span span : rootSpans) {
+                List<Span> childrenSpan = new ArrayList<>();
+                childrenSpan.add(span);
+
+                // 获取用户登录的ip；2022-09-07 11:17:09
+                getIps(ipHashSet, span);
+
+                // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
+                getData(segmentDo, span, linkedList);
+                findChildrenDetail(segmentDo, spanList, span, childrenSpan, linkedList);
+            }
+        }
+        if (!ipHashSet.isEmpty()) {
+            segmentDo.setIp(JsonUtil.obj2String(ipHashSet));
+        }
+        String toString = linkedList.toString();
+        segmentDo.setReorganizingSpans(toString);
+    }
+
+    /**
+     * <B>方法名称：getIps</B>
+     * <B>概要说明：获取用户登录的ip</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年09月07日 11:09:26
+     * @Param [ipHashSet, span]
+     **/
+    private void getIps(LinkedHashSet<String> ipHashSet, Span span) {
+        String ips = span.getIp();
+        if (StringUtil.isNotBlank(ips)) {
+            if (ips.contains(Const.EN_COMMA)) {
+                String[] splits = ips.split(Const.EN_COMMA);
+                for (String ip : splits) {
+                    ipHashSet.add(ip);
+                }
+            } else {
+                ipHashSet.add(ips);
+            }
+        }
+    }
+
+    private List<Span> findRoot(List<Span> spans) {
+        List<Span> rootSpans = new ArrayList<>();
+        spans.forEach(span -> {
+            String segmentParentSpanId = span.getSegmentParentSpanId();
+
+            boolean hasParent = false;
+            for (Span subSpan : spans) {
+                if (segmentParentSpanId.equals(subSpan.getSegmentSpanId())) {
+                    hasParent = true;
+                    // if find parent, quick exit
+                    break;
+                }
+            }
+
+            if (!hasParent) {
+                span.setRoot(true);
+                rootSpans.add(span);
+            }
+        });
+        rootSpans.sort(Comparator.comparing(Span::getStartTime));
+        return rootSpans;
+    }
+
+    private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList) {
+        spans.forEach(span -> {
+            if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
+                childrenSpan.add(span);
+                getData(segmentDo, span, linkedList);
+                findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList);
+            }
+        });
+    }
+
+    /**
+     * <B>方法名称：getData</B>
+     * <B>概要说明：只要span中的tags字段不为空，那么就把这个span放入到链表中。这样做的目的是：不再区分是哪个插件拦截到的信息，像skywalking的服务端一样，使用统一的展示方式在前端展示数据。</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年05月17日 10:05:41
+     * @Param [span, linkedList]
+     **/
+    private void getData(SegmentDo segmentDo, Span span, List<String> linkedList) {
+        try {
+            ObjectNode jsonObject = JsonUtil.createJsonObject();
+            int spanId = span.getSpanId();
+            if (0 == spanId) {
+                getSpringMvcInfo(span, jsonObject, linkedList);
+            } else if (0 < span.getTags().size()) {
+                jsonObject.put(Const.SPANID, spanId);
+                jsonObject.put(Const.PARENT_SPAN_ID, span.getParentSpanId());
+                jsonObject.put(Const.SERVICE_CODE, span.getServiceCode());
+                jsonObject.put(Const.SERVICE_INSTANCE_NAME, span.getServiceInstanceName());
+                jsonObject.put(Const.START_TIME, span.getStartTime());
+                jsonObject.put(Const.END_TIME, span.getEndTime());
+                jsonObject.put(Const.ENDPOINT_NAME, span.getEndpointName());
+                jsonObject.put(Const.PEER, span.getPeer());
+                jsonObject.put(Const.COMPONET, span.getComponent());
+                List<LogEntity> logs = span.getLogs();
+                if (null != logs && 0 < logs.size()) {
+                    jsonObject.put(Const.LOGS, JsonUtil.obj2String(logs));
+                }
+                List<KeyValue> tags = span.getTags();
+                if (0 < tags.size()) {
+                    Boolean flag = false;
+                    String key = null;
+                    String url = null;
+                    String httpBody = null;
+                    for (KeyValue tag : tags) {
+                        key = tag.getKey();
+                        if (segmentDo.getOperationName().equals(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME)) {
+                            flag = true;
+                            break;
+                        }
+                        if (tag.getValue().equals(Const.REDIS)) {
+                            // 不再存储单纯的Redis请求；2022-06-30 16:34:24
+                            flag = true;
+                            break;
+                        }
+                        if (key.equals(Const.HTTP_BODY)) {
+                            // 不再存储单纯的GET请求；2022-05-27 18:14:25
+                            httpBody = tag.getValue();
+                        } else if (key.equals(Const.URL)) {
+                            // 不再存储单纯的GET请求；2022-05-27 18:14:25
+                            url = tag.getValue();
+                        }
+                    }
+
+                    getUserNameFromHttpBody(segmentDo, url, httpBody);
+                    if (false == flag) {
+                        jsonObject.put(Const.TAGS, JsonUtil.obj2String(tags));
+                        linkedList.add(jsonObject.toString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
+        }
+    }
+
+    /**
+     * <B>方法名称：getUserNameFromHttpBody</B>
+     * <B>概要说明：从Http的返回body中获取用户名</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年07月11日 17:07:09
+     * @Param [segmentDo, url, httpBody]
+     **/
+    private void getUserNameFromHttpBody(SegmentDo segmentDo, String url, String httpBody) {
+        try {
+            // 有一个特殊的url（http://172.17.80.184:8181/login/fish/easier），其用户名放在了HTTP返回的body中。
+            // 这个url之所以特殊，是因为用户在浙里办APP上进入渔省心，然后在渔省心里获取用户名信息，接着做其他的操作。
+            // 2022-07-11 17:28:27
+            if (StringUtil.isNotBlank(url) && url.contains(Const.LOGIN_FISH_EASIER)) {
+                CommonResponse commonResponse = JsonUtil.string2Obj(httpBody, CommonResponse.class);
+                if (null != commonResponse) {
+                    Object data = commonResponse.getData();
+                    if (null != data) {
+                        String username = StringUtil.isBlank(String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME))) == true ? String.valueOf(((LinkedHashMap) data).get(Const.USERNAME)) : String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME));
+                        if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
+                            segmentDo.setUserName(username);
+                            setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.getUserNameFromHttpBody() # 从调用的url = 【{}】中获取用户名时，出现了异常。", url, e);
+        }
+    }
+
+    /**
+     * <B>方法名称：getSpringMVCInfo</B>
+     * <B>概要说明：获取SpringMVC信息</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年05月12日 16:05:24
+     * @Param [span, jsonObject, linkedList]
+     **/
+    private void getSpringMvcInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
+        List<KeyValue> tagsList = span.getTags();
+        for (KeyValue keyValue : tagsList) {
+            if (keyValue.getKey().equals(Const.URL)) {
+                String url = keyValue.getValue();
+                jsonObject.put(Const.URL, url);
+                linkedList.add(jsonObject.toString());
+            }
+        }
+    }
+
+    /**
+     * <B>方法名称：insertSegment2</B>
+     * <B>概要说明：将segment数据插入到数据库中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年05月23日 10:05:54
+     * @Param [segment]
+     **/
+    private void insertSegmentBySingle(SegmentDo segment) {
+        int insertResult = segmentDao.insertSelective(segment);
+        if (1 != insertResult) {
+            log.error("开始执行 AiitKafkaConsumer # insertSegmentBySingle()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
+        }
+    }
+
+    /**
+     * <B>方法名称：setUserNameTokenGlobalTraceIdToLocalMemory </B>
+     * <B>概要说明：将userName、token，与globalTraceId关联起来 </B>
+     * 注：userName与token是等价的。当用户第一次登录时，如果用户校验成功，那么下次用户再访问其他接口时，会使用token来代替用户名。
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年05月23日 10:05:22
+     * @Param [segment]
+     **/
+    private void setUserNameTokenGlobalTraceIdToLocalMemory(SegmentDo segment) {
+        String globalTraceId = segment.getGlobalTraceId();
+        // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
+        String segmentUserName = segment.getUserName();
+        String segmentToken = segment.getToken();
+        String userName = null;
+        if (StringUtil.isBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+            // 当用户名和token都为null，但全局追踪id不为空；
+            // 首先根据globalTraceId获取userName；
+            userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
+            if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                segment.setUserName(userName);
+            }
+
+            // 首先根据globalTraceId获取token；
+            String token = MsCaffeine.getTokenByGlobalTraceId(globalTraceId);
+            if (StringUtil.isNotBlank(token)) {
+                // 首先根据 token 获取 userName；
+                userName = MsCaffeine.getUserNameByToken(token);
+                if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                    segment.setUserName(userName);
+                    MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
+                }
+            }
+        } else if (StringUtil.isBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+            MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
+            // 当用户名为null，但token和全局追踪id不为空；
+            userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
+            if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                MsCaffeine.putUserNameByToken(segmentToken, userName);
+                segment.setUserName(userName);
+            } else {
+                userName = MsCaffeine.getUserNameByToken(segmentToken);
+                if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                    segment.setUserName(userName);
+                    MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
+                }
+            }
+        } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+            // 当用户名、token和全局追踪id都不为空；这时候，就可以把三个map补全了。2022-05-24 15:48:15
+            MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
+            MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
+            MsCaffeine.putUserNameByToken(segmentToken, segmentUserName);
+        } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
+            MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
         } else {
-          log.error("# SegmentConsumeServiceImpl.putSegmentDetailDoIntoList() # 出现异常了：用户名为空，token或者globalTraceId也为空。【{}】.", JsonUtil.obj2String(segment));
+            log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() # 出现异常情况了。用户名、token和全局追踪id都为空。");
         }
-      }
-
     }
-  }
 
-  /**
-   * <B>方法名称：setTableName</B>
-   * <B>概要说明：获取SQL语句中表的名字</B>
-   *
-   * @return java.lang.String
-   * @Author zm
-   * @Date 2022年09月20日 14:09:43
-   * @Param [value, msSegmentDetailDo]
-   **/
-  private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
-    List<String> tableNameList = null;
-    String tableName = null;
-    StringBuilder tableNameBuilder = new StringBuilder();
-    try {
-      // sql类型；
-      String sqlType = mingshiServerUtil.getSqlType(value);
-      msSegmentDetailDo.setDbType(sqlType);
-      // 获取表名；2022-06-06 14:11:21
-      tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
-      if (null != tableNameList && 0 < tableNameList.size()) {
-        for (String tableNameTemp : tableNameList) {
-          String dbInstance = msSegmentDetailDo.getDbInstance();
-          String peer = msSegmentDetailDo.getPeer();
-          String replaceTableName = tableNameTemp.replace("`", "");
-          String key = null;
-          Integer tableEnableStatus = null;
-          if (replaceTableName.contains(Const.EN_COMMA)) {
-            String[] splits = replaceTableName.split(Const.EN_COMMA);
-            for (String splitTableName : splits) {
-              key = mingshiServerUtil.doGetTableName(peer, dbInstance, splitTableName);
-              // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-              tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
-              if (null != tableEnableStatus && 1 == tableEnableStatus) {
-                // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
-                return null;
-              }
+    /**
+     * <B>方法名称：insertSegment</B>
+     * <B>概要说明：将原始的用户访问行为信息插入到表中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年08月23日 14:08:17
+     * @Param [segment, segmentObject, parentSegmentId]
+     **/
+    private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
+        // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
+        if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
+            log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
+            return;
+        }
+
+        int insertResult = segmentDao.insertSelective(segment);
+        if (1 != insertResult) {
+            log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
+        }
+    }
+
+    private List<Span> buildSpanList(SegmentObject segmentObject, SegmentDo segmentDo) {
+        List<Span> spans = new ArrayList<>();
+
+        List<SpanObject> spansList = segmentObject.getSpansList();
+        if (null != spansList && 0 < spansList.size()) {
+            segmentDo.setSpans(spansList.toString());
+        }
+        for (SpanObject spanObject : spansList) {
+            String operationName = spanObject.getOperationName();
+
+            // 忽略掉不需要的链路信息；2022-06-28 14:18:20
+            Boolean flag = ignoreMethod(operationName);
+            if (true == flag) {
+                continue;
             }
-          } else {
-            key = mingshiServerUtil.doGetTableName(peer, dbInstance, replaceTableName);
-            // 使用数据库地址 + 数据库名称 + 表名，来唯一定位一个表；2022-07-15 10:39:13
-            tableEnableStatus = LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(key);
-            if (null != tableEnableStatus && 1 == tableEnableStatus) {
-              // 如果当前表处于禁用状态，那么直接返回；2022-07-13 11:27:36
-              return null;
+
+            // 构建span；2022-09-20 14:30:47
+            doBuildSpan(segmentObject, spanObject, spans);
+        }
+
+        return spans;
+    }
+
+    /**
+     * <B>方法名称：doBuildSpan</B>
+     * <B>概要说明：构建span</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年09月20日 14:09:43
+     * @Param [segmentObject, spanObject, spans]
+     **/
+    private void doBuildSpan(SegmentObject segmentObject, SpanObject spanObject, List<Span> spans) {
+        String operationName = spanObject.getOperationName();
+        Span span = new Span();
+        span.setUserName(spanObject.getUserName());
+        span.setToken(spanObject.getToken());
+
+        span.setTraceId(segmentObject.getTraceId());
+        span.setSegmentId(segmentObject.getTraceSegmentId());
+        span.setSpanId(spanObject.getSpanId());
+        span.setParentSpanId(spanObject.getParentSpanId());
+        span.setStartTime(spanObject.getStartTime());
+        span.setEndTime(spanObject.getEndTime());
+        span.setError(spanObject.getIsError());
+        span.setLayer(spanObject.getSpanLayer().name());
+        span.setType(spanObject.getSpanType().name());
+
+        String segmentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getSpanId();
+        span.setSegmentSpanId(segmentSpanId);
+
+        String segmentParentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getParentSpanId();
+        span.setSegmentParentSpanId(segmentParentSpanId);
+
+        span.setPeer(spanObject.getPeer());
+
+        span.setEndpointName(operationName);
+
+        span.setServiceCode(segmentObject.getService());
+        span.setServiceInstanceName(segmentObject.getServiceInstance());
+
+        String component = ComponentsDefine.getComponentMap().get(spanObject.getComponentId());
+        if (!StringUtil.isBlank(component)) {
+            span.setComponent(component);
+        }
+
+        spanObject.getRefsList().forEach(reference -> {
+            Ref ref = new Ref();
+            ref.setTraceId(reference.getTraceId());
+            ref.setParentSegmentId(reference.getParentTraceSegmentId());
+
+            switch (reference.getRefType()) {
+                case CrossThread:
+                    ref.setType(RefType.CROSS_THREAD);
+                    break;
+                case CrossProcess:
+                    ref.setType(RefType.CROSS_PROCESS);
+                    break;
             }
-          }
+            ref.setParentSpanId(reference.getParentSpanId());
 
-          if (StringUtil.isBlank(tableName)) {
-            tableName = tableNameTemp;
-          } else {
-            tableName = tableName + "," + tableNameTemp;
-          }
-        }
-      }
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.setTableName() # 根据sql语句获取表名时，出现了异常。", e);
-    }
-    if (StringUtil.isNotBlank(tableName)) {
-      tableName = tableName.replace("`", "");
-    }
-    return tableName;
-  }
+            span.setSegmentParentSpanId(
+                    ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
 
-  /**
-   * <B>方法名称：ignoreMethod</B>
-   * <B>概要说明：判断是否可以过滤掉</B>
-   *
-   * @return java.lang.Boolean
-   * @Author zm
-   * @Date 2022年05月30日 20:05:06
-   * @Param [operationName]
-   **/
-  private Boolean ignoreMethod(String operationName) {
-    if (Const.OPERATION_NAME_MAP.containsKey(operationName) || operationName.startsWith(Const.SPRING_SCHEDULED)) {
-      return true;
-    }
-    return false;
-  }
+            span.getRefs().add(ref);
+        });
 
-  /**
-   * <B>方法名称：statisticsProcessorThreadQps</B>
-   * <B>概要说明：组装QPS数据</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月23日 11:07:33
-   * @Param [jsonObject]
-   **/
-  private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
-    HashMap<String, Integer> hashMap = new HashMap<>(Const.NUMBER_EIGHT);
-    hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
-    map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
-  }
+        spanObject.getTagsList().forEach(tag -> {
+            KeyValue keyValue = new KeyValue();
+            keyValue.setKey(tag.getKey());
+            keyValue.setValue(tag.getValue());
+            span.getTags().add(keyValue);
+        });
 
-  /**
-   * <B>方法名称：getRef</B>
-   * <B>概要说明：获取TraceSegmentId</B>
-   *
-   * @return java.lang.String
-   * @Author zm
-   * @Date 2022年07月14日 15:07:12
-   * @Param [segmentObject, segment]
-   **/
-  private String getRef(SegmentObject segmentObject, SegmentDo segment) {
-    try {
-      segment.setServiceCode(segmentObject.getService());
-      segment.setServiceInstanceName(segmentObject.getServiceInstance());
-      segment.setCurrentSegmentId(segmentObject.getTraceSegmentId());
-      segment.setGlobalTraceId(segmentObject.getTraceId());
-      String ref = segmentObject.getRef();
-      if (!StringUtil.isBlank(ref)) {
-        TraceSegmentRef traceSegmentRef = JsonUtil.string2Obj(ref, TraceSegmentRef.class);
-        String parentSegmentId = traceSegmentRef.getTraceSegmentId();
-        segment.setParentSegmentId(parentSegmentId);
-        return parentSegmentId;
-      }
-    } catch (Exception e) {
-      log.error("# getRef() # 根据SegmentObject实例【{}】获取TraceSegmentId时，出现了异常。", segmentObject.toString(), e);
-    }
-    return null;
-  }
+        spanObject.getLogsList().forEach(log -> {
+            LogEntity logEntity = new LogEntity();
+            logEntity.setTime(log.getTime());
 
-  /**
-   * <B>方法名称：reorganizingSpans</B>
-   * <B>概要说明：重组span数据，返回前端使用</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年09月07日 11:09:00
-   * @Param [segmentDo, spanList]
-   **/
-  private void reorganizingSpans(SegmentDo segmentDo, List<Span> spanList) {
-    if (StringUtil.isBlank(segmentDo.getUserName()) && StringUtil.isBlank(segmentDo.getToken())) {
-      return;
+            log.getDataList().forEach(data -> {
+                KeyValue keyValue = new KeyValue();
+                keyValue.setKey(data.getKey());
+                keyValue.setValue(data.getValue());
+                logEntity.getData().add(keyValue);
+            });
+
+            span.getLogs().add(logEntity);
+        });
+
+        spans.add(span);
     }
 
-    LinkedHashSet<String> ipHashSet = new LinkedHashSet<>();
-    List<String> linkedList = new LinkedList<>();
-    if (CollectionUtils.isNotEmpty(spanList)) {
-      List<Span> rootSpans = findRoot(spanList);
-      for (Span span : rootSpans) {
-        List<Span> childrenSpan = new ArrayList<>();
-        childrenSpan.add(span);
-
-        // 获取用户登录的ip；2022-09-07 11:17:09
-        getIps(ipHashSet, span);
-
-        // 在这个方法里面组装前端需要的数据；2022-04-14 14:35:37
-        getData(segmentDo, span, linkedList);
-        findChildrenDetail(segmentDo, spanList, span, childrenSpan, linkedList);
-      }
-    }
-    if (!ipHashSet.isEmpty()) {
-      segmentDo.setIp(JsonUtil.obj2String(ipHashSet));
-    }
-    String toString = linkedList.toString();
-    segmentDo.setReorganizingSpans(toString);
-  }
-
-  /**
-   * <B>方法名称：getIps</B>
-   * <B>概要说明：获取用户登录的ip</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年09月07日 11:09:26
-   * @Param [ipHashSet, span]
-   **/
-  private void getIps(LinkedHashSet<String> ipHashSet, Span span) {
-    String ips = span.getIp();
-    if (StringUtil.isNotBlank(ips)) {
-      if (ips.contains(Const.EN_COMMA)) {
-        String[] splits = ips.split(Const.EN_COMMA);
-        for (String ip : splits) {
-          ipHashSet.add(ip);
-        }
-      } else {
-        ipHashSet.add(ips);
-      }
-    }
-  }
-
-  private List<Span> findRoot(List<Span> spans) {
-    List<Span> rootSpans = new ArrayList<>();
-    spans.forEach(span -> {
-      String segmentParentSpanId = span.getSegmentParentSpanId();
-
-      boolean hasParent = false;
-      for (Span subSpan : spans) {
-        if (segmentParentSpanId.equals(subSpan.getSegmentSpanId())) {
-          hasParent = true;
-          // if find parent, quick exit
-          break;
-        }
-      }
-
-      if (!hasParent) {
-        span.setRoot(true);
-        rootSpans.add(span);
-      }
-    });
-    rootSpans.sort(Comparator.comparing(Span::getStartTime));
-    return rootSpans;
-  }
-
-  private void findChildrenDetail(SegmentDo segmentDo, List<Span> spans, Span parentSpan, List<Span> childrenSpan, List<String> linkedList) {
-    spans.forEach(span -> {
-      if (span.getSegmentParentSpanId().equals(parentSpan.getSegmentSpanId())) {
-        childrenSpan.add(span);
-        getData(segmentDo, span, linkedList);
-        findChildrenDetail(segmentDo, spans, span, childrenSpan, linkedList);
-      }
-    });
-  }
-
-  /**
-   * <B>方法名称：getData</B>
-   * <B>概要说明：只要span中的tags字段不为空，那么就把这个span放入到链表中。这样做的目的是：不再区分是哪个插件拦截到的信息，像skywalking的服务端一样，使用统一的展示方式在前端展示数据。</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月17日 10:05:41
-   * @Param [span, linkedList]
-   **/
-  private void getData(SegmentDo segmentDo, Span span, List<String> linkedList) {
-    try {
-      ObjectNode jsonObject = JsonUtil.createJsonObject();
-      int spanId = span.getSpanId();
-      if (0 == spanId) {
-        getSpringMvcInfo(span, jsonObject, linkedList);
-      } else if (0 < span.getTags().size()) {
-        jsonObject.put(Const.SPANID, spanId);
-        jsonObject.put(Const.PARENT_SPAN_ID, span.getParentSpanId());
-        jsonObject.put(Const.SERVICE_CODE, span.getServiceCode());
-        jsonObject.put(Const.SERVICE_INSTANCE_NAME, span.getServiceInstanceName());
-        jsonObject.put(Const.START_TIME, span.getStartTime());
-        jsonObject.put(Const.END_TIME, span.getEndTime());
-        jsonObject.put(Const.ENDPOINT_NAME, span.getEndpointName());
-        jsonObject.put(Const.PEER, span.getPeer());
-        jsonObject.put(Const.COMPONET, span.getComponent());
-        List<LogEntity> logs = span.getLogs();
-        if (null != logs && 0 < logs.size()) {
-          jsonObject.put(Const.LOGS, JsonUtil.obj2String(logs));
-        }
-        List<KeyValue> tags = span.getTags();
-        if (0 < tags.size()) {
-          Boolean flag = false;
-          String key = null;
-          String url = null;
-          String httpBody = null;
-          for (KeyValue tag : tags) {
-            key = tag.getKey();
-            if (segmentDo.getOperationName().equals(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME)) {
-              flag = true;
-              break;
+    /**
+     * <B>方法名称：setUserNameAndTokenFromSpan</B>
+     * <B>概要说明：从span中获取用户名和token</B>
+     *
+     * @return com.mingshi.skyflying.common.domain.SegmentDo
+     * @Author zm
+     * @Date 2022年07月12日 10:07:33
+     * @Param [spanList, segment]
+     **/
+    private SegmentDo setUserNameAndTokenFromSpan(List<Span> spanList, SegmentDo segment) {
+        try {
+            if (null == segment) {
+                segment = new SegmentDo();
             }
-            if (tag.getValue().equals(Const.REDIS)) {
-              // 不再存储单纯的Redis请求；2022-06-30 16:34:24
-              flag = true;
-              break;
+            if (null == spanList && 0 == spanList.size()) {
+                return segment;
             }
-            if (key.equals(Const.HTTP_BODY)) {
-              // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              httpBody = tag.getValue();
-            } else if (key.equals(Const.URL)) {
-              // 不再存储单纯的GET请求；2022-05-27 18:14:25
-              url = tag.getValue();
+            Span span = spanList.get(spanList.size() - 1);
+            segment.setOperationName(span.getEndpointName());
+            segment.setRequestStartTime(DateTimeUtil.longToDate(span.getStartTime()));
+
+            if (StringUtil.isNotBlank(segment.getUserName()) && StringUtil.isNotBlank(segment.getToken())) {
+                return segment;
             }
-          }
-
-          getUserNameFromHttpBody(segmentDo, url, httpBody);
-          if (false == flag) {
-            jsonObject.put(Const.TAGS, JsonUtil.obj2String(tags));
-            linkedList.add(jsonObject.toString());
-          }
-        }
-      }
-    } catch (Exception e) {
-      log.error("将span的信息 = 【{}】放入到LinkedList中的时候，出现了异常。", JsonUtil.obj2StringPretty(span), e);
-    }
-  }
-
-  /**
-   * <B>方法名称：getUserNameFromHttpBody</B>
-   * <B>概要说明：从Http的返回body中获取用户名</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月11日 17:07:09
-   * @Param [segmentDo, url, httpBody]
-   **/
-  private void getUserNameFromHttpBody(SegmentDo segmentDo, String url, String httpBody) {
-    try {
-      // 有一个特殊的url（http://172.17.80.184:8181/login/fish/easier），其用户名放在了HTTP返回的body中。
-      // 这个url之所以特殊，是因为用户在浙里办APP上进入渔省心，然后在渔省心里获取用户名信息，接着做其他的操作。
-      // 2022-07-11 17:28:27
-      if (StringUtil.isNotBlank(url) && url.contains(Const.LOGIN_FISH_EASIER)) {
-        CommonResponse commonResponse = JsonUtil.string2Obj(httpBody, CommonResponse.class);
-        if (null != commonResponse) {
-          Object data = commonResponse.getData();
-          if (null != data) {
-            String username = StringUtil.isBlank(String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME))) == true ? String.valueOf(((LinkedHashMap) data).get(Const.USERNAME)) : String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME));
-            if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
-              segmentDo.setUserName(username);
-              setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
+            String userName = span.getUserName();
+            String token = span.getToken();
+            if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                segment.setUserName(userName);
             }
-          }
+            if (StringUtil.isNotBlank(token)) {
+                segment.setToken(token);
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSpan() # 从Span实例中获取用户名和token时，出现了异常。", e);
         }
-      }
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.getUserNameFromHttpBody() # 从调用的url = 【{}】中获取用户名时，出现了异常。", url, e);
-    }
-  }
-
-  /**
-   * <B>方法名称：getSpringMVCInfo</B>
-   * <B>概要说明：获取SpringMVC信息</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月12日 16:05:24
-   * @Param [span, jsonObject, linkedList]
-   **/
-  private void getSpringMvcInfo(Span span, ObjectNode jsonObject, List<String> linkedList) {
-    List<KeyValue> tagsList = span.getTags();
-    for (KeyValue keyValue : tagsList) {
-      if (keyValue.getKey().equals(Const.URL)) {
-        String url = keyValue.getValue();
-        jsonObject.put(Const.URL, url);
-        linkedList.add(jsonObject.toString());
-      }
-    }
-  }
-
-  /**
-   * <B>方法名称：insertSegment2</B>
-   * <B>概要说明：将segment数据插入到数据库中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月23日 10:05:54
-   * @Param [segment]
-   **/
-  private void insertSegmentBySingle(SegmentDo segment) {
-    int insertResult = segmentDao.insertSelective(segment);
-    if (1 != insertResult) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegmentBySingle()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
-    }
-  }
-
-  /**
-   * <B>方法名称：setUserNameTokenGlobalTraceIdToLocalMemory </B>
-   * <B>概要说明：将userName、token，与globalTraceId关联起来 </B>
-   * 注：userName与token是等价的。当用户第一次登录时，如果用户校验成功，那么下次用户再访问其他接口时，会使用token来代替用户名。
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年05月23日 10:05:22
-   * @Param [segment]
-   **/
-  private void setUserNameTokenGlobalTraceIdToLocalMemory(SegmentDo segment) {
-    String globalTraceId = segment.getGlobalTraceId();
-    // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
-    String segmentUserName = segment.getUserName();
-    String segmentToken = segment.getToken();
-    String userName = null;
-    if (StringUtil.isBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      // 当用户名和token都为null，但全局追踪id不为空；
-      // 首先根据globalTraceId获取userName；
-      userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
-      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        segment.setUserName(userName);
-      }
-
-      // 首先根据globalTraceId获取token；
-      String token = MsCaffeine.getTokenByGlobalTraceId(globalTraceId);
-      if (StringUtil.isNotBlank(token)) {
-        // 首先根据 token 获取 userName；
-        userName = MsCaffeine.getUserNameByToken(token);
-        if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-          segment.setUserName(userName);
-          MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
-        }
-      }
-    } else if (StringUtil.isBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
-      // 当用户名为null，但token和全局追踪id不为空；
-      userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
-      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        MsCaffeine.putUserNameByToken(segmentToken, userName);
-        segment.setUserName(userName);
-      } else {
-        userName = MsCaffeine.getUserNameByToken(segmentToken);
-        if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-          segment.setUserName(userName);
-          MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
-        }
-      }
-    } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isNotBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      // 当用户名、token和全局追踪id都不为空；这时候，就可以把三个map补全了。2022-05-24 15:48:15
-      MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
-      MsCaffeine.putTokenByGlobalTraceId(globalTraceId, segmentToken);
-      MsCaffeine.putUserNameByToken(segmentToken, segmentUserName);
-    } else if (StringUtil.isNotBlank(segmentUserName) && StringUtil.isBlank(segmentToken) && StringUtil.isNotBlank(globalTraceId)) {
-      MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, segmentUserName);
-    } else {
-      log.error("# SegmentConsumeServiceImpl.setUserNameTokenGlobalTraceIdToLocalMemory() # 出现异常情况了。用户名、token和全局追踪id都为空。");
-    }
-  }
-
-  /**
-   * <B>方法名称：insertSegment</B>
-   * <B>概要说明：将原始的用户访问行为信息插入到表中</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年08月23日 14:08:17
-   * @Param [segment, segmentObject, parentSegmentId]
-   **/
-  private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
-    // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
-    if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
-      return;
-    }
-
-    int insertResult = segmentDao.insertSelective(segment);
-    if (1 != insertResult) {
-      log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
-    }
-  }
-
-  private List<Span> buildSpanList(SegmentObject segmentObject, SegmentDo segmentDo) {
-    List<Span> spans = new ArrayList<>();
-
-    List<SpanObject> spansList = segmentObject.getSpansList();
-    if (null != spansList && 0 < spansList.size()) {
-      segmentDo.setSpans(spansList.toString());
-    }
-    for (SpanObject spanObject : spansList) {
-      String operationName = spanObject.getOperationName();
-
-      // 忽略掉不需要的链路信息；2022-06-28 14:18:20
-      Boolean flag = ignoreMethod(operationName);
-      if (true == flag) {
-        continue;
-      }
-
-      // 构建span；2022-09-20 14:30:47
-      doBuildSpan(segmentObject, spanObject, spans);
-    }
-
-    return spans;
-  }
-
-  /**
-   * <B>方法名称：doBuildSpan</B>
-   * <B>概要说明：构建span</B>
-   * @Author zm
-   * @Date 2022年09月20日 14:09:43
-   * @Param [segmentObject, spanObject, spans]
-   * @return void
-   **/
-  private void doBuildSpan(SegmentObject segmentObject, SpanObject spanObject, List<Span> spans) {
-    String operationName = spanObject.getOperationName();
-    Span span = new Span();
-    span.setUserName(spanObject.getUserName());
-    span.setToken(spanObject.getToken());
-
-    span.setTraceId(segmentObject.getTraceId());
-    span.setSegmentId(segmentObject.getTraceSegmentId());
-    span.setSpanId(spanObject.getSpanId());
-    span.setParentSpanId(spanObject.getParentSpanId());
-    span.setStartTime(spanObject.getStartTime());
-    span.setEndTime(spanObject.getEndTime());
-    span.setError(spanObject.getIsError());
-    span.setLayer(spanObject.getSpanLayer().name());
-    span.setType(spanObject.getSpanType().name());
-
-    String segmentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getSpanId();
-    span.setSegmentSpanId(segmentSpanId);
-
-    String segmentParentSpanId = segmentObject.getTraceSegmentId() + Const.SEGMENT_SPAN_SPLIT + spanObject.getParentSpanId();
-    span.setSegmentParentSpanId(segmentParentSpanId);
-
-    span.setPeer(spanObject.getPeer());
-
-    span.setEndpointName(operationName);
-
-    span.setServiceCode(segmentObject.getService());
-    span.setServiceInstanceName(segmentObject.getServiceInstance());
-
-    String component = ComponentsDefine.getComponentMap().get(spanObject.getComponentId());
-    if (!StringUtil.isBlank(component)) {
-      span.setComponent(component);
-    }
-
-    spanObject.getRefsList().forEach(reference -> {
-      Ref ref = new Ref();
-      ref.setTraceId(reference.getTraceId());
-      ref.setParentSegmentId(reference.getParentTraceSegmentId());
-
-      switch (reference.getRefType()) {
-        case CrossThread:
-          ref.setType(RefType.CROSS_THREAD);
-          break;
-        case CrossProcess:
-          ref.setType(RefType.CROSS_PROCESS);
-          break;
-      }
-      ref.setParentSpanId(reference.getParentSpanId());
-
-      span.setSegmentParentSpanId(
-        ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
-
-      span.getRefs().add(ref);
-    });
-
-    spanObject.getTagsList().forEach(tag -> {
-      KeyValue keyValue = new KeyValue();
-      keyValue.setKey(tag.getKey());
-      keyValue.setValue(tag.getValue());
-      span.getTags().add(keyValue);
-    });
-
-    spanObject.getLogsList().forEach(log -> {
-      LogEntity logEntity = new LogEntity();
-      logEntity.setTime(log.getTime());
-
-      log.getDataList().forEach(data -> {
-        KeyValue keyValue = new KeyValue();
-        keyValue.setKey(data.getKey());
-        keyValue.setValue(data.getValue());
-        logEntity.getData().add(keyValue);
-      });
-
-      span.getLogs().add(logEntity);
-    });
-
-    spans.add(span);
-  }
-
-  /**
-   * <B>方法名称：setUserNameAndTokenFromSpan</B>
-   * <B>概要说明：从span中获取用户名和token</B>
-   *
-   * @return com.mingshi.skyflying.common.domain.SegmentDo
-   * @Author zm
-   * @Date 2022年07月12日 10:07:33
-   * @Param [spanList, segment]
-   **/
-  private SegmentDo setUserNameAndTokenFromSpan(List<Span> spanList, SegmentDo segment) {
-    try {
-      if (null == segment) {
-        segment = new SegmentDo();
-      }
-      if (null == spanList && 0 == spanList.size()) {
         return segment;
-      }
-      Span span = spanList.get(spanList.size() - 1);
-      segment.setOperationName(span.getEndpointName());
-      segment.setRequestStartTime(DateTimeUtil.longToDate(span.getStartTime()));
-
-      if (StringUtil.isNotBlank(segment.getUserName()) && StringUtil.isNotBlank(segment.getToken())) {
-        return segment;
-      }
-      String userName = span.getUserName();
-      String token = span.getToken();
-      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        segment.setUserName(userName);
-      }
-      if (StringUtil.isNotBlank(token)) {
-        segment.setToken(token);
-      }
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSpan() # 从Span实例中获取用户名和token时，出现了异常。", e);
     }
-    return segment;
-  }
 
-  /**
-   * <B>方法名称：setUserNameAndTokenAndIpFromSegmentObject</B>
-   * <B>概要说明：从SegmentObject中获取用户名、token和ip</B>
-   *
-   * @return com.mingshi.skyflying.common.domain.SegmentDo
-   * @Author zm
-   * @Date 2022年07月12日 10:07:59
-   * @Param [spanList, segment]
-   **/
-  private SegmentDo setUserNameAndTokenAndIpFromSegmentObject(HashSet<String> userHashSet, SegmentDo segment, SegmentObject segmentObject) {
-    try {
-      if (null == segment) {
-        segment = new SegmentDo();
-      }
+    /**
+     * <B>方法名称：setUserNameAndTokenAndIpFromSegmentObject</B>
+     * <B>概要说明：从SegmentObject中获取用户名、token和ip</B>
+     *
+     * @return com.mingshi.skyflying.common.domain.SegmentDo
+     * @Author zm
+     * @Date 2022年07月12日 10:07:59
+     * @Param [spanList, segment]
+     **/
+    private SegmentDo setUserNameAndTokenAndIpFromSegmentObject(HashSet<String> userHashSet, SegmentDo segment, SegmentObject segmentObject) {
+        try {
+            if (null == segment) {
+                segment = new SegmentDo();
+            }
 
-      // 获取用户名和token；2022-07-12 10:04:05
-      String userName = segmentObject.getUserName();
-      if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
-        segment.setUserName(userName);
-      }
-      if (StringUtil.isNotBlank(userName)) {
-        Boolean userIsExisted = InformationOverviewSingleton.userIsExisted(userName);
-        if (!userIsExisted) {
-          userHashSet.add(userName);
+            // 获取用户名和token；2022-07-12 10:04:05
+            String userName = segmentObject.getUserName();
+            if (StringUtil.isNotBlank(userName) && StringUtil.isBlank(segment.getUserName())) {
+                segment.setUserName(userName);
+            }
+            if (StringUtil.isNotBlank(userName)) {
+                Boolean userIsExisted = InformationOverviewSingleton.userIsExisted(userName);
+                if (!userIsExisted) {
+                    userHashSet.add(userName);
+                }
+            }
+
+            String token = segmentObject.getToken();
+            if (StringUtil.isNotBlank(token)) {
+                segment.setToken(token);
+            }
+
+            String ip = segmentObject.getIp();
+            if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
+                segment.setIp(ip);
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
         }
-      }
-
-      String token = segmentObject.getToken();
-      if (StringUtil.isNotBlank(token)) {
-        segment.setToken(token);
-      }
-
-      String ip = segmentObject.getIp();
-      if (StringUtil.isNotBlank(ip) && StringUtil.isBlank(segment.getIp())) {
-        segment.setIp(ip);
-      }
-    } catch (Exception e) {
-      log.error("# SegmentConsumeServiceImpl.setUserNameAndTokenFromSegmentObject() # 从SegmentObject实例中获取用户名和token时，出现了异常。", e);
+        return segment;
     }
-    return segment;
-  }
 }
 

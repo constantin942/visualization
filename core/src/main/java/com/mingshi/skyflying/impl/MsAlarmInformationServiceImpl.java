@@ -19,6 +19,7 @@ import com.mingshi.skyflying.service.MsAlarmInformationService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
@@ -174,6 +175,7 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateAnomalyDetectionInfos(@RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
         //更新数据
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {

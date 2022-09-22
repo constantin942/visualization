@@ -69,7 +69,6 @@ public class AnomalyDetectionBusiness {
     private final String NIGHT = "night";
 
 
-
     /**
      * 判断是否告警-库表维度
      */
@@ -163,31 +162,37 @@ public class AnomalyDetectionBusiness {
     public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
-            if (segmentDetailDo.getUserName() == null) return;
-            //第一次访问距今是否在画像周期内
-            String userName = segmentDetailDo.getUserName();
-            if (inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
-                continue;
-            }
-            String time = segmentDetailDo.getStartTime();
-            String interval = getInterval(time);
-            if (interval == null || interval.length() == 0) {
-                log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                        , time, segmentDetailDo.getGlobalTraceId());
-                return;
-            }
-            Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
-            if (rateByInterVal == null) {
-                //没有用户画像
-                msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
-            } else {
-                //有用户画像
-                if (rateByInterVal < portraitConfig.getRuleTimeRate()) {
-                    msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
-                }
+            userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList, portraitConfig);
+        }
+    }
+
+    public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
+        if (segmentDetailDo.getUserName() == null) return;
+        if(portraitConfig == null) {
+            portraitConfig = portraitConfigMapper.selectOne();
+        }
+        //第一次访问距今是否在画像周期内
+        String userName = segmentDetailDo.getUserName();
+        if (inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
+            return;
+        }
+        String time = segmentDetailDo.getStartTime();
+        String interval = getInterval(time);
+        if (interval == null || interval.length() == 0) {
+            log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
+                    , time, segmentDetailDo.getGlobalTraceId());
+            return;
+        }
+        Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
+        if (rateByInterVal == null) {
+            //没有用户画像
+            msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
+        } else {
+            //有用户画像
+            if (rateByInterVal < portraitConfig.getRuleTimeRate()) {
+                msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM));
             }
         }
-
     }
 
 
@@ -256,7 +261,6 @@ public class AnomalyDetectionBusiness {
     }
 
 
-
     /**
      * 更新用户画像
      */
@@ -293,4 +297,15 @@ public class AnomalyDetectionBusiness {
         return portraitConfigMapper.selectOne();
     }
 
+    /**
+     * 判断是否告警
+     */
+    public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+        if (enableTableRule) {
+            userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        }
+        if (enableTimeRule) {
+            userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        }
+    }
 }
