@@ -19,6 +19,7 @@ import com.mingshi.skyflying.service.MsAlarmInformationService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -173,13 +174,12 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     }
 
     @Override
-    public ServerResponse<String> updateAnomalyDetectionInfos(List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+    public void updateAnomalyDetectionInfos(@RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
         //更新数据
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {
             updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
         }
         anomalyDetectionBusiness.updatePortrait();
-        return ServerResponse.createBySuccess();
     }
 
     /**

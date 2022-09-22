@@ -422,11 +422,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
   }
 
   @Override
-  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String userName) {
+  public ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String userName) {
     PortraitConfig config = anomalyDetectionBusiness.getConfig();
+    Integer ruleTableCount = config.getRuleTableCount();
     Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
     queryMap.put(Const.USER_NAME, userName);
-    List<UserUsualAndUnusualVisitedData> list = new LinkedList<>();
+    List<UserUsualAndUnusualVisitedData> highList = new LinkedList<>();
+    List<UserUsualAndUnusualVisitedData> lowList = new LinkedList<>();
+    HashMap<String, List<UserUsualAndUnusualVisitedData>> resMap = new HashMap<>();
+    resMap.put("high", highList);
+    resMap.put("low", lowList);
     String key = Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName;
     Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
     // 从有序集合zset中获取最频繁访问的数据表；2022-07-22 10:01:52
@@ -449,11 +454,15 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             }
           }
           userUsualAndUnusualVisitedData.setVisitedData(value);
-          list.add(userUsualAndUnusualVisitedData);
+          if(userUsualAndUnusualVisitedData.getVisitedCount() < ruleTableCount) {
+            lowList.add(userUsualAndUnusualVisitedData);
+          } else {
+            highList.add(userUsualAndUnusualVisitedData);
+          }
         }
       }
     }
-    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
+    return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, resMap);
   }
 
   @Override

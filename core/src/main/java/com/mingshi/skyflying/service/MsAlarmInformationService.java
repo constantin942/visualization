@@ -25,5 +25,5 @@ public interface MsAlarmInformationService extends ParentService<MsAlarmInformat
      * @Date 2022年07月25日 13:07:17
      * @Param [userName, matchRuleId, originalTime]
      **/
-    ServerResponse<String> updateAnomalyDetectionInfos(List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos);
+    void updateAnomalyDetectionInfos(List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos);
 }

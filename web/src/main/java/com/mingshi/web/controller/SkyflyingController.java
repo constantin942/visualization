@@ -409,9 +409,11 @@ public class SkyflyingController {
    * @Date 2022年07月25日 13:07:16
    * @Param [pageNo, pageSize]
    **/
+  @ResponseBody
   @PostMapping(value = "/updateAnomalyDetectionInfo")
-  public ServerResponse<String> updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
-    return msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
+  public ServerResponse updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+    msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
+    return ServerResponse.createBySuccess();
   }
 
   /**
@@ -809,7 +811,7 @@ public class SkyflyingController {
 
   @ResponseBody
   @GetMapping(value = "/getUserUsualAndUnusualData")
-  public ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName) {
+  public ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String applicationUserName) {
     return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
   }
 

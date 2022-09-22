@@ -66,7 +66,7 @@
       group by user_name,match_rule_id,original_time ) as t1
   </select>
   <select id="selectAllByGroupByUserName" parameterType="java.util.Map" resultType="java.util.Map">
-    select user_name as userName,match_rule_id as matchRuleId, max(original_time), count(id) as matchCount
+    select user_name as userName,match_rule_id as matchRuleId, max(original_time) as original_time, count(id) as matchCount
     from ms_alarm_information
     where update_user_portrait = 0  and is_delete = 0
     group by user_name,match_rule_id

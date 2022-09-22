@@ -4,6 +4,7 @@ import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 public interface SegmentDetailService extends ParentService<SegmentDetailDo, Long> {
 
@@ -25,7 +26,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) throws ParseException;
 
-  ServerResponse<List<UserUsualAndUnusualVisitedData>> getUserUsualAndUnusualData(String applicationUserName);
+  ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String applicationUserName);
 
   ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, String endTime);
 

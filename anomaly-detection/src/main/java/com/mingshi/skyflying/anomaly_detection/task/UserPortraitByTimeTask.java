@@ -10,6 +10,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -26,6 +27,8 @@ import java.math.RoundingMode;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @Author: 唐郑翔
@@ -248,7 +251,15 @@ public class UserPortraitByTimeTask {
             log.error("提取时间失败----{}", segmentDetailDo.getStartTime());
             return;
         }
-        int hour = Integer.parseInt(segmentDetailDo.getStartTime());
+        Pattern pattern = Pattern.compile("\\d+-\\d+-\\d+\\s+(\\d+):");
+        Matcher m = pattern.matcher(segmentDetailDo.getStartTime());
+        if (!m.find()) {
+            log.error("提取时间异常{}", segmentDetailDo.getStartTime());
+            throw new AiitException("提取时间异常");
+
+        }
+        int hour = Integer.parseInt(m.group(1));
+//        int hour = Integer.parseInt(String.valueOf(Date.parse(segmentDetailDo.getStartTime())));
         CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTime = coarseSegmentDetailOnTimeMapper.selectOneByNameAndTime(username, time);
         if (coarseSegmentDetailOnTime == null) {
             // 没有该用户当天粗粒度信息
@@ -379,7 +390,7 @@ public class UserPortraitByTimeTask {
         Double nightRate = getRateByInterVal(username, NIGHT) == null ? 0.33 : getRateByInterVal(username, NIGHT);
         map.put("morning", morningRate);
         map.put("afternoon", afternoonRate);
-        map.put("nightRate", nightRate);
+        map.put("night", nightRate);
         return map;
     }
 }

@@ -364,8 +364,8 @@
             <if test="updateTime != null">
                 update_time = #{updateTime,jdbcType=TIMESTAMP},
             </if>
-            <if test="isDelete != null">
-                is_delete = #{isDelete,jdbcType=TINYINT},
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=TINYINT},
             </if>
         </set>
         where id = #{id,jdbcType=INTEGER}
@@ -401,7 +401,7 @@
             time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
             create_time               = #{createTime,jdbcType=TIMESTAMP},
             update_time               = #{updateTime,jdbcType=TIMESTAMP},
-            is_delete                 = #{isDelete,jdbcType=TINYINT}
+            is_deleted                 = #{isDelete,jdbcType=TINYINT}
         where id = #{id,jdbcType=INTEGER}
     </update>
 
