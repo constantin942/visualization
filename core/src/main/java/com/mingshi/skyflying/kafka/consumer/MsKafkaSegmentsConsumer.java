@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.kafka.consumer;
 
-import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.apache.kafka.common.utils.Bytes;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -175,21 +173,22 @@ public class MsKafkaSegmentsConsumer extends Thread {
         Map<TopicPartition, OffsetAndMetadata> offsetsMap = offsetsLinkedBlockingQueue.poll();
         if (null != offsetsMap && 0 < offsetsMap.size()) {
 
-          Iterator<TopicPartition> iterator = offsetsMap.keySet().iterator();
-          while (iterator.hasNext()) {
-            TopicPartition key = iterator.next();
-            String topic = key.topic();
-            int partition = key.partition();
-            OffsetAndMetadata value = offsetsMap.get(key);
-            long offset = value.offset();
-            String item = topic + ":" + partition + ":" + offset;
-            Object hget = redisPoolUtil.hget(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item);
-            if (null != hget) {
-              log.error("根据 key = 【{}】，在表 = 【{}】中获取到了已提交过的offset = 【{}】。", item, Const.HASH_TEST_GRACEFUL_SHUTDOWN, offsetsMap);
-            } else {
-              redisPoolUtil.hset(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item, "existed");
-            }
-          }
+          // 测试是否重复消费的代码，已测试完毕。可以注销掉了。出现重复消费的场景是：Kafka服务端进行了rebalance。
+          // Iterator<TopicPartition> iterator = offsetsMap.keySet().iterator();
+          // while (iterator.hasNext()) {
+          //   TopicPartition key = iterator.next();
+          //   String topic = key.topic();
+          //   int partition = key.partition();
+          //   OffsetAndMetadata value = offsetsMap.get(key);
+          //   long offset = value.offset();
+          //   String item = topic + ":" + partition + ":" + offset;
+          //   Object hget = redisPoolUtil.hget(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item);
+          //   if (null != hget) {
+          //     log.error("根据 key = 【{}】，在表 = 【{}】中获取到了已提交过的offset = 【{}】。", item, Const.HASH_TEST_GRACEFUL_SHUTDOWN, offsetsMap);
+          //   } else {
+          //     redisPoolUtil.hset(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item, "existed");
+          //   }
+          // }
 
           // 优先提交offset；
           aiitKafkaConsumer.commitSync(offsetsMap);
