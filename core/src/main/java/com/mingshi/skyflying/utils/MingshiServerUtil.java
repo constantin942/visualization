@@ -135,13 +135,13 @@ public class MingshiServerUtil {
       if (null != map && 0 < map.size()) {
         jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
       }
-      if (!segmentDetaiDolList.isEmpty()) {
+      if (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
         jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
       }
-      if (!segmentDetaiUserNameIsNullDolList.isEmpty()) {
+      if (null != segmentDetaiUserNameIsNullDolList && !segmentDetaiUserNameIsNullDolList.isEmpty()) {
         jsonObject.put(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST, JsonUtil.obj2String(segmentDetaiUserNameIsNullDolList));
       }
-      if (!msAlarmInformationDoList.isEmpty()) {
+      if (null != msAlarmInformationDoList && !msAlarmInformationDoList.isEmpty()) {
         jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
       }
       if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
@@ -158,7 +158,7 @@ public class MingshiServerUtil {
         LinkedBlockingQueue linkedBlockingQueue = IoThreadBatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue(gracefulShutdown, reactorIoThreadThreadCount, 10, mingshiServerUtil, partition);
         if (null != linkedBlockingQueue) {
           if (linkedBlockingQueue.size() == IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize()) {
-            log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
+            // log.error("将调用链信息放入到BatchInsertByLinkedBlockingQueue队列中，队列满了，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), IoThreadBatchInsertByLinkedBlockingQueue.getQueueAllSize());
             String key = DateTimeUtil.dateToStr(new Date());
             if (!linkedBlockingQueue.isEmpty()) {
               redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + queueIndex), key, Double.valueOf(linkedBlockingQueue.size()));
