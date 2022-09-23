@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.domain;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Tolerate;
@@ -13,6 +14,7 @@ import java.util.Date;
  */
 @Data
 @Builder
+@TableName("user_portrait_by_table")
 public class UserPortraitByTableDo {
     private Integer id;
 

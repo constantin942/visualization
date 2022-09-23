@@ -53,4 +53,10 @@ public class AnomalyDetectionInfoBo {
      */
     @NotNull(message = "全局跟踪id必传")
     private String globalTraceId;
+
+    /**
+     * 是否更新画像
+     */
+    @NotNull(message = "是否更新画像字段未传")
+    private Integer updateUserPortrait;
 }

@@ -23,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <B>方法名称：MsAlarmInformationServiceImpl</B>
@@ -157,18 +154,11 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
      * @Date 2022年07月25日 13:07:17
      * @Param [userName, matchRuleId, originalTime]
      */
+    @Transactional(rollbackFor = Exception.class)
     public void updateAnomalyDetectionInfo(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
-        if (!anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_DELETE) &&
-                !anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
-            throw new AiitException("处置字段非法，处置字段要么是delete，要么是update");
-        }
-
-        // 仅仅删除这条规则；2022-07-25 14:16:26
-        if (anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_DELETE)) {
-            deleteAnomalyDetection(anomalyDetectionInfoBo.getId());
-        } else if (anomalyDetectionInfoBo.getFlag().equals(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
-            // 逻辑删除告警信息；
-            updateAnomalyDetection(anomalyDetectionInfoBo.getId());
+        // 逻辑删除告警信息；
+        deleteAnomalyDetection(anomalyDetectionInfoBo.getId());
+        if(Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT.equals(anomalyDetectionInfoBo.getUpdateUserPortrait())) {
             // 插入粗粒度表
             anomalyDetectionBusiness.insertCoarse(anomalyDetectionInfoBo);
         }
@@ -181,7 +171,10 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {
             updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
         }
-        anomalyDetectionBusiness.updatePortrait();
+        //更新画像
+        if(Objects.equals(anomalyDetectionInfoBos.get(0).getUpdateUserPortrait(), Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
+            anomalyDetectionBusiness.updatePortrait();
+        }
     }
 
     /**

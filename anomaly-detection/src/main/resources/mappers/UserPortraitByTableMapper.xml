@@ -34,7 +34,7 @@
 
     <update id="updateByPrimaryKeySelective"
             parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo">
-        update coarse_segment_detail_on_time
+        update user_portrait_by_table
         <set>
             <if test="username != null">
                 username = #{username,jdbcType=VARCHAR},

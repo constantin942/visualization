@@ -14,6 +14,7 @@ import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
+import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -274,6 +275,7 @@ public class AnomalyDetectionBusiness {
             userPortraitByTableTask.updatePortrait();
         } catch (Exception e) {
             log.error("更新用户画像失败");
+            throw new AiitException("更新用户画像失败");
         } finally {
             lock.unlock();
         }

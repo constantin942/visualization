@@ -262,11 +262,11 @@ public class Const {
   /**
    * 告警信息删除；
    */
-  public static final String ANOMALY_DETECTION_INFO_DELETE = "delete";
+  public static final Integer ANOMALY_DETECTION_INFO_DELETE = 0;
   /**
    * 更新用户画像；
    */
-  public static final String ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT = "update";
+  public static final Integer ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT = 1;
 
   /**
    * 记录每一天采集到多少条信息；2022-07-18 16:41:53  AllRecentSevenDays
