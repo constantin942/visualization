@@ -301,11 +301,15 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警
      */
     public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (enableTableRule) {
+        try {
+          if (enableTableRule) {
             userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-        }
-        if (enableTimeRule) {
+          }
+          if (enableTimeRule) {
             userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+          }
+        } catch (Exception e) {
+          log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
     }
 }
