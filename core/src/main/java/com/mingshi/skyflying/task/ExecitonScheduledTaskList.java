@@ -40,8 +40,6 @@ public class ExecitonScheduledTaskList {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
   @Resource
-  private UserPortraitByVisitedTimeMapper userPortraitByVisitedTimeMapper;
-  @Resource
   private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   /**

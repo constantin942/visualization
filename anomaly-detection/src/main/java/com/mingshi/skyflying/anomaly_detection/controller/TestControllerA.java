@@ -74,4 +74,9 @@ public class TestControllerA {
     public void updatePortrait() {
         timeTask.updatePortrait();
     }
+
+    @GetMapping("getFrequentList")
+    public void getFrequentList(){
+        anomalyDetectionBusiness.getFrequentList("admin");
+    }
 }

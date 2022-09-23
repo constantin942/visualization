@@ -14,7 +14,6 @@ import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsAlarmInformationMapper;
 import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
-import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
 import com.mingshi.skyflying.service.MsAlarmInformationService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +38,6 @@ import java.util.*;
 public class MsAlarmInformationServiceImpl implements MsAlarmInformationService {
     @Resource
     private MsAlarmInformationMapper msAlarmInformationMapper;
-    @Resource
-    private UserPortraitByVisitedTimeMapper userPortraitByVisitedTimeMapper;
-    @Resource
-    private MingshiServerUtil mingshiServerUtil;
-    @Resource
-    private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 

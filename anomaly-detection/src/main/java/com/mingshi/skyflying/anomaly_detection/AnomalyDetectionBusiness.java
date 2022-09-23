@@ -3,12 +3,15 @@ package com.mingshi.skyflying.anomaly_detection;
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
+import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
@@ -53,6 +56,13 @@ public class AnomalyDetectionBusiness {
     RedissonClient redissonClient;
     @Resource
     PortraitConfigMapper portraitConfigMapper;
+
+    @Resource
+    UserPortraitByTableMapper tableMapper;
+
+    private static final String TABLE_NAME = "table_name";
+
+    private static final String COUNTS = "counts";
 
     /**
      * Redis分布式锁Key
@@ -165,7 +175,7 @@ public class AnomalyDetectionBusiness {
 
     public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
         if (segmentDetailDo.getUserName() == null) return;
-        if(portraitConfig == null) {
+        if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
         }
         //第一次访问距今是否在画像周期内
@@ -300,14 +310,49 @@ public class AnomalyDetectionBusiness {
      */
     public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
-          if (enableTableRule) {
-            userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-          }
-          if (enableTimeRule) {
-            userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-          }
+            if (enableTableRule) {
+                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            }
+            if (enableTimeRule) {
+                userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            }
         } catch (Exception e) {
-          log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
+            log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
     }
+
+    /**
+     * 获取用户周期内常用表
+     */
+    public List<UserUsualAndUnusualVisitedData> getFrequentList(String userName) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        List<Map<String, String>> list = tableMapper.selectFrequntList(userName, portraitConfig.getRuleTablePeriod(), portraitConfig.getRuleTableCount());
+        List<UserUsualAndUnusualVisitedData> resList = new ArrayList<>();
+        for (Map<String, String> stringIntegerMap : list) {
+            UserUsualAndUnusualVisitedData unusualVisitedData = new UserUsualAndUnusualVisitedData();
+            unusualVisitedData.setVisitedData(stringIntegerMap.get(TABLE_NAME));
+            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(COUNTS))));
+            unusualVisitedData.setUserName(userName);
+            resList.add(unusualVisitedData);
+        }
+        return resList;
+    }
+
+    /**
+     * 获取用户周期内不常用表
+     */
+    public List<UserUsualAndUnusualVisitedData> getUnFrequentList(String userName) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        List<Map<String, String>> list = tableMapper.selectUnFrequntList(userName, portraitConfig.getRuleTablePeriod(), portraitConfig.getRuleTableCount());
+        List<UserUsualAndUnusualVisitedData> resList = new ArrayList<>();
+        for (Map<String, String> stringIntegerMap : list) {
+            UserUsualAndUnusualVisitedData unusualVisitedData = new UserUsualAndUnusualVisitedData();
+            unusualVisitedData.setVisitedData(stringIntegerMap.get(TABLE_NAME));
+            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(COUNTS))));
+            unusualVisitedData.setUserName(userName);
+            resList.add(unusualVisitedData);
+        }
+        return resList;
+    }
+
 }

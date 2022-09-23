@@ -13,7 +13,8 @@
     </insert>
     <insert id="insertOne" parameterType="com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo">
         insert into user_portrait_by_table (username, table_name, count, create_time)
-        values (#{username,jdbcType=VARCHAR}, #{tableName,jdbcType=VARCHAR}, #{count,jdbcType=INTEGER}, #{createTime,jdbcType=DATE});
+        values (#{username,jdbcType=VARCHAR}, #{tableName,jdbcType=VARCHAR}, #{count,jdbcType=INTEGER},
+                #{createTime,jdbcType=DATE});
     </insert>
 
     <select id="selectPeriodInfo" parameterType="integer"
@@ -29,6 +30,20 @@
         where #{username,jdbcType=VARCHAR} = username
           and 1 > to_days(#{time,jdbcType=DATE}) - TO_DAYS(`create_time`)
           and #{tableName,jdbcType=VARCHAR} = table_name limit 1;
+    </select>
+    <select id="selectFrequntList" resultType="java.util.Map">
+        select table_name,sum(count) as counts
+        from user_portrait_by_table
+        where #{username,jdbcType=VARCHAR} = username
+          and #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        group by table_name having counts >= #{threshold,jdbcType=INTEGER}
+    </select>
+    <select id="selectUnFrequntList" resultType="java.util.Map">
+        select table_name,sum(count) as counts
+        from user_portrait_by_table
+        where #{username,jdbcType=VARCHAR} = username
+          and #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        group by table_name having #{threshold,jdbcType=INTEGER} > counts
     </select>
 
 

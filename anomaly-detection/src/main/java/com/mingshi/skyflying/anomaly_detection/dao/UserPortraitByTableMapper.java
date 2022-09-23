@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface UserPortraitByTableMapper {
     void insertBatch(List<UserPortraitByTableDo> userPortraitByTableDoList);
@@ -18,4 +19,10 @@ public interface UserPortraitByTableMapper {
                                               @Param("tableName") String tableName);
 
     void updateByPrimaryKeySelective(UserPortraitByTableDo userPortraitByTable);
+
+    List<Map<String, String>> selectFrequntList(@Param("username") String userName, @Param("period") Integer ruleTablePeriod
+            , @Param("threshold") Integer threshold);
+
+    List<Map<String, String>> selectUnFrequntList(@Param("username") String userName, @Param("period") Integer ruleTablePeriod
+            , @Param("threshold") Integer threshold);
 }

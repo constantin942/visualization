@@ -577,7 +577,7 @@
           parameterType="java.lang.String">
     select ms_table_name as visited_data, count(*) as visited_count, user_name
     from ms_segment_detail
-    where ms_table_name = #{tableName}
+    where ms_table_name = #{tableName,jdbcType=VARCHAR}
       and user_name is not null
     group by user_name
     order by count(*) desc limit 1;
