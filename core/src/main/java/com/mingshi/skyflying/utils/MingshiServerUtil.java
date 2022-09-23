@@ -3,7 +3,6 @@ package com.mingshi.skyflying.utils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
@@ -230,36 +229,36 @@ public class MingshiServerUtil {
     }
   }
 
-  /**
-   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
-   * <B>概要说明：同步用户访问过的时间到本地内存</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月25日 17:07:11
-   * @Param [userPortraitByVisitedTimeDo]
-   **/
-  public void synchronizationUserPortraitByVisitedTimeToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
-    String userName = userPortraitByVisitedTimeDo.getUserName();
-    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
-    Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */> map = userPortraitByVisitedTimeMap.get(userName);
-    Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
-    Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
-    Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
-    if (null == map) {
-      map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-      userPortraitByVisitedTimeMap.put(userName, map);
-    }
-    if (null != forenoonCount) {
-      map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), forenoonCount);
-    }
-    if (null != afternoonCount) {
-      map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), afternoonCount);
-    }
-    if (null != nightCount) {
-      map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), nightCount);
-    }
-  }
+//  /**
+//   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
+//   * <B>概要说明：同步用户访问过的时间到本地内存</B>
+//   *
+//   * @return void
+//   * @Author zm
+//   * @Date 2022年07月25日 17:07:11
+//   * @Param [userPortraitByVisitedTimeDo]
+//   **/
+//  public void synchronizationUserPortraitByVisitedTimeToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
+//    String userName = userPortraitByVisitedTimeDo.getUserName();
+//    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
+//    Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */> map = userPortraitByVisitedTimeMap.get(userName);
+//    Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
+//    Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
+//    Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
+//    if (null == map) {
+//      map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//      userPortraitByVisitedTimeMap.put(userName, map);
+//    }
+//    if (null != forenoonCount) {
+//      map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), forenoonCount);
+//    }
+//    if (null != afternoonCount) {
+//      map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), afternoonCount);
+//    }
+//    if (null != nightCount) {
+//      map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), nightCount);
+//    }
+//  }
 
   /**
    * <B>方法名称：getSqlType</B>

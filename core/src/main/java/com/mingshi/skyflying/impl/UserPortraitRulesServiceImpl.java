@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.impl;
 
 import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTime;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
@@ -9,7 +8,6 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
-import com.mingshi.skyflying.init.rule.LoadUserPortraitFromDb;
 import com.mingshi.skyflying.service.UserPortraitRulesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,8 +29,6 @@ import java.util.Map;
 @Slf4j
 @Service("userPortraitRulesService")
 public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
-    @Resource
-    private LoadUserPortraitFromDb loadUserPortraitFromDb;
     @Resource
     private UserPortraitRulesMapper userPortraitRulesMapper;
     private String PREFIX = "anomaly_detection:enableRule:";
@@ -117,6 +113,12 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
         }
     }
 
+    @Override
+    public void updateRule(Integer ruleId, Integer isDelete) {
+        UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(ruleId);
+        userPortraitRulesMapper.updateByPrimaryKeySelective(userPortraitRulesDo);
+    }
+
     private ServerResponse<String> doUpdateUserPortraitRuleRule(UserPortraitRulesDo userPortraitRulesDo, Integer isDelete) {
         if (isDelete.equals(Const.IS_DELETE_ONE)) {
             // 禁用这条规则；2022-06-16 14:55:51
@@ -144,17 +146,6 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
             log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.noEnableByUserPortraitByVisitedTime() # 把禁用这条规则的状态更新到数据库中失败。");
             return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
         }
-
-        // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
-        String ruleName = userPortraitRulesDo.getRuleName();
-        if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TABLE.getCode())) {
-            AnomylyDetectionSingletonByVisitedTableEveryday.setUserPortraitByVisitedTableEnable(false);
-            AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap().clear();
-        } else if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TIME.getCode())) {
-            AnomylyDetectionSingletonByVisitedTime.setUserPortraitByVisitedTimeEnable(false);
-            AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap().clear();
-        }
-
         return ServerResponse.createBySuccess();
     }
 
@@ -173,16 +164,6 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
             log.error(" # UserPortraitByVisitedVisitedTimeServiceImpl.enableByUserPortraitByVisitedTime() # 把启用这条规则的状态更新到数据库中失败。");
             return ServerResponse.createByErrorMessage("更新数据库操作失败", "");
         }
-
-        Integer ruleId = userPortraitRulesDo.getId();
-        // 数据库操作成功，才将本地内存中的数据删除；2022-06-16 17:29:01
-        String ruleName = userPortraitRulesDo.getRuleName();
-        if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TABLE.getCode())) {
-            loadUserPortraitFromDb.initUserPortraitByVisitedTableEverydayMap(ruleId);
-        } else if (ruleName.equals(ConstantsCode.USER_PORTRAIT_RULE_VISITED_TIME.getCode())) {
-            loadUserPortraitFromDb.initUserPortraitByVisitedTimeMap(ruleId);
-        }
-
         return ServerResponse.createBySuccess();
     }
 

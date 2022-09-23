@@ -10,4 +10,6 @@ public interface UserPortraitRulesService extends ParentService<UserPortraitRule
   ServerResponse<String> updateUserPortraitRule(Integer ruleId, Integer isDelete);
 
     void cacheRule(Integer ruleId, Integer isDelete);
+
+    void updateRule(Integer ruleId, Integer isDelete);
 }

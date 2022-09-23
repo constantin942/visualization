@@ -184,7 +184,6 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
     }
     // 设置规则启用/禁用的状态；2022-06-16 15:20:09
     userPortraitByVisitedTableEverydayDo.setIsDelete(isDelete);
-
     // TODO: 2022/6/16 这里如果要禁用或者启用一条规则，要同时把本地内存中存储的规则执行相同的操作。
     // 比如，一条规则之前都是在运行状态，现在要禁用了，那么需要在内存里删除这条规则。
     // 如果一条规则本来已经禁用了，现在要启用这条规则，那么需要将这条规则从数据库中加载到本地内存中。
@@ -237,6 +236,7 @@ public class UserPortraitByVisitedVisitedTableServiceImpl implements UserPortrai
 
     return ServerResponse.createBySuccess();
   }
+
 
   /**
    * <B>方法名称：updateLocalMemoryAndDb</B>
