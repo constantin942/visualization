@@ -119,7 +119,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
-
             }
 
             HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -470,7 +469,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private String setTableName(String value, MsSegmentDetailDo msSegmentDetailDo) {
         List<String> tableNameList = null;
         String tableName = null;
-        StringBuilder tableNameBuilder = new StringBuilder();
         try {
             // sql类型；
             String sqlType = mingshiServerUtil.getSqlType(value);

@@ -27,7 +27,7 @@ public class UpdateMonitorTableDescHandler implements UpdateOperationRecord {
           stringBuilder.append(Const.COLON);
           stringBuilder.append(jsonNodes.get(Const.TABLE_DESC).asText());
         }
-        operationLog.setOperationDesc(StringUtil.isBlank(tableName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.COMMA, tableName));
+        operationLog.setOperationDesc(StringUtil.isBlank(tableName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, tableName));
       }
     }
   }

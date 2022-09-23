@@ -27,17 +27,17 @@ public class UpdateOperationRecordFactory {
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_MONITOR_TABLE, updateMonitorTableMap);
 
     Map<String, Object> updateMonitorTableaDescMap = new ConcurrentHashMap<>();
-    updateMonitorTableaDescMap.put(Const.TABLE_DESC, "给表（" + Const.COMMA + "）起个中文名字");
+    updateMonitorTableaDescMap.put(Const.TABLE_DESC, "给表（" + Const.POUND_KEY + "）起个中文名字");
     updateMonitorTableaDescMap.put(Const.HANDLER, new UpdateMonitorTableDescHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_MONITOR_TABLE_DESC, updateMonitorTableaDescMap);
 
     Map<String, Object> updateSkywalkingAgentDescMap = new ConcurrentHashMap<>();
-    updateSkywalkingAgentDescMap.put(Const.AGENT_NAME, "给服务（" + Const.COMMA + "）起个中文名字");
+    updateSkywalkingAgentDescMap.put(Const.AGENT_NAME, "给服务（" + Const.POUND_KEY + "）起个中文名字");
     updateSkywalkingAgentDescMap.put(Const.HANDLER, new UpdateSkywalkingAgentHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_SKYWALKING_AGENT, updateSkywalkingAgentDescMap);
 
     Map<String, Object> updateSkywalkingAgentOnAndOffMap = new ConcurrentHashMap<>();
-    updateSkywalkingAgentOnAndOffMap.put(Const.AGENT_SWITCH, "更新探针（" + Const.COMMA + "）状态");
+    updateSkywalkingAgentOnAndOffMap.put(Const.AGENT_SWITCH, "更新探针（" + Const.POUND_KEY + "）状态");
     updateSkywalkingAgentOnAndOffMap.put(Const.HANDLER, new UpdateAgentStatusHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_SKYWALKING_AGENT_STATUS, updateSkywalkingAgentOnAndOffMap);
   }

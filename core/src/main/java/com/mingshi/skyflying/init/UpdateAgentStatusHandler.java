@@ -28,7 +28,7 @@ public class UpdateAgentStatusHandler implements UpdateOperationRecord {
           stringBuilder.append(Const.COLON);
           stringBuilder.append(agentSwitch.equals(Const.AGENT_STATUS_OFF) == true ? Const.AGENT_STATUS_OFF_DESC : Const.AGENT_STATUS_ON_DESC);
         }
-        operationLog.setOperationDesc(StringUtil.isBlank(agentSwitch) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.COMMA, serviceInstance));
+        operationLog.setOperationDesc(StringUtil.isBlank(agentSwitch) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, serviceInstance));
       }
     }
   }

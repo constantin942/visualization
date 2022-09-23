@@ -398,7 +398,7 @@ public class MingshiServerUtil {
         if (StringUtil.isBlank(tableName)) {
           tableName = table;
         } else {
-          tableName = tableName + Const.COMMA + table;
+          tableName = tableName + Const.POUND_KEY + table;
         }
       }
     }

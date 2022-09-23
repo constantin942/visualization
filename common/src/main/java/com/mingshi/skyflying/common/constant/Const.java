@@ -240,7 +240,6 @@ public class Const {
   public static final String SEGMENTS = "segments";
 
   public static final String POUND_KEY = "#";
-  public static final String COMMA = "#";
   public static final String COLON = "：";
   public static final String EN_COMMA = ",";
 

@@ -27,7 +27,7 @@ public class UpdateSkywalkingAgentHandler implements UpdateOperationRecord {
           stringBuilder.append(Const.COLON);
           stringBuilder.append(jsonNodes.get(Const.AGENT_NAME).asText());
         }
-        operationLog.setOperationDesc(StringUtil.isBlank(agentName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.COMMA, agentName));
+        operationLog.setOperationDesc(StringUtil.isBlank(agentName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, agentName));
       }
     }
   }
