@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.task;
 
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
@@ -39,8 +38,6 @@ public class ExecitonScheduledTaskList {
   private MsSegmentDetailDao msSegmentDetailDao;
   @Resource
   private MingshiServerUtil mingshiServerUtil;
-  @Resource
-  private UserPortraitByVisitedTableEverydayMapper userPortraitByVisitedTableEverydayMapper;
 
   /**
    * <B>方法名称：scheduledGetSegmentDetailDo</B>

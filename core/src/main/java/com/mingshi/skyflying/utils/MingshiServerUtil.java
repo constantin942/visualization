@@ -2,7 +2,6 @@ package com.mingshi.skyflying.utils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
@@ -192,42 +191,42 @@ public class MingshiServerUtil {
     return topicPartitionOffsetJson;
   }
 
-  /**
-   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
-   * <B>概要说明：同步用户访问过的表到本地内存</B>
-   *
-   * @return void
-   * @Author zm
-   * @Date 2022年07月25日 17:07:11
-   * @Param [userPortraitByVisitedTimeDo]
-   **/
-  public void synchronizationUserPortraitByVisitedTableToLocalMemory(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
-    String userName = userPortraitByVisitedTableEverydayDo.getUserName();
-    String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
-    String tables = userPortraitByVisitedTableEverydayDo.getVisitedTable();
-    String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
-    Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
-    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap =
-      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
-    if (null != userPortraitByVisitedTableMap) {
-      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>> stringMapMap = userPortraitByVisitedTableMap.get(userName);
-      if (null == stringMapMap) {
-        stringMapMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-        userPortraitByVisitedTableMap.put(userName, stringMapMap);
-      }
-      Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>> tablesMap = stringMapMap.get(tables);
-      if (null == tablesMap) {
-        tablesMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-        stringMapMap.put(tables, tablesMap);
-      }
-      Map<String, Integer> originalTimeMap = tablesMap.get(visitedDate);
-      if (null == originalTimeMap) {
-        originalTimeMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-        tablesMap.put(visitedDate, originalTimeMap);
-      }
-      originalTimeMap.put(dbType, visitedCount);
-    }
-  }
+//  /**
+//   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
+//   * <B>概要说明：同步用户访问过的表到本地内存</B>
+//   *
+//   * @return void
+//   * @Author zm
+//   * @Date 2022年07月25日 17:07:11
+//   * @Param [userPortraitByVisitedTimeDo]
+//   **/
+//  public void synchronizationUserPortraitByVisitedTableToLocalMemory(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
+//    String userName = userPortraitByVisitedTableEverydayDo.getUserName();
+//    String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
+//    String tables = userPortraitByVisitedTableEverydayDo.getVisitedTable();
+//    String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
+//    Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
+//    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap =
+//      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
+//    if (null != userPortraitByVisitedTableMap) {
+//      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>> stringMapMap = userPortraitByVisitedTableMap.get(userName);
+//      if (null == stringMapMap) {
+//        stringMapMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//        userPortraitByVisitedTableMap.put(userName, stringMapMap);
+//      }
+//      Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>> tablesMap = stringMapMap.get(tables);
+//      if (null == tablesMap) {
+//        tablesMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//        stringMapMap.put(tables, tablesMap);
+//      }
+//      Map<String, Integer> originalTimeMap = tablesMap.get(visitedDate);
+//      if (null == originalTimeMap) {
+//        originalTimeMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
+//        tablesMap.put(visitedDate, originalTimeMap);
+//      }
+//      originalTimeMap.put(dbType, visitedCount);
+//    }
+//  }
 
 //  /**
 //   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>

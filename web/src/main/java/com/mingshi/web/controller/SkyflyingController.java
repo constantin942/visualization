@@ -44,8 +44,8 @@ public class SkyflyingController {
   private MsAlarmInformationService msAlarmInformationService;
 //  @Resource
 //  private UserPortraitByVisitedTimeService userPortraitByTimeService;
-  @Resource
-  private UserPortraitByVisitedTableService userPortraitByTableService;
+//  @Resource
+//  private UserPortraitByVisitedTableService userPortraitByTableService;
   @Resource
   private UserPortraitRulesService userPortraitRulesService;
   @Resource
@@ -448,35 +448,35 @@ public class SkyflyingController {
 //    return userPortraitByTimeService.getAllUserPortraitByVisitedTime(userName, pageNo, pageSize);
 //  }
 
-  /**
-   * <B>方法名称：getAllVisitedTablePortraitByVisitedTableEveryday</B>
-   * <B>概要说明：获取所有的表名</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月13日 09:06:57
-   * @Param []
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday")
-  public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
-    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
-  }
+//  /**
+//   * <B>方法名称：getAllVisitedTablePortraitByVisitedTableEveryday</B>
+//   * <B>概要说明：获取所有的表名</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月13日 09:06:57
+//   * @Param []
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday")
+//  public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
+//    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
+//  }
 
-  /**
-   * <B>方法名称：getUserPortraitByVisitedTime</B>
-   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月13日 09:06:57
-   * @Param []
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getUserPortraitByVisitedTime")
-  public ServerResponse<String> getUserPortraitByVisitedTime() {
-    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
-  }
+//  /**
+//   * <B>方法名称：getUserPortraitByVisitedTime</B>
+//   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月13日 09:06:57
+//   * @Param []
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/getUserPortraitByVisitedTime")
+//  public ServerResponse<String> getUserPortraitByVisitedTime() {
+//    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
+//  }
 
 //  /**
 //   * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
@@ -493,20 +493,20 @@ public class SkyflyingController {
 //    return userPortraitByTimeService.updateUserPortraitByVisitedTimeRule(ruleId, isDelete);
 //  }
 
-  /**
-   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
-   * <B>概要说明：获取所有的用户名</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月13日 09:06:57
-   * @Param []
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday")
-  public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
-    return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
-  }
+//  /**
+//   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
+//   * <B>概要说明：获取所有的用户名</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月13日 09:06:57
+//   * @Param []
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday")
+//  public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
+//    return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
+//  }
 
   /**
    * <B>方法名称：updateUserPortraitByVisitedTableEveryday</B>
@@ -541,63 +541,63 @@ public class SkyflyingController {
 //                                                                  @RequestParam(value = "nightCount") Integer nightCount) {
 //    return userPortraitByTimeService.addUserPortraitByVisitedTtimeRule(userName, forenoonCount, afternoonCount, nightCount);
 //  }
+//
+//  /**
+//   * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
+//   * <B>概要说明：增加用户访问过的表的画像规则</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月16日 16:41:35
+//   * @Param [ruleId, isDelete]
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/addUserPortraitByVisitedTableEverydayRule")
+//  public ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "userName") String userName,
+//                                                                          @RequestParam(value = "visitedTable") String visitedTable,
+//                                                                          @RequestParam(value = "visitedCount") Integer visitedCount,
+//                                                                          @RequestParam(value = "visitedDate") String visitedDate,
+//                                                                          @RequestParam(value = "dbType") String dbType) {
+//    return userPortraitByTableService.addUserPortraitByVisitedTableEverydayRule(userName, visitedTable, visitedCount, visitedDate, dbType);
+//  }
 
-  /**
-   * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
-   * <B>概要说明：增加用户访问过的表的画像规则</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月16日 16:41:35
-   * @Param [ruleId, isDelete]
-   **/
-  @ResponseBody
-  @GetMapping(value = "/addUserPortraitByVisitedTableEverydayRule")
-  public ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "userName") String userName,
-                                                                          @RequestParam(value = "visitedTable") String visitedTable,
-                                                                          @RequestParam(value = "visitedCount") Integer visitedCount,
-                                                                          @RequestParam(value = "visitedDate") String visitedDate,
-                                                                          @RequestParam(value = "dbType") String dbType) {
-    return userPortraitByTableService.addUserPortraitByVisitedTableEverydayRule(userName, visitedTable, visitedCount, visitedDate, dbType);
-  }
-
-  /**
-   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
-   * <B>概要说明：获取用户每天访问表的次数的画像信息</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月13日 09:06:57
-   * @Param []
-   **/
-  @ResponseBody
-  @GetMapping(value = "/getUserPortraitByVisitedTableEveryday")
-  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
-                                                                      String visitedTable, /* 访问数据库的表 */
-                                                                      String visitedDate, /* 访问数据库表的时间 */
-                                                                      String visitedDbInstance,/*访问的数据库*/
-                                                                      @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+//  /**
+//   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
+//   * <B>概要说明：获取用户每天访问表的次数的画像信息</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月13日 09:06:57
+//   * @Param []
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/getUserPortraitByVisitedTableEveryday")
+//  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
+//                                                                      String visitedTable, /* 访问数据库的表 */
+//                                                                      String visitedDate, /* 访问数据库表的时间 */
+//                                                                      String visitedDbInstance,/*访问的数据库*/
+//                                                                      @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+//                                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+//
+//
+//    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance, pageNo, pageSize);
+//  }
 
 
-    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance, pageNo, pageSize);
-  }
-
-
-  /**
-   * <B>方法名称：userPortraitByVisitedTable</B>
-   * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
-   *
-   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-   * @Author zm
-   * @Date 2022年06月08日 14:06:08
-   * @Param []
-   **/
-  @ResponseBody
-  @GetMapping(value = "/userPortraitByVisitedTableEveryday")
-  public ServerResponse<String> userPortraitByVisitedTableEveryday() {
-    return userPortraitByTableService.createUserPortraitByVisitedTableEveryday();
-  }
+//  /**
+//   * <B>方法名称：userPortraitByVisitedTable</B>
+//   * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
+//   *
+//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
+//   * @Author zm
+//   * @Date 2022年06月08日 14:06:08
+//   * @Param []
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/userPortraitByVisitedTableEveryday")
+//  public ServerResponse<String> userPortraitByVisitedTableEveryday() {
+//    return userPortraitByTableService.createUserPortraitByVisitedTableEveryday();
+//  }
 
 //  /**
 //   * <B>方法名称：userPortraitByVisitedTime</B>

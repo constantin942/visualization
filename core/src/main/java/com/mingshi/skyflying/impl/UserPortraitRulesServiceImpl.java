@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.impl;
 
-import com.mingshi.skyflying.anomaly_detection.singleton.AnomylyDetectionSingletonByVisitedTableEveryday;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 import com.mingshi.skyflying.common.enums.ConstantsCode;
