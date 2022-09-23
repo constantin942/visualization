@@ -475,7 +475,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             msSegmentDetailDo.setDbType(sqlType);
             // 获取表名；2022-06-06 14:11:21
             tableNameList = mingshiServerUtil.getTableNameList(sqlType, value);
-            if (null != tableNameList && 0 < tableNameList.size()) {
+            if (null != tableNameList && !tableNameList.isEmpty()) {
                 for (String tableNameTemp : tableNameList) {
                     String dbInstance = msSegmentDetailDo.getDbInstance();
                     String peer = msSegmentDetailDo.getPeer();
@@ -506,7 +506,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                     if (StringUtil.isBlank(tableName)) {
                         tableName = tableNameTemp;
                     } else {
-                        tableName = tableName + "," + tableNameTemp;
+                        tableName = tableName + Const.EN_COMMA + tableNameTemp;
                     }
                 }
             }
