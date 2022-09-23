@@ -58,10 +58,6 @@ public class UserPortraitByTimeTask {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
-
-//    //TODO: 改成可配置
-//    private final Integer portraitByTimePeriod = 15;
-
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
     private String PREFIX;
 
@@ -259,7 +255,6 @@ public class UserPortraitByTimeTask {
 
         }
         int hour = Integer.parseInt(m.group(1));
-//        int hour = Integer.parseInt(String.valueOf(Date.parse(segmentDetailDo.getStartTime())));
         CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTime = coarseSegmentDetailOnTimeMapper.selectOneByNameAndTime(username, time);
         if (coarseSegmentDetailOnTime == null) {
             // 没有该用户当天粗粒度信息

@@ -1,7 +1,5 @@
 package com.mingshi.web.controller;
 
-import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
@@ -42,10 +40,6 @@ public class SkyflyingController {
   private AuditLogService auditLogService;
   @Resource
   private MsAlarmInformationService msAlarmInformationService;
-//  @Resource
-//  private UserPortraitByVisitedTimeService userPortraitByTimeService;
-//  @Resource
-//  private UserPortraitByVisitedTableService userPortraitByTableService;
   @Resource
   private UserPortraitRulesService userPortraitRulesService;
   @Resource

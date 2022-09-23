@@ -115,10 +115,8 @@ public class AnomalyDetectionBusiness {
         Integer count = getCountByTable(segmentDetail.getUserName(), tableName);
         if (count == null) {
             //没有用户画像
-            MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail, msAlarmInformationDoList);
-            if (msAlarmInformationDo != null) {
-                msAlarmInformationDoList.add(msAlarmInformationDo);
-            }
+            MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail);
+            msAlarmInformationDoList.add(msAlarmInformationDo);
         } else {
             //有用户画像
             if (count > portraitConfig.getRuleTableCount()) {
@@ -130,13 +128,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 没有库表用户画像
      */
-    private MsAlarmInformationDo doNoTablePortrait(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-//        if (isNewUser(segmentDetail.getUserName())) {
-//            if (existNewUserAlarm(segmentDetail, msAlarmInformationDoList)) return null;
-//            else {
-//                return buildAlarmInfo(segmentDetail, AlarmEnum.NEW_USER);
-//            }
-//        }
+    private MsAlarmInformationDo doNoTablePortrait(MsSegmentDetailDo segmentDetail) {
         //老用户但是没画像
         //产生告警信息
         return buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM);

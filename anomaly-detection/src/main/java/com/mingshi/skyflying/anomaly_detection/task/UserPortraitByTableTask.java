@@ -51,9 +51,6 @@ public class UserPortraitByTableTask {
     private String PREFIX;
 
     private final Integer EXPIRE = 100000;
-//
-//    //TODO: 改成可配置
-//    private final Integer portraitByTablePeriod = 15;
     /**
      * Redis分布式锁Key
      */
