@@ -620,8 +620,8 @@ public class MingshiServerUtil {
     Date date = DateTimeUtil.strToDate(startTime);
     String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
-    if (tableName.contains(Const.COMMA)) {
-      String[] split = tableName.split(Const.COMMA);
+    if (tableName.contains(Const.EN_COMMA)) {
+      String[] split = tableName.split(Const.EN_COMMA);
       for (String tn : split) {
         // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
         zsetVlue = doGetTableName(peer, dbInstance, tn);
