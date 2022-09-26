@@ -102,11 +102,14 @@
     from ms_monitor_business_system_tables
     where table_name is not null
   </select>
-  <select id="selectAllEnable" resultMap="BaseResultMap">
+  <select id="selectAllEnable" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
     from ms_monitor_business_system_tables
     where is_delete = 0
+    <if test="tableName != null and  tableName != null   ">
+      and table_name = #{tableName}
+    </if>
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>
@@ -147,6 +150,9 @@
     count(*)
     from ms_monitor_business_system_tables
     where is_delete = 0
+    <if test="tableName != null and  tableName != null   ">
+      and table_name = #{tableName}
+    </if>
   </select>
   <select id="selectAllNotEnable" resultMap="BaseResultMap">
     select

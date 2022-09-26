@@ -686,9 +686,9 @@ public class SkyflyingController {
   @ResponseBody
   @GetMapping(value = "/getCoarseCountsOfTableName")
   public ServerResponse<String> getCoarseCountsOfTableName(
-    String tableName,
     @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+    @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+    String tableName) {
     return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
   }
 
