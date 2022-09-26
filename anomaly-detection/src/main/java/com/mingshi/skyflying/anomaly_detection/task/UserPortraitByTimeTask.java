@@ -158,7 +158,7 @@ public class UserPortraitByTimeTask {
 
     private double calAccuracy(double value) {
         BigDecimal t = BigDecimal.valueOf(value);
-        return t.setScale(3, RoundingMode.HALF_UP).doubleValue();
+        return t.setScale(4, RoundingMode.HALF_UP).doubleValue();
     }
 
 

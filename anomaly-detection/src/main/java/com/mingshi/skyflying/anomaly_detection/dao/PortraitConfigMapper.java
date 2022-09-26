@@ -30,4 +30,6 @@ public interface PortraitConfigMapper {
     ArrayList<String> selectByName(String typeName);
 
     String selectOneByName(String demo_mode);
+
+    void setDemoMode(String enable);
 }

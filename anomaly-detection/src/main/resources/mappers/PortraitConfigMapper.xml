@@ -219,4 +219,7 @@
             is_deleted        = #{isDeleted,jdbcType=INTEGER}
         where id = #{id,jdbcType=INTEGER}
     </update>
+    <update id="setDemoMode" parameterType="string">
+        update dic_item set value = #{enable,jdbcType=VARCHAR} where name = 'demo_mode'
+    </update>
 </mapper>

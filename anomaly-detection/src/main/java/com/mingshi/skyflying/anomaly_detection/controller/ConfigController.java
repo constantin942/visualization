@@ -1,5 +1,4 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
-import com.mingshi.skyflying.anomaly_detection.dao.DicItemMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -25,6 +24,8 @@ public class ConfigController {
     @Resource
     PortraitConfigMapper portraitConfigMapper;
 
+    private final String DEMO_MODE = "demo_mode";
+
     @GetMapping("getConfigDic")
     public ServerResponse<ArrayList<String>> getAllConfigDic(@RequestParam String typeName) {
         return ServerResponse.createBySuccess(portraitConfigMapper.selectByName(typeName));
@@ -42,6 +43,23 @@ public class ConfigController {
     public ServerResponse updatePortraitConfig(@Valid @RequestBody PortraitConfig portraitConfig) {
         portraitConfigMapper.deleteOld();
         portraitConfigMapper.insertSelective(portraitConfig);
+        return ServerResponse.createBySuccess();
+    }
+
+    @GetMapping("getDemoMode")
+    public ServerResponse<Boolean> getDemoMode() {
+        String s = portraitConfigMapper.selectOneByName(DEMO_MODE);
+        Boolean enable = "1".equals(s);
+        return ServerResponse.createBySuccess(enable);
+    }
+
+    @PutMapping("setDemoMode")
+    public ServerResponse setDemoMode(@RequestParam Boolean enable) {
+        if(enable) {
+            portraitConfigMapper.setDemoMode("1");
+        } else {
+            portraitConfigMapper.setDemoMode("0");
+        }
         return ServerResponse.createBySuccess();
     }
 }
