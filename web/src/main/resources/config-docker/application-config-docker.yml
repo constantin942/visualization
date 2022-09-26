@@ -158,7 +158,8 @@ reactor:
     enable: ${reactor_processor_enable}
     graceful-shutdown: ${graceful_shutdown}
     graceful-shutdown-queue-size: 300
-    disruptor: ${reactor_processor_disruptor}
+    disruptor: false
+#    disruptor: ${reactor_processor_disruptor}
     thread:
       count: ${reactor_processor_thread_count}
   iothread:

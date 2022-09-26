@@ -105,7 +105,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
     // 一次poll最大拉取消息的条数，如果消费者处理速度很快，可以设置大点，如果处理速度一般，可以设置小点
     properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 300);
     // 如果两次poll操作间隔超过了这个时间，broker就会认为这个consumer处理能力太弱，会将其踢出消费组，将分区分配给别的consumer消费
-    properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 30 * 1000);
+    properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 60 * 1000);
     // 把消息的key从字节数组反序列化为字符串
     properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     // 把消息的value从字节数组反序列化为字符串
