@@ -133,11 +133,10 @@ public class MsKafkaSegmentsConsumer extends Thread {
       try {
         ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(100));
         Instant start = Instant.now();
-        int count = records.count();
+        Integer count = records.count();
         for (ConsumerRecord<String, Bytes> consumerRecord : records) {
-          aiitKafkaConsumerUtil.doOnMessage(consumerRecord);
+          aiitKafkaConsumerUtil.doOnMessage(consumerRecord, start, aiitKafkaConsumer, offsetsLinkedBlockingQueue, count);
         }
-
         // 根据配置情况，提交offset
         commitAck(count, start);
       } catch (Exception e) {
@@ -156,7 +155,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
    * @Param [count]
    **/
   private void commitAck(int count, Instant start) {
-    long timeMillis = DateTimeUtil.getTimeMillis(start);
+    Long timeMillis = DateTimeUtil.getTimeMillis(start);
     if (count > 0) {
       if (false == reactorProcessorEnable) {
         // 在不启用reactor模型的情况下，每消费完一批消息，就同步提交这批消息的offset；2022-09-13 17:04:03
@@ -170,39 +169,9 @@ public class MsKafkaSegmentsConsumer extends Thread {
     }
     if (true == gracefulShutdown) {
       while (true) {
-        Map<TopicPartition, OffsetAndMetadata> offsetsMap = offsetsLinkedBlockingQueue.poll();
-        if (null != offsetsMap && 0 < offsetsMap.size()) {
-
-          // 测试是否重复消费的代码，已测试完毕。可以注销掉了。出现重复消费的场景是：Kafka服务端进行了rebalance。
-          // Iterator<TopicPartition> iterator = offsetsMap.keySet().iterator();
-          // while (iterator.hasNext()) {
-          //   TopicPartition key = iterator.next();
-          //   String topic = key.topic();
-          //   int partition = key.partition();
-          //   OffsetAndMetadata value = offsetsMap.get(key);
-          //   long offset = value.offset();
-          //   String item = topic + ":" + partition + ":" + offset;
-          //   Object hget = redisPoolUtil.hget(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item);
-          //   if (null != hget) {
-          //     log.error("根据 key = 【{}】，在表 = 【{}】中获取到了已提交过的offset = 【{}】。", item, Const.HASH_TEST_GRACEFUL_SHUTDOWN, offsetsMap);
-          //   } else {
-          //     redisPoolUtil.hset(Const.HASH_TEST_GRACEFUL_SHUTDOWN, item, "existed");
-          //   }
-          // }
-
-          // 优先提交offset；
-          aiitKafkaConsumer.commitSync(offsetsMap);
-          log.info("# MsKafkaSegmentsConsumer.commitAck() # 当消息处理完毕之后，才提交这批消息的offset = 【{}】。本次KafkaConsumer线程从Kafka服务端拉取到【{}】条消息。把这些消息放入到第一层队列里用时【{}】毫秒。从第三层队列里获取到要提交的offset，并提交到Kafka服务端用时【{}】毫秒。当前队列中元素的个数【{}】。",
-            offsetsMap,
-            count,
-            timeMillis,
-            (DateTimeUtil.getTimeMillis(start) - timeMillis),
-            offsetsLinkedBlockingQueue.size());
-          offsetsMap.clear();
-        }
+        aiitKafkaConsumerUtil.commitOffsetSync(aiitKafkaConsumer, offsetsLinkedBlockingQueue, count, start);
         break;
       }
-
     }
   }
 }
