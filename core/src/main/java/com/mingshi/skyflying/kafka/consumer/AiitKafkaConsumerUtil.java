@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>主类名称: AiitKafkaConsumerUtil</B>
@@ -47,6 +48,8 @@ public class AiitKafkaConsumerUtil {
   private SegmentConsumerService segmentConsumerService;
   @Resource
   private RedisPoolUtil redisPoolUtil;
+
+  private AtomicInteger countPrintLog = new AtomicInteger(0);
 
   /**
    * <B>方法名称：commitOffsetSync</B>
@@ -196,9 +199,9 @@ public class AiitKafkaConsumerUtil {
          推荐使用的架构：
          1. 使用一个Disruptor（推荐使用，因为是无锁的）或者LinkedBlockingQueue（后面的多个消费者线程会竞争出队列的锁，有性能损耗）内存队列，这个队列的后面挂着多个消费者线程； 2022-09-13 15:13:01
          **/
-        // Integer index = InitProcessorByLinkedBlockingQueue.getIndex(partition);
+        Integer index = InitProcessorByLinkedBlockingQueue.getIndex(partition);
         // 这一行代码会拖慢acceptor线程的速度；
-        // redisPoolUtil.hsetIncrBy("index-" + index, "partition-" + partition, 1L);
+        redisPoolUtil.hsetIncrBy("index-" + index, "partition-" + partition, 1L);
         while (false == offerResult) {
           /** 使用offer方法的优点：性能高，processor线程不会出现倾斜的情况。因为每个processor线程处理的消息数量是差不多的。
            使用offer方法的缺点：整个链路在某些场景下，会丢失消息。
@@ -208,7 +211,9 @@ public class AiitKafkaConsumerUtil {
           processorHandlerByLinkedBlockingQueue = InitProcessorByLinkedBlockingQueue.getProcessor(partition);
           offerResult = processorHandlerByLinkedBlockingQueue.offer(consumerRecord);
           if (false == offerResult) {
-            log.info("消息对应的processor线程队列都满了，利用这个空隙，提交offset。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+            if(Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 100){
+              log.info("消息对应的processor线程队列都满了，利用这个空隙，提交offset。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+            }
             commitOffsetSync(aiitKafkaConsumer, offsetsLinkedBlockingQueue, count, start);
           }
         }
