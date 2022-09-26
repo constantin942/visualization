@@ -267,8 +267,10 @@ public class UserPortraitByTimeTask {
         } else {
             // 有该用户当天粗粒度信息
             int hours = time.getHours();
+            log.info("开始插入基于时间的粗粒度表---插入前 {}", coarseSegmentDetailOnTime.getCounts() );
             updateCoarseSegmentOnTime(coarseSegmentDetailOnTime, hours);
             coarseSegmentDetailOnTimeMapper.updateByPrimaryKeySelective(coarseSegmentDetailOnTime);
+            log.info("完成插入基于时间的粗粒度表---插入后 {}", coarseSegmentDetailOnTime.getCounts());
         }
 
     }
