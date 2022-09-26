@@ -3,72 +3,150 @@ package com.mingshi.skyflying.common.domain;
 import lombok.Data;
 
 import java.util.Date;
+
 @Data
-public class MsSegmentDetailDo implements Cloneable{
-    private String topic;
+public class MsSegmentDetailDo implements Cloneable {
+  private String topic;
 
-    private Integer parition;
+  private Integer parition;
 
-    private Long offset;
+  private Long offset;
 
-    private Integer id;
+  private Date gmtCreate;
 
-    private String userLoginIp;
+  private Date gmtModified;
 
-    private String userName;
+  private int isDelete;
 
-    private String token;
+  /**
+   * 记录在数据库中的自增id
+   */
+  private Integer id;
 
-    private String globalTraceId;
+  /**
+   * 登录系统的用户所在的机器ip
+   */
+  private String userLoginIp;
 
-    private String parentSegmentId;
+  /**
+   * 登录系统的用户名
+   */
+  private String userName;
 
-    private String operationName;
+  /**
+   * 与用户名绑定
+   */
+  private String token;
 
-    private String currentSegmentId;
+  /**
+   * 这条链路信息中唯一的标识
+   */
+  private String globalTraceId;
 
-    private Date gmtCreate;
+  /**
+   * 当前segment实例信息的父segment实例id
+   */
+  private String parentSegmentId;
 
-    private Date gmtModified;
+  /**
+   * url地址
+   */
+  private String operationName;
 
-    private int isDelete;
+  /**
+   * 一条完整的链路信息由若干个segment实例信息组成；
+   * 每个segment实例都有自己的segmentId；
+   * 这些segment实例信息也是有顺序的，这个顺序是一个请求执行代码的先后访问顺序；
+   * 在一个微服务内部，一个segment有若干个span实例信息组成；
+   */
+  private String currentSegmentId;
 
-    private Integer spanId;
+  /**
+   * 一条链路信息由1到多个span信息组成，
+   * 一个span就是一次访问请求，比如：访问了一次数据库操作，或者访问了一次redis缓存操作等。
+   * 这些span是有顺序的。
+   */
+  private Integer spanId;
 
-    private String component;
+  /**
+   * 当前链路信息是由哪一个插件采集到的
+   */
+  private String component;
 
-    private String serviceCode;
+  /**
+   * 运维人员将探针与应用系统一起启动时，给应用系统起的名称；
+   */
+  private String serviceCode;
 
-    private String peer;
+  /**
+   * 如果这条链路信息中包含了SQL语句，那这个字段的值就是数据库实例的地址
+   */
+  private String peer;
 
-    private String endpointName;
+  /**
+   * 当前链路信息是由哪一个插件中的哪一个方法采集到的
+   */
+  private String endpointName;
 
-    private String startTime;
+  /**
+   * 链路请求开始的时间
+   */
+  private String startTime;
 
-    private String serviceInstanceName;
+  /**
+   * 探针的唯一标识
+   */
+  private String serviceInstanceName;
 
-    private String endTime;
+  /**
+   * 链路请求结束的时间
+   */
+  private String endTime;
 
-    private Integer parentSpanId;
+  private Integer parentSpanId;
 
-    private String operationType;
+  /**
+   * 如果这条链路信息有SQL语句，那这个字段的值就是sql，如果没有SQL语句，那这个字段的值就是url
+   */
+  private String operationType;
 
-    private String msTableName;
+  /**
+   * SQL语句中表的名字
+   */
+  private String msTableName;
 
-    private String dbType;
+  /**
+   * SQL语句的类型，比如：select、insert等
+   */
+  private String dbType;
 
-    private String dbInstance;
+  /**
+   * 数据库实例地址
+   */
+  private String dbInstance;
 
-    private String dbUserName;
+  /**
+   * 数据库用户名
+   */
+  private String dbUserName;
 
-    private String dbStatement;
+  /**
+   * 具体的SQL语句
+   */
+  private String dbStatement;
 
-    private Integer userPortraitFlagByVisitedTime;
+  /**
+   *
+   */
+  private Integer userPortraitFlagByVisitedTime;
 
-    private Integer userPortraitFlagByVisitedTableEveryday;
+  /**
+   *
+   */
+  private Integer userPortraitFlagByVisitedTableEveryday;
 
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 }

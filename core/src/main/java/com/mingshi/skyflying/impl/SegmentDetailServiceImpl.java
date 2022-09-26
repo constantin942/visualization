@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -13,7 +12,9 @@ import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.*;
+import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
+import com.mingshi.skyflying.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -355,7 +356,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
         userCoarseInfo.setUserName(applicationUserName);
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-        queryMap.put(Const.USER_NAME, applicationUserName);
+        if(StringUtil.isNotBlank(applicationUserName)){
+          queryMap.put(Const.USER_NAME, applicationUserName);
+        }
 
         Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
 
@@ -364,7 +367,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         userCoarseInfo.setLastVisitedDate(lastVisited);
 
         List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-        userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
+        if(!list.isEmpty()){
+          userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
+        }
 
         log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfo);
