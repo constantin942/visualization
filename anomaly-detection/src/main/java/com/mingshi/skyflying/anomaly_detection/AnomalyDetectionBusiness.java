@@ -74,8 +74,8 @@ public class AnomalyDetectionBusiness {
     private final String AFTERNOON = "afternoon";
 
     private final String NIGHT = "night";
-
-
+ 
+    private final String DEMO_MODE = "demo_mode";
     /**
      * 判断是否告警-库表维度
      */
@@ -86,7 +86,7 @@ public class AnomalyDetectionBusiness {
             String dbInstance = segmentDetailDo.getDbInstance();
             String table = segmentDetailDo.getMsTableName();
             //第一次访问距今是否在画像周期内
-            if (inPeriod(username, portraitConfig.getRuleTablePeriod())) {
+            if (!isDemoMode() && inPeriod(username, portraitConfig.getRuleTablePeriod())) {
                 continue;
             }
             if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
@@ -98,6 +98,17 @@ public class AnomalyDetectionBusiness {
                 userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
             }
         }
+    }
+
+    /**
+     *  是否为演示模式
+     */
+    private boolean isDemoMode() {
+        String mode = portraitConfigMapper.selectOneByName(DEMO_MODE);
+        if (mode == null) {
+            return false;
+        }
+        return "1".equals(mode);
     }
 
     /**
@@ -172,7 +183,7 @@ public class AnomalyDetectionBusiness {
         }
         //第一次访问距今是否在画像周期内
         String userName = segmentDetailDo.getUserName();
-        if (inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
+        if (!isDemoMode() && inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
             return;
         }
         String time = segmentDetailDo.getStartTime();
@@ -300,12 +311,12 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
-            if (enableTableRule) {
+            if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
-            if (enableTimeRule) {
+            if (Boolean.TRUE.equals(enableTimeRule)) {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
         } catch (Exception e) {

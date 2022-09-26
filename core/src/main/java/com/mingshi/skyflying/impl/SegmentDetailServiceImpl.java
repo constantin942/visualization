@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;

@@ -86,6 +86,9 @@
     <select id="selectByName" resultType="java.lang.String" parameterType="string">
         select `value` from dic_item where name = #{typeName,jdbcType=VARCHAR} order by sort
     </select>
+    <select id="selectOneByName" resultType="java.lang.String" parameterType="string">
+        select `value` from dic_item where name = #{typeName,jdbcType=VARCHAR} limit 1;
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
         delete
         from portrait_config
