@@ -159,8 +159,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private void cacheRuleEnable() {
         UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
         UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
-        portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
-        portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
+        if(null != timeRule){
+          portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
+        }
+        if(null != tableRule){
+          portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
+        }
     }
 
     /**
