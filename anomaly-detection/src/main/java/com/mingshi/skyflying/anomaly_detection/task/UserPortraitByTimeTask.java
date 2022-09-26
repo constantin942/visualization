@@ -124,6 +124,7 @@ public class UserPortraitByTimeTask {
      */
     public void insertYesterdayInfo2Coarse() {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
+        if(segmentDetails == null)  return;
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
         coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
     }
@@ -164,7 +165,7 @@ public class UserPortraitByTimeTask {
     /**
      * 全量信息生成粗粒度信息
      */
-    public List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
+    public  List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
         //每个用户对应一个数组, 数组存储每个时段的访问次数
         HashMap<String, int[]> map = new HashMap<>();
         for (MsSegmentDetailDo segmentDetail : segmentDetails) {
@@ -186,10 +187,11 @@ public class UserPortraitByTimeTask {
         return list;
     }
 
+
     /**
      * 组装单个粗粒度信息
      */
-    private CoarseSegmentDetailOnTimeDo buildCoarseSegmentDetailOnTime(Map.Entry<String, int[]> entry) {
+    private  CoarseSegmentDetailOnTimeDo buildCoarseSegmentDetailOnTime(Map.Entry<String, int[]> entry) {
         String username = entry.getKey();
         int[] counter = entry.getValue();
         int sum = 0;
@@ -202,7 +204,7 @@ public class UserPortraitByTimeTask {
     /**
      * 构造CoarseSegmentDetailOnTimeDo类
      */
-    private CoarseSegmentDetailOnTimeDo buildCoarseSegmentOnTimeHelper(int[] counter, String username, int sum, Date time) {
+    private  CoarseSegmentDetailOnTimeDo buildCoarseSegmentOnTimeHelper(int[] counter, String username, int sum, Date time) {
         return CoarseSegmentDetailOnTimeDo
                 .builder()
                 .username(username)
@@ -265,8 +267,10 @@ public class UserPortraitByTimeTask {
         } else {
             // 有该用户当天粗粒度信息
             int hours = time.getHours();
+            log.info("开始插入基于时间的粗粒度表---插入前 {}", coarseSegmentDetailOnTime.getCounts() );
             updateCoarseSegmentOnTime(coarseSegmentDetailOnTime, hours);
             coarseSegmentDetailOnTimeMapper.updateByPrimaryKeySelective(coarseSegmentDetailOnTime);
+            log.info("完成插入基于时间的粗粒度表---插入后 {}", coarseSegmentDetailOnTime.getCounts());
         }
 
     }
@@ -371,7 +375,10 @@ public class UserPortraitByTimeTask {
     public Double getRateByInterVal(String username, String interval) {
         String redisKey = buildRedisKey(username, interval);
         Object o = redisPoolUtil.get(redisKey);
-        if (o == null) return null;
+        if (o == null) {
+            updatePortrait();
+        }
+        o = redisPoolUtil.get(redisKey);
         return Double.parseDouble((String) o);
     }
 

@@ -397,7 +397,6 @@
             time_interval_count_22_23 = #{timeIntervalCount2223,jdbcType=INTEGER},
             time_interval_count_23_24 = #{timeIntervalCount2324,jdbcType=INTEGER},
             create_time               = #{createTime,jdbcType=TIMESTAMP},
-            update_time               = #{updateTime,jdbcType=TIMESTAMP},
             is_deleted                 = #{isDelete,jdbcType=TINYINT}
         where id = #{id,jdbcType=INTEGER}
     </update>
