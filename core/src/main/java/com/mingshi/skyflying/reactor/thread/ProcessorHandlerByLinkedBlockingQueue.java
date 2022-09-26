@@ -35,22 +35,22 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
     this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
   }
 
-  public boolean put(ConsumerRecord<String, Bytes> consumerRecord) {
-    try {
-      if (++count > (Const.RECORD_COUNT)) {
-        // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-        log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueSize);
-        count = 0;
-      }
-
-      // 这里之所以使用阻塞队列的put方法，是因为当队列满时，当前线程会被阻塞住。2022-09-13 14:00:28
-      linkedBlockingQueue.put(consumerRecord);
-      return true;
-    } catch (Exception e) {
-      log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
-      return false;
-    }
-  }
+  // public boolean put(ConsumerRecord<String, Bytes> consumerRecord) {
+  //   try {
+  //     if (++count > (Const.RECORD_COUNT)) {
+  //       // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
+  //       log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", linkedBlockingQueue.size(), queueSize);
+  //       count = 0;
+  //     }
+  //
+  //     // 这里之所以使用阻塞队列的put方法，是因为当队列满时，当前线程会被阻塞住。2022-09-13 14:00:28
+  //     linkedBlockingQueue.put(consumerRecord);
+  //     return true;
+  //   } catch (Exception e) {
+  //     log.error("将调用链信息(record)放入到LinkedBlockingQueue中出现了异常。", e);
+  //     return false;
+  //   }
+  // }
 
   public boolean offer(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
