@@ -39,7 +39,7 @@ public class AspectUtil {
     } catch (Exception e) {
       log.error(METHOD_ERROR, e);
     } catch (Throwable throwable) {
-      throwable.printStackTrace();
+      log.error(METHOD_ERROR, throwable);
     }
     return resObj;
   }
