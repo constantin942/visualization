@@ -356,8 +356,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
         userCoarseInfo.setUserName(applicationUserName);
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-        if(StringUtil.isNotBlank(applicationUserName)){
-          queryMap.put(Const.USER_NAME, applicationUserName);
+        if (StringUtil.isNotBlank(applicationUserName)) {
+            queryMap.put(Const.USER_NAME, applicationUserName);
         }
 
         Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
@@ -367,8 +367,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         userCoarseInfo.setLastVisitedDate(lastVisited);
 
         List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-        if(!list.isEmpty()){
-          userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
+        if (!list.isEmpty()) {
+            userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
         }
         log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfo);
@@ -379,22 +379,19 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         List<Long> returnList = new ArrayList<>();
         log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
         Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-        if (msTableName.contains(Const.POUND_KEY)) {
-            try {
-                String[] split = msTableName.split(Const.POUND_KEY);
-                String peer = split[0];
-                String dbInstance = split[1];
-                String tableName = split[2];
-                map.put(Const.PEER, peer);
-                map.put(Const.DB_INSTANCE2, dbInstance);
-                map.put(Const.MS_TABLE_NAME, tableName);
-            } catch (Exception e) {
-                log.error("# SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays() # 获取用户近七天的访问次数时，出现了异常。", e);
-                return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, returnList);
-            }
-        } else {
-            return ServerResponse.createByErrorMessage("参数非法！传递过来的数据库名称格式应该是：数据库地址#数据库名称#表名", Const.FAILED, returnList);
+        try {
+            String[] split = msTableName.split("\\.");
+//                String peer = split[0];
+            String dbInstance = split[0];
+            String tableName = split[1];
+//                map.put(Const.PEER, peer);
+            map.put(Const.DB_INSTANCE2, dbInstance);
+            map.put(Const.MS_TABLE_NAME, tableName);
+        } catch (Exception e) {
+            log.error("# SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays() # 获取用户近七天的访问次数时，出现了异常。", e);
+            return ServerResponse.createByErrorMessage("参数非法", Const.FAILED, returnList);
         }
+
         if (null == pageNo) {
             pageNo = 1;
         }
