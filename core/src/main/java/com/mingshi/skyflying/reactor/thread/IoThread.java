@@ -47,8 +47,11 @@ public class IoThread extends Thread {
     private LinkedList<Span> spanList = null;
     private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
     private MingshiServerUtil mingshiServerUtil;
+    private Integer capacity;
+    private String name;
 
-    public IoThread( LinkedBlockingQueue<ObjectNode> linkedBlockingQueue, MingshiServerUtil mingshiServerUtil) {
+
+    public IoThread(Integer id ,Integer queueSize, MingshiServerUtil mingshiServerUtil) {
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
         skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -59,8 +62,57 @@ public class IoThread extends Thread {
         segmentDetailUserNameIsNullDoList = new LinkedList();
         spanList = new LinkedList();
         msAlarmInformationDoLinkedListist = new LinkedList();
-        this.linkedBlockingQueue = linkedBlockingQueue;
+        this.linkedBlockingQueue = new LinkedBlockingQueue(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
+        this.capacity = queueSize;
+        this.name = Const.IOTHREAD_NAME + id;
+    }
+
+    /**
+     * <B>方法名称：getIoThreadName</B>
+     * <B>概要说明：获取iothread线程名称</B>
+     * @Author zm
+     * @Date 2022年09月27日 14:09:14
+     * @Param []
+     * @return java.lang.String
+     **/
+    public String getIoThreadName(){
+        return name;
+    }
+    /**
+     * <B>方法名称：offer</B>
+     * <B>概要说明：往IoThread线程内部的线程中存放清洗后的消息</B>
+     * @Author zm
+     * @Date 2022年09月27日 14:09:32
+     * @Param [objectNode]
+     * @return java.lang.Boolean
+     **/
+    public Boolean offer(ObjectNode objectNode){
+        return linkedBlockingQueue.offer(objectNode);
+    }
+
+    /**
+     * <B>方法名称：getQueueSize</B>
+     * <B>概要说明：获取队列中元素的个数</B>
+     * @Author zm
+     * @Date 2022年09月27日 14:09:34
+     * @Param []
+     * @return java.lang.Integer
+     **/
+    public Integer getQueueSize(){
+        return linkedBlockingQueue.size();
+    }
+
+    /**
+     * <B>方法名称：getQueueCapacity</B>
+     * <B>概要说明：获取队列容量</B>
+     * @Author zm
+     * @Date 2022年09月27日 14:09:09
+     * @Param []
+     * @return java.lang.Integer
+     **/
+    public Integer getQueueCapacity(){
+        return capacity;
     }
 
     @Override

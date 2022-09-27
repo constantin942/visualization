@@ -39,10 +39,6 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
 
     private MsKafkaSegmentsConsumer msKafkaSegmentsConsumer;
 
-    public MsKafkaSegmentsConsumer getMsKafkaSegmentsConsumer() {
-        return msKafkaSegmentsConsumer;
-    }
-
     @Override
     public void run(ApplicationArguments args) throws Exception {
         try {
@@ -88,7 +84,7 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
      * @Param []
      **/
     private void createMsKafkaSegmentsConsumer() {
-        msKafkaSegmentsConsumer = new MsKafkaSegmentsConsumer(null, aiitKafkaConsumerUtil, bootstrapServers, segmentConsumerTopic, segmentConsumerGroup);
+        msKafkaSegmentsConsumer = new MsKafkaSegmentsConsumer(aiitKafkaConsumerUtil, bootstrapServers, segmentConsumerTopic, segmentConsumerGroup);
         msKafkaSegmentsConsumer.setName("aiit_kafka_consumer");
         msKafkaSegmentsConsumer.start();
     }

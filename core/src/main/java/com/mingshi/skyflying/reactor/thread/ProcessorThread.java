@@ -13,7 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
+public class ProcessorThread extends Thread {
 
   /**
    * 这里使用LinkedBlockingQueue的原因是：该阻塞队列有两把独占锁，分别是入队列的独占锁和出队列的独占锁。
@@ -30,11 +30,19 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
   private SegmentConsumerService segmentConsumerService;
   private Integer count = 0;
 
-  public ProcessorHandlerByLinkedBlockingQueue(SegmentConsumerService segmentConsumerService) {
+  public ProcessorThread(SegmentConsumerService segmentConsumerService) {
     this.segmentConsumerService = segmentConsumerService;
     this.linkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
   }
 
+  /**
+   * <B>方法名称：offer</B>
+   * <B>概要说明：往Processor线程自己的队列中放入数据</B>
+   * @Author zm
+   * @Date 2022年09月27日 14:09:23
+   * @Param [consumerRecord]
+   * @return boolean
+   **/
   public boolean offer(ConsumerRecord<String, Bytes> consumerRecord) {
     try {
       if (++count > (Const.RECORD_COUNT)) {
@@ -65,7 +73,7 @@ public class ProcessorHandlerByLinkedBlockingQueue implements Runnable {
       try {
         ConsumerRecord<String, Bytes> consumerRecord = linkedBlockingQueue.poll();
         if (null == consumerRecord) {
-          if (10 <= DateTimeUtil.getSecond(now)) {
+          if (Const.NUMBER_TEN <= DateTimeUtil.getSecond(now)) {
             // 提升性能：当队列为空的时候，每10秒打印一次日志。2022-06-01 09:50:19
             log.info("当前 processor 线程【{}】对应的队列为空，休眠50毫秒。再尝试从队列里获取数据。", Thread.currentThread().getName());
             now = Instant.now();

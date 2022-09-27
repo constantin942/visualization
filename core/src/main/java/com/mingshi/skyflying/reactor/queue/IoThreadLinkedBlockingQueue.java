@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.reactor.queue;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.reactor.thread.IoThread;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,13 +17,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Version 1.0
  **/
 @Slf4j
-public class IoThreadBatchInsertByLinkedBlockingQueue {
+public class IoThreadLinkedBlockingQueue {
 
     /**
      * 阻塞队列中，元素的个数；2021-06-09 16:30:20
      */
     private final static Integer QUEUE_SIZE = Const.IO_THREAD_QUEUE_SIZE;
-    private volatile static List<LinkedBlockingQueue<ObjectNode>> linkedBlockingQueueList = new ArrayList<>();
+    private volatile static List<IoThread> linkedBlockingQueueList = new ArrayList<>();
     /**
      * 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
      */
@@ -41,7 +39,7 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
         return QUEUE_SIZE;
     }
 
-    public static List<LinkedBlockingQueue<ObjectNode>> getLinkedBlockingQueueList() {
+    public static List<IoThread> getLinkedBlockingQueueList() {
         return linkedBlockingQueueList;
     }
 
@@ -51,20 +49,19 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * @param localStatisticsThreadCount
      * @param mingshiServerUtil
      */
-    public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
+    public IoThreadLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
         log.info("开始执行方法OperatorRedisFailureBuffer（）。");
         if (0 < SINGLE_CASE_COUNT.get()) {
-            log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
+            log.error("# IoThreadLinkedBlockingQueue.IoThreadLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
             return;
         }
         SINGLE_CASE_COUNT.incrementAndGet();
-        for (Integer integer = 0; integer < localStatisticsThreadCount; integer++) {
-            LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = new LinkedBlockingQueue(QUEUE_SIZE);
-            linkedBlockingQueueList.add(linkedBlockingQueue);
-            log.info("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。", (1 + integer));
-            IoThread ioThread = new IoThread(linkedBlockingQueue, mingshiServerUtil);
-            ioThread.setName("processLocalStatisticsThread_" + integer);
+        for (Integer i = 0; i < localStatisticsThreadCount; i++) {
+            log.info("# IoThreadLinkedBlockingQueue.IoThreadLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。", (1 + i));
+            IoThread ioThread = new IoThread(i, QUEUE_SIZE, mingshiServerUtil);
+            ioThread.setName("ioThread_" + i);
             ioThread.start();
+            linkedBlockingQueueList.add(ioThread);
         }
     }
 
@@ -77,12 +74,12 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * @Date 2022年09月27日 09:09:50
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
      **/
-    private static void initLinkedBlockingQueueList(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
+    private static void initLinkedBlockingQueueList(Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
         if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
-            synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
+            synchronized (IoThreadLinkedBlockingQueue.class) {
                 if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
                     log.info("获取单例LinkedBlockingQueue。");
-                    new IoThreadBatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, mingshiServerUtil);
+                    new IoThreadLinkedBlockingQueue(reactorIoThreadCount, mingshiServerUtil);
                 }
             }
         }
@@ -97,13 +94,13 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * @Date 2022年09月27日 09:09:37
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
      **/
-    public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
+    public static IoThread getLinkedBlockingQueue(Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
         try {
-            initLinkedBlockingQueueList(localStatisticsThreadCount, mingshiServerUtil);
+            initLinkedBlockingQueueList(reactorIoThreadCount, mingshiServerUtil);
             Integer index = indexFor(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
             return linkedBlockingQueueList.get(index);
         } catch (Exception e) {
-            log.error("# BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。", e);
+            log.error("# IoThreadLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。", e);
         }
         return null;
     }
