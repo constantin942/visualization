@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.utils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
@@ -23,6 +24,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
+import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +33,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>主类名称: mingshiServerUtil</B>
@@ -78,7 +79,6 @@ public class MingshiServerUtil {
     @Resource
     private AiitKafkaConsumerRunner aiitKafkaConsumerRunner;
 
-    private AtomicInteger INTEVAL = new AtomicInteger(0);
     /**
      * 产生字符串类型的订单号
      */
@@ -87,6 +87,25 @@ public class MingshiServerUtil {
             orderId = SnowflakeIdWorker.generateStringId();
         }
         return orderId;
+    }
+
+    /**
+     * <B>方法名称：recordForwarding</B>
+     * <B>概要说明：将蓝景kafka服务器上的消息转发到我们内网测试环境中的kafka上</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年06月24日 09:06:35
+     * @Param [record]
+     **/
+    public void recordForwarding(ConsumerRecord<String, Bytes> record, String topic) {
+        try {
+            SegmentObject segmentObject = null;
+            segmentObject = SegmentObject.parseFrom(record.value().get());
+            aiitKafkaProducer.send(segmentObject, topic);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -188,10 +207,11 @@ public class MingshiServerUtil {
     /**
      * <B>方法名称：doEnableReactorModel</B>
      * <B>概要说明：不使用优雅关机的方式，可以提高吞吐量，但在异常情况下，会造成消息的丢失</B>
+     *
+     * @return void
      * @Author zm
      * @Date 2022年09月27日 09:09:06
      * @Param [jsonObject, gracefulShutdown, reactorIoThreadThreadCount, mingshiServerUtil]
-     * @return void
      **/
     private void doEnableReactorModel(ObjectNode jsonObject, boolean gracefulShutdown, Integer reactorIoThreadThreadCount, MingshiServerUtil mingshiServerUtil) {
         if (null != jsonObject && 0 < jsonObject.size()) {

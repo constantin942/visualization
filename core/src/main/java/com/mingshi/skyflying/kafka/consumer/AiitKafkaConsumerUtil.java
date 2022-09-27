@@ -256,8 +256,8 @@ public class AiitKafkaConsumerUtil {
                 processorHandlerByLinkedBlockingQueue = InitProcessorByLinkedBlockingQueue.getProcessor();
                 offerResult = processorHandlerByLinkedBlockingQueue.offer(consumerRecord);
                 if (false == offerResult) {
-                    if (Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 100) {
-                        log.info("消息对应的processor线程队列都满了，利用这个空隙，提交offset。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+                    if (Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 500) {
+                        log.info("消息对应的processor线程队列都满了，该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
                     }
                 }
             }
