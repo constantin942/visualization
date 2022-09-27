@@ -346,6 +346,8 @@ public class IoThread extends Thread {
                 long timeMillis = DateTimeUtil.getTimeMillis(now);
                 if (0 < timeMillis) {
                     log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), timeMillis);
+                }
+                if (Boolean.TRUE.equals(gracefulShutdown)) {
                     log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前第二层队列中的统计信息 = 【{}】。", JsonUtil.object2String(MetricsUtil.getQueuePartitionMap()));
                 }
             }

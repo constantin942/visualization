@@ -31,6 +31,7 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
      */
     private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
+    private volatile static AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
 
     /**
      * 获取队列的容量；2021-11-17 14:35:19
@@ -77,16 +78,9 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * @param mingshiServerUtil
      * @return
      */
-    public static LinkedBlockingQueue getLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, Integer partition) {
+    public static LinkedBlockingQueue getLinkedBlockingQueueByGracefulShutdown(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, Integer partition) {
         try {
-            if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
-                synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
-                    if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
-                        log.info("获取单例LinkedBlockingQueue。");
-                        new IoThreadBatchInsertByLinkedBlockingQueue(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
-                    }
-                }
-            }
+            initLinkedBlockingQueueList(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
             Integer index = 0;
             if (null != partition) {
                 index = indexFor(partition, linkedBlockingQueueList.size());
@@ -95,6 +89,44 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
             return linkedBlockingQueueList.get(index);
         } catch (Exception e) {
             log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 根据partition = 【{}】获取所属内存队列时，出现了异常。", partition, e);
+        }
+        return null;
+    }
+
+    /**
+     * <B>方法名称：initLinkedBlockingQueueList</B>
+     * <B>概要说明：初始化IoThead线程和对应的队列</B>
+     * @Author zm
+     * @Date 2022年09月27日 09:09:50
+     * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
+     * @return void
+     **/
+    private static void initLinkedBlockingQueueList(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+        if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+            synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
+                if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+                    log.info("获取单例LinkedBlockingQueue。");
+                    new IoThreadBatchInsertByLinkedBlockingQueue(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+                }
+            }
+        }
+    }
+
+    /**
+     * <B>方法名称：getLinkedBlockingQueue</B>
+     * <B>概要说明：使用非优雅关机的方式获取IoThread线程对应的队列</B>
+     * @Author zm
+     * @Date 2022年09月27日 09:09:37
+     * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
+     * @return java.util.concurrent.LinkedBlockingQueue
+     **/
+    public static LinkedBlockingQueue getLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+        try {
+            initLinkedBlockingQueueList(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+            Integer index = indexFor(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
+            return linkedBlockingQueueList.get(index);
+        } catch (Exception e) {
+            log.error("# BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。", e);
         }
         return null;
     }

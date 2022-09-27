@@ -29,6 +29,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -118,8 +119,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
+                Instant now = Instant.now();
                 try {
                     anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
+                    log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。",DateTimeUtil.getTimeMillis(now));
                 } catch (Exception e) {
                     log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
                 }
