@@ -2,6 +2,8 @@ package com.mingshi.skyflying.kafka.consumer;
 
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.MetricsUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.disruptor.processor.ProcessorByDisruptor;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
@@ -213,12 +215,13 @@ public class AiitKafkaConsumerUtil {
           if (false == offerResult) {
             if(Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 100){
               log.info("消息对应的processor线程队列都满了，利用这个空隙，提交offset。该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+              log.info("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 当前第二层队列中的统计信息 = 【{}】。", JsonUtil.object2String(MetricsUtil.getQueuePartitionMap()));
             }
             commitOffsetSync(aiitKafkaConsumer, offsetsLinkedBlockingQueue, count, start);
           }
         }
       } else {
-        log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue # 根据消息的partition进行路由到processor线程对应的额内存队列里时，该消息没有partition字段值。这是不正常的。");
+        log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 根据消息的partition进行路由到processor线程对应的额内存队列里时，该消息没有partition字段值。这是不正常的。");
       }
     } catch (Throwable e) {
       log.error("# ReactorUtil.putRecordIntoBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);

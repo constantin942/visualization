@@ -180,4 +180,4 @@ reactor:
       count: 1
   iothread:
     thread:
-      count: 4
+      count: 8

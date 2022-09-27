@@ -119,9 +119,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 try {
-                  anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
+                    anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
                 } catch (Exception e) {
-                  log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
+                    log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
                 }
             }
 
@@ -159,11 +159,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private void cacheRuleEnable() {
         UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
         UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
-        if(null != timeRule){
-          portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
+        if (null != timeRule) {
+            portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
         }
-        if(null != tableRule){
-          portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
+        if (null != tableRule) {
+            portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
         }
     }
 
@@ -978,7 +978,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             ref.setParentSpanId(reference.getParentSpanId());
 
             span.setSegmentParentSpanId(
-                    ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
+                ref.getParentSegmentId() + Const.SEGMENT_SPAN_SPLIT + ref.getParentSpanId());
 
             span.getRefs().add(ref);
         });
