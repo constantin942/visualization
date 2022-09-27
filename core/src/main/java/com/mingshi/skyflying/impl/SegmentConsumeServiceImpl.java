@@ -14,7 +14,6 @@ import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.dao.SegmentDao;
 import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
-import com.mingshi.skyflying.disruptor.processor.SegmentByByte;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.service.UserPortraitRulesService;
@@ -72,13 +71,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     @Override
     public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
         doConsume(consumerRecord, enableReactorModelFlag);
-        return null;
-    }
-
-    @Override
-    public ServerResponse<String> consumeByDisruptor(SegmentByByte segmentByByte, Boolean enableReactorModelFlag) throws Exception {
-        ConsumerRecord<String, Bytes> record = segmentByByte.getRecord();
-        doConsume(record, enableReactorModelFlag);
         return null;
     }
 

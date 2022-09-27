@@ -79,8 +79,6 @@ public class Const {
     public static final String TOPIC = "topic";
     public static final String PARTITION = "partition";
     public static final String OFFSET = "offset";
-    public static final String TOPIC_PARTITION_OFFSET = "topic-partition-offset";
-    public static final String HASH_TEST_GRACEFUL_SHUTDOWN = "hash-test-graceful-shutdown";
     public static final String AGENT_STATUS_OFF_DESC = "关闭";
     public static final String AGENT_STATUS_ON_DESC = "开启";
     public static final String HANDLER = "handler";
@@ -358,12 +356,10 @@ public class Const {
     /**
      * 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
      */
-    public static final String SECOND_QUEUE_SIZE_ZSET_BY_DISRUPTOR = "second_queue_size_zset_by_disruptor";
     public static final String SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "second_queue_size_zset_by_linked_blocking_queue";
     /**
      * 统计第一层队列当前有多少个元素；2022-07-26 17:21:20
      */
-    public static final String FIRST_QUEUE_SIZE_ZSET_BY_DISRUPTOR = "first_queue_size_zset_by_disruptor";
     public static final String FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "first_queue_size_zset_by_linked_blocking_queue";
     public static final String SEGMENT = "segment";
     public static final String SPAN = "span";

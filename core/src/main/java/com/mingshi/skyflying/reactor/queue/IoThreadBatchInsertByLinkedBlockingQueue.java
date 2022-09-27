@@ -2,7 +2,6 @@ package com.mingshi.skyflying.reactor.queue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.utils.MetricsUtil;
 import com.mingshi.skyflying.reactor.thread.IoThread;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import com.mingshi.skyflying.utils.ReactorUtil;
@@ -50,10 +49,9 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
      * 私有构造函数，只能产生一个单例；2021-06-23 10:49:23
      *
      * @param localStatisticsThreadCount
-     * @param flushToRocketMqInterval
      * @param mingshiServerUtil
      */
-    public IoThreadBatchInsertByLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+    public IoThreadBatchInsertByLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
         log.info("开始执行方法OperatorRedisFailureBuffer（）。");
         if (0 < SINGLE_CASE_COUNT.get()) {
             log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
@@ -64,49 +62,27 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
             LinkedBlockingQueue<ObjectNode> linkedBlockingQueue = new LinkedBlockingQueue(QUEUE_SIZE);
             linkedBlockingQueueList.add(linkedBlockingQueue);
             log.info("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。", (1 + integer));
-            IoThread ioThread = new IoThread(gracefulShutdown, linkedBlockingQueue, flushToRocketMqInterval, mingshiServerUtil);
+            IoThread ioThread = new IoThread(linkedBlockingQueue, mingshiServerUtil);
             ioThread.setName("processLocalStatisticsThread_" + integer);
             ioThread.start();
         }
     }
 
     /**
-     * 获取单例；2021-06-23 10:50:06
-     *
-     * @param localStatisticsThreadCount
-     * @param flushToRocketMqInterval
-     * @param mingshiServerUtil
-     * @return
-     */
-    public static LinkedBlockingQueue getLinkedBlockingQueueByGracefulShutdown(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil, Integer partition) {
-        try {
-            initLinkedBlockingQueueList(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
-            Integer index = 0;
-            if (null != partition) {
-                index = indexFor(partition, linkedBlockingQueueList.size());
-            }
-            MetricsUtil.put(Const.SECOND + Const.QUEUE + index, Const.PARTITION + "-" + partition);
-            return linkedBlockingQueueList.get(index);
-        } catch (Exception e) {
-            log.error("# BatchInsertByLinkedBlockingQueue.BatchInsertByLinkedBlockingQueue() # 根据partition = 【{}】获取所属内存队列时，出现了异常。", partition, e);
-        }
-        return null;
-    }
-
-    /**
      * <B>方法名称：initLinkedBlockingQueueList</B>
      * <B>概要说明：初始化IoThead线程和对应的队列</B>
+     *
+     * @return void
      * @Author zm
      * @Date 2022年09月27日 09:09:50
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
-     * @return void
      **/
-    private static void initLinkedBlockingQueueList(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+    private static void initLinkedBlockingQueueList(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
         if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
             synchronized (IoThreadBatchInsertByLinkedBlockingQueue.class) {
                 if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
                     log.info("获取单例LinkedBlockingQueue。");
-                    new IoThreadBatchInsertByLinkedBlockingQueue(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+                    new IoThreadBatchInsertByLinkedBlockingQueue(localStatisticsThreadCount, mingshiServerUtil);
                 }
             }
         }
@@ -115,36 +91,21 @@ public class IoThreadBatchInsertByLinkedBlockingQueue {
     /**
      * <B>方法名称：getLinkedBlockingQueue</B>
      * <B>概要说明：使用非优雅关机的方式获取IoThread线程对应的队列</B>
+     *
+     * @return java.util.concurrent.LinkedBlockingQueue
      * @Author zm
      * @Date 2022年09月27日 09:09:37
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
-     * @return java.util.concurrent.LinkedBlockingQueue
      **/
-    public static LinkedBlockingQueue getLinkedBlockingQueue(boolean gracefulShutdown, Integer localStatisticsThreadCount, Integer flushToRocketMqInterval, MingshiServerUtil mingshiServerUtil) {
+    public static LinkedBlockingQueue getLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
         try {
-            initLinkedBlockingQueueList(gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil);
+            initLinkedBlockingQueueList(localStatisticsThreadCount, mingshiServerUtil);
             Integer index = indexFor(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
             return linkedBlockingQueueList.get(index);
         } catch (Exception e) {
             log.error("# BatchInsertByLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。", e);
         }
         return null;
-    }
-
-    /**
-     * <B>方法名称：getQueueIndex</B>
-     * <B>概要说明：根据partition获取对应的队列</B>
-     *
-     * @return java.lang.Integer
-     * @Author zm
-     * @Date 2022年09月14日 19:09:54
-     * @Param [partition]
-     **/
-    public static Integer getQueueIndex(Integer partition) {
-        if (0 < linkedBlockingQueueList.size() && null != partition && -1 < partition) {
-            return indexFor(partition, linkedBlockingQueueList.size());
-        }
-        return -1000;
     }
 
     private static volatile Boolean TWO_POWER_FLAG = null;
