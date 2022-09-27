@@ -48,10 +48,8 @@ public class IoThread extends Thread {
     private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
     private MingshiServerUtil mingshiServerUtil;
     private Integer capacity;
-    private String name;
 
-
-    public IoThread(Integer id ,Integer queueSize, MingshiServerUtil mingshiServerUtil) {
+    public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
         skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -65,20 +63,8 @@ public class IoThread extends Thread {
         this.linkedBlockingQueue = new LinkedBlockingQueue(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
-        this.name = Const.IOTHREAD_NAME + id;
     }
 
-    /**
-     * <B>方法名称：getIoThreadName</B>
-     * <B>概要说明：获取iothread线程名称</B>
-     * @Author zm
-     * @Date 2022年09月27日 14:09:14
-     * @Param []
-     * @return java.lang.String
-     **/
-    public String getIoThreadName(){
-        return name;
-    }
     /**
      * <B>方法名称：offer</B>
      * <B>概要说明：往IoThread线程内部的线程中存放清洗后的消息</B>

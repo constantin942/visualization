@@ -1,21 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 package com.mingshi.skyflying.common.constant;
 
 import java.util.Map;
@@ -27,10 +9,11 @@ public class Const {
     public static final String TOTAL = "total";
     public static final String ROWS = "rows";
     public static final String STATUS = "status";
-    public static final String QUEUE = "queue-";
-    public static final String FIRST = "first-";
-    public static final String SECOND = "second-";
-    public static final String IOTHREAD_NAME = "io_thread_name_";
+    public static final String QUEUE = "queue:";
+    public static final String FIRST = "first:";
+    public static final String SECOND = "second:";
+    public static final String IO_THREAD = "io_Thread_";
+    public static final String PROCESSOR_THREAD = "processor_thread_";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -357,11 +340,11 @@ public class Const {
     /**
      * 统计第二层公共队列当前有多少个元素；2022-07-23 11:32:15
      */
-    public static final String SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "second_queue_size_zset_by_linked_blocking_queue";
+    public static final String SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "second_queue_size_zset_";
     /**
      * 统计第一层队列当前有多少个元素；2022-07-26 17:21:20
      */
-    public static final String FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "first_queue_size_zset_by_linked_blocking_queue";
+    public static final String FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE = "first_queue_size_zset_";
     public static final String SEGMENT = "segment";
     public static final String SPAN = "span";
 

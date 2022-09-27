@@ -92,7 +92,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
         for (int i = 0; i < processorSize; i++) {
             log.info("项目启动，开始创建第【{}】个processor线程，processor线程总数【{}】个。", (1 + i), processorSize);
             ProcessorThread processorThread = new ProcessorThread(segmentConsumerService);
-            processorThread.setName("processor_" + i);
+            processorThread.setName(Const.PROCESSOR_THREAD + i);
             processorThread.start();
             processorThreadList.add(processorThread);
         }

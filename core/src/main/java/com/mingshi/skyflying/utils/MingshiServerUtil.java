@@ -203,7 +203,7 @@ public class MingshiServerUtil {
         if (queueSize == ioThread.getQueueCapacity() && Const.NUMBER_ZERO < queueSize) {
             String key = DateTimeUtil.dateToStr(new Date());
 
-            redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + Const.RELATION_ID_CONNECTOR + ioThread.getIoThreadName(), key, Double.valueOf(queueSize));
+            redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + Const.RELATION_ID_CONNECTOR + ioThread.getName(), key, Double.valueOf(queueSize));
         }
     }
 
@@ -935,9 +935,10 @@ public class MingshiServerUtil {
             List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
             if (!processorThreadList.isEmpty()) {
                 for (int i = 0; i < processorThreadList.size(); i++) {
-                    Integer queueSize = processorThreadList.get(i).getQueueSize();
+                    ProcessorThread processorThread = processorThreadList.get(i);
+                    Integer queueSize = processorThread.getQueueSize();
                     if (0 < queueSize) {
-                        redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, Double.valueOf(queueSize));
+                        redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + processorThread.getName(), key, Double.valueOf(queueSize));
                     }
                 }
             }
@@ -945,9 +946,10 @@ public class MingshiServerUtil {
             List<IoThread> ioThreadList = IoThreadLinkedBlockingQueue.getLinkedBlockingQueueList();
             if (!ioThreadList.isEmpty()) {
                 for (int i = 0; i < ioThreadList.size(); i++) {
-                    Integer size = ioThreadList.get(i).getQueueSize();
+                    IoThread ioThread = ioThreadList.get(i);
+                    Integer size = ioThread.getQueueSize();
                     if (0 < size) {
-                        redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + "-" + (1 + i), key, size.doubleValue());
+                        redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + ioThread.getName(), key, size.doubleValue());
                     }
                 }
             }
@@ -978,7 +980,7 @@ public class MingshiServerUtil {
         // 将processor线程的QPS发送到Redis中；2022-07-23 11:22:13
         flushProcessorThreadQpsToRedis(processorThreadQpsMap);
 
-        // 将公共队列中有多少元素没有被消费发送到Redis中统计；2022-07-23 11:33:39
+        // 将公共队列中有多少元素没有被消费发送到Redis中统计，便于日常的系统调优；2022-07-23 11:33:39
         statisticsProcessorAndIoThreadQueueSize();
 
         // 统计kafka消费者每秒拿到多少消息；2022-07-28 13:57:05

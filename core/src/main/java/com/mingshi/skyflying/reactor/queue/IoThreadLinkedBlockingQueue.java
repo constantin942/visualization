@@ -58,8 +58,8 @@ public class IoThreadLinkedBlockingQueue {
         SINGLE_CASE_COUNT.incrementAndGet();
         for (Integer i = 0; i < localStatisticsThreadCount; i++) {
             log.info("# IoThreadLinkedBlockingQueue.IoThreadLinkedBlockingQueue() # 开始创建第【{}】个IoThread线程。", (1 + i));
-            IoThread ioThread = new IoThread(i, QUEUE_SIZE, mingshiServerUtil);
-            ioThread.setName("ioThread_" + i);
+            IoThread ioThread = new IoThread(QUEUE_SIZE, mingshiServerUtil);
+            ioThread.setName(Const.IO_THREAD + i);
             ioThread.start();
             linkedBlockingQueueList.add(ioThread);
         }
