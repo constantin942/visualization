@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.utils;
 
-import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.thread.ProcessorThread;
 import com.mingshi.skyflying.service.SegmentConsumerService;
@@ -52,7 +51,6 @@ public class AiitKafkaConsumerUtil {
     public void doOnMessage(ConsumerRecord<String, Bytes> consumerRecord) {
         if (Boolean.TRUE.equals(reactorProcessorEnable)) {
             // 使用Reactor模式；
-            log.info("# AiitKafkaConsumerUtil.doOnMessage() # 使用Reactor模式来处理链路信息，启用LinkedBlockingQueue队列。");
             // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
             useReactorModelByLinkedBlockingQueue(consumerRecord);
         } else {
@@ -79,11 +77,13 @@ public class AiitKafkaConsumerUtil {
             while (false == offerResult) {
                 processorThread = InitProcessorByLinkedBlockingQueue.getProcessor();
                 offerResult = processorThread.offer(consumerRecord);
-                if (false == offerResult) {
-                    if (Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 500) {
-                        log.info("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消息对应的processor线程队列都满了，该processor线程中队列中的元素个数【{}】。", processorThread.getQueueSize());
-                    }
-                }
+                // TimeUnit.MILLISECONDS.sleep(10);
+                // if (false == offerResult) {
+                //     if (100 * 10000 == countPrintLog.incrementAndGet()) {
+                //         log.info("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消息对应的processor线程【{}】队列都满了，该processor线程中队列中的元素个数【{}】。",processorThread.getName(), processorThread.getQueueSize());
+                //         countPrintLog.set(0);
+                //     }
+                // }
             }
         } catch (Throwable e) {
             log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);

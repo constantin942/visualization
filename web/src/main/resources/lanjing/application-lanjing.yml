@@ -81,7 +81,8 @@ spring:
   #      nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
 
   kafka:
-    bootstrap-servers: 114.55.211.161:9092
+    bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+#    bootstrap-servers: 114.55.211.161:9092
     producer:
       topic: skywalking-segments-online
       # 发生错误后，消息重发的次数。
@@ -141,4 +142,4 @@ reactor:
       count: 1
   iothread:
     thread:
-      count: 8
+      count: 2

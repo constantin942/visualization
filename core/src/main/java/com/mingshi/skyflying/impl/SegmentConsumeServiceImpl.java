@@ -28,7 +28,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -126,7 +125,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             // 将组装好的segment插入到表中；2022-04-20 16:34:01
             if (enableReactorModelFlag) {
                 // 使用reactor模型；2022-05-30 21:04:05
-                mingshiServerUtil.doEnableReactorModel(consumerRecord, statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
             } else {
                 disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
             }

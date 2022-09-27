@@ -119,8 +119,7 @@ public class MingshiServerUtil {
      * @Date 2022年08月01日 15:08:05
      * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
      **/
-    public void doEnableReactorModel(ConsumerRecord<String, Bytes> consumerRecord,
-                                     Map<String, Map<String, Integer>> map,
+    public void doEnableReactorModel(Map<String, Map<String, Integer>> map,
                                      List<Span> spanList,
                                      SegmentDo segmentDo,
                                      List<MsSegmentDetailDo> segmentDetaiDolList,
@@ -129,9 +128,9 @@ public class MingshiServerUtil {
                                      Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
         try {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
-            // if (null != segmentDo) {
-            //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-            // }
+            if (null != segmentDo) {
+              jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
+            }
 
             /**
              * 统计当前线程的QPS；2022-07-23 11:05:16

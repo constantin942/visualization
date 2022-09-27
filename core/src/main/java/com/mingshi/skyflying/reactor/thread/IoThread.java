@@ -113,6 +113,8 @@ public class IoThread extends Thread {
                         // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
                         getSkywalkingAgentNameFromJsonObject(jsonObject);
 
+                        getSegmentFromJsonObject(jsonObject);
+
                         // 统计processorThread线程的QPS；2022-07-23 11:15:29
                         getProcessorThreadQpsFromJsonObject(jsonObject);
 
