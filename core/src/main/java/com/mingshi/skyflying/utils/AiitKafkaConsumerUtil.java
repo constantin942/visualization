@@ -2,7 +2,7 @@ package com.mingshi.skyflying.utils;
 
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
-import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
+import com.mingshi.skyflying.reactor.thread.ProcessorThread;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -52,7 +52,7 @@ public class AiitKafkaConsumerUtil {
     public void doOnMessage(ConsumerRecord<String, Bytes> consumerRecord) {
         if (Boolean.TRUE.equals(reactorProcessorEnable)) {
             // 使用Reactor模式；
-            log.info("# AiitKafkaConsumerUtil.doOnMessage() # 不使用优雅关机的方式来消息链路信息，启用LinkedBlockingQueue队列。");
+            log.info("# AiitKafkaConsumerUtil.doOnMessage() # 使用Reactor模式来处理链路信息，启用LinkedBlockingQueue队列。");
             // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
             useReactorModelByLinkedBlockingQueue(consumerRecord);
         } else {
@@ -74,19 +74,19 @@ public class AiitKafkaConsumerUtil {
         // 等待创建processor线程；2022-06-01 09:20:19
         waitingCreateProcessorsThread();
         try {
-            ProcessorHandlerByLinkedBlockingQueue processorHandlerByLinkedBlockingQueue = null;
+            ProcessorThread processorThread = null;
             boolean offerResult = false;
             while (false == offerResult) {
-                processorHandlerByLinkedBlockingQueue = InitProcessorByLinkedBlockingQueue.getProcessor();
-                offerResult = processorHandlerByLinkedBlockingQueue.offer(consumerRecord);
+                processorThread = InitProcessorByLinkedBlockingQueue.getProcessor();
+                offerResult = processorThread.offer(consumerRecord);
                 if (false == offerResult) {
                     if (Const.NUMBER_ZERO == countPrintLog.incrementAndGet() % 500) {
-                        log.info("消息对应的processor线程队列都满了，该processor线程中队列中的元素个数【{}】。", processorHandlerByLinkedBlockingQueue.getQueueSize());
+                        log.info("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消息对应的processor线程队列都满了，该processor线程中队列中的元素个数【{}】。", processorThread.getQueueSize());
                     }
                 }
             }
         } catch (Throwable e) {
-            log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueueByGracefulShutdown() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);
+            log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.reactor.queue;
 
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.reactor.thread.ProcessorHandlerByLinkedBlockingQueue;
+import com.mingshi.skyflying.reactor.thread.ProcessorThread;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import com.mingshi.skyflying.utils.ReactorUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     private static Integer processorSize;
     private static AtomicInteger indexAtomicInteger = null;
     private static volatile Boolean createProcessorsFinishedFlag = false;
-    private static List<ProcessorHandlerByLinkedBlockingQueue> processorHandlerByLinkedBlockingQueueList = null;
+    private static List<ProcessorThread> processorThreadList = null;
 
     public static Boolean getCreateProcessorsFinishedFlag() {
         return createProcessorsFinishedFlag;
@@ -51,8 +51,8 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
         return shutdown;
     }
 
-    public static List<ProcessorHandlerByLinkedBlockingQueue> getProcessorHandlerByLinkedBlockingQueueList() {
-        return processorHandlerByLinkedBlockingQueueList;
+    public static List<ProcessorThread> getProcessorHandlerByLinkedBlockingQueueList() {
+        return processorThreadList;
     }
 
     public static Integer getProcessorSize() {
@@ -72,7 +72,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
             }
             processorSize = reactorProcessorThreadCount;
             indexAtomicInteger = new AtomicInteger(Const.NUMBER_ZERO);
-            processorHandlerByLinkedBlockingQueueList = new ArrayList<>(reactorProcessorThreadCount);
+            processorThreadList = new ArrayList<>(reactorProcessorThreadCount);
             // 项目启动成功后，创建指定数量的processor线程；
             createProcessors();
             createProcessorsFinishedFlag = true;
@@ -91,11 +91,10 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     private void createProcessors() {
         for (int i = 0; i < processorSize; i++) {
             log.info("项目启动，开始创建第【{}】个processor线程，processor线程总数【{}】个。", (1 + i), processorSize);
-            ProcessorHandlerByLinkedBlockingQueue processorHandlerByLinkedBlockingQueue = new ProcessorHandlerByLinkedBlockingQueue(segmentConsumerService);
-            Thread thread = new Thread(processorHandlerByLinkedBlockingQueue);
-            thread.setName("processor_" + i);
-            thread.start();
-            processorHandlerByLinkedBlockingQueueList.add(processorHandlerByLinkedBlockingQueue);
+            ProcessorThread processorThread = new ProcessorThread(segmentConsumerService);
+            processorThread.setName("processor_" + i);
+            processorThread.start();
+            processorThreadList.add(processorThread);
         }
     }
 
@@ -108,12 +107,12 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
      * @Date 2022年09月27日 09:09:26
      * @Param []
      **/
-    public static ProcessorHandlerByLinkedBlockingQueue getProcessor() {
-        if (Const.NUMBER_ONE.equals(processorHandlerByLinkedBlockingQueueList.size())) {
-            return processorHandlerByLinkedBlockingQueueList.get(Const.NUMBER_ZERO);
+    public static ProcessorThread getProcessor() {
+        if (Const.NUMBER_ONE.equals(processorThreadList.size())) {
+            return processorThreadList.get(Const.NUMBER_ZERO);
         }
         int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);
-        return processorHandlerByLinkedBlockingQueueList.get(index);
+        return processorThreadList.get(index);
     }
 
 }

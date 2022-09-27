@@ -2,17 +2,17 @@ package com.mingshi.skyflying.kafka.consumer;
 
 import com.mingshi.skyflying.utils.AiitKafkaConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -31,7 +31,6 @@ public class MsKafkaSegmentsConsumer extends Thread {
     private String consumerGroup;
     private String bootstrapServers;
     private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
-    private LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> offsetsLinkedBlockingQueue;
 
     /**
      * 初始化完成的标志；2022-07-28 17:12:32
@@ -40,21 +39,11 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
     private KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-    public MsKafkaSegmentsConsumer(LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> linkedBlockingQueue, AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
+    public MsKafkaSegmentsConsumer(AiitKafkaConsumerUtil aiitKafkaConsumerUtil, String bootstrapServers, String consumerTopic, String consumerGroup) {
         this.aiitKafkaConsumerUtil = aiitKafkaConsumerUtil;
         this.bootstrapServers = bootstrapServers;
         this.consumerTopic = consumerTopic;
         this.consumerGroup = consumerGroup;
-        this.offsetsLinkedBlockingQueue = linkedBlockingQueue;
-    }
-
-    /**
-     * 获取队列
-     *
-     * @return
-     */
-    public LinkedBlockingQueue<Map<TopicPartition, OffsetAndMetadata>> getOffsetsLinkedBlockingQueue() {
-        return offsetsLinkedBlockingQueue;
     }
 
     /**
@@ -123,7 +112,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
     private void doRun() {
         while (true) {
             try {
-                ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(100));
+                ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(200));
                 Integer count = records.count();
                 for (ConsumerRecord<String, Bytes> consumerRecord : records) {
                     aiitKafkaConsumerUtil.doOnMessage(consumerRecord);

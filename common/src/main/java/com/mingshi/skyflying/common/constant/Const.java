@@ -30,6 +30,7 @@ public class Const {
     public static final String QUEUE = "queue-";
     public static final String FIRST = "first-";
     public static final String SECOND = "second-";
+    public static final String IOTHREAD_NAME = "io_thread_name_";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -99,6 +100,7 @@ public class Const {
     public static final String TABLE_COMMENT = "table_comment";
     public static final int NUMBER_SIX = 6;
     public static final int NUMBER_EIGHTEEN = 18;
+    public static final int NUMBER_TEN = 10;
     public static final int NUMBER_TWENTY_FOUR = 24;
     public static final int NUMBER_TWELVE = 12;
 
@@ -181,7 +183,6 @@ public class Const {
     public static final Integer INITIAL_PROCESSOR_THREAD_COUNT = 4;
     public static final Integer NUMBER_ZERO = 0;
     public static final Integer IO_THREAD_QUEUE_SIZE = 500;
-    public static final Integer INITIAL_FLUSH_TO_ROCKETMQ_INTERVAL = 5;
     public static final Integer FLUSH_TO_MQ_INTERVAL = 5;
     public static final Integer CURRENT_TIME_RANDOM = 30;
     public static final String KEYS_ALL = "keys *";
