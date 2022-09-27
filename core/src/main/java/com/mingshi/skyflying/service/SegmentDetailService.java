@@ -20,7 +20,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<List<String>> getUserOperationTypeCount(String userName);
 
-  ServerResponse<String> getCoarseCountsOfUser(Integer pageNo, Integer pageSize);
+  ServerResponse<String> getCoarseCountsOfUser();
 
   ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize);
 
@@ -38,6 +38,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<List<UserAlarmData>> getUserAlarmData();
 
+  List<UserCoarseInfo> getCoarseCountsOfUsers(String username);
 }
 
 // 恢复kafak的某个topic下某个消费组的offset为最早；2022-06-07 10:25:58

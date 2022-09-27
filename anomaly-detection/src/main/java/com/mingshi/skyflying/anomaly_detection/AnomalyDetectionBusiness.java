@@ -5,12 +5,12 @@ import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.UserCoarseInfo;
 import com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
@@ -20,7 +20,6 @@ import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -74,8 +73,9 @@ public class AnomalyDetectionBusiness {
     private final String AFTERNOON = "afternoon";
 
     private final String NIGHT = "night";
- 
+
     private final String DEMO_MODE = "demo_mode";
+
     /**
      * 判断是否告警-库表维度
      */
@@ -101,7 +101,7 @@ public class AnomalyDetectionBusiness {
     }
 
     /**
-     *  是否为演示模式
+     * 是否为演示模式
      */
     private boolean isDemoMode() {
         String mode = portraitConfigMapper.selectOneByName(DEMO_MODE);
@@ -358,4 +358,18 @@ public class AnomalyDetectionBusiness {
         return resList;
     }
 
+    public List<UserCoarseInfo> getCoarseCountsOfUsers(String username) {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        Integer period = portraitConfig.getRuleTablePeriod();
+        List<String> users = tableMapper.getAllUser(username, period);
+        List<UserCoarseInfo> coarseInfoList = new ArrayList<>(users.size() * 2);
+        for (String user : users) {
+            UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);
+            if (userCoarseInfo != null) {
+                userCoarseInfo.setLastVisitedDate(tableMapper.getLastVisitedDate(user));
+                coarseInfoList.add(userCoarseInfo);
+            }
+        }
+        return coarseInfoList;
+    }
 }

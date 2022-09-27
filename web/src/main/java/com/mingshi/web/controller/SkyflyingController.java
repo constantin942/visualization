@@ -670,7 +670,7 @@ public class SkyflyingController {
   @GetMapping(value = "/getCoarseCountsOfUser")
   public ServerResponse<String> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-    return segmentDetailService.getCoarseCountsOfUser(pageNo, pageSize);
+    return segmentDetailService.getCoarseCountsOfUser();
   }
 
   /**
@@ -692,25 +692,30 @@ public class SkyflyingController {
     return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
   }
 
-  /**
-   * <B>方法名称：getCoarseCountsOfOneUser/B>
-   * <B>概要说明：获取某一特定用户对数据的粗粒度信息</B>
-   *
-   * @return ServerResponse<SysOperator>
-   * @Author lhx
-   * @Date 2022年07月5日 14:30:19
-   * @Param
-   **/
+//  /**
+//   * <B>方法名称：getCoarseCountsOfOneUser/B>
+//   * <B>概要说明：获取某一特定用户对数据的粗粒度信息</B>
+//   *
+//   * @return ServerResponse<SysOperator>
+//   * @Author lhx
+//   * @Date 2022年07月5日 14:30:19
+//   * @Param
+//   **/
+//  @ResponseBody
+//  @GetMapping(value = "/getCoarseCountsOfOneUser")
+//  public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
+//                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+//                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+//
+//    return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
+//
+//  }
+
   @ResponseBody
-  @GetMapping(value = "/getCoarseCountsOfOneUser")
-  public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
-                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-
-    return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
-
+  @GetMapping(value = "/getCoarseCountsOfUsers")
+  public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfOneUser(@RequestParam(value = "username", defaultValue = "") String username) {
+    return ServerResponse.createBySuccess(segmentDetailService.getCoarseCountsOfUsers(username));
   }
-
 
   /**
    * <B>方法名称：getCountsOfUser/B>

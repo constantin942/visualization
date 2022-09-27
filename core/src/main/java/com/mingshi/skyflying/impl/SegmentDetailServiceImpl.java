@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -247,7 +246,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     @Override
-    public ServerResponse<String> getCoarseCountsOfUser(Integer pageNo, Integer pageSize) {
+    public ServerResponse<String> getCoarseCountsOfUser() {
         log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
 
         List<UserCoarseInfo> userCoarseInfos = new ArrayList<>();
@@ -371,7 +370,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         if(!list.isEmpty()){
           userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
         }
-
         log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfo);
     }
@@ -746,6 +744,11 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         });
         log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取用户告警信息。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
+    }
+
+    @Override
+    public List<UserCoarseInfo> getCoarseCountsOfUsers(String username) {
+        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username);
     }
 
 

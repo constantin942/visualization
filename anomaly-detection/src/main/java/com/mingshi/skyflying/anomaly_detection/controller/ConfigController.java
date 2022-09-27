@@ -55,7 +55,7 @@ public class ConfigController {
 
     @PutMapping("setDemoMode")
     public ServerResponse setDemoMode(@RequestParam Boolean enable) {
-        if(enable) {
+        if(Boolean.TRUE.equals(enable)) {
             portraitConfigMapper.setDemoMode("1");
         } else {
             portraitConfigMapper.setDemoMode("0");

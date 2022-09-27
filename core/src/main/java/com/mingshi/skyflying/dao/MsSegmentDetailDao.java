@@ -102,4 +102,5 @@ public interface MsSegmentDetailDao {
   String selectUserNameByToken(String token);
 
   String selectUserNameByGlobalTraceId(String globalTraceId);
+
 }

@@ -2,6 +2,7 @@ package com.mingshi.skyflying.anomaly_detection.dao;
 
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
+import com.mingshi.skyflying.common.domain.UserCoarseInfo;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
@@ -25,4 +26,10 @@ public interface UserPortraitByTableMapper {
 
     List<Map<String, String>> selectUnFrequntList(@Param("username") String userName, @Param("period") Integer ruleTablePeriod
             , @Param("threshold") Integer threshold);
+
+    UserCoarseInfo selectCoarseCountsOfUser(@Param("username") String username, @Param("period") Integer period);
+
+    List<String> getAllUser(@Param("username") String userName, @Param("period") Integer ruleTablePeriod);
+
+    String getLastVisitedDate(String username);
 }
