@@ -381,10 +381,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
         try {
             String[] split = msTableName.split("\\.");
-//                String peer = split[0];
             String dbInstance = split[0];
             String tableName = split[1];
-//                map.put(Const.PEER, peer);
             map.put(Const.DB_INSTANCE2, dbInstance);
             map.put(Const.MS_TABLE_NAME, tableName);
         } catch (Exception e) {
