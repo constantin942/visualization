@@ -102,7 +102,7 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
      *  存入Redis
      */
     @Override
-    public void cacheRule(Integer ruleId, Integer isDelete) {
+    public Boolean cacheRule(Integer ruleId, Integer isDelete) {
         Boolean enable = isDelete != 1;
         if(ruleId == 1) {
             redisPoolUtil.set(PREFIX + TIME_SUF, enable, EXPIRE);
@@ -110,12 +110,14 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
         if (ruleId == 2) {
             redisPoolUtil.set(PREFIX + TABLE_SUF, enable, EXPIRE);
         }
+        return enable;
     }
 
     @Override
     public void updateRule(Integer ruleId, Integer isDelete) {
         UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(ruleId);
         userPortraitRulesMapper.updateByPrimaryKeySelective(userPortraitRulesDo);
+        cacheRule(ruleId, isDelete);
     }
 
     private ServerResponse<String> doUpdateUserPortraitRuleRule(UserPortraitRulesDo userPortraitRulesDo, Integer isDelete) {

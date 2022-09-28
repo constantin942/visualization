@@ -138,19 +138,19 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     /**
      * 获取规则开关
      */
-    private Boolean getEnableRule(String suffix) {
-        Object o = redisPoolUtil.get(PREFIX + suffix);
-        if (o == null) {
-            cacheRuleEnable();
+    public Boolean getEnableRule(String suffix) {
+        String key = PREFIX + suffix;
+        Object o = redisPoolUtil.get(key);
+        if (o != null) {
+            return Boolean.parseBoolean((String) o);
         }
-        o = redisPoolUtil.get(PREFIX + suffix);
-        return Boolean.parseBoolean((String) o);
+        return cacheRuleEnable(suffix);
     }
 
     /**
      * 从数据库查询开关存入Redis
      */
-    private void cacheRuleEnable() {
+    private Boolean cacheRuleEnable(String suffix) {
         UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
         UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
         if (null != timeRule) {
@@ -159,6 +159,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if (null != tableRule) {
             portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
         }
+        if(suffix.equals(TIME_SUF)) {
+            assert timeRule != null;
+            return timeRule.getIsDelete() != 1;
+        }
+        if(suffix.equals(TABLE_SUF)) {
+            assert tableRule != null;
+            return tableRule.getIsDelete() != 1;
+        }
+        return false;
     }
 
     /**

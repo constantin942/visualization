@@ -81,4 +81,5 @@ public class TestControllerA {
     public void getFrequentList(){
         anomalyDetectionBusiness.getFrequentList("admin");
     }
+
 }

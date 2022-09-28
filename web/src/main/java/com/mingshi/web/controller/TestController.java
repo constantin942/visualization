@@ -2,14 +2,18 @@ package com.mingshi.web.controller;
 
 import com.mingshi.skyflying.common.utils.DbUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
+import com.mingshi.skyflying.impl.SegmentConsumeServiceImpl;
 import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
+import com.mingshi.skyflying.service.SegmentConsumerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.time.Instant;
@@ -21,9 +25,9 @@ import java.time.Instant;
  * @Param
  * @return
  **/
-@Controller
+@RestController
 @Slf4j
-// @RequestMapping("/api")
+@RequestMapping("/api/test")
 public class TestController {
   @Value("${spring.datasource.url}")
   private String url;
@@ -40,6 +44,8 @@ public class TestController {
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
 
+  @Resource
+  private SegmentConsumeServiceImpl segmentConsumerService;
   private String topic = "zm-test-topic-02";
   private Instant nowCpuMemory = Instant.now();
 
@@ -51,14 +57,12 @@ public class TestController {
    * @Param []
    * @return void
    **/
-  @ResponseBody
   @GetMapping(value = "/createDbDocument")
   public void createDbDocument() {
     String dataBaseName = url.split("/")[3].split("useUnicode")[0].replace("?","");
     dbUtil.createWord(dataBaseName, docDirPath);
   }
 
-  @ResponseBody
   @GetMapping(value = "/sendMsg")
   public void testSendMsgToKafka(String topic){
     for (int i = 0; i < 1; i++) {
@@ -341,4 +345,10 @@ public class TestController {
   //   Long timeMillis = DateTimeUtil.getTimeMillis(start);
   //   redisPoolUtil.hset(flag + url, item, timeMillis.toString());
   // }
+
+  @GetMapping("tableRuleEnable")
+  public void tableRuleEnable() {
+    segmentConsumerService.getEnableRule("table");
+  }
+
 }
