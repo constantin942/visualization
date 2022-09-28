@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
+import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,9 @@ public class ConfigController {
 
     @Resource
     PortraitConfigMapper portraitConfigMapper;
+
+//    @Resource
+
 
     private final String DEMO_MODE = "demo_mode";
 
@@ -62,4 +66,9 @@ public class ConfigController {
         }
         return ServerResponse.createBySuccess();
     }
+//
+//    @GetMapping("getAllHighRiskOpt")
+//    public ServerResponse<List<HighRiskOpt>> getAllHighRiskOpt() {
+//
+//    }
 }

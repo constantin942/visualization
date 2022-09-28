@@ -130,7 +130,7 @@ public class AnomalyDetectionBusiness {
             msAlarmInformationDoList.add(msAlarmInformationDo);
         } else {
             //有用户画像
-            if (count > portraitConfig.getRuleTableCount()) {
+            if (count < portraitConfig.getRuleTableCount()) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM));
             }
         }

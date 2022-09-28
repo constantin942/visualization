@@ -215,7 +215,7 @@ public class UserPortraitByTableTask {
             log.error("提取时间失败----{}", segmentDetail.getStartTime());
             return;
         }
-        String tableName = segmentDetail.getMsTableName() + "." + segmentDetail.getMsTableName();
+        String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
         UserPortraitByTableDo userPortraitByTable = userPortraitByTableMapper.selectByNameAndTime(username, time, tableName);
         if (userPortraitByTable == null) {
             // 没有该用户当天粗粒度/画像信息
