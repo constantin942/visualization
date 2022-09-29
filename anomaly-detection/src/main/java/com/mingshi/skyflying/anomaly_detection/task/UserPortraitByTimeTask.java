@@ -135,7 +135,9 @@ public class UserPortraitByTimeTask {
     public List<UserPortraitByTimeDo> createUserPortraitByTime(Integer portraitByTimePeriod) {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
-        userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
+        if(userPortraitByTimeDoList.size() != 0) {
+            userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
+        }
         return userPortraitByTimeDoList;
     }
 

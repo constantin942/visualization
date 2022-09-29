@@ -113,7 +113,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 msAlarmInformationDoList = new LinkedList<>();
                 Instant now = Instant.now();
                 try {
-                    if(segmentDetaiDolList.size() != 0) {
+                    if(!segmentDetaiDolList.isEmpty()) {
                         anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
                         log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }

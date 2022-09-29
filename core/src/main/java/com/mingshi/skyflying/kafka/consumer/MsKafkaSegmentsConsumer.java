@@ -101,6 +101,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
     @Override
     public void run() {
+        //TODO: 不需要拉取消息时注释掉
         init();
         if (false == isInitDone.get()) {
             log.error("# ConsumerTest.run() # 初始化失kafka消费者败，不能消费kafka服务端的消息。");

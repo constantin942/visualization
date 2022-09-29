@@ -64,6 +64,6 @@
         select * from ms_segment_detail where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
     </select>
     <select id="selectTimeGap" parameterType="string" resultType="date">
-        select start_time from  ms_segment_detail where user_name = #{username,jdbcType=VARCHAR} order by start_time asc limit 0,1 ;
+        select start_time from  ms_segment_detail where user_name = #{username,jdbcType=VARCHAR} order by start_time asc limit 1 ;
     </select>
 </mapper>

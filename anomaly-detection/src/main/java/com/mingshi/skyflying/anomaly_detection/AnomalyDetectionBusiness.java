@@ -5,9 +5,11 @@ import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
+import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.domain.UserCoarseInfo;
@@ -55,6 +57,9 @@ public class AnomalyDetectionBusiness {
     RedissonClient redissonClient;
     @Resource
     PortraitConfigMapper portraitConfigMapper;
+
+    @Resource
+    HighRiskOptServiceImpl highRiskOptService;
 
     @Resource
     UserPortraitByTableMapper tableMapper;
@@ -116,6 +121,9 @@ public class AnomalyDetectionBusiness {
      */
     public boolean inPeriod(String username, int period) {
         Date date = segmentDetailMapper.selectTimeGap(username);
+        if(date == null) {
+            return true;
+        }
         int betweenDays = (int) ((new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24) + 0.5);
         return betweenDays <= period;
     }
@@ -319,6 +327,7 @@ public class AnomalyDetectionBusiness {
             if (Boolean.TRUE.equals(enableTimeRule)) {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
+            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
