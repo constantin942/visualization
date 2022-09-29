@@ -32,4 +32,6 @@ public interface UserPortraitByTableMapper {
     List<String> getAllUser(@Param("username") String userName, @Param("period") Integer ruleTablePeriod);
 
     String getLastVisitedDate(String username);
+
+    Long getCounts(String user);
 }

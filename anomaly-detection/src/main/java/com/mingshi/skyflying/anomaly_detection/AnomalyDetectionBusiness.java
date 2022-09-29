@@ -376,6 +376,7 @@ public class AnomalyDetectionBusiness {
             UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);
             if (userCoarseInfo != null) {
                 userCoarseInfo.setLastVisitedDate(tableMapper.getLastVisitedDate(user));
+                userCoarseInfo.setVisitedCount(tableMapper.getCounts(user));
                 coarseInfoList.add(userCoarseInfo);
             }
         }

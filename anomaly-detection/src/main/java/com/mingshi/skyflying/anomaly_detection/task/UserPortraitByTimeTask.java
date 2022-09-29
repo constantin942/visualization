@@ -381,7 +381,7 @@ public class UserPortraitByTimeTask {
             updatePortrait();
         }
         o = redisPoolUtil.get(redisKey);
-        return Double.parseDouble((String) o);
+        return o == null ? null : Double.parseDouble((String) o);
     }
 
     /**

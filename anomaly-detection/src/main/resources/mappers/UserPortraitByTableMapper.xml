@@ -63,6 +63,7 @@
         order by count desc limit 1;
 
     </select>
+
     <select id="getAllUser" resultType="java.lang.String">
         select distinct(username)
         from user_portrait_by_table
@@ -75,6 +76,10 @@
         from ms_segment_detail
         where user_name = #{username,jdbcType=VARCHAR}
         order by start_time desc limit 1;
+    </select>
+    <select id="getCounts" resultType="java.lang.Long">
+        select count(*) from  ms_segment_detail
+        where  #{username,jdbcType=VARCHAR} = user_name and db_instance is not null and ms_table_name is not null;
     </select>
 
 
