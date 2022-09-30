@@ -57,6 +57,7 @@
       <if test="originalTime != null and  originalTime != null   ">
         and original_time = #{originalTime}
       </if>
+    order by original_time desc
     <if test="pageNo != null and  pageSize != null   ">
       LIMIT #{pageNo},#{pageSize}
     </if>

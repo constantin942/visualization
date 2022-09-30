@@ -48,6 +48,7 @@ public class ConfigController {
     }
 
 
+
     @Transactional(rollbackFor = Exception.class)
     @PutMapping("updatePortraitConfig")
     public ServerResponse updatePortraitConfig(@Valid @RequestBody PortraitConfig portraitConfig) {

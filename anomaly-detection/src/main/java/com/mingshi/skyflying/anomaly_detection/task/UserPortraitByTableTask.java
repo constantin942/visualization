@@ -108,7 +108,7 @@ public class UserPortraitByTableTask {
             String username = userPortraitByTableDo.getUsername();
             HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
             int count = innerMap.getOrDefault(userPortraitByTableDo.getTableName(), userPortraitByTableDo.getCount());
-            innerMap.put(userPortraitByTableDo.getTableName(), ++count);
+            innerMap.put(userPortraitByTableDo.getTableName(), count + userPortraitByTableDo.getCount());
             outerMap.put(username, innerMap);
         }
     }
