@@ -1,5 +1,8 @@
 package com.mingshi.skyflying.kafka.consumer;
 
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.reactor.queue.IoThreadLinkedBlockingQueue;
 import com.mingshi.skyflying.utils.AiitKafkaConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -11,8 +14,10 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -84,7 +89,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
         // broker接收不到一个consumer的心跳, 持续该时间, 就认为故障了，会将其踢出消费组，对应的Partition也会被重新分配给其他consumer，默认是10秒
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30 * 1000);
         // 一次poll最大拉取消息的条数，如果消费者处理速度很快，可以设置大点，如果处理速度一般，可以设置小点
-        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
+        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 30);
         // 如果两次poll操作间隔超过了这个时间，broker就会认为这个consumer处理能力太弱，会将其踢出消费组，将分区分配给别的consumer消费
         properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 60 * 1000);
         // 把消息的key从字节数组反序列化为字符串
@@ -111,20 +116,65 @@ public class MsKafkaSegmentsConsumer extends Thread {
     }
 
     private void doRun() {
-        while (true) {
-            try {
-                ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(200));
-                Integer count = records.count();
-                for (ConsumerRecord<String, Bytes> consumerRecord : records) {
-                    aiitKafkaConsumerUtil.doOnMessage(consumerRecord);
-                }
-                if (count > 0) {
-                    // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
-                    aiitKafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
-                }
-            } catch (Exception e) {
-                log.error(" # ConsumerTest.run() # 消费消息时，出现了异常。", e);
+        try {
+            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+                consumeRecords();
             }
+        } finally {
+            try {
+                log.info("# MsKafkaSegmentsConsumer.doRun() # 优雅关机，开始同步提交offset。");
+                doCommitSync();
+                log.info("# MsKafkaSegmentsConsumer.doRun() # 优雅关机，同步提交offset完毕。");
+            } finally {
+                aiitKafkaConsumer.close();
+            }
+        }
+    }
+
+    /**
+     * <B>方法名称：consumeRecords</B>
+     * <B>概要说明：从Kafka服务端拉取消息并消费消息</B>
+     * @Author zm
+     * @Date 2022年10月08日 16:10:38
+     * @Param []
+     * @return void
+     **/
+    private void consumeRecords() {
+        try {
+            ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(200));
+            Integer count = records.count();
+            for (ConsumerRecord<String, Bytes> consumerRecord : records) {
+                aiitKafkaConsumerUtil.doOnMessage(consumerRecord);
+            }
+            if (count > 0) {
+                // 手动异步提交offset，当前线程提交offset不会阻塞，可以继续处理后面的程序逻辑
+                aiitKafkaConsumer.commitAsync(new AiitOffsetCommitCallback());
+            }
+        } catch (Exception e) {
+            log.error(" # ConsumerTest.run() # 消费消息时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doCommitSync</B>
+     * <B>概要说明：等待所有的ioThread线程都退出后，再提交offset</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年10月08日 16:10:41
+     * @Param []
+     **/
+    private void doCommitSync() {
+        try {
+            while (0 < IoThreadLinkedBlockingQueue.getIoThreadGraceShutdown()) {
+                TimeUnit.MILLISECONDS.sleep(Const.NUM_ONE);
+            }
+            Instant now = Instant.now();
+            log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，所有的IoThread线程都已退出，此时再同步提交offset。");
+            aiitKafkaConsumer.commitSync();
+            log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，所有的IoThread线程都已退出，此时再同步提交offset，用时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+        } catch (InterruptedException e) {
+            log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，同步提交offset时，出现了异常。", e);
         }
     }
 }

@@ -36,6 +36,11 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     @Resource
     private SegmentConsumerService segmentConsumerService;
 
+    /**
+     * processor线程的数量，优雅关机时，会用到；2022-10-08 15:44:50
+     */
+    private static AtomicInteger processorGraceShutdown = null;
+
     private static Integer processorSize;
     private static AtomicInteger indexAtomicInteger = null;
     private static volatile Boolean createProcessorsFinishedFlag = false;
@@ -45,18 +50,46 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
         return createProcessorsFinishedFlag;
     }
 
-    private static Boolean shutdown = false;
-
-    public static Boolean getShutdown() {
-        return shutdown;
-    }
-
     public static List<ProcessorThread> getProcessorHandlerByLinkedBlockingQueueList() {
         return processorThreadList;
     }
 
     public static Integer getProcessorSize() {
         return processorSize;
+    }
+
+    /**
+     * <B>方法名称：decrementGraceShutdown</B>
+     * <B>概要说明：退出的线程数量减一</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年10月08日 15:10:38
+     * @Param []
+     **/
+    public static void decrementProcessorGraceShutdown() {
+        if (null != processorGraceShutdown) {
+            log.error("# InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown() # processor线程 = 【{}】要退出了。", Thread.currentThread().getName());
+            processorGraceShutdown.decrementAndGet();
+        }
+    }
+
+    /**
+     * <B>方法名称：getProcessorGraceShutdown</B>
+     * <B>概要说明：获取还剩下多少线程没有退出</B>
+     *
+     * @return java.lang.Integer
+     * @Author zm
+     * @Date 2022年10月08日 15:10:10
+     * @Param []
+     **/
+    public static Integer getProcessorGraceShutdown() {
+        if(null != processorGraceShutdown){
+            return processorGraceShutdown.get();
+        }else{
+            log.error("#  InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown()  # processor线程 = 【{}】要退出了，但 processorGraceShutdown 实例为null。");
+            return -1;
+        }
     }
 
     @Override
@@ -76,6 +109,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
             // 项目启动成功后，创建指定数量的processor线程；
             createProcessors();
             createProcessorsFinishedFlag = true;
+            processorGraceShutdown = new AtomicInteger(processorSize);
         }
     }
 
@@ -89,6 +123,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
      * @Param []
      **/
     private void createProcessors() {
+        log.info("项目启动，开始创建【{}】个processor线程。", processorSize);
         for (int i = 0; i < processorSize; i++) {
             log.info("项目启动，开始创建第【{}】个processor线程，processor线程总数【{}】个。", (1 + i), processorSize);
             ProcessorThread processorThread = new ProcessorThread(segmentConsumerService);

@@ -115,7 +115,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 try {
                     if(!segmentDetaiDolList.isEmpty()) {
                         anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
-                        log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+                        // log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }
                 } catch (Exception e) {
                     log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);

@@ -18,6 +18,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 @Slf4j
 public class IoThreadLinkedBlockingQueue {
+    /**
+     * ioThread线程的数量，优雅关机时，会用到；2022-10-08 15:44:50
+     */
+    private static AtomicInteger ioThreadGraceShutdown = null;
 
     /**
      * 阻塞队列中，元素的个数；2021-06-09 16:30:20
@@ -30,6 +34,39 @@ public class IoThreadLinkedBlockingQueue {
     private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
     private volatile static AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
 
+    /**
+     * <B>方法名称：decrementIoThreadGraceShutdown</B>
+     * <B>概要说明：退出的线程数量减一</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年10月08日 15:10:38
+     * @Param []
+     **/
+    public static void decrementIoThreadGraceShutdown() {
+        if (null != ioThreadGraceShutdown) {
+            log.error("# InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown() # processor线程 = 【{}】要退出了。", Thread.currentThread().getName());
+            ioThreadGraceShutdown.decrementAndGet();
+        }
+    }
+
+    /**
+     * <B>方法名称：getIoThreadGraceShutdown</B>
+     * <B>概要说明：获取还剩下多少线程没有退出</B>
+     *
+     * @return java.lang.Integer
+     * @Author zm
+     * @Date 2022年10月08日 15:10:10
+     * @Param []
+     **/
+    public static Integer getIoThreadGraceShutdown() {
+        if(null != ioThreadGraceShutdown){
+            return ioThreadGraceShutdown.get();
+        }else{
+            log.error("#  InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown()  # processor线程 = 【{}】要退出了，但 processorGraceShutdown 实例为null。");
+            return -1;
+        }
+    }
     /**
      * 获取队列的容量；2021-11-17 14:35:19
      *
@@ -63,6 +100,7 @@ public class IoThreadLinkedBlockingQueue {
             ioThread.start();
             linkedBlockingQueueList.add(ioThread);
         }
+        ioThreadGraceShutdown = new AtomicInteger(localStatisticsThreadCount);
     }
 
     /**

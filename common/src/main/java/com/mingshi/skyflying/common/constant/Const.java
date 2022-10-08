@@ -19,10 +19,8 @@ public class Const {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
         OPERATION_NAME_MAP.put(Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME, Const.JEDIS_SENTINEL_GET_MASTER_ADDR_BY_NAME);
         OPERATION_NAME_MAP.put(Const.LETTUCE_SENTINEL, Const.LETTUCE_SENTINEL);
-        OPERATION_NAME_MAP.put(Const.MYSQL_JDBI_CONNECTION_CLOSE, Const.MYSQL_JDBI_CONNECTION_CLOSE);
         OPERATION_NAME_MAP.put(Const.GET_DEVICES_NOTIFICATION, Const.GET_DEVICES_NOTIFICATION);
         OPERATION_NAME_MAP.put(Const.GET_MANAGER_HTML, Const.GET_MANAGER_HTML);
-        OPERATION_NAME_MAP.put(Const.BALANCER_USER_CHECKTOKEN, Const.BALANCER_USER_CHECKTOKEN);
         OPERATION_NAME_MAP.put(Const.GET1, Const.GET1);
         OPERATION_NAME_MAP.put(Const.GET_ASSETS_FONTS_NUNITO_BOLD_WOFF2, Const.GET_ASSETS_FONTS_NUNITO_BOLD_WOFF2);
         OPERATION_NAME_MAP.put(Const.GET_TEMP_NULL, Const.GET_TEMP_NULL);
@@ -30,16 +28,8 @@ public class Const {
         OPERATION_NAME_MAP.put(Const.GET_ASSETS_FONTS_NUNITO_REGULAR_WOFF2, Const.GET_ASSETS_FONTS_NUNITO_REGULAR_WOFF2);
         OPERATION_NAME_MAP.put(Const.GET_ASSETS_FONTS_ROBOTO_REGULAR_WOFF2, Const.GET_ASSETS_FONTS_ROBOTO_REGULAR_WOFF2);
         OPERATION_NAME_MAP.put(Const.GET_ASSETS_FONTS_ROBOTO_MEDIUM_WOFF2, Const.GET_ASSETS_FONTS_ROBOTO_MEDIUM_WOFF2);
-        OPERATION_NAME_MAP.put(Const.HIKARICP_CONNECTION_GETCONNECTION, Const.HIKARICP_CONNECTION_GETCONNECTION);
         OPERATION_NAME_MAP.put(Const.GET2, Const.GET2);
-        OPERATION_NAME_MAP.put(Const.GET_COMPANIES_COMPANYHEALTH_LIST, Const.GET_COMPANIES_COMPANYHEALTH_LIST);
         OPERATION_NAME_MAP.put(Const.NULL_NULL, Const.NULL_NULL);
-        OPERATION_NAME_MAP.put(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_UPDATE, Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_UPDATE);
-        OPERATION_NAME_MAP.put(Const.HIKARICP_CONNECTION_CLOSE, Const.HIKARICP_CONNECTION_CLOSE);
-        OPERATION_NAME_MAP.put(Const.POST_USERS_MENUSAUTHS, Const.POST_USERS_MENUSAUTHS);
-        OPERATION_NAME_MAP.put(Const.GET_ZLB_GET_RURAL_COMMERCIAL_BANK_INFO, Const.GET_ZLB_GET_RURAL_COMMERCIAL_BANK_INFO);
-        OPERATION_NAME_MAP.put(Const.MYSQL_JDBI_CONNECTION_COMMIT, Const.MYSQL_JDBI_CONNECTION_COMMIT);
-        OPERATION_NAME_MAP.put(Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY, Const.MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY);
         OPERATION_NAME_MAP.put(Const.POST_DEVICES_HEARTEAT, Const.POST_DEVICES_HEARTEAT);
     }
 
@@ -137,10 +127,8 @@ public class Const {
     public static final String NUMBER_ZERO_STR = "0";
     public static final String REDISSON_PING = "Redisson/PING";
     public static final String LETTUCE_SENTINEL = "Lettuce/SENTINEL";
-    public static final String MYSQL_JDBI_CONNECTION_CLOSE = "Mysql/JDBI/Connection/close";
     public static final String GET_DEVICES_NOTIFICATION = "GET:/devices/notification";
     public static final String GET_MANAGER_HTML = "GET:/manager/html";
-    public static final String BALANCER_USER_CHECKTOKEN = "Balancer/user/checkToken";
     public static final String GET1 = "GET:";
     public static final String GET_ASSETS_FONTS_NUNITO_BOLD_WOFF2 = "GET:/assets/fonts/Nunito-Bold.woff2";
     public static final String GET_TEMP_NULL = "GET:/temp/null";
@@ -148,24 +136,16 @@ public class Const {
     public static final String GET_ASSETS_FONTS_NUNITO_REGULAR_WOFF2 = "GET:/assets/fonts/Nunito-Regular.woff2";
     public static final String GET_ASSETS_FONTS_ROBOTO_REGULAR_WOFF2 = "GET:/assets/fonts/Roboto-Regular.woff2";
     public static final String GET_ASSETS_FONTS_ROBOTO_MEDIUM_WOFF2 = "GET:/assets/fonts/Roboto-Medium.woff2";
-    public static final String HIKARICP_CONNECTION_GETCONNECTION = "HikariCP/Connection/getConnection";
     public static final String GET2 = "GET:/";
-    public static final String GET_COMPANIES_COMPANYHEALTH_LIST = "GET:/companies/companyHealth/list";
     public static final String NULL_NULL = "null:null";
-    public static final String MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_UPDATE = "Mysql/JDBI/PreparedStatement/executeUpdate";
-    public static final String HIKARICP_CONNECTION_CLOSE = "HikariCP/Connection/close";
-    public static final String POST_USERS_MENUSAUTHS = "POST:/users/menusAuths";
-    public static final String GET_ZLB_GET_RURAL_COMMERCIAL_BANK_INFO = "GET:/zlb/getRuralCommercialBank/info";
-    public static final String MYSQL_JDBI_CONNECTION_COMMIT = "Mysql/JDBI/Connection/commit";
-    public static final String MYSQL_JDBI_PREPARED_STATEMENT_EXECUTE_QUERY = "Mysql/JDBI/PreparedStatement/executeQuery";
     public static final String SPRING_SCHEDULED = "SpringScheduled";
     public static final String POST_DEVICES_HEARTEAT = "POST:/devices/heartbeat";
-    public static final Integer QUEUE_SIZE = 2000;
+    public static final Integer QUEUE_SIZE = 50;
     public static final Integer RECORD_COUNT = 10 * 10000;
     public static final Long SLEEP_INTERVAL = 50L;
-    public static final Integer INITIAL_PROCESSOR_THREAD_COUNT = 4;
+    public static final Integer INITIAL_PROCESSOR_THREAD_COUNT = 2;
     public static final Integer NUMBER_ZERO = 0;
-    public static final Integer IO_THREAD_QUEUE_SIZE = 2000;
+    public static final Integer IO_THREAD_QUEUE_SIZE = 500;
     public static final Integer FLUSH_TO_MQ_INTERVAL = 5;
     public static final Integer CURRENT_TIME_RANDOM = 30;
     public static final String KEYS_ALL = "keys *";

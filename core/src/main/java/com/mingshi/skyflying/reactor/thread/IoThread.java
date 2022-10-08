@@ -11,7 +11,9 @@ import com.mingshi.skyflying.common.domain.Span;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.kafka.consumer.GracefulShutdown;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
+import com.mingshi.skyflying.reactor.queue.IoThreadLinkedBlockingQueue;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,7 @@ public class IoThread extends Thread {
     /**
      * 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
      */
-    private LinkedBlockingQueue<ObjectNode> linkedBlockingQueue;
+    private LinkedBlockingQueue<ObjectNode> ioThreadLinkedBlockingQueue;
     private Instant currentTime = null;
 
     private Integer flushToRocketMqInterval = Const.FLUSH_TO_MQ_INTERVAL;
@@ -60,7 +62,7 @@ public class IoThread extends Thread {
         segmentDetailUserNameIsNullDoList = new LinkedList();
         spanList = new LinkedList();
         msAlarmInformationDoLinkedListist = new LinkedList();
-        this.linkedBlockingQueue = new LinkedBlockingQueue(queueSize);
+        this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
     }
@@ -68,83 +70,108 @@ public class IoThread extends Thread {
     /**
      * <B>方法名称：offer</B>
      * <B>概要说明：往IoThread线程内部的线程中存放清洗后的消息</B>
+     *
+     * @return java.lang.Boolean
      * @Author zm
      * @Date 2022年09月27日 14:09:32
      * @Param [objectNode]
-     * @return java.lang.Boolean
      **/
-    public Boolean offer(ObjectNode objectNode){
-        return linkedBlockingQueue.offer(objectNode);
+    public Boolean offer(ObjectNode objectNode) {
+        return ioThreadLinkedBlockingQueue.offer(objectNode);
     }
 
     /**
      * <B>方法名称：getQueueSize</B>
      * <B>概要说明：获取队列中元素的个数</B>
+     *
+     * @return java.lang.Integer
      * @Author zm
      * @Date 2022年09月27日 14:09:34
      * @Param []
-     * @return java.lang.Integer
      **/
-    public Integer getQueueSize(){
-        return linkedBlockingQueue.size();
+    public Integer getQueueSize() {
+        return ioThreadLinkedBlockingQueue.size();
     }
 
     /**
      * <B>方法名称：getQueueCapacity</B>
      * <B>概要说明：获取队列容量</B>
+     *
+     * @return java.lang.Integer
      * @Author zm
      * @Date 2022年09月27日 14:09:09
      * @Param []
-     * @return java.lang.Integer
      **/
-    public Integer getQueueCapacity(){
+    public Integer getQueueCapacity() {
         return capacity;
     }
 
     @Override
     public void run() {
+        int queueSize = -1;
         try {
-            while (true) {
-                try {
-                    ObjectNode jsonObject = linkedBlockingQueue.poll();
-                    if (null == jsonObject) {
-                        TimeUnit.MILLISECONDS.sleep(10);
-                    } else {
-                        // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
-                        getSkywalkingAgentNameFromJsonObject(jsonObject);
-
-                        getSegmentFromJsonObject(jsonObject);
-
-                        // 统计processorThread线程的QPS；2022-07-23 11:15:29
-                        getProcessorThreadQpsFromJsonObject(jsonObject);
-
-                        // getIoThreadQueueFromJSONObject(jsonObject);
-
-                        // 从json实例中获取segmentDetail实例的信息
-                        getSegmentDetailFromJsonObject(jsonObject);
-
-                        // 从json实例中获取用户名为空的segmentDetail实例信息
-                        getSegmentDetailUserNameIsNullFromJsonObject(jsonObject);
-
-                        // 从json实例中获取异常信息
-                        getAbnormalFromJsonObject(jsonObject);
-
-                        // 从json实例中获取segment的信息
-                        // getSegmentFromJSONObject(jsonObject);
-                    }
-
-                    // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
-                    insertSegmentDetailIntoMySqlAndRedis();
-                } catch (Throwable e) {
-                    log.error("# IoThread.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
-                }
+            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+                doRun(Boolean.FALSE);
             }
+            queueSize = ioThreadLinkedBlockingQueue.size();
+            log.error("# IoThread.run() # IoThread线程 = 【{}】要退出了。此时jvm关闭的标志位 = 【{}】，还没有执行finally代码块之前，线程对应的队列中元素的个数 = 【{}】。",
+                Thread.currentThread().getName(),
+                Boolean.TRUE.equals(GracefulShutdown.getRUNNING()),
+                queueSize);
         } finally {
+            Instant now = Instant.now();
+            while (!ioThreadLinkedBlockingQueue.isEmpty() || Const.NUMBER_ZERO < InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()) {
+                doRun(Boolean.FALSE);
+            }
             // 当IoThread线程退出时，要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:32:43
             insertSegmentDetailIntoMySqlAndRedis();
-            log.error("# IoThread.run() # IoThread线程要退出了。此时jvm关闭的标志位 = 【{}】，该线程对应的队列中元素的个数 = 【{}】。",
-                InitProcessorByLinkedBlockingQueue.getShutdown(),
-                linkedBlockingQueue.size());
+            log.error("# IoThread.run() # IoThread线程 = 【{}】要退出了。该线程对应的队列中元素的个数 = 【{}】。处理完【{}】条消息用时【{}】毫秒。当前存活的processor线程数量 = 【{}】。",
+                Thread.currentThread().getName(),
+                ioThreadLinkedBlockingQueue.size(),
+                queueSize,
+                DateTimeUtil.getTimeMillis(now),
+                InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()
+                );
+            // 当前线程退出时，减一。减一后的结果，aiitKafkaConsumer在优雅关机时会用到。2022-10-08 15:56:54
+            IoThreadLinkedBlockingQueue.decrementIoThreadGraceShutdown();
+        }
+    }
+
+    private void doRun(Boolean isRunning) {
+        try {
+            ObjectNode jsonObject = ioThreadLinkedBlockingQueue.poll();
+            if (null == jsonObject) {
+                if (Boolean.FALSE.equals(isRunning)) {
+                    TimeUnit.MILLISECONDS.sleep(Const.NUMBER_TEN);
+                }
+            } else {
+                // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
+                getSkywalkingAgentNameFromJsonObject(jsonObject);
+
+                getSegmentFromJsonObject(jsonObject);
+
+                // 统计processorThread线程的QPS；2022-07-23 11:15:29
+                getProcessorThreadQpsFromJsonObject(jsonObject);
+
+                // getIoThreadQueueFromJSONObject(jsonObject);
+
+                // 从json实例中获取segmentDetail实例的信息
+                getSegmentDetailFromJsonObject(jsonObject);
+
+                // 从json实例中获取用户名为空的segmentDetail实例信息
+                getSegmentDetailUserNameIsNullFromJsonObject(jsonObject);
+
+                // 从json实例中获取异常信息
+                getAbnormalFromJsonObject(jsonObject);
+
+                // 从json实例中获取segment的信息
+                // getSegmentFromJSONObject(jsonObject);
+            }
+
+            // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
+            insertSegmentDetailIntoMySqlAndRedis();
+        } catch (Throwable e) {
+            log.error("# IoThread.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
         }
     }
 
@@ -347,7 +374,7 @@ public class IoThread extends Thread {
         try {
             Instant now = Instant.now();
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
-            if (isShouldFlush >= 0 || true == InitProcessorByLinkedBlockingQueue.getShutdown()) {
+            if (isShouldFlush >= 0 || Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
                 mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
                 currentTime = Instant.now();
