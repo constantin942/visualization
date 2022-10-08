@@ -91,6 +91,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             return ServerResponse.createByErrorMessage("解析aksk配置信息时，出现了异常。" + e.getMessage(), "");
         }
 
+        // TODO：这个"cn-beijing"不应该写死，明天看看阿里云上这个参数代表啥意思，然后配置到数据库中，从数据库中获取这个参数；2022-10-08 17:09:10
         DefaultProfile profile = DefaultProfile.getProfile("cn-beijing", ak, sk);
         IAcsClient client = new DefaultAcsClient(profile);
 
@@ -117,11 +118,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         int increment = 0;
         Boolean flag = true;
         while (true == flag) {
-            ListSQLExecAuditLogRequest request = new ListSQLExecAuditLogRequest();
-            request.setStartTime(startTime);
-            request.setEndTime(endTime);
-            request.setPageSize(pageSize);
-            request.setPageNumber(++pageNumber);
+            ListSQLExecAuditLogRequest request = getRequest(startTime, endTime, pageSize, pageNumber);
             MsScheduledTaskDo msScheduledTaskDo = new MsScheduledTaskDo();
 
             try {
@@ -138,6 +135,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                     "当前totalCount.intValue() =【{}】，increment = 【{}】。", totalCount.intValue(), increment);
 
                 if (0 < sqlExecAuditLogList.size()) {
+                    // 将DMS数据插入到数据库中
                     batchProcessDmsAuditLog(sqlExecAuditLogList);
                 }
 
@@ -152,6 +150,24 @@ public class AuditLogServiceImpl implements AuditLogService {
                 log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志时，出现了异常。", e);
                 byErrorMessage = ServerResponse.createByErrorMessage("拉取DMS审计日志时，出现了异常。" + e.getMessage(), "");
             }
+            // 将拉取DMS数据的记录插入到数据库中
+            doInsertSelective(msScheduledTaskDo);
+        }
+
+        return byErrorMessage;
+    }
+
+    /**
+     * <B>方法名称：doInsertSelective</B>
+     * <B>概要说明：将拉取DMS数据的记录插入到数据库中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年10月08日 17:10:03
+     * @Param [msScheduledTaskDo]
+     **/
+    private void doInsertSelective(MsScheduledTaskDo msScheduledTaskDo) {
+        try {
             if (StringUtil.isNotBlank(msScheduledTaskDo.getStartTime()) &&
                 StringUtil.isNotBlank(msScheduledTaskDo.getEndTime()) &&
                 null != msScheduledTaskDo.getPageNumber() &&
@@ -162,11 +178,37 @@ public class AuditLogServiceImpl implements AuditLogService {
                     log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志，把拉取到的数据 = 【{}】存入到数据库失败。", JsonUtil.obj2String(msScheduledTaskDo));
                 }
             }
+        } catch (Exception e) {
+            log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志，把拉取到的数据 = 【{}】存入到数据库中出现了异常。", JsonUtil.obj2String(msScheduledTaskDo), e);
         }
-
-        return byErrorMessage;
     }
 
+    /**
+     * <B>方法名称：getRequest</B>
+     * <B>概要说明：组装请求实例</B>
+     *
+     * @return com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogRequest
+     * @Author zm
+     * @Date 2022年10月08日 17:10:47
+     * @Param [startTime, endTime, pageSize, pageNumber]
+     **/
+    private ListSQLExecAuditLogRequest getRequest(String startTime, String endTime, int pageSize, int pageNumber) {
+        ListSQLExecAuditLogRequest request = new ListSQLExecAuditLogRequest();
+        request.setStartTime(startTime);
+        request.setEndTime(endTime);
+        request.setPageSize(pageSize);
+        request.setPageNumber(++pageNumber);
+        return request;
+    }
+
+    /**
+     * <B>方法名称：batchProcessDmsAuditLog</B>
+     * <B>概要说明：将DMS数据插入到数据库中</B>
+     * @Author zm
+     * @Date 2022年10月08日 17:10:23
+     * @Param [listSqlExecAuditLogList]
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     **/
     public ServerResponse<String> batchProcessDmsAuditLog(List<ListSQLExecAuditLogResponse.SQLExecAuditLog> listSqlExecAuditLogList) {
         int size = 0;
         Instant now = Instant.now();
@@ -182,51 +224,8 @@ public class AuditLogServiceImpl implements AuditLogService {
                 if (msSql.startsWith("show variables") || msSql.startsWith("set global") || msSql.startsWith("select @@version")) {
                     continue;
                 }
-
-                String opTime = sqlExecAuditLog.getOpTime();
-                String userName = sqlExecAuditLog.getUserName();
-                Long userId = sqlExecAuditLog.getUserId();
-                String instanceName = sqlExecAuditLog.getInstanceName();
-                Long instanceId = sqlExecAuditLog.getInstanceId();
-                Long dbId = sqlExecAuditLog.getDbId();
-                Boolean logic = sqlExecAuditLog.getLogic();
-                String sqlType = sqlExecAuditLog.getSQLType();
-                String execState = sqlExecAuditLog.getExecState();
-                Long affectRows = sqlExecAuditLog.getAffectRows();
-                Long elapsedTime = sqlExecAuditLog.getElapsedTime();
-                String remark = sqlExecAuditLog.getRemark();
-
-                // 大写统一转换成消息、去掉多余的空格
-                String strData = StringUtil.recombination(msSql, opTime, msSchemaName, sqlType);
-                String hash = StringUtil.mD5(strData);
-                MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
-
-                String sqlType1 = mingshiServerUtil.getSqlType(msSql);
-                // 获取表名；2022-06-06 14:11:21
-                if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(execState)) {
-                    String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
-                    msDmsAuditLogDo.setMsTableName(tableName);
-                }
-
-
-                msDmsAuditLogDo.setMsSql(msSql);
-                msDmsAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
-                msDmsAuditLogDo.setMsSchemaName(msSchemaName);
-                msDmsAuditLogDo.setOpTime(opTime);
-                msDmsAuditLogDo.setUserName(userName);
-                msDmsAuditLogDo.setUserId(userId);
-                msDmsAuditLogDo.setInstanceName(instanceName);
-                msDmsAuditLogDo.setInstanceId(instanceId);
-                msDmsAuditLogDo.setDbId(dbId);
-                msDmsAuditLogDo.setLogic(logic);
-                msDmsAuditLogDo.setSqlType(sqlType);
-                msDmsAuditLogDo.setExecState(execState);
-                msDmsAuditLogDo.setAffectRows(affectRows);
-                msDmsAuditLogDo.setElapsedTime(elapsedTime);
-                msDmsAuditLogDo.setRemark(remark);
-                msDmsAuditLogDo.setHash(hash);
-
-                list.add(msDmsAuditLogDo);
+                // 组装MsDmsAuditLogDo实例
+                getMsDmsAuditLogDo(msSql, msSchemaName, sqlExecAuditLog, list);
             }
             size = list.size();
             if (0 < list.size()) {
@@ -238,6 +237,49 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         log.info("执行完毕# AuditLogServiceImpl.batchProcessDMSAuditLog() # 将阿里云提供的DMS数据库审计日志【{}条】插入到数据库中。耗时【{}】毫秒。", size, DateTimeUtil.getTimeMillis(now));
         return null;
+    }
+
+    /**
+     * <B>方法名称：getMsDmsAuditLogDo</B>
+     * <B>概要说明：组装MsDmsAuditLogDo实例</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年10月08日 17:10:57
+     * @Param [msSql, msSchemaName, sqlExecAuditLog, list]
+     **/
+    private void getMsDmsAuditLogDo(String msSql, String msSchemaName, ListSQLExecAuditLogResponse.SQLExecAuditLog sqlExecAuditLog, List<MsDmsAuditLogDo> list) {
+        // 大写统一转换成消息、去掉多余的空格
+        String strData = StringUtil.recombination(msSql, sqlExecAuditLog.getOpTime(), msSchemaName, sqlExecAuditLog.getSQLType());
+        String hash = StringUtil.mD5(strData);
+
+        MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
+
+        String sqlType1 = mingshiServerUtil.getSqlType(msSql);
+        // 获取表名；2022-06-06 14:11:21
+        if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
+            String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
+            msDmsAuditLogDo.setMsTableName(tableName);
+        }
+
+        msDmsAuditLogDo.setMsSql(msSql);
+        msDmsAuditLogDo.setSqlSource(Const.SQL_SOURCE_DMS);
+        msDmsAuditLogDo.setMsSchemaName(msSchemaName);
+        msDmsAuditLogDo.setOpTime(sqlExecAuditLog.getOpTime());
+        msDmsAuditLogDo.setUserName(sqlExecAuditLog.getUserName());
+        msDmsAuditLogDo.setUserId(sqlExecAuditLog.getUserId());
+        msDmsAuditLogDo.setInstanceName(sqlExecAuditLog.getInstanceName());
+        msDmsAuditLogDo.setInstanceId(sqlExecAuditLog.getInstanceId());
+        msDmsAuditLogDo.setDbId(sqlExecAuditLog.getDbId());
+        msDmsAuditLogDo.setLogic(sqlExecAuditLog.getLogic());
+        msDmsAuditLogDo.setSqlType(sqlExecAuditLog.getSQLType());
+        msDmsAuditLogDo.setExecState(sqlExecAuditLog.getExecState());
+        msDmsAuditLogDo.setAffectRows(sqlExecAuditLog.getAffectRows());
+        msDmsAuditLogDo.setElapsedTime(sqlExecAuditLog.getElapsedTime());
+        msDmsAuditLogDo.setRemark(sqlExecAuditLog.getRemark());
+        msDmsAuditLogDo.setHash(hash);
+
+        list.add(msDmsAuditLogDo);
     }
 
     /**
@@ -314,5 +356,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         bySuccess.setData(JsonUtil.obj2String(list));
         return bySuccess;
     }
+
 
 }
