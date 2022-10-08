@@ -128,9 +128,9 @@ public class MingshiServerUtil {
                                      Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
         try {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
-            if (null != segmentDo) {
-              jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-            }
+            // if (null != segmentDo) {
+            //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
+            // }
 
             /**
              * 统计当前线程的QPS；2022-07-23 11:05:16
@@ -985,7 +985,7 @@ public class MingshiServerUtil {
         // 统计kafka消费者每秒拿到多少消息；2022-07-28 13:57:05
         // statisticsKafkaConsumerRecords();
 
-        // flushSegmentToDB(segmentList);
+        // flushSegmentToDb(segmentList);
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         flushSkywalkingAgentInformationToDb();
