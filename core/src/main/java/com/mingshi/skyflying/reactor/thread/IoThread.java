@@ -120,20 +120,24 @@ public class IoThread extends Thread {
                 queueSize);
         } finally {
             Instant now = Instant.now();
-            while (!ioThreadLinkedBlockingQueue.isEmpty() || Const.NUMBER_ZERO < InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()) {
-                doRun(Boolean.FALSE);
-            }
-            // 当IoThread线程退出时，要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:32:43
-            insertSegmentDetailIntoMySqlAndRedis();
-            log.error("# IoThread.run() # IoThread线程 = 【{}】要退出了。该线程对应的队列中元素的个数 = 【{}】。处理完【{}】条消息用时【{}】毫秒。当前存活的processor线程数量 = 【{}】。",
-                Thread.currentThread().getName(),
-                ioThreadLinkedBlockingQueue.size(),
-                queueSize,
-                DateTimeUtil.getTimeMillis(now),
-                InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()
+            try {
+                while (!ioThreadLinkedBlockingQueue.isEmpty() || Const.NUMBER_ZERO < InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()) {
+                    doRun(Boolean.FALSE);
+                }
+                log.error("# IoThread.run() # IoThread线程 = 【{}】要退出了。该线程对应的队列中元素的个数 = 【{}】。处理完【{}】条消息用时【{}】毫秒。当前存活的processor线程数量 = 【{}】。",
+                    Thread.currentThread().getName(),
+                    ioThreadLinkedBlockingQueue.size(),
+                    queueSize,
+                    DateTimeUtil.getTimeMillis(now),
+                    InitProcessorByLinkedBlockingQueue.getProcessorGraceShutdown()
                 );
-            // 当前线程退出时，减一。减一后的结果，aiitKafkaConsumer在优雅关机时会用到。2022-10-08 15:56:54
-            IoThreadLinkedBlockingQueue.decrementIoThreadGraceShutdown();
+            } finally {
+                // 当IoThread线程退出时，要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:32:43
+                insertSegmentDetailIntoMySqlAndRedis();
+                // 当前线程退出时，减一。减一后的结果，aiitKafkaConsumer在优雅关机时会用到。2022-10-08 15:56:54
+                IoThreadLinkedBlockingQueue.decrementIoThreadGraceShutdown();
+            }
+
         }
     }
 
@@ -374,7 +378,7 @@ public class IoThread extends Thread {
         try {
             Instant now = Instant.now();
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
-            if (isShouldFlush >= 0 || Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+            if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRUNNING())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
                 mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
                 currentTime = Instant.now();

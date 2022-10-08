@@ -81,16 +81,19 @@ public class ProcessorThread extends Thread {
             log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程 = 【{}】要退出了。此时jvm关闭的标志位 = 【{}】，还没有执行finally代码块之前，线程对应的队列中元素的个数 = 【{}】。", Thread.currentThread().getName(), GracefulShutdown.getRUNNING(), queueSize);
         } finally {
             Instant now = Instant.now();
-            while (!processorLinkedBlockingQueue.isEmpty()) {
-                doRun(Boolean.TRUE);
+            try {
+                while (!processorLinkedBlockingQueue.isEmpty()) {
+                    doRun(Boolean.TRUE);
+                }
+            } finally {
+                // 存活的processor线程数量减一；2022-10-08 15:19:34
+                InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown();
+                log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程 = 【{}】要退出了。该线程对应的队列中元素的个数 = 【{}】。处理完【{}】条消息用时【{}】毫秒。",
+                    Thread.currentThread().getName(),
+                    getQueueSize(),
+                    queueSize,
+                    DateTimeUtil.getTimeMillis(now));
             }
-            // 存活的processor线程数量减一；2022-10-08 15:19:34
-            InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown();
-            log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程 = 【{}】要退出了。该线程对应的队列中元素的个数 = 【{}】。处理完【{}】条消息用时【{}】毫秒。",
-                Thread.currentThread().getName(),
-                getQueueSize(),
-                queueSize,
-                DateTimeUtil.getTimeMillis(now));
         }
     }
 
