@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.dao;
+package com.mingshi.skyflying.anomaly_detection.dao;
 
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 

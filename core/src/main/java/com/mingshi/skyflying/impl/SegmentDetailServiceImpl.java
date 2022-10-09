@@ -14,7 +14,7 @@ import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
 import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentDetailService;
 import com.mingshi.skyflying.utils.MingshiServerUtil;

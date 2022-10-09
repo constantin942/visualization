@@ -10,7 +10,7 @@
 //import com.mingshi.skyflying.common.utils.StringUtil;
 //import com.mingshi.skyflying.dao.UserPortraitByVisitedTableEverydayMapper;
 //import com.mingshi.skyflying.dao.UserPortraitByVisitedTimeMapper;
-//import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
+//import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.boot.ApplicationArguments;
 //import org.springframework.boot.ApplicationRunner;

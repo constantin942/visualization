@@ -1,19 +1,13 @@
 package com.mingshi.skyflying.anomaly_detection;
 
-import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
+import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
-import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
-import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.common.domain.UserCoarseInfo;
-import com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData;
+import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
@@ -62,11 +56,19 @@ public class AnomalyDetectionBusiness {
     HighRiskOptServiceImpl highRiskOptService;
 
     @Resource
+    UserPortraitRulesMapper userPortraitRulesMapper;
+
+    @Resource
+    UserPortraitRulesService portraitRulesService;
+
+    @Resource
     UserPortraitByTableMapper tableMapper;
 
     private static final String TABLE_NAME = "table_name";
 
     private static final String COUNTS = "counts";
+
+    private String PREFIX = "anomaly_detection:enableRule:";
 
     /**
      * Redis分布式锁Key
@@ -80,6 +82,14 @@ public class AnomalyDetectionBusiness {
     private final String NIGHT = "night";
 
     private final String DEMO_MODE = "demo_mode";
+
+    private static final Integer TABLE_ID = 2;
+
+    private static final Integer TIME_ID = 1;
+
+    private static final String TIME_SUF = "time";
+
+    private static final String TABLE_SUF = "table";
 
     /**
      * 判断是否告警-库表维度
@@ -121,7 +131,7 @@ public class AnomalyDetectionBusiness {
      */
     public boolean inPeriod(String username, int period) {
         Date date = segmentDetailMapper.selectTimeGap(username);
-        if(date == null) {
+        if (date == null) {
             return true;
         }
         int betweenDays = (int) ((new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24) + 0.5);
@@ -198,7 +208,7 @@ public class AnomalyDetectionBusiness {
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                    , time, segmentDetailDo.getGlobalTraceId());
+                , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -319,8 +329,10 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
+            Boolean enableTimeRule = getEnableRule(TIME_SUF);
+            Boolean enableTableRule = getEnableRule(TABLE_SUF);
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
@@ -331,6 +343,41 @@ public class AnomalyDetectionBusiness {
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
+    }
+
+    /**
+     * 获取规则开关
+     */
+    private Boolean getEnableRule(String suffix) {
+        String key = PREFIX + suffix;
+        Object o = redisPoolUtil.get(key);
+        if (o != null) {
+            return Boolean.parseBoolean((String) o);
+        }
+        return cacheRuleEnable(suffix);
+    }
+
+    /**
+     * 从数据库查询开关存入Redis
+     */
+    private Boolean cacheRuleEnable(String suffix) {
+        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
+        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
+        if (null != timeRule) {
+            portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
+        }
+        if (null != tableRule) {
+            portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
+        }
+        if (suffix.equals(TIME_SUF)) {
+            assert timeRule != null;
+            return timeRule.getIsDelete() != 1;
+        }
+        if (suffix.equals(TABLE_SUF)) {
+            assert tableRule != null;
+            return tableRule.getIsDelete() != 1;
+        }
+        return false;
     }
 
     /**

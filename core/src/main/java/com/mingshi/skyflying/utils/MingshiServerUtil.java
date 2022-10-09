@@ -167,7 +167,7 @@ public class MingshiServerUtil {
      * @Date 2022年09月27日 09:09:06
      * @Param [jsonObject, gracefulShutdown, reactorIoThreadThreadCount, mingshiServerUtil]
      **/
-    private void doEnableReactorModel(ObjectNode jsonObject, Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
+    public void doEnableReactorModel(ObjectNode jsonObject, Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
         if (null == jsonObject || Const.NUMBER_ZERO == jsonObject.size()) {
             return;
         }

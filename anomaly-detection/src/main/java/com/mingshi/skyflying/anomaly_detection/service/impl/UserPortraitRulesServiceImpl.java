@@ -1,13 +1,12 @@
-package com.mingshi.skyflying.impl;
+package com.mingshi.skyflying.anomaly_detection.service.impl;
 
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
-import com.mingshi.skyflying.common.enums.ConstantsCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
-import com.mingshi.skyflying.service.UserPortraitRulesService;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

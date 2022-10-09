@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.service;
+package com.mingshi.skyflying.anomaly_detection.service;
 
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 import com.mingshi.skyflying.common.response.ServerResponse;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.UserPortraitRulesMapper">
+<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper">
   <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserPortraitRulesDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />

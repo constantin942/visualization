@@ -10,13 +10,14 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.type.KeyValue;
 import com.mingshi.skyflying.common.type.LogEntity;
 import com.mingshi.skyflying.common.type.RefType;
-import com.mingshi.skyflying.common.utils.*;
+import com.mingshi.skyflying.common.utils.CollectionUtils;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.component.ComponentsDefine;
 import com.mingshi.skyflying.dao.SegmentDao;
-import com.mingshi.skyflying.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.SegmentConsumerService;
-import com.mingshi.skyflying.service.UserPortraitRulesService;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -51,22 +52,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private SegmentDao segmentDao;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
-    @Resource
-    RedisPoolUtil redisPoolUtil;
-    @Resource
-    private UserPortraitRulesMapper userPortraitRulesMapper;
-    @Resource
-    private UserPortraitRulesService portraitRulesService;
-
-    private String PREFIX = "anomaly_detection:enableRule:";
-
-    private static final String TIME_SUF = "time";
-
-    private static final String TABLE_SUF = "table";
-
-    private static final Integer TABLE_ID = 2;
-
-    private static final Integer TIME_ID = 1;
 
     @Override
     public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
@@ -90,8 +75,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
             // 判断是否是异常信息；2022-06-07 18:00:13
             LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
-            // 将一条访问操作过程中涉及到的多条SQL语句拆成一条一条的SQL；2022-06-09 08:55:18
+            // 存放用户名不为空的链路信息；
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
+            // 存放用户名为空的链路信息；
             LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList = null;
             // 获取探针的名称；2022-06-28 14:25:46
             skywalkingAgentHeartBeatMap = getAgentServiceName(segmentObject);
@@ -103,18 +89,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 segment = setUserNameAndTokenFromSpan(spanList, segment);
                 // 重组span数据，返回前端使用；2022-04-20 16:49:02
                 reorganizingSpans(segment, spanList);
-                // 存放用户名不为空的链路信息；
-                segmentDetaiDolList = new LinkedList<>();
                 // 存放用户名暂时为空的链路信息；
                 segmentDetaiUserNameIsNullDolList = new LinkedList<>();
                 // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
-                getSegmentDetaiDolList(consumerRecord, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
+                segmentDetaiDolList = getSegmentDetaiDolList(consumerRecord, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 Instant now = Instant.now();
                 try {
                     if(!segmentDetaiDolList.isEmpty()) {
-                        anomalyDetectionBusiness.userVisitedIsAbnormal(getEnableRule(TIME_SUF), getEnableRule(TABLE_SUF), segmentDetaiDolList, msAlarmInformationDoList);
+                        anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
                         // log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }
                 } catch (Exception e) {
@@ -137,41 +121,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         }
     }
 
-
-    /**
-     * 获取规则开关
-     */
-    public Boolean getEnableRule(String suffix) {
-        String key = PREFIX + suffix;
-        Object o = redisPoolUtil.get(key);
-        if (o != null) {
-            return Boolean.parseBoolean((String) o);
-        }
-        return cacheRuleEnable(suffix);
-    }
-
-    /**
-     * 从数据库查询开关存入Redis
-     */
-    private Boolean cacheRuleEnable(String suffix) {
-        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
-        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
-        if (null != timeRule) {
-            portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
-        }
-        if (null != tableRule) {
-            portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
-        }
-        if(suffix.equals(TIME_SUF)) {
-            assert timeRule != null;
-            return timeRule.getIsDelete() != 1;
-        }
-        if(suffix.equals(TABLE_SUF)) {
-            assert tableRule != null;
-            return tableRule.getIsDelete() != 1;
-        }
-        return false;
-    }
 
     /**
      * <B>方法名称：getSegmentObject</B>
@@ -281,17 +230,18 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年09月07日 11:09:24
      * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
      **/
-    private void getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
+    private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
+        LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
         try {
             String reorganizingSpans = segment.getReorganizingSpans();
             if (StringUtil.isBlank(reorganizingSpans)) {
                 putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
-                return;
+                return segmentDetaiDolList;
             }
             List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
             if (null == list || 0 == list.size() || 1 == list.size()) {
                 putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
-                return;
+                return segmentDetaiDolList;
             }
             for (int i = 1; i < list.size(); i++) {
                 LinkedHashMap map = list.get(i);
@@ -372,6 +322,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         } catch (Exception e) {
             log.error("# SegmentConsumeServiceImpl.getSegmentDetaiDolList() # 组装segmentDetail详情实例时，出现了异常。", e);
         }
+        return segmentDetaiDolList;
     }
 
     /**
