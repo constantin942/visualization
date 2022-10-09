@@ -25,10 +25,6 @@
         <result column="db_user_name" jdbcType="VARCHAR" property="dbUserName"/>
         <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
         <result column="operation_type" jdbcType="VARCHAR" property="operationType"/>
-        <result column="user_portrait_flag_by_visited_time" jdbcType="TINYINT"
-                property="userPortraitFlagByVisitedTime"/>
-        <result column="user_portrait_flag_by_visited_table_everyday" jdbcType="TINYINT"
-                property="userPortraitFlagByVisitedTableEveryday"/>
         <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
         <result column="token" jdbcType="VARCHAR" property="token"/>
     </resultMap>

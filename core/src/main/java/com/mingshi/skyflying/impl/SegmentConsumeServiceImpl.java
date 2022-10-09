@@ -341,7 +341,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         msSegmentDetailDo.setParition(consumerRecord.partition());
         msSegmentDetailDo.setOffset(consumerRecord.offset());
 
-        msSegmentDetailDo.setUserPortraitFlagByVisitedTime(null == segment.getUserPortraitFlagByVisitedTime() ? 0 : segment.getUserPortraitFlagByVisitedTime());
         msSegmentDetailDo.setOperationName(String.valueOf(url));
 
         Integer spanId = null;

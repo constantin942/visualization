@@ -135,10 +135,6 @@ public class MsSegmentDetailDo implements Cloneable {
    */
   private String dbStatement;
 
-  private Integer userPortraitFlagByVisitedTime;
-
-  private Integer userPortraitFlagByVisitedTableEveryday;
-
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
