@@ -11,7 +11,7 @@
  Target Server Version : 80027
  File Encoding         : 65001
 
- Date: 15/09/2022 17:59:13
+ Date: 09/10/2022 10:37:57
 */
 
 SET NAMES utf8mb4;
@@ -59,6 +59,55 @@ CREATE TABLE `coarse_segment_detail_on_time` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='基于时间维度的粗粒度中间表';
 
 -- ----------------------------
+-- Table structure for dic_item
+-- ----------------------------
+DROP TABLE IF EXISTS `dic_item`;
+CREATE TABLE `dic_item` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(256) COLLATE utf8mb4_bin NOT NULL,
+  `value` varchar(256) COLLATE utf8mb4_bin NOT NULL,
+  `sort` int NOT NULL,
+  `is_deleted` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dic_item_id_uindex` (`id`),
+  UNIQUE KEY `dic_item_name_value_uindex` (`name`,`value`),
+  KEY `dic_item_name_index` (`name`),
+  KEY `dic_item_sort_index` (`sort`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='数据字典';
+
+-- ----------------------------
+-- Table structure for ding_alarm_config
+-- ----------------------------
+DROP TABLE IF EXISTS `ding_alarm_config`;
+CREATE TABLE `ding_alarm_config` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `webhook` varchar(512) COLLATE utf8mb4_bin NOT NULL,
+  `secret` varchar(512) COLLATE utf8mb4_bin NOT NULL,
+  `gap` int NOT NULL DEFAULT '5' COMMENT '告警间隔',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ding_alarm_config_id_uindex` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='钉钉告警配置表';
+
+-- ----------------------------
+-- Table structure for high_risk_opt
+-- ----------------------------
+DROP TABLE IF EXISTS `high_risk_opt`;
+CREATE TABLE `high_risk_opt` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `keyword` varchar(256) COLLATE utf8mb4_bin NOT NULL COMMENT '操作关键字',
+  `description` varchar(256) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '操作描述',
+  `enable` int DEFAULT '1' COMMENT '是否启用 1:启用 0:不启用',
+  `alarm_info` varchar(256) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '告警信息',
+  `is_deleted` int NOT NULL DEFAULT '0' COMMENT '是否删除 1:已删除 0:未删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `high_risk_opt_id_uindex` (`id`),
+  UNIQUE KEY `high_risk_opt_keyword_uindex` (`keyword`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='高危操作表';
+
+-- ----------------------------
 -- Table structure for ms_agent_information
 -- ----------------------------
 DROP TABLE IF EXISTS `ms_agent_information`;
@@ -71,17 +120,7 @@ CREATE TABLE `ms_agent_information` (
   `agent_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '监管方或者运维人员设置的服务名称',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_ agent_code` (`agent_code`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='探针信息表';
-
--- ----------------------------
--- Records of ms_agent_information
--- ----------------------------
-BEGIN;
-INSERT INTO `ms_agent_information` VALUES (1, 0, '2022-09-15 09:59:11', '2022-09-15 09:59:11', 'hy2-api-gateway-test', NULL);
-INSERT INTO `ms_agent_information` VALUES (2, 0, '2022-09-15 09:59:11', '2022-09-15 09:59:11', 'demo-application-springboot', NULL);
-INSERT INTO `ms_agent_information` VALUES (3, 0, '2022-09-15 09:59:11', '2022-09-15 09:59:11', 'hy2-company-test', NULL);
-INSERT INTO `ms_agent_information` VALUES (4, 0, '2022-09-15 09:59:11', '2022-09-15 09:59:11', 'firewall-management-01-Djava.security.egd=file:/de', NULL);
-COMMIT;
+) ENGINE=InnoDB AUTO_INCREMENT=58252 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='探针信息表';
 
 -- ----------------------------
 -- Table structure for ms_agent_switch
@@ -122,7 +161,7 @@ CREATE TABLE `ms_alarm_information` (
   `global_trace_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '全局追踪id',
   `update_user_portrait` tinyint DEFAULT '0' COMMENT '更新用户画像；0：未更新；1-已更新；',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='告警信息表';
+) ENGINE=InnoDB AUTO_INCREMENT=2763 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='告警信息表';
 
 -- ----------------------------
 -- Table structure for ms_config
@@ -137,13 +176,6 @@ CREATE TABLE `ms_config` (
   `config_type` varchar(16) DEFAULT NULL COMMENT '配置类型',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='系统配置表';
-
--- ----------------------------
--- Records of ms_config
--- ----------------------------
-BEGIN;
-INSERT INTO `ms_config` VALUES (1, 0, '2022-05-26 07:53:21', '2022-05-26 07:53:21', '{\"ak\":\"LTAI5tBM5srwtPdYWpngoJCW\",\"sk\":\"068ZDt4f324GR9muOpmdhxoeIe4FIV\"}', 'akSk');
-COMMIT;
 
 -- ----------------------------
 -- Table structure for ms_dms_audit_log
@@ -177,7 +209,7 @@ CREATE TABLE `ms_dms_audit_log` (
   `sql_insight_user_ip` varchar(128) DEFAULT NULL COMMENT 'sql洞察记录的访问实例的IP',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_hash` (`hash`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据库审计日志表';
+) ENGINE=InnoDB AUTO_INCREMENT=3243 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据库审计日志表';
 
 -- ----------------------------
 -- Table structure for ms_monitor_business_system_tables
@@ -195,7 +227,7 @@ CREATE TABLE `ms_monitor_business_system_tables` (
   `table_desc` varchar(64) DEFAULT NULL COMMENT '表中存储什么类型的数据',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_table_name` (`table_name`,`db_name`,`db_address`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='监管业务系统数据库表';
+) ENGINE=InnoDB AUTO_INCREMENT=216 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='监管业务系统数据库表';
 
 -- ----------------------------
 -- Table structure for ms_scheduled_task
@@ -213,7 +245,7 @@ CREATE TABLE `ms_scheduled_task` (
   `status` varchar(16) DEFAULT NULL COMMENT '执行结果',
   `record_count` int DEFAULT NULL COMMENT '本地拉取到的数据量',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='定时拉取DMS审计日志任务表';
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='定时拉取DMS审计日志任务表';
 
 -- ----------------------------
 -- Table structure for ms_segment_detail
@@ -233,7 +265,7 @@ CREATE TABLE `ms_segment_detail` (
   `parent_segment_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '当前segment的父segmentId',
   `operation_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '操作类型；是访问Redis、MySQL或远程调用等',
   `ms_table_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '数据库表名',
-  `db_instance` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '数据库名称',
+  `db_instance` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '数据库名称',
   `db_statement` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '具体的SQL语句',
   `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
   `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
@@ -244,8 +276,6 @@ CREATE TABLE `ms_segment_detail` (
   `endpoint_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '拦截方法的名称',
   `service_instance_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '数据库连接地址',
   `end_time` datetime DEFAULT NULL COMMENT '请求结束的时间',
-  `user_portrait_flag_by_visited_time` tinyint DEFAULT '0' COMMENT '基于访问时间维度的用户画像；0：未标识；1：已标识过；',
-  `user_portrait_flag_by_visited_table_everyday` tinyint DEFAULT '0' COMMENT '基于访问过的表维度的用户画像；0：未标识；1：已标识过；',
   `parent_span_id` int DEFAULT NULL COMMENT '父span的id',
   `current_segment_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '当前segment的id',
   PRIMARY KEY (`id`),
@@ -255,7 +285,7 @@ CREATE TABLE `ms_segment_detail` (
   KEY `idx_table_name_db_instance_peer` (`ms_table_name`,`db_instance`,`peer`) USING BTREE,
   KEY `idx_start_time` (`start_time`) USING BTREE,
   KEY `idx_db_type` (`db_type`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作记录详情表';
+) ENGINE=InnoDB AUTO_INCREMENT=39271 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作记录详情表';
 
 -- ----------------------------
 -- Table structure for ms_segment_detail_username_is_null
@@ -294,7 +324,7 @@ CREATE TABLE `ms_segment_detail_username_is_null` (
   KEY `idx_user_name_token_global_trace_id` (`user_name`,`token`,`global_trace_id`) USING BTREE,
   KEY `idx_table_name_db_instance_peer` (`ms_table_name`,`db_instance`,`peer`) USING BTREE,
   KEY `idx_start_time` (`start_time`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作记录用户名为空的表';
+) ENGINE=InnoDB AUTO_INCREMENT=467016 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作记录用户名为空的表';
 
 -- ----------------------------
 -- Table structure for operate_log
@@ -321,6 +351,25 @@ CREATE TABLE `operate_log` (
   KEY `idx_loginIp` (`login_ip`) USING BTREE,
   KEY `idxe_gmtCreate` (`gmt_create`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户操作记录表';
+
+-- ----------------------------
+-- Table structure for portrait_config
+-- ----------------------------
+DROP TABLE IF EXISTS `portrait_config`;
+CREATE TABLE `portrait_config` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `rule_table_period` int NOT NULL COMMENT '库表规则画像周期',
+  `rule_table_count` int NOT NULL COMMENT '库表规则阈值次数',
+  `rule_time_period` int NOT NULL COMMENT '时间规则画像周期',
+  `rule_time_rate` double NOT NULL COMMENT '时间规则阈值频率',
+  `enableTableRule` int NOT NULL DEFAULT '1' COMMENT '0:不开启 1:开启',
+  `enableTimeRule` int NOT NULL DEFAULT '1' COMMENT '0:不开启 1:开启',
+  `is_deleted` int NOT NULL DEFAULT '0' COMMENT '0: 未删除 1: 已删除',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `portrait_config_id_uindex` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='画像配置表';
 
 -- ----------------------------
 -- Table structure for segment
@@ -362,20 +411,6 @@ CREATE TABLE `sys_menu` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='菜单表';
 
 -- ----------------------------
--- Records of sys_menu
--- ----------------------------
-BEGIN;
-INSERT INTO `sys_menu` VALUES (1, 0, '2022-09-09 00:58:48', '2022-09-09 00:58:48', 'admin', 2, '信息概况', '[\'/api/skyflying/getCoarseCountsOfUser\',\'/api/skyflying/getCountsOfAllRecentSevenDays\',\'/api/skyflying/getCoarseCountsOfTableName\',\'/api/skyflying/getOverviewOfSystem\',\'/api/skyflying/getAllAlarmInfoDetailByUserName\',\'\']');
-INSERT INTO `sys_menu` VALUES (2, 0, '2022-09-09 00:58:48', '2022-09-09 00:58:48', 'admin', 2, '用户行为', '[\'/api/skyflying/getCoarseCountsOfUser\']');
-INSERT INTO `sys_menu` VALUES (3, 0, '2022-09-09 00:58:49', '2022-09-09 00:58:49', 'admin', 2, '数据分布', '[\'/api/skyflying/getCoarseCountsOfTableName\']');
-INSERT INTO `sys_menu` VALUES (4, 0, '2022-09-09 00:58:50', '2022-09-09 00:58:50', 'admin', 2, '告警信息', '[\'/api/skyflying/getAlarmData\',\'/api/skyflying/getUserAlarmData\',\'api/skyflying/getAnomalyDetectionInfoByGroupByUserName\']');
-INSERT INTO `sys_menu` VALUES (5, 0, '2022-09-09 00:58:50', '2022-09-09 00:58:50', 'admin', 2, '库表管理', '[\'/api/skyflying/getAllMonitorTables\']');
-INSERT INTO `sys_menu` VALUES (6, 0, '2022-09-09 00:58:51', '2022-09-09 00:58:51', 'admin', 2, '检测规则', '[\'api/skyflying/getUserPortraitRules\']');
-INSERT INTO `sys_menu` VALUES (7, 0, '2022-09-09 00:58:52', '2022-09-09 00:58:52', 'admin', 2, '服务与探针', '[\'/api/skyflying/getAllSkywalkingAgent\']');
-INSERT INTO `sys_menu` VALUES (8, 0, '2022-09-15 09:25:38', '2022-09-15 09:25:38', 'admin', 2, '操作审计', '[\'/api/skyflying/getHighDangerOperationLog\']');
-COMMIT;
-
--- ----------------------------
 -- Table structure for sys_menu_role
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_menu_role`;
@@ -390,28 +425,6 @@ CREATE TABLE `sys_menu_role` (
   `role_id` bigint NOT NULL COMMENT '角色id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户角色表';
-
--- ----------------------------
--- Records of sys_menu_role
--- ----------------------------
-BEGIN;
-INSERT INTO `sys_menu_role` VALUES (1, 0, '2022-09-09 01:05:29', '2022-09-09 01:05:29', 'admin', 'admin', 1, 1);
-INSERT INTO `sys_menu_role` VALUES (2, 0, '2022-09-09 01:05:30', '2022-09-09 01:05:30', 'admin', 'admin', 2, 1);
-INSERT INTO `sys_menu_role` VALUES (3, 0, '2022-09-09 01:05:31', '2022-09-09 01:05:31', 'admin', 'admin', 3, 1);
-INSERT INTO `sys_menu_role` VALUES (4, 0, '2022-09-09 01:05:32', '2022-09-09 01:05:32', 'admin', 'admin', 4, 1);
-INSERT INTO `sys_menu_role` VALUES (5, 0, '2022-09-09 01:05:32', '2022-09-09 01:05:32', 'admin', 'admin', 5, 1);
-INSERT INTO `sys_menu_role` VALUES (6, 0, '2022-09-09 01:05:33', '2022-09-09 01:05:33', 'admin', 'admin', 6, 1);
-INSERT INTO `sys_menu_role` VALUES (7, 0, '2022-09-09 01:05:34', '2022-09-09 01:05:34', 'admin', 'admin', 7, 1);
-INSERT INTO `sys_menu_role` VALUES (8, 0, '2022-09-09 01:05:35', '2022-09-09 01:05:35', 'admin', 'admin', 1, 2);
-INSERT INTO `sys_menu_role` VALUES (9, 0, '2022-09-09 01:05:36', '2022-09-09 01:05:36', 'admin', 'admin', 2, 2);
-INSERT INTO `sys_menu_role` VALUES (10, 0, '2022-09-09 01:05:39', '2022-09-09 01:05:39', 'admin', 'admin', 3, 2);
-INSERT INTO `sys_menu_role` VALUES (11, 0, '2022-09-09 01:05:40', '2022-09-09 01:05:40', 'admin', 'admin', 4, 2);
-INSERT INTO `sys_menu_role` VALUES (12, 0, '2022-09-09 01:05:41', '2022-09-09 01:05:41', 'admin', 'admin', 5, 2);
-INSERT INTO `sys_menu_role` VALUES (13, 0, '2022-09-09 01:05:43', '2022-09-09 01:05:43', 'admin', 'admin', 6, 2);
-INSERT INTO `sys_menu_role` VALUES (14, 0, '2022-09-09 01:05:44', '2022-09-09 01:05:44', 'admin', 'admin', 7, 2);
-INSERT INTO `sys_menu_role` VALUES (15, 0, '2022-09-15 09:31:18', '2022-09-15 09:31:18', 'admin', 'admin', 8, 1);
-INSERT INTO `sys_menu_role` VALUES (16, 0, '2022-09-15 09:31:28', '2022-09-15 09:31:28', 'admin', 'admin', 8, 2);
-COMMIT;
 
 -- ----------------------------
 -- Table structure for sys_operator
@@ -435,14 +448,6 @@ CREATE TABLE `sys_operator` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb3 COMMENT='系统用户信息表';
 
 -- ----------------------------
--- Records of sys_operator
--- ----------------------------
-BEGIN;
-INSERT INTO `sys_operator` VALUES (1, 0, '2021-07-27 10:25:34', '2021-07-27 10:25:34', 'admin', NULL, 1, 'admin', 'de6eb79b18bd0c2fcbb3ce1d50f1b5fddb684409', '884df31e2e88e12a', '', NULL, '');
-INSERT INTO `sys_operator` VALUES (2, 0, '2022-09-09 00:34:02', '2022-09-09 00:34:02', 'admin', NULL, 1, 'audit', 'de6eb79b18bd0c2fcbb3ce1d50f1b5fddb684409', '884df31e2e88e12a', '', NULL, '');
-COMMIT;
-
--- ----------------------------
 -- Table structure for sys_operator_role
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_operator_role`;
@@ -457,14 +462,6 @@ CREATE TABLE `sys_operator_role` (
   `role_id` bigint NOT NULL DEFAULT '2' COMMENT '角色id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户角色表';
-
--- ----------------------------
--- Records of sys_operator_role
--- ----------------------------
-BEGIN;
-INSERT INTO `sys_operator_role` VALUES (1, 0, '2021-06-08 16:43:19', '2021-06-08 16:43:19', 'admin', NULL, 1, 1);
-INSERT INTO `sys_operator_role` VALUES (2, 0, '2021-06-08 16:43:30', '2021-06-08 16:43:30', 'admin', NULL, 2, 2);
-COMMIT;
 
 -- ----------------------------
 -- Table structure for sys_role
@@ -485,12 +482,18 @@ CREATE TABLE `sys_role` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COMMENT='系统用户信息表';
 
 -- ----------------------------
--- Records of sys_role
+-- Table structure for test_zm
 -- ----------------------------
-BEGIN;
-INSERT INTO `sys_role` VALUES (1, 0, '2021-06-08 16:36:05', '2021-06-08 16:36:05', 'admin', 'admin', 0, '超级管理员', 0);
-INSERT INTO `sys_role` VALUES (2, 0, '2022-09-09 01:46:59', '2022-09-09 01:46:59', 'admin', 'admin', 1, '审计人员', 1);
-COMMIT;
+DROP TABLE IF EXISTS `test_zm`;
+CREATE TABLE `test_zm` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `is_delete` tinyint DEFAULT '0' COMMENT '逻辑删除标志；0-未删除；1-已删除；',
+  `gmt_create` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '开始处理请求的时间',
+  `gmt_modified` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '处理完请求的时间',
+  `config` varchar(255) DEFAULT NULL COMMENT '配置项',
+  `config_type` varchar(16) DEFAULT NULL COMMENT '配置类型',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='系统配置表';
 
 -- ----------------------------
 -- Table structure for user_login_log
@@ -509,7 +512,7 @@ CREATE TABLE `user_login_log` (
   KEY `index_user_name` (`user_name`) USING BTREE,
   KEY `index_ip` (`login_ip`) USING BTREE,
   KEY `index_session_id` (`session_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=189 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登录登出记录';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登录登出记录';
 
 -- ----------------------------
 -- Table structure for user_login_statistics
@@ -525,14 +528,7 @@ CREATE TABLE `user_login_statistics` (
   `description` varchar(128) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `index_user_name` (`user_name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登录登出记录';
-
--- ----------------------------
--- Records of user_login_statistics
--- ----------------------------
-BEGIN;
-INSERT INTO `user_login_statistics` VALUES (7, 0, '2022-09-15 09:13:18', '2022-09-15 17:13:23', 'admin', 0, NULL);
-COMMIT;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登录登出记录';
 
 -- ----------------------------
 -- Table structure for user_portrait_by_table
@@ -638,13 +634,5 @@ CREATE TABLE `user_portrait_rules` (
   `rule_desc_detail` varchar(128) DEFAULT NULL COMMENT '规则详细描述',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户画像规则表';
-
--- ----------------------------
--- Records of user_portrait_rules
--- ----------------------------
-BEGIN;
-INSERT INTO `user_portrait_rules` VALUES (1, 0, '2022-07-27 06:39:07', '2022-07-27 06:39:07', 'user_visited_time', '基于访问时间段的异常告警', '基于访问时间段的异常告警规则：如果某用户通常白天访问数据，那么夜间访问数据则为异常情况，给出告警；');
-INSERT INTO `user_portrait_rules` VALUES (2, 0, '2022-07-27 06:39:11', '2022-07-27 06:39:11', 'user_visited_table', '基于访问数据库表的异常告警', '基于访问数据库表的异常告警规则：某用户首次访问某个数据库表时，给出告警；');
-COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
