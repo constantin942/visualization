@@ -8,7 +8,6 @@ import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.*;
 import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.kafka.consumer.AiitKafkaConsumerRunner;
 import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.reactor.queue.IoThreadLinkedBlockingQueue;
@@ -63,8 +62,6 @@ public class MingshiServerUtil {
     private SegmentDao segmentDao;
     @Resource
     private MingshiServerUtil mingshiServerUtil;
-    @Resource
-    private AiitKafkaConsumerRunner aiitKafkaConsumerRunner;
 
     /**
      * 产生字符串类型的订单号
