@@ -226,6 +226,9 @@ public class AuditLogServiceImpl implements AuditLogService {
                 if (msSql.startsWith("show variables") || msSql.startsWith("set global") || msSql.startsWith("select @@version")) {
                     continue;
                 }
+                if(Const.FAIL.equals(sqlExecAuditLog.getExecState())){
+                    continue;
+                }
                 // 组装MsDmsAuditLogDo实例
                 getMsDmsAuditLogDo(msSql, msSchemaName, sqlExecAuditLog, list);
             }
