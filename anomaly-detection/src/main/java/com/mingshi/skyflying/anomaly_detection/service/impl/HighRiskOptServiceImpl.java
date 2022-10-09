@@ -6,6 +6,7 @@ import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -86,6 +86,7 @@ public class HighRiskOptServiceImpl {
         msAlarmInformationDo.setAlarmContent(HAVE_USER + segmentDetailDo.getUserName() + alarmInfo);
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDetailDo.getStartTime()));
         msAlarmInformationDo.setGlobalTraceId(segmentDetailDo.getGlobalTraceId());
+        msAlarmInformationDo.setMatchRuleId(AlarmEnum.HIGH_RISK_OPT.getCode());
         return msAlarmInformationDo;
     }
 }

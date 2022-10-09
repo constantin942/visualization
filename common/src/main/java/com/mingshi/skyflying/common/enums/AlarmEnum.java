@@ -8,7 +8,8 @@ package com.mingshi.skyflying.common.enums;
 public enum AlarmEnum {
     NEW_USER(0, "新用户"),
     TIME_ALARM(1, "时间"),
-    TABLE_ALARM(2, "库表");
+    TABLE_ALARM(2, "库表"),
+    HIGH_RISK_OPT(3, "高危操作");
 
     private Integer code;
 

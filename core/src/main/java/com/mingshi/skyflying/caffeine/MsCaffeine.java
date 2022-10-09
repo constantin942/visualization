@@ -254,6 +254,5 @@ public class MsCaffeine implements ApplicationRunner {
       //设置缓存的移除通知
       .removalListener(new CaffeineRemovalTokenUserNameListener())
       .build();
-
   }
 }

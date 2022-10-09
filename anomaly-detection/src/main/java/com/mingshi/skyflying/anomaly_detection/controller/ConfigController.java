@@ -1,6 +1,10 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
+import com.mingshi.skyflying.anomaly_detection.dao.DicItemMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
+import com.mingshi.skyflying.anomaly_detection.domain.DicItem;
+import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
@@ -32,6 +36,9 @@ public class ConfigController {
 
     @Resource
     HighRiskOptServiceImpl highRiskOptService;
+
+    @Resource
+    DingAlarmConfigMapper dingAlarmConfigMapper;
 
 
     private final String DEMO_MODE = "demo_mode";
@@ -82,5 +89,21 @@ public class ConfigController {
     @PutMapping("updateHighRiskOpt")
     public ServerResponse updateHighRiskOpt(@RequestBody List<HighRiskOpt> highRiskOpts) {
         return ServerResponse.createBySuccess(highRiskOptService.updateHighRiskOpt(highRiskOpts));
+    }
+
+    @GetMapping("getDingConfig")
+    public ServerResponse<DingAlarmConfig> getDingConfig() {
+        return ServerResponse.createBySuccess(dingAlarmConfigMapper.selectOne());
+    }
+
+    @GetMapping("getDingGapDic")
+    public ServerResponse<ArrayList<Integer>> getDingGapDic() {
+        return ServerResponse.createBySuccess(dingAlarmConfigMapper.selectGapDic());
+    }
+
+    @PutMapping("updateDingConfig")
+    public ServerResponse updateDingConfig(@RequestBody DingAlarmConfig dingAlarmConfig) {
+        dingAlarmConfigMapper.updateByPrimaryKeySelective(dingAlarmConfig);
+        return ServerResponse.createBySuccess();
     }
 }

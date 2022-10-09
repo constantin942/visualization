@@ -1,16 +1,19 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.dao.*;
+import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.DingUtils;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +67,9 @@ public class AnomalyDetectionBusiness {
     @Resource
     UserPortraitByTableMapper tableMapper;
 
+    @Resource
+    DingAlarmConfigMapper dingAlarmConfigMapper;
+
     private static final String TABLE_NAME = "table_name";
 
     private static final String COUNTS = "counts";
@@ -90,6 +96,7 @@ public class AnomalyDetectionBusiness {
     private static final String TIME_SUF = "time";
 
     private static final String TABLE_SUF = "table";
+    private static Integer SECONDS = 60;
 
     /**
      * 判断是否告警-库表维度
@@ -343,6 +350,7 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
             highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
@@ -432,4 +440,67 @@ public class AnomalyDetectionBusiness {
         }
         return coarseInfoList;
     }
+
+    /**
+     * 钉钉告警
+     */
+    private void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        HashSet<String> set = new HashSet<>();
+        for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
+            set.add(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName());
+        }
+        DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
+        for (String str : set) {
+            dingAlarmHelper(str, dingAlarmConfig);
+        }
+    }
+
+    /**
+     * 告警单条消息
+     */
+    private void dingAlarmHelper(String redisKey, DingAlarmConfig dingAlarmConfig) {
+        Integer gap = dingAlarmConfig.getGap();
+        if (!isAlarmed(redisKey, gap)) {
+            redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
+            String message = buildDingAlarmInfo(redisKey);
+            try {
+                DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 构建钉钉告警内容
+     */
+    private String buildDingAlarmInfo(String redisKey) {
+        String[] strings = redisKey.split(Const.POUND_KEY);
+        StringBuilder sb = new StringBuilder();
+        sb.append("用户").append(strings[1]);
+        Integer code = Integer.valueOf(strings[0]);
+        if (code.equals(AlarmEnum.TIME_ALARM.getCode())) {
+            sb.append("以往在该时段不经常访问");
+            return sb.toString();
+        }
+        if (code.equals(AlarmEnum.TABLE_ALARM.getCode())) {
+            sb.append("访问了不经常使用的表");
+            return sb.toString();
+        }
+        sb.append("进行了高危操作");
+        return sb.toString();
+    }
+
+    /**
+     * 判断是否在告警间隔内
+     */
+    private Boolean isAlarmed(String redisKey, Integer gap) {
+        Object o = redisPoolUtil.get(redisKey);
+        if (o != null) {
+            return true;
+        }
+        redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
+        return false;
+    }
+
 }
