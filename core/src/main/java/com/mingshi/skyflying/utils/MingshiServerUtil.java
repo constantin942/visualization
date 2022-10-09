@@ -298,7 +298,7 @@ public class MingshiServerUtil {
         }
 
         if (StringUtil.isNotBlank(sqlType) && !sqlType.equals(sqlTypeFromLibrary)) {
-            log.error("#MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】从库里获取到的sql类型 = 【{}】与原生匹配到的sql类型 = 【{}】不一致。", msSql, sqlTypeFromLibrary, sqlType);
+            // log.error("#MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】从库里获取到的sql类型 = 【{}】与原生匹配到的sql类型 = 【{}】不一致。", msSql, sqlTypeFromLibrary, sqlType);
         } else {
             sqlType = sqlTypeFromLibrary;
         }
@@ -402,9 +402,9 @@ public class MingshiServerUtil {
         } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
             tableNameList = SqlParserUtils.deleteTable(msSql);
         } else {
-            log.error("# MingshiServerUtil.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
+            // log.error("# MingshiServerUtil.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
         }
-        if (!tableNameList.isEmpty()) {
+        if (null != tableNameList && !tableNameList.isEmpty()) {
             for (String table : tableNameList) {
                 if (StringUtil.isBlank(tableName)) {
                     tableName = table;
@@ -626,7 +626,9 @@ public class MingshiServerUtil {
         // 累加用户对数据库表资源的访问次数；
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
         String serviceCodeName = AgentInformationSingleton.get(serviceCode);
-        serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
+        if(StringUtil.isNotBlank(serviceCodeName)){
+            serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
+        }
 
         Date date = DateTimeUtil.strToDate(startTime);
         String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
