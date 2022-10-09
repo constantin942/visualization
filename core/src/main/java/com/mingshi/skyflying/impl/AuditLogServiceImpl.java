@@ -226,7 +226,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 if (msSql.startsWith("show variables") || msSql.startsWith("set global") || msSql.startsWith("select @@version")) {
                     continue;
                 }
-                if(Const.FAIL.equals(sqlExecAuditLog.getExecState())){
+                if (Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
                     continue;
                 }
                 // 组装MsDmsAuditLogDo实例
@@ -302,7 +302,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         MsDmsAuditLogDo msDmsAuditLogDo = new MsDmsAuditLogDo();
 
         String sqlType1 = mingshiServerUtil.getSqlType(msSql);
-        if(StringUtil.isBlank(sqlType1)){
+        if (StringUtil.isBlank(sqlType1)) {
             return;
         }
         // 获取表名；2022-06-06 14:11:21
@@ -312,7 +312,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 msDmsAuditLogDo.setMsTableName(tableName);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("# AuditLogServiceImpl.getMsDmsAuditLogDo() # 根据sql语句 = 【{}】获取表名时，出现了异常。", msSql, e);
         }
 
         msDmsAuditLogDo.setMsSql(msSql);
