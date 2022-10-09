@@ -330,6 +330,9 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警
      */
     public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        if(null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()){
+            return;
+        }
         try {
             Boolean enableTimeRule = getEnableRule(TIME_SUF);
             Boolean enableTableRule = getEnableRule(TABLE_SUF);
