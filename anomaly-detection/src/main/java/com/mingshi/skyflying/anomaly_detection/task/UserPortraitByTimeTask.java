@@ -77,7 +77,7 @@ public class UserPortraitByTimeTask {
      * 每日定时任务 : 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    private void createUserPortraitTask() {
+    public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
@@ -126,7 +126,9 @@ public class UserPortraitByTimeTask {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
         if(segmentDetails == null)  return;
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
-        coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
+        if(list.size() != 0) {
+            coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
+        }
     }
 
     /**

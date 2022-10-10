@@ -38,14 +38,6 @@ public class TestControllerA {
         anomalyDetectionBusiness.inPeriod("admin", 15);
     }
 
-    @GetMapping("cache")
-    public void test() {
-        List<UserPortraitByTimeDo> list = new ArrayList<>();
-        list.add(UserPortraitByTimeDo.builder()
-                .username("testTzx")
-                .morningRate(0.2).afternoonRate(0.3).nightRate(0.5).build());
-        timeTask.cachePortraitByTime(list);
-    }
 
     @GetMapping("alarm")
     public void testAlarm(@RequestParam(value = "name") String name) {
@@ -55,7 +47,7 @@ public class TestControllerA {
         msSegmentDetailDo.setGlobalTraceId("94d2c1159fd44d06b81f4bcc1a35ee2f.43.16577678448421029");
         msSegmentDetailDo.setDbInstance("zhejiang_mobile");
         msSegmentDetailDo.setDbType("alter");
-        msSegmentDetailDo.setMsTableName("ms_distributed_firewall_rules");
+        msSegmentDetailDo.setMsTableName("sys_operator_role");
         List<MsAlarmInformationDo> msAlarmInformationDoList = new ArrayList<>();
         List<MsSegmentDetailDo> list = new ArrayList<>();
         list.add(msSegmentDetailDo);
@@ -73,15 +65,16 @@ public class TestControllerA {
         tableTask.cachePortraitByTable();
     }
 
-    @GetMapping("updatePortrait")
-    public void updatePortrait() {
-        timeTask.updatePortrait();
-    }
 
     @GetMapping("getFrequentList")
     public void getFrequentList(){
         anomalyDetectionBusiness.getFrequentList("admin");
     }
 
+    @GetMapping("createPortrait")
+    public void createPortrait() {
+        tableTask.createUserPortraitTask();
+        timeTask.createUserPortraitTask();
+    }
 
 }

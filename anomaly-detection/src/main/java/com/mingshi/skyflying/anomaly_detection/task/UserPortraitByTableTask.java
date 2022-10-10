@@ -60,7 +60,7 @@ public class UserPortraitByTableTask {
      * 每日定时任务 : 全量表生成用户画像 -> 放入Redis
      */
     @Scheduled(cron = "0 0 1 * * ?")
-    private void createUserPortraitTask() {
+    public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {

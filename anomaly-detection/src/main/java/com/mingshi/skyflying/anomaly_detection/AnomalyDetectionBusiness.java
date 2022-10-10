@@ -170,19 +170,10 @@ public class AnomalyDetectionBusiness {
         return buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM);
     }
 
-    /**
-     * 判断是否已存在新用户告警
-     */
-    private boolean existNewUserAlarm(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        String username = segmentDetail.getUserName();
-        for (MsAlarmInformationDo alarmInformationDo : msAlarmInformationDoList) {
-            if (alarmInformationDo.getUserName().equals(username) && alarmInformationDo.getAlarmContent().contains("首次出现")) {
-                return true;
-            }
-        }
-        return false;
-    }
 
+    /**
+     *  获取某表访问次数
+     */
     private Integer getCountByTable(String username, String tableName) {
         String redisKey = userPortraitByTableTask.buildRedisKey(username, tableName);
         Object o = redisPoolUtil.get(redisKey);
@@ -201,6 +192,9 @@ public class AnomalyDetectionBusiness {
         }
     }
 
+    /**
+     * 判断是否告警-时间维度
+     */
     public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
         if (segmentDetailDo.getUserName() == null) return;
         if (portraitConfig == null) {
@@ -215,7 +209,7 @@ public class AnomalyDetectionBusiness {
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                , time, segmentDetailDo.getGlobalTraceId());
+                    , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -235,14 +229,14 @@ public class AnomalyDetectionBusiness {
      * 没有时间用户画像
      */
     private MsAlarmInformationDo doNoTimePortrait(MsSegmentDetailDo segmentDetailDo) {
-//        if (isNewUser(segmentDetailDo.getUserName())) {
-//            return buildAlarmInfo(segmentDetailDo, AlarmEnum.NEW_USER);
-//        }
         //老用户但是没画像(上次访问距今已超过画像统计周期)
         //产生告警信息
         return buildAlarmInfo(segmentDetailDo, AlarmEnum.TIME_ALARM);
     }
 
+    /**
+     *  构建告警信息
+     */
     private MsAlarmInformationDo buildAlarmInfo(MsSegmentDetailDo segmentDetailDo, AlarmEnum alarmEnum) {
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
         msAlarmInformationDo.setUserName(segmentDetailDo.getUserName());
@@ -265,12 +259,6 @@ public class AnomalyDetectionBusiness {
         return msAlarmInformationDo;
     }
 
-    /**
-     * 判断是否是新用户
-     */
-    private boolean isNewUser(String userName) {
-        return coarseSegmentDetailOnTimeMapper.selectOneByUsername(userName) == null;
-    }
 
 
     /**
@@ -337,7 +325,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警
      */
     public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if(null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()){
+        if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
             return;
         }
         try {
@@ -350,6 +338,7 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
             highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            //钉钉告警
             dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
@@ -460,7 +449,7 @@ public class AnomalyDetectionBusiness {
      */
     private void dingAlarmHelper(String redisKey, DingAlarmConfig dingAlarmConfig) {
         Integer gap = dingAlarmConfig.getGap();
-        if (!isAlarmed(redisKey, gap)) {
+        if (Boolean.FALSE.equals(isAlarmed(redisKey, gap))) {
             redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
             String message = buildDingAlarmInfo(redisKey);
             try {
@@ -494,7 +483,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否在告警间隔内
      */
-    private Boolean isAlarmed(String redisKey, Integer gap) {
+    private boolean isAlarmed(String redisKey, Integer gap) {
         Object o = redisPoolUtil.get(redisKey);
         if (o != null) {
             return true;
