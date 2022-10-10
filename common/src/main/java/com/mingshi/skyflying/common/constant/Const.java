@@ -334,6 +334,7 @@ public class Const {
     public static final String AK_SK = "akSk";
     public static final String AK = "ak";
     public static final String SK = "sk";
+    public static final String DMS_REGION = "dms-region";
     public static final String RETCH_AUDIT_LOG_BY_DMS_SUCCESS_RESULT = "sucess";
 
     public static final String SQL = "sql";

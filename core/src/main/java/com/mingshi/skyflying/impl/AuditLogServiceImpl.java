@@ -69,10 +69,103 @@ public class AuditLogServiceImpl implements AuditLogService {
             return ServerResponse.createByErrorMessage("开始时间或者结束时间不能为空", "");
         }
         log.info("开始执行 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS审计日志。参数 startTime = 【{}】，endTime = 【{}】。", startTime, endTime);
+
+        // 从数据库中获取ak、sk信息；2022-10-10 09:49:55
+        ObjectNode akSkObjectNode = getAkSk();
+        if(null == akSkObjectNode || null == akSkObjectNode.get(Const.AK) || null == akSkObjectNode.get(Const.SK) || StringUtil.isBlank(akSkObjectNode.get(Const.AK).asText()) || StringUtil.isBlank(akSkObjectNode.get(Const.SK).asText())){
+            return ServerResponse.createByErrorMessage("开始执行 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS审计日志。没有配置aksk信息", "");
+        }
+
+        // 从数据库中获取配置的数据库位置信息；2022-10-10 09:49:55
+        ObjectNode dmsRegionObjectNode = getDmsRegion();
+        if(null == dmsRegionObjectNode || null == dmsRegionObjectNode.get(Const.DMS_REGION) || StringUtil.isBlank(dmsRegionObjectNode.get(Const.DMS_REGION).asText())){
+            return ServerResponse.createByErrorMessage("开始执行 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS审计日志。没有配置数据库所属区域（region）信息", "");
+        }
+
+        /**
+         * cn-qingdao：华北1（青岛）
+         * cn-beijing：华北2（北京）
+         * cn-zhangjiakou：华北3（张家口）
+         * cn-huhehaote：华北5（呼和浩特）
+         * cn-hangzhou：华东1（杭州）
+         * cn-shanghai：华东2（上海）
+         * cn-shenzhen：华南1（深圳）
+         * cn-chengdu：西南1（成都）
+         * cn-hongkong：中国（香港）
+         * ap-northeast-1：日本（东京）
+         * ap-southeast-1：新加坡
+         * ap-southeast-2：澳大利亚（悉尼）
+         * ap-southeast-3：马来西亚（吉隆坡）
+         * ap-southeast-5：印度尼西亚（雅加达）
+         * us-east-1：美国（弗吉尼亚）
+         * us-west-1：美国（硅谷）
+         * eu-west-1：英国（伦敦）
+         * eu-central-1：德国（法兰克福）
+         * ap-south-1：印度（孟买）
+         * me-east-1：阿联酋（迪拜）
+         * cn-hangzhou-finance：华东1 金融云
+         * cn-shanghai-finance-1：华东2 金融云
+         * cn-shenzhen-finance-1：华南1 金融云
+         * cn-beijing-finance-1：华北2 金融云
+         */
+        DefaultProfile profile = DefaultProfile.getProfile(dmsRegionObjectNode.get(Const.DMS_REGION).asText(), akSkObjectNode.get(Const.AK).asText(), akSkObjectNode.get(Const.SK).asText());
+        // DefaultProfile profile = DefaultProfile.getProfile("cn-beijing", akSkObjectNode.get(Const.AK).asText(), akSkObjectNode.get(Const.SK).asText());
+        IAcsClient client = new DefaultAcsClient(profile);
+
+        ServerResponse<String> dmsAuditLog = getDmsAuditLog(client, startTime, endTime);
+        log.info("执行结束 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+        return dmsAuditLog;
+
+    }
+
+    /**
+     * <B>方法名称：getDmsRegion</B>
+     * <B>概要说明：从数据库中获取配置的数据库位置信息</B>
+     * @Author zm
+     * @Date 2022年10月10日 09:10:59
+     * @Param []
+     * @return com.fasterxml.jackson.databind.node.ObjectNode
+     **/
+    private ObjectNode getDmsRegion() {
+        ObjectNode jsonNodes = JsonUtil.createJsonObject();
+        MsConfigDo msConfigDo = msConfigDao.selectByConfigType(Const.DMS_REGION);
+        if (null == msConfigDo || StringUtil.isBlank(msConfigDo.getConfig())) {
+            log.error("#AuditLogServiceImpl.getDmsRegion()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到数据库所属区域（region）配置。");
+            return null;
+        }
+        String config = null;
+        String dmsRegion = null;
+        try {
+            config = msConfigDo.getConfig();
+
+            ObjectNode jsonObject = JsonUtil.string2Object(config, ObjectNode.class);
+            if (null == jsonObject.get(Const.DMS_REGION) || StringUtil.isBlank(jsonObject.get(Const.DMS_REGION).asText())) {
+                log.error("#AuditLogServiceImpl.getDmsRegion()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到数据库所属区域（region）配置。");
+                return null;
+            }
+            dmsRegion = jsonObject.get(Const.DMS_REGION).asText();
+        } catch (Exception e) {
+            log.error("#AuditLogServiceImpl.getDmsRegion()# 通过定时任务自动拉取DMS的审计日志，解析在数据库中获取到的数据库所属区域（region）配置 = 【{}】时，出现了异常。", config, e);
+            return null;
+        }
+        jsonNodes.put(Const.DMS_REGION,dmsRegion);
+        return jsonNodes;
+    }
+
+    /**
+     * <B>方法名称：getAkSk</B>
+     * <B>概要说明：从数据库中获取ak、sk信息</B>
+     * @Author zm
+     * @Date 2022年10月10日 09:10:49
+     * @Param []
+     * @return com.fasterxml.jackson.databind.node.ObjectNode
+     **/
+    private ObjectNode getAkSk() {
+        ObjectNode jsonNodes = JsonUtil.createJsonObject();
         MsConfigDo msConfigDo = msConfigDao.selectByConfigType(Const.AK_SK);
         if (null == msConfigDo || StringUtil.isBlank(msConfigDo.getConfig())) {
-            log.error("#AuditLogServiceImpl.manualFetchAuditlog()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到aksk配置。");
-            return ServerResponse.createByErrorMessage("没有配置aksk信息", "");
+            log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到aksk配置。");
+            return null;
         }
         String config = null;
         String ak = null;
@@ -81,25 +174,19 @@ public class AuditLogServiceImpl implements AuditLogService {
             config = msConfigDo.getConfig();
 
             ObjectNode jsonObject = JsonUtil.string2Object(config, ObjectNode.class);
+            if (null == jsonObject.get(Const.AK) || null == jsonObject.get(Const.SK) || StringUtil.isBlank(jsonObject.get(Const.AK).asText()) || StringUtil.isBlank(jsonObject.get(Const.SK).asText())) {
+                log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
+                return null;
+            }
             ak = jsonObject.get(Const.AK).asText();
             sk = jsonObject.get(Const.SK).asText();
-            if (StringUtil.isBlank(ak) || StringUtil.isBlank(sk)) {
-                log.error("#AuditLogServiceImpl.manualFetchAuditlog()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
-                return ServerResponse.createByErrorMessage("没有配置ak或者sk信息", "");
-            }
         } catch (Exception e) {
-            log.error("#AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志，解析在数据库中获取到的aksk配置 = 【{}】时，出现了异常。", config, e);
-            return ServerResponse.createByErrorMessage("解析aksk配置信息时，出现了异常。" + e.getMessage(), "");
+            log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS的审计日志，解析在数据库中获取到的aksk配置 = 【{}】时，出现了异常。", config, e);
+            return null;
         }
-
-        // TODO：这个"cn-beijing"不应该写死，明天看看阿里云上这个参数代表啥意思，然后配置到数据库中，从数据库中获取这个参数；2022-10-08 17:09:10
-        DefaultProfile profile = DefaultProfile.getProfile("cn-beijing", ak, sk);
-        IAcsClient client = new DefaultAcsClient(profile);
-
-        ServerResponse<String> dmsAuditLog = getDmsAuditLog(client, startTime, endTime);
-        log.info("执行结束 #AuditLogServiceImpl.autoFetchAuditlogByDMS()# 通过定时任务自动拉取DMS的审计日志。耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-        return dmsAuditLog;
-
+        jsonNodes.put(Const.AK,ak);
+        jsonNodes.put(Const.SK,sk);
+        return jsonNodes;
     }
 
     /**

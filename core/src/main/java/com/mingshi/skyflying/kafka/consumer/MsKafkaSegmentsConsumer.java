@@ -100,7 +100,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
         aiitKafkaConsumer = new org.apache.kafka.clients.consumer.KafkaConsumer<>(properties);
 
         // 订阅主题
-        aiitKafkaConsumer.subscribe(Collections.singletonList(consumerTopic));
+        aiitKafkaConsumer.subscribe(Collections.singletonList(consumerTopic), new MsConsumerRebalanceListener(aiitKafkaConsumer));
         isInitDone.set(true);
     }
 
@@ -133,10 +133,11 @@ public class MsKafkaSegmentsConsumer extends Thread {
     /**
      * <B>方法名称：consumeRecords</B>
      * <B>概要说明：从Kafka服务端拉取消息并消费消息</B>
+     *
+     * @return void
      * @Author zm
      * @Date 2022年10月08日 16:10:38
      * @Param []
-     * @return void
      **/
     private void consumeRecords() {
         try {
