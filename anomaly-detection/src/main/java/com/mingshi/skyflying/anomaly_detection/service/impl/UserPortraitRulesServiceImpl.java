@@ -101,8 +101,8 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
      *  存入Redis
      */
     @Override
-    public Boolean cacheRule(Integer ruleId, Integer isDelete) {
-        Boolean enable = isDelete != 1;
+    public boolean cacheRule(Integer ruleId, Integer isDelete) {
+        boolean enable = isDelete != 1;
         if(ruleId == 1) {
             redisPoolUtil.set(PREFIX + TIME_SUF, enable, EXPIRE);
         }

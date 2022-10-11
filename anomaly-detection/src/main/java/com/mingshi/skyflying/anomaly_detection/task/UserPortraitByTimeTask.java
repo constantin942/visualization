@@ -126,7 +126,7 @@ public class UserPortraitByTimeTask {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
         if(segmentDetails == null)  return;
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
-        if(list.size() != 0) {
+        if(!list.isEmpty()) {
             coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
         }
     }
@@ -137,7 +137,7 @@ public class UserPortraitByTimeTask {
     public List<UserPortraitByTimeDo> createUserPortraitByTime(Integer portraitByTimePeriod) {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
-        if(userPortraitByTimeDoList.size() != 0) {
+        if(!userPortraitByTimeDoList.isEmpty()) {
             userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
         }
         return userPortraitByTimeDoList;

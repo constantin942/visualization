@@ -360,7 +360,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 从数据库查询开关存入Redis
      */
-    private Boolean cacheRuleEnable(String suffix) {
+    private boolean cacheRuleEnable(String suffix) {
         UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
         UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
         if (null != timeRule) {
@@ -370,12 +370,20 @@ public class AnomalyDetectionBusiness {
             portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
         }
         if (suffix.equals(TIME_SUF)) {
-            assert timeRule != null;
-            return timeRule.getIsDelete() != 1;
+            if (timeRule != null && timeRule.getIsDelete() != null) {
+                return timeRule.getIsDelete() != 1;
+            } else {
+                log.error("从数据库获取规则失败");
+                return false;
+            }
         }
         if (suffix.equals(TABLE_SUF)) {
-            assert tableRule != null;
-            return tableRule.getIsDelete() != 1;
+            if (tableRule != null && tableRule.getIsDelete() != null) {
+                return tableRule.getIsDelete() != 1;
+            } else {
+                log.error("从数据库获取规则失败");
+                return false;
+            }
         }
         return false;
     }
