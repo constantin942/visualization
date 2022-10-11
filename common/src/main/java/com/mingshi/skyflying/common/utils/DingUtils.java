@@ -1,21 +1,30 @@
 package com.mingshi.skyflying.common.utils;
 
-
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.SSLContext;
 import java.net.URLEncoder;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 
+@Slf4j
 public class DingUtils {
+
     //请求地址以及access_token
 //    private static String Webhook = "https://oapi.dingtalk.com/robot/send?access_token=2102254b2856062b676aa73b7fb2854e666e6a2cc97bdfcdf252a125ac60ad8e";
     //密钥
@@ -41,8 +50,7 @@ public class DingUtils {
         String sign = URLEncoder.encode(new String(encoder.encodeToString(signData)), "UTF-8");
         System.out.println(timestamp);
         System.out.println(sign);
-        String result = "&timestamp=" + timestamp + "&sign=" + sign;
-        return result;
+        return "&timestamp=" + timestamp + "&sign=" + sign;
     }
 
     ;
@@ -53,12 +61,15 @@ public class DingUtils {
 
     public static void dingRequest(String message, String Webhook, String secret) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        System.setProperty("com.sun.security.enableAIAcaIssuers", "true");
+        log.info("开始钉钉告警:{}", message);
         String url = null;
         try {
             url = Webhook + encode(secret);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("钉钉告警失败{}", e.getMessage());
         }
+        log.info("钉钉告警url:{}", url);
         HttpPost httpPost = new HttpPost(url);
         //设置http的请求头，发送json字符串，编码UTF-8
         httpPost.setHeader("Content-Type", "application/json;charset=utf8");
@@ -74,18 +85,23 @@ public class DingUtils {
         httpPost.setEntity(entity);
         // 响应模型
         CloseableHttpResponse response = null;
+        HttpEntity responseEntity = null;
         try {
             // 由客户端执行(发送)Post请求
+            log.info("开始发送请求");
             response = httpClient.execute(httpPost);
+            log.info("请求发送成功");
             // 从响应模型中获取响应实体
-            HttpEntity responseEntity = response.getEntity();
-            System.out.println("响应状态为:" + response.getStatusLine());
-            if (responseEntity != null) {
-                System.out.println("响应内容长度为:" + responseEntity.getContentLength());
-                System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
-            }
+            responseEntity = response.getEntity();
+            log.info("钉钉告警响应内容:{}", EntityUtils.toString(responseEntity));
+//            System.out.println("响应状态为:" + response.getStatusLine());
+//            if (responseEntity != null) {
+//                System.out.println("响应内容长度为:" + responseEntity.getContentLength());
+//                System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
+//            }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("钉钉告警失败{}", e.getMessage());
+//            e.printStackTrace();
         } finally {
             try {
                 // 释放资源
@@ -96,7 +112,7 @@ public class DingUtils {
                     response.close();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("钉钉告警释放资源失败{}", e.getMessage());
             }
         }
     }

@@ -454,8 +454,9 @@ public class AnomalyDetectionBusiness {
             String message = buildDingAlarmInfo(redisKey);
             try {
                 DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret());
+                log.info("钉钉告警成功");
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("钉钉告警发生异常:{}",e.getMessage());
             }
         }
     }

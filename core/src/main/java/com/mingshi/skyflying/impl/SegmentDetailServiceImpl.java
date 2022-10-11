@@ -708,12 +708,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     public ServerResponse<List<AlarmData>> getAlarmData() {
         log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData # 获取告警信息。");
         List<AlarmData> list = msSegmentDetailDao.selectAlarmData();
-        for (int i = 0; i < list.size(); i++) {
-            UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(list.get(i).getMatchRuleId());
+        for (AlarmData alarmData : list) {
+            UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(alarmData.getMatchRuleId());
             if (null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())) {
-                list.get(i).setAlarmName(userPortraitRulesDo.getRuleDesc());
+                alarmData.setAlarmName(userPortraitRulesDo.getRuleDesc());
             } else {
-                list.get(i).setAlarmName("异常告警");
+                alarmData.setAlarmName("高危操作");
             }
         }
         log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取告警信息。");
