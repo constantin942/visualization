@@ -1,113 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="webhook" jdbcType="VARCHAR" property="webhook" />
-    <result column="secret" jdbcType="VARCHAR" property="secret" />
-    <result column="gap" jdbcType="INTEGER" property="gap" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    id, webhook, secret, gap, create_time, update_time, is_deleted
-  </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from ding_alarm_config
-    where id = #{id,jdbcType=INTEGER}
-  </select>
-  <select id="selectOne" resultType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    select
-    <include refid="Base_Column_List" />
-    from ding_alarm_config
-    where is_deleted = 0 limit 1;
-  </select>
-  <select id="selectGapDic" resultType="java.lang.Integer">
-    select `value` from dic_item where name = 'ding_alarm_gap' order by sort
-  </select>
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="webhook" jdbcType="VARCHAR" property="webhook"/>
+        <result column="secret" jdbcType="VARCHAR" property="secret"/>
+        <result column="gap" jdbcType="INTEGER" property="gap"/>
+        <result column="mobiles" jdbcType="VARCHAR" property="mobiles"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , webhook, secret, gap, mobiles, create_time, update_time, is_deleted
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ding_alarm_config
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectOne" resultType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        select
+        <include refid="Base_Column_List"/>
+        from ding_alarm_config
+        where is_deleted = 0 limit 1;
+    </select>
+    <select id="selectGapDic" resultType="java.lang.Integer">
+        select `value`
+        from dic_item
+        where name = 'ding_alarm_gap'
+        order by sort
+    </select>
 
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from ding_alarm_config
-    where id = #{id,jdbcType=INTEGER}
-  </delete>
-  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    insert into ding_alarm_config (id, webhook, secret, 
-      gap, create_time, update_time, 
-      is_deleted)
-    values (#{id,jdbcType=INTEGER}, #{webhook,jdbcType=VARCHAR}, #{secret,jdbcType=VARCHAR}, 
-      #{gap,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, 
-      #{isDeleted,jdbcType=INTEGER})
-  </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    insert into ding_alarm_config
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="webhook != null">
-        webhook,
-      </if>
-      <if test="secret != null">
-        secret,
-      </if>
-      <if test="gap != null">
-        gap,
-      </if>
-      <if test="createTime != null">
-        create_time,
-      </if>
-      <if test="updateTime != null">
-        update_time,
-      </if>
-      <if test="isDeleted != null">
-        is_deleted,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="webhook != null">
-        #{webhook,jdbcType=VARCHAR},
-      </if>
-      <if test="secret != null">
-        #{secret,jdbcType=VARCHAR},
-      </if>
-      <if test="gap != null">
-        #{gap,jdbcType=INTEGER},
-      </if>
-      <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="isDeleted != null">
-        #{isDeleted,jdbcType=INTEGER},
-      </if>
-    </trim>
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    update ding_alarm_config
-    <set>
-      <if test="webhook != null">
-        webhook = #{webhook,jdbcType=VARCHAR},
-      </if>
-      <if test="secret != null">
-        secret = #{secret,jdbcType=VARCHAR},
-      </if>
-      <if test="gap != null">
-        gap = #{gap,jdbcType=INTEGER},
-      </if>
-    </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
-    update ding_alarm_config
-    set webhook = #{webhook,jdbcType=VARCHAR},
-      secret = #{secret,jdbcType=VARCHAR},
-      gap = #{gap,jdbcType=INTEGER},
-      is_deleted = #{isDeleted,jdbcType=INTEGER}
-    where id = #{id,jdbcType=INTEGER}
-  </update>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from ding_alarm_config
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        insert into ding_alarm_config (id, webhook, secret,
+                                       gap, create_time, update_time,
+                                       is_deleted)
+        values (#{id,jdbcType=INTEGER}, #{webhook,jdbcType=VARCHAR}, #{secret,jdbcType=VARCHAR},
+                #{gap,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP},
+                #{isDeleted,jdbcType=INTEGER})
+    </insert>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        insert into ding_alarm_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="webhook != null">
+                webhook,
+            </if>
+            <if test="secret != null">
+                secret,
+            </if>
+            <if test="gap != null">
+                gap,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="webhook != null">
+                #{webhook,jdbcType=VARCHAR},
+            </if>
+            <if test="secret != null">
+                #{secret,jdbcType=VARCHAR},
+            </if>
+            <if test="gap != null">
+                #{gap,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective"
+            parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        update ding_alarm_config
+        <set>
+            <if test="webhook != null">
+                webhook = #{webhook,jdbcType=VARCHAR},
+            </if>
+            <if test="secret != null">
+                secret = #{secret,jdbcType=VARCHAR},
+            </if>
+            <if test="gap != null">
+                gap = #{gap,jdbcType=INTEGER},
+            </if>
+            <if test="mobiles != null">
+                mobiles = #{mobiles,jdbcType=VARCHAR}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+        update ding_alarm_config
+        set webhook    = #{webhook,jdbcType=VARCHAR},
+            secret     = #{secret,jdbcType=VARCHAR},
+            gap        = #{gap,jdbcType=INTEGER},
+            is_deleted = #{isDeleted,jdbcType=INTEGER}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
 </mapper>

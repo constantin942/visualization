@@ -25,6 +25,7 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Author: 唐郑翔
@@ -172,7 +173,7 @@ public class AnomalyDetectionBusiness {
 
 
     /**
-     *  获取某表访问次数
+     * 获取某表访问次数
      */
     private Integer getCountByTable(String username, String tableName) {
         String redisKey = userPortraitByTableTask.buildRedisKey(username, tableName);
@@ -235,7 +236,7 @@ public class AnomalyDetectionBusiness {
     }
 
     /**
-     *  构建告警信息
+     * 构建告警信息
      */
     private MsAlarmInformationDo buildAlarmInfo(MsSegmentDetailDo segmentDetailDo, AlarmEnum alarmEnum) {
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
@@ -258,7 +259,6 @@ public class AnomalyDetectionBusiness {
         msAlarmInformationDo.setAlarmContent(content);
         return msAlarmInformationDo;
     }
-
 
 
     /**
@@ -453,10 +453,14 @@ public class AnomalyDetectionBusiness {
             redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
             String message = buildDingAlarmInfo(redisKey);
             try {
-                DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret());
+                List<String> mobiles = null;
+                if (!StringUtil.isEmpty(dingAlarmConfig.getMobiles())) {
+                    mobiles = Arrays.stream(dingAlarmConfig.getMobiles().split(Const.POUND_KEY)).collect(Collectors.toList());
+                }
+                DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret(), mobiles);
                 log.info("钉钉告警成功");
             } catch (Exception e) {
-                log.error("钉钉告警发生异常:{}",e.getMessage());
+                log.error("钉钉告警发生异常:{}", e.getMessage());
             }
         }
     }

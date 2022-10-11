@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.common.utils;
 
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -17,18 +17,17 @@ import org.apache.http.util.EntityUtils;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLContext;
+import java.io.Reader;
 import java.net.URLEncoder;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 @Slf4j
 public class DingUtils {
 
-    //请求地址以及access_token
-//    private static String Webhook = "https://oapi.dingtalk.com/robot/send?access_token=2102254b2856062b676aa73b7fb2854e666e6a2cc97bdfcdf252a125ac60ad8e";
-    //密钥
-//    private static String secret = "SEC743c25f70352a7c33f8b855ef8d74bb53478e4433e05b44511e2c1e77b623bd6";
 
     /*
      ** 生成时间戳和验证信息
@@ -48,18 +47,13 @@ public class DingUtils {
         Base64.Encoder encoder = Base64.getEncoder();
         //把上面的字符串进行Base64加密后再进行URL编码
         String sign = URLEncoder.encode(new String(encoder.encodeToString(signData)), "UTF-8");
-        System.out.println(timestamp);
-        System.out.println(sign);
         return "&timestamp=" + timestamp + "&sign=" + sign;
     }
-
-    ;
 
     /* param: message 要发送的信息
      ** return: void 无返回值
      ** 作用：把传入的message发送给钉钉机器人*/
-
-    public static void dingRequest(String message, String Webhook, String secret) {
+    public static void dingRequest(String message, String Webhook, String secret, List<String> mobiles) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         System.setProperty("com.sun.security.enableAIAcaIssuers", "true");
         log.info("开始钉钉告警:{}", message);
@@ -77,6 +71,12 @@ public class DingUtils {
         JsonObject result = new JsonObject();
         JsonObject text = new JsonObject();
         text.addProperty("content", message);
+
+        if(mobiles != null) {
+            JsonObject at = new JsonObject();
+            at.add("atMobiles", new JsonParser().parse(mobiles.toString()).getAsJsonArray());
+            result.add("at", at);
+        }
         result.add("text", text);
         result.addProperty("msgtype", "text");
         String jsonString = result.toString();
