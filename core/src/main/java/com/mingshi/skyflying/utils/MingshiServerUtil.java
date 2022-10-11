@@ -62,6 +62,8 @@ public class MingshiServerUtil {
     private SegmentDao segmentDao;
     @Resource
     private MingshiServerUtil mingshiServerUtil;
+    @Resource
+    private MsConfigDao msConfigDao;
 
     /**
      * 产生字符串类型的订单号
@@ -71,6 +73,49 @@ public class MingshiServerUtil {
             orderId = SnowflakeIdWorker.generateStringId();
         }
         return orderId;
+    }
+
+    /**
+     * <B>方法名称：getAkSk</B>
+     * <B>概要说明：从数据库中获取ak、sk信息</B>
+     * @Author zm
+     * @Date 2022年10月10日 09:10:49
+     * @Param []
+     * @return com.fasterxml.jackson.databind.node.ObjectNode
+     **/
+    public ObjectNode getAkSk(Boolean scheduled) {
+        ObjectNode jsonNodes = JsonUtil.createJsonObject();
+        MsConfigDo msConfigDo = msConfigDao.selectByConfigType(Const.AK_SK);
+        if (null == msConfigDo || StringUtil.isBlank(msConfigDo.getConfig())) {
+            if(Boolean.TRUE.equals(scheduled)){
+                log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到aksk配置。");
+            }
+            return null;
+        }
+        String config = null;
+        String ak = null;
+        String sk = null;
+        try {
+            config = msConfigDo.getConfig();
+
+            ObjectNode jsonObject = JsonUtil.string2Object(config, ObjectNode.class);
+            if (null == jsonObject.get(Const.AK) || null == jsonObject.get(Const.SK) || StringUtil.isBlank(jsonObject.get(Const.AK).asText()) || StringUtil.isBlank(jsonObject.get(Const.SK).asText())) {
+                if(Boolean.TRUE.equals(scheduled)){
+                    log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
+                }
+                return null;
+            }
+            ak = jsonObject.get(Const.AK).asText();
+            sk = jsonObject.get(Const.SK).asText();
+        } catch (Exception e) {
+            if(Boolean.TRUE.equals(scheduled)){
+                log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS的审计日志，解析在数据库中获取到的aksk配置 = 【{}】时，出现了异常。", config, e);
+            }
+            return null;
+        }
+        jsonNodes.put(Const.AK,ak);
+        jsonNodes.put(Const.SK,sk);
+        return jsonNodes;
     }
 
     /**

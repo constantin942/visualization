@@ -33,7 +33,7 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * <B>方法名称：SegmentConsumeServiceImpl</B>
+ * <B>类名称：SegmentConsumeServiceImpl</B>
  * <B>概要说明：清洗调用链信息</B>
  *
  * @Author zm
@@ -52,6 +52,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private SegmentDao segmentDao;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
+
 
     @Override
     public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
@@ -98,7 +99,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 Instant now = Instant.now();
                 try {
                     if(!segmentDetaiDolList.isEmpty()) {
-                        anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
                         // log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }
                 } catch (Exception e) {
