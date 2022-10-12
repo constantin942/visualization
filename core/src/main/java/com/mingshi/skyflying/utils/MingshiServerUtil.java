@@ -472,27 +472,6 @@ public class MingshiServerUtil {
     }
 
     /**
-     * <B>方法名称：batchUpdateMsAuditLog</B>
-     * <B>概要说明：批量更新审计日志的用户名和globalTraceId信息；</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年06月01日 11:06:48
-     * @Param [auditLogDoList]
-     **/
-    private void batchUpdateMsSegmentDetail(List<MsSegmentDetailDo> setmentDetailDoList) {
-        try {
-            if (!setmentDetailDoList.isEmpty()) {
-                Instant now = Instant.now();
-                msSegmentDetailDao.updateBatch(setmentDetailDoList);
-                log.info("# IoThread.batchUpdateMsSegmentDetail # 更新数据库审计数据（【{}】条）的用户名耗时【{}】毫秒。", setmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-            }
-        } catch (Exception e) {
-            log.error("# IoThread.batchUpdateMsSegmentDetail # 批量更新审计日志中的登录应用系统的用户名时，出现了异常。", e);
-        }
-    }
-
-    /**
      * <B>方法名称：flushToDB</B>
      * <B>概要说明：批量插入到数据库中</B>
      *

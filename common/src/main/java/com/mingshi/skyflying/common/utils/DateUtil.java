@@ -49,10 +49,6 @@ public class DateUtil {
 
   public static final String FINAL_END_DATE_STR = "9999-12-30";
 
-  /**
-   * 格式 ：yyyy-MM-dd HH:mm:ss
-   */
-  public static final String DATEFORMAT_STR_001 = "yyyy-MM-dd HH:mm:ss";
   private static final String YYYY_MM_DD1 = "yyyyMMdd";
   private static final String YYYY_MM_DD2 = "yyyy-MM-dd";
 
@@ -138,7 +134,7 @@ public class DateUtil {
    * @return
    */
   public static String dateStr4(Date date) {
-    return dateStr(date, DATEFORMAT_STR_001);
+    return dateStr(date, DATE_TIME_SHORT);
 
   }
 
@@ -170,7 +166,7 @@ public class DateUtil {
    * @return
    */
   public static Date valueOf(String str) {
-    return valueOf(str, DATEFORMAT_STR_001);
+    return valueOf(str, DATE_TIME_SHORT);
   }
 
   /**
@@ -215,22 +211,6 @@ public class DateUtil {
 
 
   /**
-   * 获得当前日期与本周日相差的天数
-   * @return
-   */
-  private static int getMondayPlus() {
-    Calendar cd = Calendar.getInstance();
-    // 获得今天是一周的第几天，星期日是第一天，星期二是第二天......
-    // 因为按中国礼拜一作为第一天所以这里减1
-    int dayOfWeek = cd.get(Calendar.DAY_OF_WEEK) - 1;
-    if (dayOfWeek == 1) {
-      return 0;
-    } else {
-      return 1 - dayOfWeek;
-    }
-  }
-
-  /**
    * 获取指定时间天的结束时间
    *
    * @return
@@ -272,8 +252,7 @@ public class DateUtil {
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DATE, -1);
     cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), 0, 0, 0);
-    Date time = cal.getTime();
-    return time;
+    return cal.getTime();
   }
 
   public static final int REAL_FIRST_DAY = Calendar.SUNDAY;
@@ -289,7 +268,7 @@ public class DateUtil {
     setToRealFirstDay(calendar);
     calendar.add(Calendar.DATE, 6);
     Date date = DateUtil.getDayEndTime(calendar.getTime());
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(STANDARD_FORMAT);
 
     return dateFormat.format(date);
   }
@@ -303,15 +282,13 @@ public class DateUtil {
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DATE, 0);
     cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), 0, 0, 0);
-    Date time = cal.getTime();
-    return time;
+    return cal.getTime();
   }
 
 
   public static int getCurrentHour() {
     Calendar cal = Calendar.getInstance();
-    int a = cal.get(Calendar.HOUR_OF_DAY);
-    return a;
+    return cal.get(Calendar.HOUR_OF_DAY);
   }
 
   /**

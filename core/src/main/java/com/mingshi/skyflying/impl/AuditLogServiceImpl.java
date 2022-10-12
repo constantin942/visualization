@@ -109,7 +109,6 @@ public class AuditLogServiceImpl implements AuditLogService {
          * cn-beijing-finance-1：华北2 金融云
          */
         DefaultProfile profile = DefaultProfile.getProfile(dmsRegionObjectNode.get(Const.DMS_REGION).asText(), akSkObjectNode.get(Const.AK).asText(), akSkObjectNode.get(Const.SK).asText());
-        // DefaultProfile profile = DefaultProfile.getProfile("cn-beijing", akSkObjectNode.get(Const.AK).asText(), akSkObjectNode.get(Const.SK).asText());
         IAcsClient client = new DefaultAcsClient(profile);
 
         ServerResponse<String> dmsAuditLog = getDmsAuditLog(client, startTime, endTime);
@@ -185,7 +184,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 log.info("# AuditLogServiceImpl.autoFetchAuditlogByDMS() # 通过定时任务自动拉取DMS的审计日志，终止死循环条件是totalCount.intValue() == increment，" +
                     "当前totalCount.intValue() =【{}】，increment = 【{}】。", totalCount.intValue(), increment);
 
-                if (0 < sqlExecAuditLogList.size()) {
+                if (!sqlExecAuditLogList.isEmpty()) {
                     // 将DMS数据插入到数据库中
                     batchProcessDmsAuditLog(sqlExecAuditLogList);
                 }
@@ -269,14 +268,11 @@ public class AuditLogServiceImpl implements AuditLogService {
             List<MsDmsAuditLogDo> list = new LinkedList<>();
             for (ListSQLExecAuditLogResponse.SQLExecAuditLog sqlExecAuditLog : listSqlExecAuditLogList) {
                 String msSchemaName = sqlExecAuditLog.getSchemaName();
-                if (Const.MYSQL.equals(msSchemaName)) {
+                if (Const.MYSQL.equals(msSchemaName) || Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
                     continue;
                 }
                 String msSql = sqlExecAuditLog.getSQL();
                 if (msSql.startsWith("show variables") || msSql.startsWith("set global") || msSql.startsWith("select @@version")) {
-                    continue;
-                }
-                if (Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
                     continue;
                 }
                 // 组装MsDmsAuditLogDo实例

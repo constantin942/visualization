@@ -36,6 +36,7 @@ public class AgentInformationSingleton {
 
   static class Singleton {
     private static AgentInformationSingleton agentInformationSingleton = new AgentInformationSingleton();
+    private Singleton(){}
   }
 
   public static CopyOnWriteMap<String, String> getInstance() {

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <B>主类名称: AiitKafkaConsumerUtil</B>
@@ -28,8 +27,6 @@ public class AiitKafkaConsumerUtil {
     private boolean reactorProcessorEnable;
     @Resource
     private SegmentConsumerService segmentConsumerService;
-
-    private AtomicInteger countPrintLog = new AtomicInteger(0);
 
     /**
      * <B>方法名称：useNoReactorModel</B>
@@ -73,17 +70,10 @@ public class AiitKafkaConsumerUtil {
         waitingCreateProcessorsThread();
         try {
             ProcessorThread processorThread = null;
-            boolean offerResult = false;
+            Boolean offerResult = false;
             while (false == offerResult) {
                 processorThread = InitProcessorByLinkedBlockingQueue.getProcessor();
                 offerResult = processorThread.offer(consumerRecord);
-                // TimeUnit.MILLISECONDS.sleep(10);
-                // if (false == offerResult) {
-                //     if (100 * 10000 == countPrintLog.incrementAndGet()) {
-                //         log.info("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消息对应的processor线程【{}】队列都满了，该processor线程中队列中的元素个数【{}】。",processorThread.getName(), processorThread.getQueueSize());
-                //         countPrintLog.set(0);
-                //     }
-                // }
             }
         } catch (Throwable e) {
             log.error("# AiitKafkaConsumerUtil.useReactorModelByLinkedBlockingQueue() # 消费者线程将拉取到的流量信息分发给processor线程时，出现了异常。", e);

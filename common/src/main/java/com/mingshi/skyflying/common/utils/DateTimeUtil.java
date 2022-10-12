@@ -21,6 +21,7 @@ import java.util.*;
 @Slf4j
 public class DateTimeUtil {
 
+  private DateTimeUtil(){}
   public static final String STANDARD_FORMAT = "yyyy-MM-dd HH:mm:ss";
   public static final String STANDARD_FORMAT_T = "yyyy-MM-dd'T'HH:mm:ss";
   public static final String STANDARD_FORMAT_YYYYMMDD = "yyyy-MM-dd";
@@ -53,11 +54,6 @@ public class DateTimeUtil {
    * yyyyMMdd
    */
   public static final String DEFAULT_PATTERN = "yyyyMMdd";
-
-  /**
-   * yyyy-MM-dd
-   */
-  public static final String DEFAULT_PATTERN_WITH_HYPHEN = "yyyy-MM-dd";
 
   /**
    * yyyy-MM
@@ -225,9 +221,8 @@ public class DateTimeUtil {
    **/
   public static Instant stringToInstant1(String date) {
     // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
-    Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(STANDARD_FORMAT)
+    return LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(STANDARD_FORMAT)
       .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
-    return instant;
   }
 
   /**
@@ -241,9 +236,8 @@ public class DateTimeUtil {
    **/
   public static Instant stringToInstant2(String date, String dateFormat) {
     // 将String类型的时间转换成Instant类型的时间；2022-07-04 09:00:46
-    Instant instant = LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(dateFormat)
+    return LocalDateTime.parse(date, java.time.format.DateTimeFormatter.ofPattern(dateFormat)
       .withZone(ZoneId.systemDefault()).withLocale(Locale.CHINA)).toInstant(ZoneOffset.UTC);
-    return instant;
   }
 
   /**
@@ -307,7 +301,7 @@ public class DateTimeUtil {
     if (date == null) {
       return null;
     }
-    SimpleDateFormat sdf = new SimpleDateFormat(DEFAULT_PATTERN_WITH_HYPHEN);
+    SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT_STR_002);
     try {
       date = sdf.parse(sdf.format(date));
       return date;
@@ -335,33 +329,12 @@ public class DateTimeUtil {
     if (date == null) {
       return "";
     }
-    return formatDate(date, DEFAULT_PATTERN_WITH_HYPHEN);
+    return formatDate(date, DATEFORMAT_STR_002);
   }
 
-  public static String formatWithDateTimeFullPattern(final Date date) {
-    if (date == null) {
-      return "";
-    }
-    return formatDate(date, DATE_TIME_SHORT);
-  }
 
   public static String formatDate(final Date date, String format) {
     return new SimpleDateFormat(format).format(date);
-  }
-
-  /**
-   * Add specified number of days to the given date.
-   *
-   * @param date date
-   * @param days Int number of days to add
-   * @return revised date
-   */
-  public static Date addDays(final Date date, int days) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-    cal.add(Calendar.DAY_OF_MONTH, days);
-
-    return new Date(cal.getTime().getTime());
   }
 
 
@@ -391,8 +364,7 @@ public class DateTimeUtil {
   public static long getSecondByDate(String stringDate) {
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
     long timeEnd = System.currentTimeMillis();
-    long interval = Math.abs((timeEnd - timeFrom) / 1000);
-    return interval;
+    return Math.abs((timeEnd - timeFrom) / 1000);
   }
 
   /**
@@ -407,8 +379,7 @@ public class DateTimeUtil {
   public static long getMilliSecondByDate(String stringDate) {
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
     long timeEnd = System.currentTimeMillis();
-    long interval = Math.abs((timeEnd - timeFrom));
-    return interval;
+    return Math.abs((timeEnd - timeFrom));
   }
 
   /**
@@ -504,29 +475,12 @@ public class DateTimeUtil {
   }
 
   /**
-   * Get start of date.
-   *
-   * @param date Date
-   * @return Date Date
-   */
-  public static Date getStartOfDate(final Date date) {
-    Calendar cal = GregorianCalendar.getInstance();
-    cal.setTime(date);
-
-    cal.set(Calendar.MINUTE, 0);
-    cal.set(Calendar.SECOND, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-
-    return new Date(cal.getTime().getTime());
-  }
-
-  /**
    * 返回一个Date默认最大值
    *
    * @return
    */
   public static Date getFinalDate() {
-    return parseDate(FINAL_END_DATE_STR, DEFAULT_PATTERN_WITH_HYPHEN);
+    return parseDate(FINAL_END_DATE_STR, DATEFORMAT_STR_002);
   }
 
   /**
@@ -597,8 +551,7 @@ public class DateTimeUtil {
    */
   public static Date getNow() {
     Calendar cal = Calendar.getInstance();
-    Date currDate = cal.getTime();
-    return currDate;
+    return cal.getTime();
   }
 
   /**
@@ -632,8 +585,7 @@ public class DateTimeUtil {
   public static Date valueOf(String str, String dateFormatStr) {
     SimpleDateFormat formatter = new SimpleDateFormat(dateFormatStr);
     ParsePosition pos = new ParsePosition(0);
-    Date strtoDate = formatter.parse(str, pos);
-    return strtoDate;
+    return formatter.parse(str, pos);
   }
 
   /**
@@ -642,8 +594,7 @@ public class DateTimeUtil {
    * @return
    */
   public static String getNowTimeStr() {
-    String str = Long.toString(System.currentTimeMillis() / 1000);
-    return str;
+    return Long.toString(System.currentTimeMillis() / 1000);
   }
 
   public static Date getIntegralTime() {
@@ -669,7 +620,7 @@ public class DateTimeUtil {
     if (StringUtil.isBlank(format)) {
       return t;
     }
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    SimpleDateFormat sdf = new SimpleDateFormat(STANDARD_FORMAT);
     Date date;
     try {
       date = sdf.parse(format);
@@ -692,9 +643,8 @@ public class DateTimeUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus + 6);
     Date monday = currentDate.getTime();
 
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    String preMonday = df.format(monday);
-    return preMonday;
+    SimpleDateFormat df = new SimpleDateFormat(DATEFORMAT_STR_002);
+    return df.format(monday);
   }
 
   /**
@@ -725,9 +675,8 @@ public class DateTimeUtil {
     currentDate.add(GregorianCalendar.DATE, mondayPlus);
     Date monday = currentDate.getTime();
 
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    String preMonday = df.format(monday);
-    return preMonday;
+    SimpleDateFormat df = new SimpleDateFormat(DATEFORMAT_STR_002);
+    return df.format(monday);
   }
 
   /**
@@ -735,13 +684,12 @@ public class DateTimeUtil {
    * @return
    */
   public static String getFirstDayOfMonth() {
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    SimpleDateFormat format = new SimpleDateFormat(DATEFORMAT_STR_002);
     Calendar c = Calendar.getInstance();
     c.add(Calendar.MONTH, 0);
     // 设置为1号,当前日期既为本月第一天
     c.set(Calendar.DAY_OF_MONTH, 1);
-    String first = format.format(c.getTime());
-    return first;
+    return format.format(c.getTime());
   }
 
   /**
@@ -767,8 +715,7 @@ public class DateTimeUtil {
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DATE, -1);
     cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), 0, 0, 0);
-    Date time = cal.getTime();
-    return time;
+    return cal.getTime();
 
   }
 
@@ -787,7 +734,7 @@ public class DateTimeUtil {
     setToRealFirstDay(calendar);
     calendar.add(Calendar.DATE, 6);
     Date date = DateTimeUtil.getDayEndTime(calendar.getTime());
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(STANDARD_FORMAT);
 
     return dateFormat.format(date);
   }
@@ -802,15 +749,13 @@ public class DateTimeUtil {
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DATE, 0);
     cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), 0, 0, 0);
-    Date time = cal.getTime();
-    return time;
+    return cal.getTime();
   }
 
 
   public static int getCurrentHour() {
     Calendar cal = Calendar.getInstance();
-    int a = cal.get(Calendar.HOUR_OF_DAY);
-    return a;
+    return cal.get(Calendar.HOUR_OF_DAY);
   }
 
   /**
@@ -819,7 +764,7 @@ public class DateTimeUtil {
    * @return
    */
   public static String getCurrentDateStr() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT_STR_002);
     return sdf.format(DateTimeUtil.getNow());
   }
 
@@ -830,7 +775,7 @@ public class DateTimeUtil {
    * @return
    */
   public static String getCurrentSimpleDateStr() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT_STR_002);
     return sdf.format(DateTimeUtil.getNow());
   }
 
@@ -880,8 +825,7 @@ public class DateTimeUtil {
    **/
   public static long getSecond(Instant fromDate) {
     Instant toDate = Instant.now();
-    long seconds = ChronoUnit.SECONDS.between(fromDate, toDate);
-    return seconds;
+    return ChronoUnit.SECONDS.between(fromDate, toDate);
   }
 
   /**
@@ -891,27 +835,23 @@ public class DateTimeUtil {
    * @return str
    */
   public static String date2Str(Date date) {
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    String str = format.format(date);
-    return str;
+    SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT);
+    return format.format(date);
   }
 
   public static String dateToStr2(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_T);
-    String str = format.format(date);
-    return str;
+    return format.format(date);
   }
 
   public static String dateToStrYyyyMmDdHhMmSs(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_YYYY_MM_DD_HHMMSSSSSSSS);
-    String str = format.format(date);
-    return str;
+    return format.format(date);
   }
 
   public static String dateToStrYyyyMmDd(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(STANDARD_FORMAT_YYYYMMDD);
-    String str = format.format(date);
-    return str;
+    return format.format(date);
   }
 
   /**

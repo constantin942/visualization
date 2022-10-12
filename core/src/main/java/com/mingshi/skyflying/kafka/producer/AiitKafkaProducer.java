@@ -28,7 +28,7 @@ public class AiitKafkaProducer {
 
     @Value("${spring.kafka.producer.topic}")
     private String producerTopic;
-    private AtomicInteger INTEVAL = new AtomicInteger(0);
+    private AtomicInteger LOG_INTEVAL = new AtomicInteger(0);
 
     /**
      * 自定义topic
@@ -123,7 +123,7 @@ public class AiitKafkaProducer {
             @Override
             public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
                 //成功的处理
-                if (0 == INTEVAL.incrementAndGet() % 500) {
+                if (0 == LOG_INTEVAL.incrementAndGet() % 500) {
                     log.info("发送消息成功  *** 发送消息成功 *** 发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic);
                 }
             }

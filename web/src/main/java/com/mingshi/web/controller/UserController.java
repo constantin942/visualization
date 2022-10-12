@@ -61,7 +61,7 @@ public class UserController {
             HttpSession httpSession = request.getSession(true);
             String sessionId = httpSession.getId();
             log.info("用户=【{}】登录  sessionID={}", userName, sessionId);
-            boolean flag = redisPoolUtil.set(sessionId, response.getData(), Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+            boolean flag = redisPoolUtil.set(sessionId, response.getData(), Const.REDIS_SESSION_EXTIME);
             log.info("用户 phone={} 登录成功，将用户的信息放入Redis中的结果={}", userName, flag);
         } else {
             log.info("用户 phone={} 登录失败。", userName);

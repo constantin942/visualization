@@ -60,7 +60,7 @@ public class DataAccessAspect {
   /**
    * 对类ServerlessCheckController中所有方法调用之前，进行登录校验；这种方式不需要在类的头部加注解
    */
-  private static final String executeExpr = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
+  private static final String EXECUTE_EXPR = "execution(* com.mingshi.web.controller.SkyflyingController.*(..))";
 
   /**
    * @return java.lang.Object
@@ -69,7 +69,7 @@ public class DataAccessAspect {
    * @Date 16:01 2020/1/31
    * @Param [joinPoint]
    **/
-  @Around(executeExpr)
+  @Around(EXECUTE_EXPR)
   public Object processLog(ProceedingJoinPoint joinPoint) {
     Instant instStart = Instant.now();
     //获取到请求的属性

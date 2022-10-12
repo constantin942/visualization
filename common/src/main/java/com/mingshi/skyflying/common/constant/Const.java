@@ -77,9 +77,7 @@ public class Const {
     public static final int NUMBER_TWENTY_FOUR = 24;
     public static final int NUMBER_TWELVE = 12;
 
-    public interface RedisCacheExtime {
-        int REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
-    }
+    public static Integer REDIS_SESSION_EXTIME = 60 * 60 * 3;//3小时
 
     public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
     public static final String SCHEDULED_UPDATE_USER_NAME_BY_TOKEN = "redisson:key:scheduledUpdateUserNameByToken";

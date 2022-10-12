@@ -116,39 +116,35 @@ public class MsAgentInformationServiceImpl implements MsAgentInformationService 
 
   private void doActiveSkywalkingAgent(List<Map<String, String>> list, long interval, String key,String date) {
     if (interval > Const.SKYWALKING_AGENT_HEART_BEAT_INTERVAL_SECONDS) {
-      try {
         redisPoolUtil.hDelete(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, key);
-      } catch (Exception e) {
-        log.error(" # SkyflyingController.getActiveSkywalkingAgent() # 从Redis中获取当前存活的探针时，出现了异常。", e);
-      }
-    } else {
+        return;
+    }
       Map<String, String> codeNameMap = JsonUtil.string2Obj(key, Map.class);
       if (null != codeNameMap) {
-        Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
-        String serviceCode = codeNameMap.get("serviceCode");
-        String serviceInstanceName = codeNameMap.get("serviceInstanceName");
-        map.put("serviceCode", serviceCode);
-        String agentName = msAgentInformationMapper.selectByAgentCode(serviceCode);
-        map.put("agentName", agentName);
-        map.put("serviceInstanceName", serviceInstanceName);
-        map.put("time", date);
+          Map<String, String> map = new HashMap<>(Const.NUMBER_EIGHT);
+          String serviceCode = codeNameMap.get("serviceCode");
+          String serviceInstanceName = codeNameMap.get("serviceInstanceName");
+          map.put("serviceCode", serviceCode);
+          String agentName = msAgentInformationMapper.selectByAgentCode(serviceCode);
+          map.put("agentName", agentName);
+          map.put("serviceInstanceName", serviceInstanceName);
+          map.put("time", date);
 
-        // 获取探针状态；
-        MsAgentSwitchDo msAgentSwitchDo = msAgentSwitchMapper.selectByServiceInstanceLatest(serviceInstanceName);
-        if(null != msAgentSwitchDo){
-          String agentSwitch = msAgentSwitchDo.getAgentSwitchStatus();
-          String sendKafkaStatus = msAgentSwitchDo.getSendKafkaStatus();
-          String receiveKafkaStatus = msAgentSwitchDo.getReceiveKafkaStatus();
-          if(Const.SUCCESS.equals(sendKafkaStatus) && Const.SUCCESS.equals(receiveKafkaStatus)){
-            map.put(Const.STATUS, agentSwitch);
+          // 获取探针状态；
+          MsAgentSwitchDo msAgentSwitchDo = msAgentSwitchMapper.selectByServiceInstanceLatest(serviceInstanceName);
+          if(null != msAgentSwitchDo){
+              String agentSwitch = msAgentSwitchDo.getAgentSwitchStatus();
+              String sendKafkaStatus = msAgentSwitchDo.getSendKafkaStatus();
+              String receiveKafkaStatus = msAgentSwitchDo.getReceiveKafkaStatus();
+              if(Const.SUCCESS.equals(sendKafkaStatus) && Const.SUCCESS.equals(receiveKafkaStatus)){
+                  map.put(Const.STATUS, agentSwitch);
+              }else{
+                  map.put(Const.STATUS, Const.AGENT_STATUS_UNKNOWN);
+              }
           }else{
-            map.put(Const.STATUS, Const.AGENT_STATUS_UNKNOWN);
+              map.put(Const.STATUS, Const.AGENT_STATUS_ON);
           }
-        }else{
-          map.put(Const.STATUS, Const.AGENT_STATUS_ON);
-        }
-        list.add(map);
+          list.add(map);
       }
-    }
   }
 }
