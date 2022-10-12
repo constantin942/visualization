@@ -10,6 +10,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
@@ -62,12 +63,6 @@ public class UserPortraitByTimeTask {
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
     private String PREFIX;
 
-    private final String MORNING = "morning";
-
-    private final String AFTERNOON = "afternoon";
-
-    private final String NIGHT = "night";
-
     private final Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
@@ -107,9 +102,9 @@ public class UserPortraitByTimeTask {
             String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
             String afternoonRate = String.valueOf(userPortraitByTimeDo.getAfternoonRate());
             String nightRate = String.valueOf(userPortraitByTimeDo.getNightRate());
-            redisPoolUtil.set(buildRedisKey(username, MORNING), morningRate, EXPIRE);
-            redisPoolUtil.set(buildRedisKey(username, AFTERNOON), afternoonRate, EXPIRE);
-            redisPoolUtil.set(buildRedisKey(username, NIGHT), nightRate, EXPIRE);
+            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.MORNING), morningRate, EXPIRE);
+            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.AFTERNOON), afternoonRate, EXPIRE);
+            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.NIGHT), nightRate, EXPIRE);
         }
     }
 
@@ -393,6 +388,10 @@ public class UserPortraitByTimeTask {
             updatePortrait();
         }
         o = redisPoolUtil.get(redisKey);
+        if(o == null) {
+            // redis中也没有
+            return null;
+        }
         if (redisLocalCache != null) {
             redisLocalCache.put(redisKey, (String) o);
         }
@@ -404,9 +403,9 @@ public class UserPortraitByTimeTask {
      */
     public Map<String, Double> getVisitRate(String username) {
         Map<String, Double> map = new HashMap<>();
-        Double morningRate = getRateByInterVal(username, MORNING, null);
-        Double afternoonRate = getRateByInterVal(username, AFTERNOON, null);
-        Double nightRate = getRateByInterVal(username, NIGHT, null);
+        Double morningRate = getRateByInterVal(username, AnomalyConst.MORNING, null);
+        Double afternoonRate = getRateByInterVal(username, AnomalyConst.AFTERNOON, null);
+        Double nightRate = getRateByInterVal(username, AnomalyConst.NIGHT, null);
 
         morningRate = morningRate == null ? 0.33 : morningRate;
         afternoonRate = afternoonRate == null ? 0.33 : afternoonRate;

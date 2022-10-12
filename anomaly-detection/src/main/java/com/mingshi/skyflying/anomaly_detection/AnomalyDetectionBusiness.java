@@ -11,6 +11,7 @@ import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceIm
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
@@ -73,31 +74,10 @@ public class AnomalyDetectionBusiness {
     @Resource
     DingAlarmConfigMapper dingAlarmConfigMapper;
 
-    private static final String TABLE_NAME = "table_name";
-
-    private static final String COUNTS = "counts";
-
-    private String PREFIX = "anomaly_detection:enableRule:";
     /**
      * Redis分布式锁Key
      */
     public static final String REDIS_LOCK = "anomaly_detection:updatePortrait";
-
-    private final String MORNING = "morning";
-
-    private final String AFTERNOON = "afternoon";
-
-    private final String NIGHT = "night";
-
-    private final String DEMO_MODE = "demo_mode";
-
-    private static final Integer TABLE_ID = 2;
-
-    private static final Integer TIME_ID = 1;
-
-    private static final String TIME_SUF = "time";
-
-    private static final String TABLE_SUF = "table";
 
     private static final Integer SECONDS = 60;
 
@@ -139,7 +119,7 @@ public class AnomalyDetectionBusiness {
      * 是否为演示模式
      */
     private boolean isDemoMode() {
-        String mode = portraitConfigMapper.selectOneByName(DEMO_MODE);
+        String mode = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
         if (mode == null) {
             return false;
         }
@@ -276,11 +256,11 @@ public class AnomalyDetectionBusiness {
         }
         int time = Integer.parseInt(m.group(1));
         if (time >= 5 && time < 13) {
-            return MORNING;
+            return AnomalyConst.MORNING;
         } else if (time >= 13 && time < 21) {
-            return AFTERNOON;
+            return AnomalyConst.AFTERNOON;
         } else if ((time >= 21 && time < 24) || (time >= 0 && time < 5)) {
-            return NIGHT;
+            return AnomalyConst.NIGHT;
         } else {
             log.error("提取时间出错, 原数据{}, 提取后{}", timeStr, time);
         }
@@ -335,8 +315,8 @@ public class AnomalyDetectionBusiness {
             return;
         }
         try {
-            Boolean enableTimeRule = getEnableRule(TIME_SUF);
-            Boolean enableTableRule = getEnableRule(TABLE_SUF);
+            Boolean enableTimeRule = getEnableRule(AnomalyConst.TIME_SUF);
+            Boolean enableTableRule = getEnableRule(AnomalyConst.TABLE_SUF);
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
@@ -355,9 +335,16 @@ public class AnomalyDetectionBusiness {
      * 获取规则开关
      */
     private Boolean getEnableRule(String suffix) {
-        String key = PREFIX + suffix;
+        String key = AnomalyConst.RULE_PREFIX + suffix;
+        // 从本地缓存读取
+        String enable = redisLocalCache.getIfPresent(key);
+        if(enable != null) {
+            return Boolean.valueOf(enable);
+        }
+        // 从Redis中读取
         Object o = redisPoolUtil.get(key);
         if (o != null) {
+            redisLocalCache.put(key, (String) o);
             return Boolean.parseBoolean((String) o);
         }
         return cacheRuleEnable(suffix);
@@ -367,15 +354,15 @@ public class AnomalyDetectionBusiness {
      * 从数据库查询开关存入Redis
      */
     private boolean cacheRuleEnable(String suffix) {
-        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(TIME_ID);
-        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(TABLE_ID);
+        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TIME_ID);
+        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TABLE_ID);
         if (null != timeRule) {
             portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
         }
         if (null != tableRule) {
             portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
         }
-        if (suffix.equals(TIME_SUF)) {
+        if (suffix.equals(AnomalyConst.TIME_SUF)) {
             if (timeRule != null && timeRule.getIsDelete() != null) {
                 return timeRule.getIsDelete() != 1;
             } else {
@@ -383,7 +370,7 @@ public class AnomalyDetectionBusiness {
                 return false;
             }
         }
-        if (suffix.equals(TABLE_SUF)) {
+        if (suffix.equals(AnomalyConst.TABLE_SUF)) {
             if (tableRule != null && tableRule.getIsDelete() != null) {
                 return tableRule.getIsDelete() != 1;
             } else {
@@ -403,8 +390,8 @@ public class AnomalyDetectionBusiness {
         List<UserUsualAndUnusualVisitedData> resList = new ArrayList<>();
         for (Map<String, String> stringIntegerMap : list) {
             UserUsualAndUnusualVisitedData unusualVisitedData = new UserUsualAndUnusualVisitedData();
-            unusualVisitedData.setVisitedData(stringIntegerMap.get(TABLE_NAME));
-            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(COUNTS))));
+            unusualVisitedData.setVisitedData(stringIntegerMap.get(AnomalyConst.TABLE_NAME));
+            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(AnomalyConst.COUNTS))));
             unusualVisitedData.setUserName(userName);
             resList.add(unusualVisitedData);
         }
@@ -420,8 +407,8 @@ public class AnomalyDetectionBusiness {
         List<UserUsualAndUnusualVisitedData> resList = new ArrayList<>();
         for (Map<String, String> stringIntegerMap : list) {
             UserUsualAndUnusualVisitedData unusualVisitedData = new UserUsualAndUnusualVisitedData();
-            unusualVisitedData.setVisitedData(stringIntegerMap.get(TABLE_NAME));
-            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(COUNTS))));
+            unusualVisitedData.setVisitedData(stringIntegerMap.get(AnomalyConst.TABLE_NAME));
+            unusualVisitedData.setVisitedCount(Long.valueOf(String.valueOf(stringIntegerMap.get(AnomalyConst.COUNTS))));
             unusualVisitedData.setUserName(userName);
             resList.add(unusualVisitedData);
         }

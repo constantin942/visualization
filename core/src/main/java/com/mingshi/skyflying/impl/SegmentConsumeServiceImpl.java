@@ -85,7 +85,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
             List<Span> spanList = buildSpanList(segmentObject, segment);
 
-            if (null != spanList && 0 < spanList.size()) {
+            if (0 < spanList.size()) {
                 // 组装segment；2022-04-20 16:33:48
                 segment = setUserNameAndTokenFromSpan(spanList, segment);
                 // 重组span数据，返回前端使用；2022-04-20 16:49:02
@@ -99,8 +99,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 Instant now = Instant.now();
                 try {
                     if(!segmentDetaiDolList.isEmpty()) {
-//                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                        // log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                         log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }
                 } catch (Exception e) {
                     log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
