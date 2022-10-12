@@ -64,7 +64,7 @@ public class UserPortraitByTableTask {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
-            log.info("开始执行定时任务: 全量表生成用户画像 -> 放入Redis");
+            log.info("开始执行基于库表画像定时任务: 全量表生成用户画像 -> 放入Redis");
             //1. 全量表生成用户画像
             insertYesterdayInfo2Portrait();
             //2. 放入Redis
@@ -73,6 +73,7 @@ public class UserPortraitByTableTask {
             log.error("生成用户画像异常");
         } finally {
             lock.unlock();
+            log.info("基于库表画像定时任务完成");
         }
     }
 

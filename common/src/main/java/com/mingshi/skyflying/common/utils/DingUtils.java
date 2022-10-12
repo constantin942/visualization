@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
@@ -13,12 +14,19 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.util.ResourceUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.Reader;
 import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -27,8 +35,6 @@ import java.util.List;
 
 @Slf4j
 public class DingUtils {
-
-
     /*
      ** 生成时间戳和验证信息
      */
@@ -55,7 +61,6 @@ public class DingUtils {
      ** 作用：把传入的message发送给钉钉机器人*/
     public static void dingRequest(String message, String Webhook, String secret, List<String> mobiles) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-        System.setProperty("com.sun.security.enableAIAcaIssuers", "true");
         log.info("开始钉钉告警:{}", message);
         String url = null;
         try {
@@ -72,7 +77,7 @@ public class DingUtils {
         JsonObject text = new JsonObject();
         text.addProperty("content", message);
 
-        if(mobiles != null) {
+        if (mobiles != null) {
             JsonObject at = new JsonObject();
             at.add("atMobiles", new JsonParser().parse(mobiles.toString()).getAsJsonArray());
             result.add("at", at);

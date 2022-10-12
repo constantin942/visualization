@@ -12,5 +12,5 @@ public class DingAlarmConfig {
 
     private Integer gap;
 
-    String mobiles;
+    private String mobiles;
 }
