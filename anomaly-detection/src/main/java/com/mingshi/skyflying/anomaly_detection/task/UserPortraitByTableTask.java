@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
@@ -235,5 +236,28 @@ public class UserPortraitByTableTask {
      */
     public void updatePortrait() {
         cachePortraitByTable();
+    }
+
+
+    /**
+     * 获取某表访问次数
+     */
+    public Integer getCountByTable(String username, String tableName, Cache<String, String> redisLocalCache) {
+        String redisKey = buildRedisKey(username, tableName);
+        // 从本地缓存读取
+        if (redisLocalCache != null) {
+            String s = redisLocalCache.getIfPresent(redisKey);
+            if (s != null) {
+                return Integer.parseInt(s);
+            }
+        }
+        // 从Redis中读取
+        Object o = redisPoolUtil.get(redisKey);
+        if (o == null) return null;
+        // 放入本地缓存
+        if (redisLocalCache != null) {
+            redisLocalCache.put(redisKey, (String) o);
+        }
+        return Integer.parseInt((String) o);
     }
 }

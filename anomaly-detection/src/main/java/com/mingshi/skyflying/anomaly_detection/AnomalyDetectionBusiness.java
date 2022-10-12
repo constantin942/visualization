@@ -1,7 +1,10 @@
 package com.mingshi.skyflying.anomaly_detection;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
+import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
@@ -21,8 +24,10 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,9 +50,6 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     RedisPoolUtil redisPoolUtil;
-
-    @Resource
-    CoarseSegmentDetailOnTimeMapper coarseSegmentDetailOnTimeMapper;
 
     @Resource
     MsSegmentDetailMapper segmentDetailMapper;
@@ -76,7 +78,6 @@ public class AnomalyDetectionBusiness {
     private static final String COUNTS = "counts";
 
     private String PREFIX = "anomaly_detection:enableRule:";
-
     /**
      * Redis分布式锁Key
      */
@@ -97,7 +98,18 @@ public class AnomalyDetectionBusiness {
     private static final String TIME_SUF = "time";
 
     private static final String TABLE_SUF = "table";
-    private static Integer SECONDS = 60;
+
+    private static final Integer SECONDS = 60;
+
+    private static final Integer CACHE_SIZE = 2000;
+
+    private static final Integer CACHE_EXPIRE = 1;
+
+    private final static Cache<String, String> redisLocalCache = Caffeine.newBuilder()
+            .expireAfterWrite(CACHE_EXPIRE, TimeUnit.MINUTES)
+            .maximumSize(CACHE_SIZE)
+            .build();
+
 
     /**
      * 判断是否告警-库表维度
@@ -149,7 +161,7 @@ public class AnomalyDetectionBusiness {
     private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
-        Integer count = getCountByTable(segmentDetail.getUserName(), tableName);
+        Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName, redisLocalCache);
         if (count == null) {
             //没有用户画像
             MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail);
@@ -172,15 +184,7 @@ public class AnomalyDetectionBusiness {
     }
 
 
-    /**
-     * 获取某表访问次数
-     */
-    private Integer getCountByTable(String username, String tableName) {
-        String redisKey = userPortraitByTableTask.buildRedisKey(username, tableName);
-        Object o = redisPoolUtil.get(redisKey);
-        if (o == null) return null;
-        return Integer.parseInt((String) o);
-    }
+
 
 
     /**
@@ -213,7 +217,7 @@ public class AnomalyDetectionBusiness {
                     , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
-        Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
+        Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval, redisLocalCache);
         if (rateByInterVal == null) {
             //没有用户画像
             msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
@@ -291,6 +295,8 @@ public class AnomalyDetectionBusiness {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
+            // 清空本地缓存
+            redisLocalCache.cleanUp();
             // 时间维度
             userPortraitByTimeTask.updatePortrait();
             // 空间维度

@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
@@ -125,9 +126,9 @@ public class UserPortraitByTimeTask {
      */
     public void insertYesterdayInfo2Coarse() {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
-        if(segmentDetails == null)  return;
+        if (segmentDetails == null) return;
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
-        if(!list.isEmpty()) {
+        if (!list.isEmpty()) {
             coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
         }
     }
@@ -138,7 +139,7 @@ public class UserPortraitByTimeTask {
     public List<UserPortraitByTimeDo> createUserPortraitByTime(Integer portraitByTimePeriod) {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
-        if(!userPortraitByTimeDoList.isEmpty()) {
+        if (!userPortraitByTimeDoList.isEmpty()) {
             userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
         }
         return userPortraitByTimeDoList;
@@ -170,7 +171,7 @@ public class UserPortraitByTimeTask {
     /**
      * 全量信息生成粗粒度信息
      */
-    public  List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
+    public List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
         //每个用户对应一个数组, 数组存储每个时段的访问次数
         HashMap<String, int[]> map = new HashMap<>();
         for (MsSegmentDetailDo segmentDetail : segmentDetails) {
@@ -196,7 +197,7 @@ public class UserPortraitByTimeTask {
     /**
      * 组装单个粗粒度信息
      */
-    private  CoarseSegmentDetailOnTimeDo buildCoarseSegmentDetailOnTime(Map.Entry<String, int[]> entry) {
+    private CoarseSegmentDetailOnTimeDo buildCoarseSegmentDetailOnTime(Map.Entry<String, int[]> entry) {
         String username = entry.getKey();
         int[] counter = entry.getValue();
         int sum = 0;
@@ -209,7 +210,7 @@ public class UserPortraitByTimeTask {
     /**
      * 构造CoarseSegmentDetailOnTimeDo类
      */
-    private  CoarseSegmentDetailOnTimeDo buildCoarseSegmentOnTimeHelper(int[] counter, String username, int sum, Date time) {
+    private CoarseSegmentDetailOnTimeDo buildCoarseSegmentOnTimeHelper(int[] counter, String username, int sum, Date time) {
         return CoarseSegmentDetailOnTimeDo
                 .builder()
                 .username(username)
@@ -272,7 +273,7 @@ public class UserPortraitByTimeTask {
         } else {
             // 有该用户当天粗粒度信息
             int hours = time.getHours();
-            log.info("开始插入基于时间的粗粒度表---插入前 {}", coarseSegmentDetailOnTime.getCounts() );
+            log.info("开始插入基于时间的粗粒度表---插入前 {}", coarseSegmentDetailOnTime.getCounts());
             updateCoarseSegmentOnTime(coarseSegmentDetailOnTime, hours);
             coarseSegmentDetailOnTimeMapper.updateByPrimaryKeySelective(coarseSegmentDetailOnTime);
             log.info("完成插入基于时间的粗粒度表---插入后 {}", coarseSegmentDetailOnTime.getCounts());
@@ -377,14 +378,25 @@ public class UserPortraitByTimeTask {
     /**
      * 获取该用户画像所定义该时段正常访问频率
      */
-    public Double getRateByInterVal(String username, String interval) {
+    public Double getRateByInterVal(String username, String interval, Cache<String, String> redisLocalCache) {
         String redisKey = buildRedisKey(username, interval);
+        // 从本地缓存读取
+        if (redisLocalCache != null) {
+            String s = redisLocalCache.getIfPresent(redisKey);
+            if (s != null) {
+                return Double.parseDouble(s);
+            }
+        }
+        // 从Redis读取
         Object o = redisPoolUtil.get(redisKey);
         if (o == null) {
             updatePortrait();
         }
         o = redisPoolUtil.get(redisKey);
-        return o == null ? null : Double.parseDouble((String) o);
+        if (redisLocalCache != null) {
+            redisLocalCache.put(redisKey, (String) o);
+        }
+        return Double.parseDouble((String) o);
     }
 
     /**
@@ -392,9 +404,13 @@ public class UserPortraitByTimeTask {
      */
     public Map<String, Double> getVisitRate(String username) {
         Map<String, Double> map = new HashMap<>();
-        Double morningRate = getRateByInterVal(username, MORNING) == null ? 0.33 : getRateByInterVal(username, MORNING);
-        Double afternoonRate = getRateByInterVal(username, AFTERNOON) == null ? 0.33 : getRateByInterVal(username, AFTERNOON);
-        Double nightRate = getRateByInterVal(username, NIGHT) == null ? 0.33 : getRateByInterVal(username, NIGHT);
+        Double morningRate = getRateByInterVal(username, MORNING, null);
+        Double afternoonRate = getRateByInterVal(username, AFTERNOON, null);
+        Double nightRate = getRateByInterVal(username, NIGHT, null);
+
+        morningRate = morningRate == null ? 0.33 : morningRate;
+        afternoonRate = afternoonRate == null ? 0.33 : afternoonRate;
+        nightRate = nightRate == null ? 0.33 : nightRate;
         map.put("morning", morningRate);
         map.put("afternoon", afternoonRate);
         map.put("night", nightRate);
