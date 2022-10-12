@@ -78,16 +78,17 @@ public class MingshiServerUtil {
     /**
      * <B>方法名称：getAkSk</B>
      * <B>概要说明：从数据库中获取ak、sk信息</B>
+     *
+     * @return com.fasterxml.jackson.databind.node.ObjectNode
      * @Author zm
      * @Date 2022年10月10日 09:10:49
      * @Param []
-     * @return com.fasterxml.jackson.databind.node.ObjectNode
      **/
     public ObjectNode getAkSk(Boolean scheduled) {
         ObjectNode jsonNodes = JsonUtil.createJsonObject();
         MsConfigDo msConfigDo = msConfigDao.selectByConfigType(Const.AK_SK);
         if (null == msConfigDo || StringUtil.isBlank(msConfigDo.getConfig())) {
-            if(Boolean.TRUE.equals(scheduled)){
+            if (Boolean.TRUE.equals(scheduled)) {
                 log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到aksk配置。");
             }
             return null;
@@ -100,7 +101,7 @@ public class MingshiServerUtil {
 
             ObjectNode jsonObject = JsonUtil.string2Object(config, ObjectNode.class);
             if (null == jsonObject.get(Const.AK) || null == jsonObject.get(Const.SK) || StringUtil.isBlank(jsonObject.get(Const.AK).asText()) || StringUtil.isBlank(jsonObject.get(Const.SK).asText())) {
-                if(Boolean.TRUE.equals(scheduled)){
+                if (Boolean.TRUE.equals(scheduled)) {
                     log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS审计日志时，在数据库中没有获取到ak或者sk配置。");
                 }
                 return null;
@@ -108,13 +109,13 @@ public class MingshiServerUtil {
             ak = jsonObject.get(Const.AK).asText();
             sk = jsonObject.get(Const.SK).asText();
         } catch (Exception e) {
-            if(Boolean.TRUE.equals(scheduled)){
+            if (Boolean.TRUE.equals(scheduled)) {
                 log.error("#AuditLogServiceImpl.getAkSk()# 通过定时任务自动拉取DMS的审计日志，解析在数据库中获取到的aksk配置 = 【{}】时，出现了异常。", config, e);
             }
             return null;
         }
-        jsonNodes.put(Const.AK,ak);
-        jsonNodes.put(Const.SK,sk);
+        jsonNodes.put(Const.AK, ak);
+        jsonNodes.put(Const.SK, sk);
         return jsonNodes;
     }
 
@@ -671,7 +672,7 @@ public class MingshiServerUtil {
         // 累加用户对数据库表资源的访问次数；
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
         String serviceCodeName = AgentInformationSingleton.get(serviceCode);
-        if(StringUtil.isNotBlank(serviceCodeName)){
+        if (StringUtil.isNotBlank(serviceCodeName)) {
             serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
         }
 
@@ -821,7 +822,7 @@ public class MingshiServerUtil {
      * @Date 2022年08月19日 16:08:43
      * @Param [segmentDetailDoList]
      **/
-    public void flushSegmentDetailToDb(List<MsSegmentDetailDo> segmentDetailDoList) {
+    public void flushSegmentDetailToDb(List<MsSegmentDetailDo> segmentDetailDoList, Boolean isClear) {
         if (segmentDetailDoList.isEmpty()) {
             return;
         }
@@ -836,7 +837,9 @@ public class MingshiServerUtil {
         flushSegmentDetailCountToRedis(segmentDetailDoList);
 
         log.info("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-        segmentDetailDoList.clear();
+        if (Boolean.TRUE.equals(isClear)) {
+            segmentDetailDoList.clear();
+        }
     }
 
     /**
@@ -1041,7 +1044,7 @@ public class MingshiServerUtil {
         insertMonitorTables();
 
         // 将带有用户名的链路信息持久化到MySQL数据库中；
-        flushSegmentDetailToDb(segmentDetailDoList);
+        flushSegmentDetailToDb(segmentDetailDoList, Boolean.TRUE);
 
         // 将没有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);

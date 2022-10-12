@@ -99,7 +99,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 Instant now = Instant.now();
                 try {
                     if(!segmentDetaiDolList.isEmpty()) {
-                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+//                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
                         // log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
                     }
                 } catch (Exception e) {
@@ -177,7 +177,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 将表名字插入到监管表中；2022-07-13 14:16:57
         mingshiServerUtil.insertMonitorTables();
 
-        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
 
         mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
 
