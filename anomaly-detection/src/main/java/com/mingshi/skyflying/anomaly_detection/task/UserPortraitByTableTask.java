@@ -51,7 +51,7 @@ public class UserPortraitByTableTask {
     @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTable:}")
     private String PREFIX;
 
-    private final Integer EXPIRE = 100000;
+    private final static Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
      */

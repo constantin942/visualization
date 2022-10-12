@@ -28,6 +28,9 @@ public class UserPortraitByTableDo {
 
     private Date updateTime;
 
+    /**
+     * 兼容@Builder
+     */
     @Tolerate
     public UserPortraitByTableDo() {
     }

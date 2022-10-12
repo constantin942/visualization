@@ -28,13 +28,13 @@ public class HighRiskOptServiceImpl {
     @Resource
     HighRiskOptMapper highRiskOptMapper;
 
-    private static Integer HIGH_RISK_SIZE;
+    private  Integer HIGH_RISK_SIZE;
 
-    private final static String NO_USER = "未知用户";
+    private static final String NO_USER = "未知用户";
 
-    private final static String HAVE_USER = "用户";
+    private static final String HAVE_USER = "用户";
 
-    private final static Cache<String, HighRiskOpt> cache = Caffeine.newBuilder()
+    private static final Cache<String, HighRiskOpt> cache = Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(100)
             .build();

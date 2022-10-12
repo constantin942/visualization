@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.dao;
 
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.common.domain.UserCoarseInfo;
 import org.apache.ibatis.annotations.Param;
 

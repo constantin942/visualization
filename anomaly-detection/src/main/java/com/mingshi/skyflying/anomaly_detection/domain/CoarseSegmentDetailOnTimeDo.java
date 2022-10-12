@@ -2,9 +2,6 @@ package com.mingshi.skyflying.anomaly_detection.domain;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
 

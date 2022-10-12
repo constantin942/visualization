@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.service.impl;
 
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -29,14 +30,8 @@ import java.util.Map;
 public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
     @Resource
     private UserPortraitRulesMapper userPortraitRulesMapper;
-    private String PREFIX = "anomaly_detection:enableRule:";
     @Resource
     RedisPoolUtil redisPoolUtil;
-
-    private static final String TIME_SUF = "time";
-
-    private static final String TABLE_SUF = "table";
-
     private final Integer EXPIRE = 1000;
 
     @Override
@@ -98,16 +93,16 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
     }
 
     /**
-     *  存入Redis
+     * 存入Redis
      */
     @Override
     public boolean cacheRule(Integer ruleId, Integer isDelete) {
         boolean enable = isDelete != 1;
-        if(ruleId == 1) {
-            redisPoolUtil.set(PREFIX + TIME_SUF, enable, EXPIRE);
+        if (ruleId == 1) {
+            redisPoolUtil.set(AnomalyConst.RULE_PREFIX + AnomalyConst.TIME_SUF, enable, EXPIRE);
         }
         if (ruleId == 2) {
-            redisPoolUtil.set(PREFIX + TABLE_SUF, enable, EXPIRE);
+            redisPoolUtil.set(AnomalyConst.RULE_PREFIX + AnomalyConst.TABLE_SUF, enable, EXPIRE);
         }
         return enable;
     }

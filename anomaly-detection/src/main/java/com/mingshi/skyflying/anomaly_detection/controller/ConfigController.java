@@ -1,4 +1,5 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
+
 import com.mingshi.skyflying.anomaly_detection.dao.DicItemMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
@@ -8,11 +9,13 @@ import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.*;
@@ -40,9 +43,6 @@ public class ConfigController {
     @Resource
     DingAlarmConfigMapper dingAlarmConfigMapper;
 
-
-    private final String DEMO_MODE = "demo_mode";
-
     @GetMapping("getConfigDic")
     public ServerResponse<ArrayList<String>> getAllConfigDic(@RequestParam String typeName) {
         return ServerResponse.createBySuccess(portraitConfigMapper.selectByName(typeName));
@@ -55,7 +55,6 @@ public class ConfigController {
     }
 
 
-
     @Transactional(rollbackFor = Exception.class)
     @PutMapping("updatePortraitConfig")
     public ServerResponse updatePortraitConfig(@Valid @RequestBody PortraitConfig portraitConfig) {
@@ -66,14 +65,14 @@ public class ConfigController {
 
     @GetMapping("getDemoMode")
     public ServerResponse<Boolean> getDemoMode() {
-        String s = portraitConfigMapper.selectOneByName(DEMO_MODE);
+        String s = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
         Boolean enable = "1".equals(s);
         return ServerResponse.createBySuccess(enable);
     }
 
     @PutMapping("setDemoMode")
     public ServerResponse setDemoMode(@RequestParam Boolean enable) {
-        if(Boolean.TRUE.equals(enable)) {
+        if (Boolean.TRUE.equals(enable)) {
             portraitConfigMapper.setDemoMode("1");
         } else {
             portraitConfigMapper.setDemoMode("0");
