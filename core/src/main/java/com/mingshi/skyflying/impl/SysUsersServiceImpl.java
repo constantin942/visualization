@@ -161,7 +161,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     int updatePassword = sysOperatorDao.updateByPrimaryKeySelective(sysOperator);
     if (updatePassword == 0) {
       log.error("用户修改密码，更新用户={}的密码失败。", userName);
-      return new ServerResponse(AiitExceptionCode.FAILURE);
+      return new ServerResponse<>(AiitExceptionCode.FAILURE);
     }
     return serverResponse;
   }
@@ -169,7 +169,6 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
   @Override
   public ServerResponse<SysOperator> login(String userName, String password) {
-    ServerResponse serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     if (StringUtil.isBlank(userName)) {
       return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
@@ -190,6 +189,8 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
     aiitUsers.setPassword(StringUtils.EMPTY);
     aiitUsers.setSalt(StringUtils.EMPTY);
+
+    ServerResponse serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     serverResponse.setData(JsonUtil.obj2String(aiitUsers));
     return serverResponse;
   }

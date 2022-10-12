@@ -75,7 +75,7 @@ public class SysMenuServiceImpl extends BaseParentServiceImpl<SysMenu, Long> imp
     jsonObject.put("readOnly", readOnly);
     jsonObject.put("menu", JsonUtil.obj2String(sysMenuSet));
 
-    ServerResponse<String> serverResponse = new ServerResponse(AiitExceptionCode.SUCCESS);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
     serverResponse.setData(jsonObject.toString());
     return serverResponse;
   }
