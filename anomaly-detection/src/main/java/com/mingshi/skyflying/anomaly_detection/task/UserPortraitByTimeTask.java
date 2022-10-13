@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
@@ -373,8 +374,9 @@ public class UserPortraitByTimeTask {
     /**
      * 获取该用户画像所定义该时段正常访问频率
      */
-    public Double getRateByInterVal(String username, String interval, Cache<String, String> redisLocalCache) {
+    public Double getRateByInterVal(String username, String interval) {
         String redisKey = buildRedisKey(username, interval);
+        Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
         // 从本地缓存读取
         if (redisLocalCache != null) {
             String s = redisLocalCache.getIfPresent(redisKey);
@@ -403,9 +405,9 @@ public class UserPortraitByTimeTask {
      */
     public Map<String, Double> getVisitRate(String username) {
         Map<String, Double> map = new HashMap<>();
-        Double morningRate = getRateByInterVal(username, AnomalyConst.MORNING, null);
-        Double afternoonRate = getRateByInterVal(username, AnomalyConst.AFTERNOON, null);
-        Double nightRate = getRateByInterVal(username, AnomalyConst.NIGHT, null);
+        Double morningRate = getRateByInterVal(username, AnomalyConst.MORNING);
+        Double afternoonRate = getRateByInterVal(username, AnomalyConst.AFTERNOON);
+        Double nightRate = getRateByInterVal(username, AnomalyConst.NIGHT);
 
         morningRate = morningRate == null ? 0.33 : morningRate;
         afternoonRate = afternoonRate == null ? 0.33 : afternoonRate;

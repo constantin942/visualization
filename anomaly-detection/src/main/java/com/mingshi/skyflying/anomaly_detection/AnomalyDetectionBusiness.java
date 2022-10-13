@@ -2,6 +2,7 @@ package com.mingshi.skyflying.anomaly_detection;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
@@ -152,9 +153,6 @@ public class AnomalyDetectionBusiness {
     }
 
 
-
-
-
     /**
      * 判断是否告警-时间维度
      */
@@ -185,7 +183,7 @@ public class AnomalyDetectionBusiness {
                     , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
-        Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval, redisLocalCache);
+        Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
         if (rateByInterVal == null) {
             //没有用户画像
             msAlarmInformationDoList.add(doNoTimePortrait(segmentDetailDo));
@@ -264,7 +262,7 @@ public class AnomalyDetectionBusiness {
         lock.lock();
         try {
             // 清空本地缓存
-            redisLocalCache.cleanUp();
+            MsCaffeineCache.getRedisLocalCache().cleanUp();
             // 时间维度
             userPortraitByTimeTask.updatePortrait();
             // 空间维度
@@ -325,14 +323,18 @@ public class AnomalyDetectionBusiness {
     private Boolean getEnableRule(String suffix) {
         String key = AnomalyConst.RULE_PREFIX + suffix;
         // 从本地缓存读取
-        String enable = redisLocalCache.getIfPresent(key);
-        if(enable != null) {
-            return Boolean.valueOf(enable);
+        if (MsCaffeineCache.getRedisLocalCache() != null) {
+            String enable = MsCaffeineCache.getFromRedisLocalCache(key);
+            if (enable != null) {
+                return Boolean.valueOf(enable);
+            }
         }
         // 从Redis中读取
         Object o = redisPoolUtil.get(key);
         if (o != null) {
-            redisLocalCache.put(key, (String) o);
+            if (MsCaffeineCache.getRedisLocalCache() != null) {
+                MsCaffeineCache.putIntoRedisLocalCache(key, (String) o);
+            }
             return Boolean.parseBoolean((String) o);
         }
         return cacheRuleEnable(suffix);
