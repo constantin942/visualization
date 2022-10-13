@@ -399,70 +399,123 @@ CREATE TABLE `segment` (
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_menu`;
 CREATE TABLE `sys_menu` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '创建人',
-  `type` tinyint NOT NULL DEFAULT '2' COMMENT '类型   1:系统 2：父菜单  3：菜单（叶子节点）',
-  `title` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' COMMENT '菜单名称',
-  `href` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '菜单地址',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='菜单表';
+                            `id` int unsigned NOT NULL AUTO_INCREMENT,
+                            `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
+                            `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                            `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+                            `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '创建人',
+                            `type` tinyint NOT NULL DEFAULT '2' COMMENT '类型   1:系统 2：父菜单  3：菜单（叶子节点）',
+                            `title` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' COMMENT '菜单名称',
+                            `href` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '菜单地址',
+                            PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='菜单表';
 
 -- ----------------------------
--- Table structure for sys_menu_role
+-- Records of sys_menu
 -- ----------------------------
+BEGIN;
+INSERT INTO `sys_menu` VALUES (1, 0, '2022-09-09 00:58:48', '2022-09-09 00:58:48', 'admin', 2, '信息概况', '[\'/api/skyflying/getCoarseCountsOfUser\',\'/api/skyflying/getCountsOfAllRecentSevenDays\',\'/api/skyflying/getCoarseCountsOfTableName\',\'/api/skyflying/getOverviewOfSystem\',\'/api/skyflying/getAllAlarmInfoDetailByUserName\',\'\']');
+INSERT INTO `sys_menu` VALUES (2, 0, '2022-09-09 00:58:48', '2022-09-09 00:58:48', 'admin', 2, '用户行为', '[\'/api/skyflying/getCoarseCountsOfUser\']');
+INSERT INTO `sys_menu` VALUES (3, 0, '2022-09-09 00:58:49', '2022-09-09 00:58:49', 'admin', 2, '数据分布', '[\'/api/skyflying/getCoarseCountsOfTableName\']');
+INSERT INTO `sys_menu` VALUES (4, 0, '2022-09-09 00:58:50', '2022-09-09 00:58:50', 'admin', 2, '告警信息', '[\'/api/skyflying/getAlarmData\',\'/api/skyflying/getUserAlarmData\',\'api/skyflying/getAnomalyDetectionInfoByGroupByUserName\']');
+INSERT INTO `sys_menu` VALUES (5, 0, '2022-09-09 00:58:50', '2022-09-09 00:58:50', 'admin', 2, '库表管理', '[\'/api/skyflying/getAllMonitorTables\']');
+INSERT INTO `sys_menu` VALUES (6, 0, '2022-09-09 00:58:51', '2022-09-09 00:58:51', 'admin', 2, '检测规则', '[\'api/skyflying/getUserPortraitRules\']');
+INSERT INTO `sys_menu` VALUES (7, 0, '2022-09-09 00:58:52', '2022-09-09 00:58:52', 'admin', 2, '服务与探针', '[\'/api/skyflying/getAllSkywalkingAgent\']');
+INSERT INTO `sys_menu` VALUES (8, 0, '2022-09-15 09:25:38', '2022-09-15 09:25:38', 'admin', 2, '操作审计', '[\'/api/skyflying/getHighDangerOperationLog\']');
+INSERT INTO `sys_menu` VALUES (9, 0, '2022-10-09 08:02:25', '2022-10-09 08:02:25', 'admin', 2, '钉钉告警', NULL);
+INSERT INTO `sys_menu` VALUES (10, 0, '2022-10-13 07:30:16', '2022-10-13 07:30:16', 'admin', 2, '系统配置', NULL);
+COMMIT;
+
+
 DROP TABLE IF EXISTS `sys_menu_role`;
 CREATE TABLE `sys_menu_role` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建人',
-  `modifier` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '最后修改人',
-  `menu_id` bigint NOT NULL COMMENT '菜单id',
-  `role_id` bigint NOT NULL COMMENT '角色id',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户角色表';
+                                 `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
+                                 `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
+                                 `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                                 `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+                                 `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建人',
+                                 `modifier` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '最后修改人',
+                                 `menu_id` bigint NOT NULL COMMENT '菜单id',
+                                 `role_id` bigint NOT NULL COMMENT '角色id',
+                                 PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户角色表';
+
+-- ----------------------------
+-- Records of sys_menu_role
+-- ----------------------------
+BEGIN;
+INSERT INTO `sys_menu_role` VALUES (1, 0, '2022-09-09 01:05:29', '2022-09-09 01:05:29', 'admin', 'admin', 1, 1);
+INSERT INTO `sys_menu_role` VALUES (2, 0, '2022-09-09 01:05:30', '2022-09-09 01:05:30', 'admin', 'admin', 2, 1);
+INSERT INTO `sys_menu_role` VALUES (3, 0, '2022-09-09 01:05:31', '2022-09-09 01:05:31', 'admin', 'admin', 3, 1);
+INSERT INTO `sys_menu_role` VALUES (4, 0, '2022-09-09 01:05:32', '2022-09-09 01:05:32', 'admin', 'admin', 4, 1);
+INSERT INTO `sys_menu_role` VALUES (5, 0, '2022-09-09 01:05:32', '2022-09-09 01:05:32', 'admin', 'admin', 5, 1);
+INSERT INTO `sys_menu_role` VALUES (6, 0, '2022-09-09 01:05:33', '2022-09-09 01:05:33', 'admin', 'admin', 6, 1);
+INSERT INTO `sys_menu_role` VALUES (7, 0, '2022-09-09 01:05:34', '2022-09-09 01:05:34', 'admin', 'admin', 7, 1);
+INSERT INTO `sys_menu_role` VALUES (8, 0, '2022-09-09 01:05:35', '2022-09-09 01:05:35', 'admin', 'admin', 1, 2);
+INSERT INTO `sys_menu_role` VALUES (9, 0, '2022-09-09 01:05:36', '2022-09-09 01:05:36', 'admin', 'admin', 2, 2);
+INSERT INTO `sys_menu_role` VALUES (10, 0, '2022-09-09 01:05:39', '2022-09-09 01:05:39', 'admin', 'admin', 3, 2);
+INSERT INTO `sys_menu_role` VALUES (11, 0, '2022-09-09 01:05:40', '2022-09-09 01:05:40', 'admin', 'admin', 4, 2);
+INSERT INTO `sys_menu_role` VALUES (12, 0, '2022-09-09 01:05:41', '2022-09-09 01:05:41', 'admin', 'admin', 5, 2);
+INSERT INTO `sys_menu_role` VALUES (13, 0, '2022-09-09 01:05:43', '2022-09-09 01:05:43', 'admin', 'admin', 6, 2);
+INSERT INTO `sys_menu_role` VALUES (14, 0, '2022-09-09 01:05:44', '2022-09-09 01:05:44', 'admin', 'admin', 7, 2);
+INSERT INTO `sys_menu_role` VALUES (15, 0, '2022-09-15 09:31:18', '2022-09-15 09:31:18', 'admin', 'admin', 8, 1);
+INSERT INTO `sys_menu_role` VALUES (16, 0, '2022-09-15 09:31:28', '2022-09-15 09:31:28', 'admin', 'admin', 8, 2);
+INSERT INTO `sys_menu_role` VALUES (17, 0, '2022-10-13 07:36:18', '2022-10-13 07:36:18', 'admin', 'admin', 9, 1);
+INSERT INTO `sys_menu_role` VALUES (18, 0, '2022-10-13 07:36:33', '2022-10-13 07:36:33', 'admin', 'admin', 10, 1);
+COMMIT;
 
 -- ----------------------------
 -- Table structure for sys_operator
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_operator`;
 CREATE TABLE `sys_operator` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  `creator` varchar(32) DEFAULT NULL COMMENT '创建人',
-  `modifier` varchar(32) DEFAULT NULL COMMENT '最后修改人',
-  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态 1:正常 2:冻结 3:离职',
-  `user_name` varchar(32) NOT NULL COMMENT '用户名',
-  `password` varchar(64) NOT NULL COMMENT '密码',
-  `salt` varchar(32) NOT NULL COMMENT '随机salt值',
-  `phone` varchar(32) DEFAULT '' COMMENT '电话',
-  `name` varchar(32) DEFAULT NULL COMMENT '姓名',
-  `email` varchar(64) DEFAULT '' COMMENT '邮箱',
-  PRIMARY KEY (`id`) USING BTREE
+                                `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
+                                `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
+                                `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+                                `creator` varchar(32) DEFAULT NULL COMMENT '创建人',
+                                `modifier` varchar(32) DEFAULT NULL COMMENT '最后修改人',
+                                `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态 1:正常 2:冻结 3:离职',
+                                `user_name` varchar(32) NOT NULL COMMENT '用户名',
+                                `password` varchar(64) NOT NULL COMMENT '密码',
+                                `salt` varchar(32) NOT NULL COMMENT '随机salt值',
+                                `phone` varchar(32) DEFAULT '' COMMENT '电话',
+                                `name` varchar(32) DEFAULT NULL COMMENT '姓名',
+                                `email` varchar(64) DEFAULT '' COMMENT '邮箱',
+                                PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb3 COMMENT='系统用户信息表';
+
+-- ----------------------------
+-- Records of sys_operator
+-- ----------------------------
+BEGIN;
+INSERT INTO `sys_operator` VALUES (1, 0, '2021-07-27 10:25:34', '2021-07-27 10:25:34', 'admin', NULL, 1, 'admin', 'de6eb79b18bd0c2fcbb3ce1d50f1b5fddb684409', '884df31e2e88e12a', '', NULL, '');
+INSERT INTO `sys_operator` VALUES (2, 0, '2022-09-09 00:34:02', '2022-09-09 00:34:02', 'admin', NULL, 1, 'audit', 'de6eb79b18bd0c2fcbb3ce1d50f1b5fddb684409', '884df31e2e88e12a', '', NULL, '');
+COMMIT;
 
 -- ----------------------------
 -- Table structure for sys_operator_role
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_operator_role`;
 CREATE TABLE `sys_operator_role` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
-  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '创建人',
-  `modifier` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '最后修改人',
-  `operator_id` bigint NOT NULL COMMENT '用户id',
-  `role_id` bigint NOT NULL DEFAULT '2' COMMENT '角色id',
-  PRIMARY KEY (`id`) USING BTREE
+                                     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
+                                     `is_delete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除状态，1：删除，0：有效',
+                                     `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+                                     `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+                                     `creator` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '创建人',
+                                     `modifier` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '最后修改人',
+                                     `operator_id` bigint NOT NULL COMMENT '用户id',
+                                     `role_id` bigint NOT NULL DEFAULT '2' COMMENT '角色id',
+                                     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户角色表';
 
+-- ----------------------------
+-- Records of sys_operator_role
+-- ----------------------------
+BEGIN;
+INSERT INTO `sys_operator_role` VALUES (1, 0, '2021-06-08 16:43:19', '2021-06-08 16:43:19', 'admin', NULL, 1, 1);
+INSERT INTO `sys_operator_role` VALUES (2, 0, '2021-06-08 16:43:30', '2021-06-08 16:43:30', 'admin', NULL, 2, 2);
+COMMIT;
 -- ----------------------------
 -- Table structure for sys_role
 -- ----------------------------
