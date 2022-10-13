@@ -119,17 +119,17 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * <B>方法名称：doUserVisitedIsAbnormal</B>
      * <B>概要说明：进行异常检测</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-13 09:41:04
      * @Param [segmentDetaiDolList, msAlarmInformationDoList]
-     * @return void
      **/
     private void doUserVisitedIsAbnormal(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
         Instant now = Instant.now();
         try {
-            if(!segmentDetaiDolList.isEmpty()) {
+            if (!segmentDetaiDolList.isEmpty()) {
                 anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+                log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
             }
         } catch (Exception e) {
             log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
