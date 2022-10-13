@@ -36,6 +36,6 @@ public class AnomalyConst {
 
     public static final Integer LOCAL_REDIS_CACHE_SIZE = 2000;
 
-    public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 1;
+    public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 5;
 
 }
