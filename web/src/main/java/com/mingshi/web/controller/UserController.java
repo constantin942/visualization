@@ -29,7 +29,7 @@ import java.util.Date;
  * @Param
  * @return
  **/
-@Controller
+@RestController
 @Slf4j
 @RequestMapping("/api/user")
 public class UserController {
@@ -48,7 +48,6 @@ public class UserController {
      * @Date 下午3:40 2021/6/8
      * @Param [request, userName, password]
      **/
-    @ResponseBody
     @PostMapping(value = "/login")
     public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
         Instant instStart = Instant.now();
@@ -79,7 +78,6 @@ public class UserController {
    * @Date 15:19 2020/2/3
    * @Param [userName, password, request, httpServletResponse]
    **/
-  @ResponseBody
   @PostMapping(value = "/isLogin")
   public ServerResponse<String> isLogin(HttpServletRequest request, HttpServletResponse httpServletResponse) {
     ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
@@ -105,7 +103,6 @@ public class UserController {
    * @Date 18:43 2020/2/3
    * @Param [request, httpServletResponse]
    **/
-  @ResponseBody
   @PostMapping(value = "/loginOut")
   public ServerResponse<String> loginOut(HttpServletRequest request) {
     ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);

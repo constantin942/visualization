@@ -6,6 +6,7 @@ import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -25,7 +26,7 @@ import java.util.Map;
  * @Param
  * @return
  **/
-@Controller
+@RestController
 @Slf4j
 @Validated
 @RequestMapping("/api/skyflying")
@@ -53,6 +54,24 @@ public class SkyflyingController {
     private UserPortraitByTimeTask timeTask;
     @Resource
     private MsConfigService msConfigService;
+    @Resource
+    private AiitSysUsersService aiitSysUsersService;
+
+    /**
+     * @return com.zhejiang.mobile.common.response.ServerResponse<java.lang.String>
+     * @Author zhaoming
+     * @Description 更改密码
+     * @Date 下午3:56 2021/6/8
+     * @Param [oldPassword, newPassword, userName]
+     **/
+    @PostMapping(value = "/changePassword")
+    public ServerResponse<String> changePassword(@RequestParam(value = "oldPassword", required = true) String oldPassword,
+                                                 @RequestParam(value = "newPassword", required = true) String newPassword,
+                                                 String userName) {
+        ServerResponse<String> response = aiitSysUsersService.changePassword(userName, oldPassword, newPassword);
+        log.info("# UserController.changePassword() # 用户 userName={} 修改密码，返回给前端的信息={}", userName, JsonUtil.obj2String(response));
+        return response;
+    }
 
     /**
      * <B>方法名称：getAkSk</B>
@@ -63,7 +82,6 @@ public class SkyflyingController {
      * @Param []
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
-    @ResponseBody
     @GetMapping(value = "/getAkSk")
     public ServerResponse<String> getAkSk() {
         return msConfigService.getAkSkFromDb();
@@ -78,7 +96,6 @@ public class SkyflyingController {
      * @Param [ak, sk]
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
-    @ResponseBody
     @PostMapping(value = "/setAkSk")
     public ServerResponse<String> setAkSk(@RequestParam(value = "ak") String ak, @RequestParam(value = "sk") String sk) {
         return msConfigService.setAkSkIntoDb(ak, sk);
@@ -93,7 +110,6 @@ public class SkyflyingController {
      * @Param []
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
-    @ResponseBody
     @GetMapping(value = "/getRegion")
     public ServerResponse<String> getRegion() {
         return msConfigService.getRegionFromDb();
@@ -108,7 +124,6 @@ public class SkyflyingController {
      * @Param [ak, sk]
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
-    @ResponseBody
     @PostMapping(value = "/setRegion")
     public ServerResponse<String> setRegionIntoDb(@RequestParam(value = "region") String region) {
         return msConfigService.setRegionIntoDb(region);
@@ -123,7 +138,6 @@ public class SkyflyingController {
      * @Date 2022年09月09日 15:09:50
      * @Param [userName]
      **/
-    @ResponseBody
     @GetMapping(value = "/getHighDangerOperationLog")
     public ServerResponse<String> getHighDangerOperationLog(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
@@ -140,7 +154,6 @@ public class SkyflyingController {
      * @Date 2022年09月09日 09:09:54
      * @Param [userName]
      **/
-    @ResponseBody
     @PostMapping(value = "/sysmenu")
     public ServerResponse<String> getSysMenu(String userName) {
         return sysMenuService.getSysMenu(userName);
@@ -155,7 +168,6 @@ public class SkyflyingController {
      * @Date 2022年08月25日 16:08:13
      * @Param [serviceInstance, agentSwitch]
      **/
-    @ResponseBody
     @GetMapping(value = "/allAgentOperationRecord")
     public ServerResponse<String> allAgentOperationRecord(@RequestParam(value = "serviceInstance") String serviceInstance,
                                                           @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -172,7 +184,6 @@ public class SkyflyingController {
      * @Date 2022年08月26日 10:08:20
      * @Param [serviceInstance]
      **/
-    @ResponseBody
     @GetMapping(value = "/queryAgentStatus")
     public ServerResponse<String> queryAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance) {
         return msAgentSwitchService.queryAgentStatus(serviceInstance.trim());
@@ -188,7 +199,6 @@ public class SkyflyingController {
      * @Param [pageNo, pageSize]
      **/
     @OperationAuditAspectAnnotation(isStart = true)
-    @ResponseBody
     @PostMapping(value = "/updateAgentStatus")
     public ServerResponse<String> updateAgentStatus(@RequestParam(value = "serviceInstance") String serviceInstance, @RequestParam(value = "agentSwitch") String agentSwitch) {
         return msAgentSwitchService.updateAgentStatus(serviceInstance.trim(), agentSwitch.trim());
@@ -203,7 +213,6 @@ public class SkyflyingController {
      * @Date 2022年07月13日 14:07:42
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllMonitorTables")
     public ServerResponse<String> getAllMonitorTables(
         String tableName,
@@ -216,7 +225,6 @@ public class SkyflyingController {
     }
 
     @OperationAuditAspectAnnotation(isStart = true)
-    @ResponseBody
     @PostMapping(value = "/updateMonitorTableDesc")
     public ServerResponse<String> updateMonitorTableDesc(@RequestParam(value = "id") Integer id, @RequestParam(value = "tableDesc") String tableDesc, String tableName) {
         return msMonitorBusinessSystemTablesService.updateTableDesc(id, tableDesc);
@@ -232,7 +240,6 @@ public class SkyflyingController {
      * @Param []
      **/
     @OperationAuditAspectAnnotation(isStart = true)
-    @ResponseBody
     @PostMapping(value = "/updateMonitorTable")
     public ServerResponse<String> updateMonitorTable(@RequestParam(value = "id") Integer id,
                                                      @RequestParam(value = "isDelete") Integer isDelete, String tableName) {
@@ -249,7 +256,6 @@ public class SkyflyingController {
      * @Param [agentCode, pageNo, pageSize]
      **/
     @OperationAuditAspectAnnotation(isStart = true)
-    @ResponseBody
     @GetMapping(value = "/updateSkywalkingAgent")
     public ServerResponse<String> updateSkywalkingAgent(
         @RequestParam(value = "id") Integer id,
@@ -267,7 +273,6 @@ public class SkyflyingController {
      * @Date 2022年06月29日 10:06:11
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllSkywalkingAgent")
     public ServerResponse<String> getAllSkywalkingAgent(
         String agentCode,
@@ -285,7 +290,6 @@ public class SkyflyingController {
      * @Date 2022年06月27日 14:06:57
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getActiveSkywalkingAgent")
     public ServerResponse<String> getActiveSkywalkingAgent() {
         return msAgentInformationService.getActiveSkywalkingAgent();
@@ -300,7 +304,6 @@ public class SkyflyingController {
      * @Date 2022年06月23日 15:06:53
      * @Param [pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getUserPortraitRules")
     public ServerResponse<String> getUserPortraitRules(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -316,7 +319,6 @@ public class SkyflyingController {
      * @Date 2022年06月16日 17:06:55
      * @Param []
      **/
-    @ResponseBody
     @PostMapping(value = "/updateUserPortraitRule")
     public ServerResponse<String> updateUserPortraitRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
         return userPortraitRulesService.updateUserPortraitRule(ruleId, isDelete);
@@ -331,7 +333,6 @@ public class SkyflyingController {
      * @Date 2022年06月15日 17:06:51
      * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllTableNameFromDMS")
     public ServerResponse<String> getAllTableNameFromDms() {
         return auditLogService.getAllTableNameFromDms();
@@ -346,7 +347,6 @@ public class SkyflyingController {
      * @Date 2022年06月15日 17:06:51
      * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllSqlTypeFromDMS")
     public ServerResponse<String> getAllSqlTypeFromDms() {
         return auditLogService.getAllSqlTypeFromDms();
@@ -361,7 +361,6 @@ public class SkyflyingController {
      * @Date 2022年06月15日 17:06:51
      * @Param [dbUserName, sqlType, msTableName, startTime, endTime, pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllUserNameFromDMS")
     public ServerResponse<String> getAllUserNameFromDms() {
         return auditLogService.getAllUserNameFromDms();
@@ -376,7 +375,6 @@ public class SkyflyingController {
      * @Date 2022年06月15日 15:06:08
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getDmsAuditLogFromDb")
     public ServerResponse<String> getDmsAuditLogFromDb(String dbUserName, /* 访问数据库的用户名 */
                                                        String sqlType, /* SQL语句的类型；是insert、select、update、delete等 */
@@ -397,7 +395,6 @@ public class SkyflyingController {
      * @Date 2022年06月13日 09:06:57
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getUserNameAnomalyDetectionInfo")
     public ServerResponse<String> getUserNameAnomalyDetectionInfo() {
         return msAlarmInformationService.getUserNameAnomalyDetectionInfo();
@@ -413,7 +410,6 @@ public class SkyflyingController {
      * @Date 2022年06月24日 16:06:19
      * @Param [userName, pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllAlarmInfoDetailByUserName")
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName,
                                                                   Integer matchRuleId,
@@ -432,7 +428,6 @@ public class SkyflyingController {
      * @Date 2022年06月13日 09:06:57
      * @Param []
      **/
-    @ResponseBody
     @GetMapping(value = "/getAnomalyDetectionInfo")
     public ServerResponse<String> getAnomalyDetectionInfo(String userName,
                                                           @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -449,7 +444,6 @@ public class SkyflyingController {
      * @Date 2022年06月30日 09:06:06
      * @Param [pageNo, pageSize]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAnomalyDetectionInfoByGroupByUserName")
     public ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(
         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -466,7 +460,6 @@ public class SkyflyingController {
      * @Date 2022年07月25日 13:07:16
      * @Param [pageNo, pageSize]
      **/
-    @ResponseBody
     @PostMapping(value = "/updateAnomalyDetectionInfo")
     public ServerResponse<String> updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
         msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
@@ -482,7 +475,6 @@ public class SkyflyingController {
      * @Date 2022年06月16日 14:06:35
      * @Param [ruleId, isDelete]
      **/
-    @ResponseBody
     @GetMapping(value = "/updateUserPortraitByVisitedTableEverydayRule")
     public ServerResponse<String> updateUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
         userPortraitRulesService.updateRule(ruleId, isDelete);
@@ -498,7 +490,6 @@ public class SkyflyingController {
      * @Date 2022年06月1日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllUserName")
     public ServerResponse<String> getAllUserName() {
         return segmentDetailService.getAllUserName();
@@ -514,7 +505,6 @@ public class SkyflyingController {
      * @Date 2022年06月1日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllMsTableName")
     public ServerResponse<String> getAllMsTableName() {
         return segmentDetailService.getAllMsTableName();
@@ -530,7 +520,6 @@ public class SkyflyingController {
      * @Date 2022年06月1日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllInstanceAndTableName")
     public ServerResponse<InstanceTable> getAllInstanceAndTableName() {
         return segmentDetailService.getAllInstanceAndTableName();
@@ -546,7 +535,6 @@ public class SkyflyingController {
      * @Param
      **/
 
-    @ResponseBody
     @GetMapping(value = "/getCoarseCountsOfUser")
     public ServerResponse<String> getCoarseCountsOfUser(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -563,7 +551,6 @@ public class SkyflyingController {
      * @Param
      * @Question：计算数据过慢
      **/
-    @ResponseBody
     @GetMapping(value = "/getCoarseCountsOfTableName")
     public ServerResponse<String> getCoarseCountsOfTableName(
         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -572,7 +559,6 @@ public class SkyflyingController {
         return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
     }
 
-    @ResponseBody
     @GetMapping(value = "/getCoarseCountsOfUsers")
     public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfOneUser(@RequestParam(value = "username", defaultValue = "") String username) {
         return ServerResponse.createBySuccess(segmentDetailService.getCoarseCountsOfUsers(username));
@@ -587,7 +573,6 @@ public class SkyflyingController {
      * @Date 2022年07月5日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getCountsOfUser")
     public ServerResponse<List<String>> getCountsOfUser(@RequestParam(value = "tableName") String tableName /* 数据库表名 */) {
         return segmentDetailService.getCountsOfUser(tableName);
@@ -602,7 +587,6 @@ public class SkyflyingController {
      * @Date 2022年07月22日 17:07:46
      * @Param [userName]
      **/
-    @ResponseBody
     @GetMapping(value = "/getUserOperationTypeCount")
     public ServerResponse<List<String>> getUserOperationTypeCount(@RequestParam(value = "userName") String userName) {
         return segmentDetailService.getUserOperationTypeCount(userName);
@@ -617,7 +601,6 @@ public class SkyflyingController {
      * @Date 2022年07月5日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getCountsOfUserRecentSevenDays")
     public ServerResponse<List<Long>> getCountsOfUserRecentSevenDays(@RequestParam(value = "tableName") String tableName, /* 数据库表名 */
                                                                      @RequestParam(value = "startTime") String startTime, /* 开始时间 */
@@ -637,7 +620,6 @@ public class SkyflyingController {
      * @Date 2022年07月5日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getCountsOfAllRecentSevenDays")
     public ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(@RequestParam(value = "startTime") String startTime, /* 开始时间 */
                                                                     @RequestParam(value = "endTime") String endTime /* 结束时间 */) {
@@ -653,7 +635,6 @@ public class SkyflyingController {
      * @Date 2022年07月5日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getOverviewOfSystem")
     public ServerResponse<SystemOverview> getOverviewOfSystem() {
         return segmentDetailService.getOverviewOfSystem();
@@ -670,7 +651,6 @@ public class SkyflyingController {
      * @Param
      **/
 
-    @ResponseBody
     @GetMapping(value = "/getUserUsualAndUnusualData")
     public ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String applicationUserName) {
         return segmentDetailService.getUserUsualAndUnusualData(applicationUserName);
@@ -685,7 +665,6 @@ public class SkyflyingController {
      * @Date 2022年07月6日 14:30:19
      * @Param
      **/
-    @ResponseBody
     @GetMapping(value = "/getAlarmData")
     public ServerResponse<List<AlarmData>> getAlarmData() {
         return segmentDetailService.getAlarmData();
@@ -701,7 +680,6 @@ public class SkyflyingController {
      * @Param
      **/
 
-    @ResponseBody
     @GetMapping(value = "/getUserAlarmData")
     public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
         return segmentDetailService.getUserAlarmData();
@@ -717,7 +695,6 @@ public class SkyflyingController {
      * @Date 2022年06月02日 17:15:19
      * @Param [request, userName, password]
      **/
-    @ResponseBody
     @GetMapping(value = "/getAllSegments")
     public ServerResponse<String> getAllSegments(String applicationUserName, /* 登录系统的名称 */
                                                  String dbUserName, /* 访问数据库的用户名 */
@@ -740,14 +717,12 @@ public class SkyflyingController {
      * @Date 2022年05月26日 16:05:50
      * @Param [startTime, endTime]
      **/
-    @ResponseBody
     @GetMapping(value = "/autoFetchAuditlogByDMS")
     public ServerResponse<String> autoFetchAuditlogByDms(@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime) {
         return auditLogService.autoFetchAuditlogByDms(startTime, endTime);
     }
 
 
-    @ResponseBody
     @GetMapping(value = "/getVisitRate")
     public ServerResponse<Map<String, Double>> getVisitRate(@RequestParam("username") String username) {
         return ServerResponse.createBySuccess(timeTask.getVisitRate(username));

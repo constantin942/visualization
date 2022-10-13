@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.Odd;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.stereotype.Component;
@@ -74,6 +75,15 @@ public class AspectUtil {
         //URL：根据请求对象拿到访问的地址
         map.put(Const.URL, request.getRequestURL());
         map.put(Const.PARAMS, jsonObject.toString());
+        String oldPassword = request.getParameter(Const.OLD_PASSWORD);
+        if(StringUtil.isNotBlank(oldPassword)){
+            map.put(Const.OLD_PASSWORD, oldPassword);
+        }
+
+        String newPassword = request.getParameter(Const.NEW_PASSWORD);
+        if(StringUtil.isNotBlank(newPassword)){
+            map.put(Const.NEW_PASSWORD, newPassword);
+        }
 
         String userName = request.getParameter(Const.USER_NAME);
         if (null != request.getParameter(Const.RULE_ID)) {
