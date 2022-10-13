@@ -28,4 +28,14 @@ public class AnomalyConst {
 
     public static final String COUNTS = "counts";
 
+    public static final String NO_USER = "未知用户";
+
+    public static final String HAVE_USER = "用户";
+
+    public static final Integer SECONDS = 60;
+
+    public static final Integer LOCAL_REDIS_CACHE_SIZE = 2000;
+
+    public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 1;
+
 }

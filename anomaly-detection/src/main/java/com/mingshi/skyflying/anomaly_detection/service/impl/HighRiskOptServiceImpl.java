@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
@@ -29,10 +30,6 @@ public class HighRiskOptServiceImpl {
     HighRiskOptMapper highRiskOptMapper;
 
     private  Integer HIGH_RISK_SIZE;
-
-    private static final String NO_USER = "未知用户";
-
-    private static final String HAVE_USER = "用户";
 
     private static final Cache<String, HighRiskOpt> cache = Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -82,8 +79,8 @@ public class HighRiskOptServiceImpl {
 
     private MsAlarmInformationDo buildAlarmInfo(MsSegmentDetailDo segmentDetailDo, String alarmInfo) {
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
-        msAlarmInformationDo.setUserName(segmentDetailDo.getUserName() == null ? NO_USER : segmentDetailDo.getUserName());
-        msAlarmInformationDo.setAlarmContent(HAVE_USER + segmentDetailDo.getUserName() + alarmInfo);
+        msAlarmInformationDo.setUserName(segmentDetailDo.getUserName() == null ? AnomalyConst.NO_USER : segmentDetailDo.getUserName());
+        msAlarmInformationDo.setAlarmContent(AnomalyConst.HAVE_USER + segmentDetailDo.getUserName() + alarmInfo);
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDetailDo.getStartTime()));
         msAlarmInformationDo.setGlobalTraceId(segmentDetailDo.getGlobalTraceId());
         msAlarmInformationDo.setMatchRuleId(AlarmEnum.HIGH_RISK_OPT.getCode());

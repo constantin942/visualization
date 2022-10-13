@@ -79,18 +79,6 @@ public class AnomalyDetectionBusiness {
      */
     public static final String REDIS_LOCK = "anomaly_detection:updatePortrait";
 
-    private static final Integer SECONDS = 60;
-
-    private static final Integer CACHE_SIZE = 2000;
-
-    private static final Integer CACHE_EXPIRE = 1;
-
-    private final static Cache<String, String> redisLocalCache = Caffeine.newBuilder()
-            .expireAfterWrite(CACHE_EXPIRE, TimeUnit.MINUTES)
-            .maximumSize(CACHE_SIZE)
-            .build();
-
-
     /**
      * 判断是否告警-库表维度
      */
@@ -141,7 +129,7 @@ public class AnomalyDetectionBusiness {
     private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
-        Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName, redisLocalCache);
+        Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName);
         if (count == null) {
             //没有用户画像
             MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail);
@@ -451,7 +439,7 @@ public class AnomalyDetectionBusiness {
     private void dingAlarmHelper(String redisKey, DingAlarmConfig dingAlarmConfig) {
         Integer gap = dingAlarmConfig.getGap();
         if (Boolean.FALSE.equals(isAlarmed(redisKey, gap))) {
-            redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
+            redisPoolUtil.set(redisKey, 1, (long) gap * AnomalyConst.SECONDS);
             String message = buildDingAlarmInfo(redisKey);
             try {
                 List<String> mobiles = null;
@@ -494,7 +482,7 @@ public class AnomalyDetectionBusiness {
         if (o != null) {
             return true;
         }
-        redisPoolUtil.set(redisKey, 1, (long) gap * SECONDS);
+        redisPoolUtil.set(redisKey, 1, (long) gap * AnomalyConst.SECONDS);
         return false;
     }
 
