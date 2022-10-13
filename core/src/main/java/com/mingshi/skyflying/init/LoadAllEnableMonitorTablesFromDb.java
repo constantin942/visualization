@@ -29,11 +29,11 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
   @Resource
   private MingshiServerUtil mingshiServerUtil;
 
-  private static volatile Map<String, Integer> concurrentHashMapIsDelete = new ConcurrentHashMap();
+  private static volatile Map<String, Integer> concurrentHashMapIsDelete = new ConcurrentHashMap<>();
 
-  private static volatile Map<String, String> concurrentHashMapTableDesc = new ConcurrentHashMap();
+  private static volatile Map<String, String> concurrentHashMapTableDesc = new ConcurrentHashMap<>();
 
-  private static volatile Map<String, Integer> isChangedMap = new ConcurrentHashMap();
+  private static volatile Map<String, Integer> isChangedMap = new ConcurrentHashMap<>();
 
   public static Map<String, Integer> getIsChangedMap() {
     return isChangedMap;
@@ -46,7 +46,7 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
 
   private void doRun() {
     List<MsMonitorBusinessSystemTablesDo> msMonitorBusinessSystemTablesDos = msMonitorBusinessSystemTablesMapper.selectAll();
-    if (null != msMonitorBusinessSystemTablesDos && 0 < msMonitorBusinessSystemTablesDos.size()) {
+    if (null != msMonitorBusinessSystemTablesDos && !msMonitorBusinessSystemTablesDos.isEmpty()) {
       for (MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo : msMonitorBusinessSystemTablesDos) {
         String key = mingshiServerUtil.getTableName(msMonitorBusinessSystemTablesDo);
         concurrentHashMapIsDelete.put(key, msMonitorBusinessSystemTablesDo.getIsDelete());
@@ -138,12 +138,9 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
    **/
   public static Integer getTableEnableStatus(String tableName) {
     Integer status = concurrentHashMapIsDelete.get(tableName);
-    if (null == status) {
-      // if (null == status && true == flag) {
+    if (null == status && !isChangedMap.containsKey(tableName)) {
       // 当获取表名时，如果当前表不在本地内存中，那么就将其插入到本地内存中。2022-07-13 14:03:14
-      if (!isChangedMap.containsKey(tableName)) {
         isChangedMap.put(tableName, 0);
-      }
     }
     return status;
   }

@@ -26,13 +26,13 @@ public class IoThreadLinkedBlockingQueue {
     /**
      * 阻塞队列中，元素的个数；2021-06-09 16:30:20
      */
-    private final static Integer QUEUE_SIZE = Const.IO_THREAD_QUEUE_SIZE;
-    private volatile static List<IoThread> linkedBlockingQueueList = new ArrayList<>();
+    private static final Integer QUEUE_SIZE = Const.IO_THREAD_QUEUE_SIZE;
+    private static volatile List<IoThread> linkedBlockingQueueList = new ArrayList<>();
     /**
      * 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
      */
-    private volatile static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
-    private volatile static AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
+    private static volatile AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
+    private static volatile AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
 
     /**
      * <B>方法名称：decrementIoThreadGraceShutdown</B>
@@ -86,7 +86,7 @@ public class IoThreadLinkedBlockingQueue {
      * @param localStatisticsThreadCount
      * @param mingshiServerUtil
      */
-    public IoThreadLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
+    private IoThreadLinkedBlockingQueue(Integer localStatisticsThreadCount, MingshiServerUtil mingshiServerUtil) {
         log.info("开始执行方法OperatorRedisFailureBuffer（）。");
         if (0 < SINGLE_CASE_COUNT.get()) {
             log.error("# IoThreadLinkedBlockingQueue.IoThreadLinkedBlockingQueue() # 类OperatorRedisFailureBuffer的实例个数大于1了（【{}】），不允许再次创建实例。", SINGLE_CASE_COUNT);
@@ -113,9 +113,9 @@ public class IoThreadLinkedBlockingQueue {
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
      **/
     private static void initLinkedBlockingQueueList(Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
-        if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+        if (null == linkedBlockingQueueList || linkedBlockingQueueList.isEmpty()) {
             synchronized (IoThreadLinkedBlockingQueue.class) {
-                if (null == linkedBlockingQueueList || 0 == linkedBlockingQueueList.size()) {
+                if (null == linkedBlockingQueueList || linkedBlockingQueueList.isEmpty()) {
                     log.info("获取单例LinkedBlockingQueue。");
                     new IoThreadLinkedBlockingQueue(reactorIoThreadCount, mingshiServerUtil);
                 }

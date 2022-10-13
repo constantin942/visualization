@@ -85,7 +85,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
             List<Span> spanList = buildSpanList(segmentObject, segment);
 
-            if (0 < spanList.size()) {
+            if (!spanList.isEmpty()) {
                 // 组装segment；2022-04-20 16:33:48
                 segment = setUserNameAndTokenFromSpan(spanList, segment);
                 // 重组span数据，返回前端使用；2022-04-20 16:49:02
@@ -96,15 +96,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 segmentDetaiDolList = getSegmentDetaiDolList(consumerRecord, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
-                Instant now = Instant.now();
-                try {
-                    if(!segmentDetaiDolList.isEmpty()) {
-                         anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                         log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-                    }
-                } catch (Exception e) {
-                    log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
-                }
+                // 异常检测；2022-10-13 09:40:57
+                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
 
             HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -122,6 +115,27 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         }
     }
 
+    /**
+     * <B>方法名称：doUserVisitedIsAbnormal</B>
+     * <B>概要说明：进行异常检测</B>
+     *
+     * @Author zm
+     * @Date 2022-10-13 09:41:04
+     * @Param [segmentDetaiDolList, msAlarmInformationDoList]
+     * @return void
+     **/
+    private void doUserVisitedIsAbnormal(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+        Instant now = Instant.now();
+        try {
+            if(!segmentDetaiDolList.isEmpty()) {
+                anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
+        }
+    }
+
 
     /**
      * <B>方法名称：getSegmentObject</B>
@@ -132,10 +146,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年09月13日 15:09:41
      * @Param [record]
      **/
-    private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> record) throws Exception {
+    private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> consumerRecord) throws Exception {
         SegmentObject segmentObject = null;
         try {
-            segmentObject = SegmentObject.parseFrom(record.value().get());
+            segmentObject = SegmentObject.parseFrom(consumerRecord.value().get());
         } catch (InvalidProtocolBufferException e) {
             log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
             throw new RuntimeException();
@@ -183,7 +197,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
         // 将异常信息插入到MySQL中；2022-06-07 18:16:44
         LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
-        if (null != msAlarmInformationDoList && 0 < msAlarmInformationDoList.size()) {
+        if (null != msAlarmInformationDoList && !msAlarmInformationDoList.isEmpty()) {
             msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
         }
         mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
@@ -240,7 +254,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 return segmentDetaiDolList;
             }
             List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
-            if (null == list || 0 == list.size() || 1 == list.size()) {
+            if (null == list || list.isEmpty() || 1 == list.size()) {
                 putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
                 return segmentDetaiDolList;
             }
@@ -651,7 +665,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             int spanId = span.getSpanId();
             if (0 == spanId) {
                 getSpringMvcInfo(span, jsonObject, linkedList);
-            } else if (0 < span.getTags().size()) {
+            } else if (!span.getTags().isEmpty()) {
                 jsonObject.put(Const.SPANID, spanId);
                 jsonObject.put(Const.PARENT_SPAN_ID, span.getParentSpanId());
                 jsonObject.put(Const.SERVICE_CODE, span.getServiceCode());
@@ -662,11 +676,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 jsonObject.put(Const.PEER, span.getPeer());
                 jsonObject.put(Const.COMPONET, span.getComponent());
                 List<LogEntity> logs = span.getLogs();
-                if (null != logs && 0 < logs.size()) {
+                if (null != logs && !logs.isEmpty()) {
                     jsonObject.put(Const.LOGS, JsonUtil.obj2String(logs));
                 }
                 List<KeyValue> tags = span.getTags();
-                if (0 < tags.size()) {
+                if (!tags.isEmpty()) {
                     Boolean flag = false;
                     String key = null;
                     String url = null;
@@ -756,22 +770,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
 
     /**
-     * <B>方法名称：insertSegment2</B>
-     * <B>概要说明：将segment数据插入到数据库中</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年05月23日 10:05:54
-     * @Param [segment]
-     **/
-    private void insertSegmentBySingle(SegmentDo segment) {
-        int insertResult = segmentDao.insertSelective(segment);
-        if (1 != insertResult) {
-            log.error("开始执行 AiitKafkaConsumer # insertSegmentBySingle()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
-        }
-    }
-
-    /**
      * <B>方法名称：setUserNameTokenGlobalTraceIdToLocalMemory </B>
      * <B>概要说明：将userName、token，与globalTraceId关联起来 </B>
      * 注：userName与token是等价的。当用户第一次登录时，如果用户校验成功，那么下次用户再访问其他接口时，会使用token来代替用户名。
@@ -831,33 +829,11 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         }
     }
 
-    /**
-     * <B>方法名称：insertSegment</B>
-     * <B>概要说明：将原始的用户访问行为信息插入到表中</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年08月23日 14:08:17
-     * @Param [segment, segmentObject, parentSegmentId]
-     **/
-    private void insertSegment(SegmentDo segment, SegmentObject segmentObject, String parentSegmentId) {
-        // 用户名和token都是空的调用链，不存入数据库中。这里只存入带有用户名或者token完整的调用链。2022-04-20 16:35:52
-        if (StringUtil.isBlank(segment.getUserName()) && StringUtil.isBlank(segment.getToken())) {
-            log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，该调用链 = 【{}】 不含有用户名和token，不能插入到表中。", JsonUtil.obj2String(segment));
-            return;
-        }
-
-        int insertResult = segmentDao.insertSelective(segment);
-        if (1 != insertResult) {
-            log.error("开始执行 AiitKafkaConsumer # insertSegment()方法，将完整的调用链 = 【{}】 插入到表中失败。", JsonUtil.obj2String(segment));
-        }
-    }
-
     private List<Span> buildSpanList(SegmentObject segmentObject, SegmentDo segmentDo) {
         List<Span> spans = new ArrayList<>();
 
         List<SpanObject> spansList = segmentObject.getSpansList();
-        if (null != spansList && 0 < spansList.size()) {
+        if (null != spansList && !spansList.isEmpty()) {
             segmentDo.setSpans(spansList.toString());
         }
         for (SpanObject spanObject : spansList) {
@@ -978,7 +954,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             if (null == segment) {
                 segment = new SegmentDo();
             }
-            if (null == spanList && 0 == spanList.size()) {
+            if (null == spanList && !spanList.isEmpty()) {
                 return segment;
             }
             Span span = spanList.get(spanList.size() - 1);

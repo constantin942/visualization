@@ -135,8 +135,4 @@ public class MsSegmentDetailDo implements Cloneable {
    */
   private String dbStatement;
 
-  @Override
-  public Object clone() throws CloneNotSupportedException {
-    return super.clone();
-  }
 }

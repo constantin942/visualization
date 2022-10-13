@@ -468,102 +468,10 @@ public class SkyflyingController {
      **/
     @ResponseBody
     @PostMapping(value = "/updateAnomalyDetectionInfo")
-    public ServerResponse updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
+    public ServerResponse<String> updateAnomalyDetectionInfo(@Valid @RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
         msAlarmInformationService.updateAnomalyDetectionInfos(anomalyDetectionInfoBos);
         return ServerResponse.createBySuccess();
     }
-
-//  /**
-//   * <B>方法名称：getAllUserNamePortraitByVisitedTime</B>
-//   * <B>概要说明：获取所有的用户</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getAllUserNamePortraitByVisitedTime")
-//  public ServerResponse<String> getAllUserNamePortraitByVisitedTime() {
-//    return userPortraitByTimeService.getAllUserNamePortraitByVisitedTime();
-//  }
-
-//  /**
-//   * <B>方法名称：getUserPortraitByVisitedTime</B>
-//   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getAllUserPortraitByVisitedTime")
-//  public ServerResponse<String> getAllUserPortraitByVisitedTime(String userName, /* 登录系统的名称 */
-//                                                                @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-//                                                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-//    return userPortraitByTimeService.getAllUserPortraitByVisitedTime(userName, pageNo, pageSize);
-//  }
-
-//  /**
-//   * <B>方法名称：getAllVisitedTablePortraitByVisitedTableEveryday</B>
-//   * <B>概要说明：获取所有的表名</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getAllVisitedTablePortraitByVisitedTableEveryday")
-//  public ServerResponse<String> getAllVisitedTablePortraitByVisitedTableEveryday() {
-//    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
-//  }
-
-//  /**
-//   * <B>方法名称：getUserPortraitByVisitedTime</B>
-//   * <B>概要说明：获取用户在什么时间访问了多少次系统</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getUserPortraitByVisitedTime")
-//  public ServerResponse<String> getUserPortraitByVisitedTime() {
-//    return userPortraitByTableService.getAllVisitedTablePortraitByVisitedTableEveryday();
-//  }
-
-//  /**
-//   * <B>方法名称：updateUserPortraitByVisitedTimeRule</B>
-//   * <B>概要说明：禁启用用户在什么时间访问了多少次系统规则</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月16日 17:06:55
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/updateUserPortraitByVisitedTimeRule")
-//  public ServerResponse<String> updateUserPortraitByVisitedTimeRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
-//    return userPortraitByTimeService.updateUserPortraitByVisitedTimeRule(ruleId, isDelete);
-//  }
-
-//  /**
-//   * <B>方法名称：getAllUserNameUserPortraitByVisitedTableEveryday</B>
-//   * <B>概要说明：获取所有的用户名</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getAllUserNameUserPortraitByVisitedTableEveryday")
-//  public ServerResponse<String> getAllUserNameUserPortraitByVisitedTableEveryday() {
-//    return userPortraitByTableService.getAllUserNameUserPortraitByVisitedTableEveryday();
-//  }
 
     /**
      * <B>方法名称：updateUserPortraitByVisitedTableEveryday</B>
@@ -576,100 +484,10 @@ public class SkyflyingController {
      **/
     @ResponseBody
     @GetMapping(value = "/updateUserPortraitByVisitedTableEverydayRule")
-    public ServerResponse updateUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
+    public ServerResponse<String> updateUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
         userPortraitRulesService.updateRule(ruleId, isDelete);
         return ServerResponse.createBySuccess();
     }
-
-//  /**
-//   * <B>方法名称：addUserPortraitByVisitedTtimeRule</B>
-//   * <B>概要说明：增加用户在什么时间访问过系统多少次的画像规则</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月16日 17:41:35
-//   * @Param [ruleId, isDelete]
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/addUserPortraitByVisitedTtimeRule")
-//  public ServerResponse<String> addUserPortraitByVisitedTtimeRule(@RequestParam(value = "userName") String userName,
-//                                                                  @RequestParam(value = "forenoonCount") Integer forenoonCount,
-//                                                                  @RequestParam(value = "afternoonCount") Integer afternoonCount,
-//                                                                  @RequestParam(value = "nightCount") Integer nightCount) {
-//    return userPortraitByTimeService.addUserPortraitByVisitedTtimeRule(userName, forenoonCount, afternoonCount, nightCount);
-//  }
-//
-//  /**
-//   * <B>方法名称：addUserPortraitByVisitedTableEverydayRule</B>
-//   * <B>概要说明：增加用户访问过的表的画像规则</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月16日 16:41:35
-//   * @Param [ruleId, isDelete]
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/addUserPortraitByVisitedTableEverydayRule")
-//  public ServerResponse<String> addUserPortraitByVisitedTableEverydayRule(@RequestParam(value = "userName") String userName,
-//                                                                          @RequestParam(value = "visitedTable") String visitedTable,
-//                                                                          @RequestParam(value = "visitedCount") Integer visitedCount,
-//                                                                          @RequestParam(value = "visitedDate") String visitedDate,
-//                                                                          @RequestParam(value = "dbType") String dbType) {
-//    return userPortraitByTableService.addUserPortraitByVisitedTableEverydayRule(userName, visitedTable, visitedCount, visitedDate, dbType);
-//  }
-
-//  /**
-//   * <B>方法名称：getUserPortraitByVisitedTableEveryday</B>
-//   * <B>概要说明：获取用户每天访问表的次数的画像信息</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月13日 09:06:57
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getUserPortraitByVisitedTableEveryday")
-//  public ServerResponse<String> getUserPortraitByVisitedTableEveryday(String userName, /* 登录系统的名称 */
-//                                                                      String visitedTable, /* 访问数据库的表 */
-//                                                                      String visitedDate, /* 访问数据库表的时间 */
-//                                                                      String visitedDbInstance,/*访问的数据库*/
-//                                                                      @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-//                                                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-//
-//
-//    return userPortraitByTableService.getUserPortraitByVisitedTableEveryday(userName, visitedTable, visitedDate, visitedDbInstance, pageNo, pageSize);
-//  }
-
-
-//  /**
-//   * <B>方法名称：userPortraitByVisitedTable</B>
-//   * <B>概要说明：基于历史数据，统计用户每天访问表的次数，以此来生成用户的画像</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月08日 14:06:08
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/userPortraitByVisitedTableEveryday")
-//  public ServerResponse<String> userPortraitByVisitedTableEveryday() {
-//    return userPortraitByTableService.createUserPortraitByVisitedTableEveryday();
-//  }
-
-//  /**
-//   * <B>方法名称：userPortraitByVisitedTime</B>
-//   * <B>概要说明：基于历史数据，统计用户访问系统的时间，以此来生成用户的画像</B>
-//   *
-//   * @return com.mingshi.skyflying.common.utils.response.ServerResponse<java.lang.String>
-//   * @Author zm
-//   * @Date 2022年06月07日 14:06:08
-//   * @Param []
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/userPortraitByVisitedTime")
-//  public ServerResponse<String> userPortraitByVisitedTime() {
-//    return userPortraitByTimeService.createUserPortraitByVisitedTime();
-//  }
 
     /**
      * <B>方法名称：getAllUserName/B>
@@ -753,25 +571,6 @@ public class SkyflyingController {
         String tableName) {
         return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
     }
-
-//  /**
-//   * <B>方法名称：getCoarseCountsOfOneUser/B>
-//   * <B>概要说明：获取某一特定用户对数据的粗粒度信息</B>
-//   *
-//   * @return ServerResponse<SysOperator>
-//   * @Author lhx
-//   * @Date 2022年07月5日 14:30:19
-//   * @Param
-//   **/
-//  @ResponseBody
-//  @GetMapping(value = "/getCoarseCountsOfOneUser")
-//  public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(@RequestParam(value = "applicationUserName", defaultValue = "") String applicationUserName, /* 登录系统的名称 */
-//                                                                 @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-//                                                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-//
-//    return segmentDetailService.getCoarseCountsOfOneUser(applicationUserName, pageNo, pageSize);
-//
-//  }
 
     @ResponseBody
     @GetMapping(value = "/getCoarseCountsOfUsers")

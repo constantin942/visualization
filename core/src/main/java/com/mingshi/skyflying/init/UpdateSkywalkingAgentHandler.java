@@ -14,21 +14,19 @@ import jodd.util.StringUtil;
  * @Version 1.0
  **/
 public class UpdateSkywalkingAgentHandler implements UpdateOperationRecord {
-  @Override
-  public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT)) {
-      if (null != jsonNodes.get(Const.AGENT_NAME)) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_NAME);
-        stringBuilder.append(value);
-        String agentName = null;
-        if (null != jsonNodes.get(Const.AGENT_CODE)) {
-          agentName = jsonNodes.get(Const.AGENT_CODE).asText();
-          stringBuilder.append(Const.COLON);
-          stringBuilder.append(jsonNodes.get(Const.AGENT_NAME).asText());
+    @Override
+    public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
+        if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT) && null != jsonNodes.get(Const.AGENT_NAME)) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_NAME);
+            stringBuilder.append(value);
+            String agentName = null;
+            if (null != jsonNodes.get(Const.AGENT_CODE)) {
+                agentName = jsonNodes.get(Const.AGENT_CODE).asText();
+                stringBuilder.append(Const.COLON);
+                stringBuilder.append(jsonNodes.get(Const.AGENT_NAME).asText());
+            }
+            operationLog.setOperationDesc(StringUtil.isBlank(agentName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, agentName));
         }
-        operationLog.setOperationDesc(StringUtil.isBlank(agentName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, agentName));
-      }
     }
-  }
 }

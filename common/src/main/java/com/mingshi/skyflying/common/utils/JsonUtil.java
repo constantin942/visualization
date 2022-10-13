@@ -24,6 +24,7 @@ public class JsonUtil {
   private static com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
   private static com.fasterxml.jackson.databind.ObjectMapper mapperWithYMDDate = new com.fasterxml.jackson.databind.ObjectMapper();
 
+  private JsonUtil(){}
   static {
     //对象的所有字段全部列入
     objectMapper.setSerializationInclusion(Inclusion.ALWAYS);
@@ -35,7 +36,7 @@ public class JsonUtil {
     objectMapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
 
     //所有的日期格式都统一为以下的样式，即yyyy-MM-dd HH:mm:ss
-    objectMapper.setDateFormat(new SimpleDateFormat(STANDARD_FORMAT));
+    objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
     //忽略 在json字符串中存在，但是在java对象中不存在对应属性的情况。防止错误
     objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -51,8 +52,7 @@ public class JsonUtil {
    * @Param []
    **/
   public static ObjectNode createJsonObject() {
-    ObjectNode objectNode = mapper.createObjectNode();
-    return objectNode;
+      return mapper.createObjectNode();
   }
 
   /**
@@ -65,8 +65,7 @@ public class JsonUtil {
    * @Param []
    **/
   public static ArrayNode createJsonArray() {
-    ArrayNode arrayNode = mapper.createArrayNode();
-    return arrayNode;
+      return mapper.createArrayNode();
   }
 
   public static <T> String object2String(T obj) {

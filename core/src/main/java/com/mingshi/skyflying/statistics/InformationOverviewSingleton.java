@@ -38,7 +38,7 @@ public class InformationOverviewSingleton implements ApplicationRunner {
   private void doRun() {
     // 从Redis缓存中获取所有的用户；
     Set<String> smembers = redisPoolUtil.smembers(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
-    if (null != smembers && 0 < smembers.size()) {
+    if (null != smembers && !smembers.isEmpty()) {
       for (String smember : smembers) {
         userCountHashMap.put(smember, 1);
       }
