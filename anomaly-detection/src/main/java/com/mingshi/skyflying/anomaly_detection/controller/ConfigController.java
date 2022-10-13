@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
+import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.DicItemMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
@@ -74,8 +75,10 @@ public class ConfigController {
     public ServerResponse setDemoMode(@RequestParam Boolean enable) {
         if (Boolean.TRUE.equals(enable)) {
             portraitConfigMapper.setDemoMode("1");
+            MsCaffeineCache.getRedisLocalCache().put(AnomalyConst.DEMO_MODE, "1");
         } else {
             portraitConfigMapper.setDemoMode("0");
+            MsCaffeineCache.getRedisLocalCache().put(AnomalyConst.DEMO_MODE, "0");
         }
         return ServerResponse.createBySuccess();
     }

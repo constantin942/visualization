@@ -81,7 +81,7 @@
     <select id="selectOne" resultType="com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig">
         select *
         from portrait_config
-        where is_deleted = 0;
+        where is_deleted = 0 limit 1;
     </select>
     <select id="selectByName" resultType="java.lang.String" parameterType="string">
         select `value` from dic_item where name = #{typeName,jdbcType=VARCHAR} order by sort

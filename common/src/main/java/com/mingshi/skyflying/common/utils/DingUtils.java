@@ -14,6 +14,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
 import javax.crypto.Mac;
@@ -34,6 +36,7 @@ import java.util.Base64;
 import java.util.List;
 
 @Slf4j
+@Component
 public class DingUtils {
     /*
      ** 生成时间戳和验证信息

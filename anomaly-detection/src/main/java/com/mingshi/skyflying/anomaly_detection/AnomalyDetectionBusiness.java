@@ -21,13 +21,18 @@ import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.DingUtils;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -75,6 +80,9 @@ public class AnomalyDetectionBusiness {
     @Resource
     DingAlarmConfigMapper dingAlarmConfigMapper;
 
+    @Lazy
+    @Resource
+    AnomalyDetectionBusiness anomalyDetectionBusiness;
     /**
      * Redis分布式锁Key
      */
@@ -83,14 +91,14 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-库表维度
      */
-    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList
+            , PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
             String table = segmentDetailDo.getMsTableName();
             //第一次访问距今是否在画像周期内
-            if (!isDemoMode() && inPeriod(username, portraitConfig.getRuleTablePeriod())) {
+            if (!isDemoMode && inPeriod(username, portraitConfig.getRuleTablePeriod())) {
                 continue;
             }
             if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
@@ -99,7 +107,7 @@ public class AnomalyDetectionBusiness {
             //一条信息包含多张表名, 拆分一下
             List<MsSegmentDetailDo> msSegmentDetailDos = userPortraitByTableTask.splitTable(list);
             for (MsSegmentDetailDo segmentDetail : msSegmentDetailDos) {
-                userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList);
+                userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList, portraitConfig);
             }
         }
     }
@@ -108,9 +116,23 @@ public class AnomalyDetectionBusiness {
      * 是否为演示模式
      */
     private boolean isDemoMode() {
+        //这里其实不是缓存在Redis中, 但由于只有一个数据, 比较特殊, 也先放在这个cache里
+        Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
+        if(redisLocalCache != null) {
+            //从本地缓存中获取
+            String s = redisLocalCache.getIfPresent(AnomalyConst.DEMO_MODE);
+            if(s != null) {
+                return "1".equals(s);
+            }
+        }
+        //从数据库中获取
         String mode = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
         if (mode == null) {
             return false;
+        }
+        if(redisLocalCache != null) {
+            //加入本地缓存
+            redisLocalCache.put(AnomalyConst.DEMO_MODE, mode);
         }
         return "1".equals(mode);
     }
@@ -127,8 +149,8 @@ public class AnomalyDetectionBusiness {
         return betweenDays <= period;
     }
 
-    private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+    private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail,
+                                                   List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
         String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
         Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName);
         if (count == null) {
@@ -156,24 +178,25 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-时间维度
      */
-    public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+    public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList,
+                                          PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
-            userVisitedTimeIsAbnormal(segmentDetailDo, msAlarmInformationDoList, portraitConfig);
+            userVisitedTimeIsAbnormalHelper(segmentDetailDo, msAlarmInformationDoList, portraitConfig, isDemoMode);
         }
     }
 
     /**
      * 判断是否告警-时间维度
      */
-    public void userVisitedTimeIsAbnormal(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
+    public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList
+            , PortraitConfig portraitConfig, boolean isDemoMode) {
         if (segmentDetailDo.getUserName() == null) return;
         if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
         }
         //第一次访问距今是否在画像周期内
         String userName = segmentDetailDo.getUserName();
-        if (!isDemoMode() && inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
+        if (!isDemoMode && inPeriod(userName, portraitConfig.getRuleTablePeriod())) {
             return;
         }
         String time = segmentDetailDo.getStartTime();
@@ -303,15 +326,16 @@ public class AnomalyDetectionBusiness {
         try {
             Boolean enableTimeRule = getEnableRule(AnomalyConst.TIME_SUF);
             Boolean enableTableRule = getEnableRule(AnomalyConst.TABLE_SUF);
+            PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+            boolean isDemoMode = isDemoMode();
             if (Boolean.TRUE.equals(enableTableRule)) {
-                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig,isDemoMode);
             }
             if (Boolean.TRUE.equals(enableTimeRule)) {
-                userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
             highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            //钉钉告警
-            dingAlarm(msAlarmInformationDoList);
+            anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
@@ -424,7 +448,8 @@ public class AnomalyDetectionBusiness {
     /**
      * 钉钉告警
      */
-    private void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    @Async
+    public void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
         HashSet<String> set = new HashSet<>();
         for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
             set.add(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName());
