@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ReactorUtil {
   private static volatile Boolean TWO_POWER_FLAG = null;
 
+  private ReactorUtil(){}
+
   /**
    * <B>方法名称：indexFor</B>
    * <B>概要说明：采用按位与代替取模运算，从而提升性能</B>

@@ -16,7 +16,6 @@ import com.mingshi.skyflying.reactor.thread.ProcessorThread;
 import com.mingshi.skyflying.sql.SqlTypeMap;
 import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.JSQLParserException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
@@ -128,10 +127,10 @@ public class MingshiServerUtil {
      * @Date 2022年06月24日 09:06:35
      * @Param [record]
      **/
-    public void recordForwarding(ConsumerRecord<String, Bytes> record, String topic) {
+    public void recordForwarding(ConsumerRecord<String, Bytes> consumerRecord, String topic) {
         try {
             SegmentObject segmentObject = null;
-            segmentObject = SegmentObject.parseFrom(record.value().get());
+            segmentObject = SegmentObject.parseFrom(consumerRecord.value().get());
             aiitKafkaProducer.send(segmentObject, topic);
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
@@ -242,81 +241,13 @@ public class MingshiServerUtil {
      **/
     private void statisticsIoThreadQueueSizeByRedis(IoThread ioThread) {
         Integer queueSize = ioThread.getQueueSize();
-        if (queueSize == ioThread.getQueueCapacity() && Const.NUMBER_ZERO < queueSize) {
+        if (queueSize.equals(ioThread.getQueueCapacity()) && Const.NUMBER_ZERO < queueSize) {
             String key = DateTimeUtil.dateToStr(new Date());
 
             redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + Const.RELATION_ID_CONNECTOR + ioThread.getName(), key, Double.valueOf(queueSize));
         }
     }
 
-
-//  /**
-//   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
-//   * <B>概要说明：同步用户访问过的表到本地内存</B>
-//   *
-//   * @return void
-//   * @Author zm
-//   * @Date 2022年07月25日 17:07:11
-//   * @Param [userPortraitByVisitedTimeDo]
-//   **/
-//  public void synchronizationUserPortraitByVisitedTableToLocalMemory(UserPortraitByVisitedTableEverydayDo userPortraitByVisitedTableEverydayDo) {
-//    String userName = userPortraitByVisitedTableEverydayDo.getUserName();
-//    String visitedDate = userPortraitByVisitedTableEverydayDo.getVisitedDate();
-//    String tables = userPortraitByVisitedTableEverydayDo.getVisitedTable();
-//    String dbType = userPortraitByVisitedTableEverydayDo.getDbType();
-//    Integer visitedCount = userPortraitByVisitedTableEverydayDo.getVisitedCount();
-//    Map<String/* 用户名 */, Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>>> userPortraitByVisitedTableMap =
-//      AnomylyDetectionSingletonByVisitedTableEveryday.getUserPortraitByVisitedTableMap();
-//    if (null != userPortraitByVisitedTableMap) {
-//      Map<String/* 访问过的表 */, Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>>> stringMapMap = userPortraitByVisitedTableMap.get(userName);
-//      if (null == stringMapMap) {
-//        stringMapMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-//        userPortraitByVisitedTableMap.put(userName, stringMapMap);
-//      }
-//      Map<String/* 访问日期，以天为单位 */, Map<String,/* 数据库操作类型：insert、delete、update、select */Integer/* 访问次数 */>> tablesMap = stringMapMap.get(tables);
-//      if (null == tablesMap) {
-//        tablesMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-//        stringMapMap.put(tables, tablesMap);
-//      }
-//      Map<String, Integer> originalTimeMap = tablesMap.get(visitedDate);
-//      if (null == originalTimeMap) {
-//        originalTimeMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-//        tablesMap.put(visitedDate, originalTimeMap);
-//      }
-//      originalTimeMap.put(dbType, visitedCount);
-//    }
-//  }
-
-//  /**
-//   * <B>方法名称：synchronizationUserPortraitByVisitedTimeToLocalMemory</B>
-//   * <B>概要说明：同步用户访问过的时间到本地内存</B>
-//   *
-//   * @return void
-//   * @Author zm
-//   * @Date 2022年07月25日 17:07:11
-//   * @Param [userPortraitByVisitedTimeDo]
-//   **/
-//  public void synchronizationUserPortraitByVisitedTimeToLocalMemory(UserPortraitByVisitedTimeDo userPortraitByVisitedTimeDo) {
-//    String userName = userPortraitByVisitedTimeDo.getUserName();
-//    Map<String/* 用户名 */, Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */>> userPortraitByVisitedTimeMap = AnomylyDetectionSingletonByVisitedTime.getUserPortraitByVisitedTimeMap();
-//    Map<String/* 访问时间 */, Integer/* 在当前时间段内的访问次数 */> map = userPortraitByVisitedTimeMap.get(userName);
-//    Integer forenoonCount = userPortraitByVisitedTimeDo.getForenoonCount();
-//    Integer afternoonCount = userPortraitByVisitedTimeDo.getAfternoonCount();
-//    Integer nightCount = userPortraitByVisitedTimeDo.getNightCount();
-//    if (null == map) {
-//      map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
-//      userPortraitByVisitedTimeMap.put(userName, map);
-//    }
-//    if (null != forenoonCount) {
-//      map.put(ConstantsCode.USER_PORTRAIT_FORENOON.getCode(), forenoonCount);
-//    }
-//    if (null != afternoonCount) {
-//      map.put(ConstantsCode.USER_PORTRAIT_AFTERNOON.getCode(), afternoonCount);
-//    }
-//    if (null != nightCount) {
-//      map.put(ConstantsCode.USER_PORTRAIT_NIGHT.getCode(), nightCount);
-//    }
-//  }
 
     /**
      * <B>方法名称：getSqlType</B>
@@ -328,25 +259,24 @@ public class MingshiServerUtil {
      * @Param [msSql]
      **/
     public String getSqlType(String msSql) {
-        String sqlTypeFromLibrary = null;
+
+        String sqlTypeFromLibrary = doGetSqlTypeFromLibrary(msSql);
+        if(StringUtil.isNotBlank(sqlTypeFromLibrary)){
+            return sqlTypeFromLibrary;
+        }
+
+        return doGetSqlType(msSql);
+    }
+
+    private String doGetSqlTypeFromLibrary(String msSql) {
+        String sqlType = null;;
         try {
-            String sqlType = SqlParserUtils.getSqlType(msSql);
+            sqlType = SqlParserUtils.getSqlType(msSql);
             if (StringUtil.isNotBlank(sqlType)) {
-                sqlTypeFromLibrary = sqlType.toLowerCase();
+                sqlType = sqlType.toLowerCase();
             }
-        } catch (JSQLParserException e) {
+        } catch (Exception e) {
             // ignore
-        }
-
-        String sqlType = null;
-        if (StringUtil.isBlank(sqlTypeFromLibrary)) {
-            sqlType = doGetSqlType(msSql);
-        }
-
-        if (StringUtil.isNotBlank(sqlType) && !sqlType.equals(sqlTypeFromLibrary)) {
-            // log.error("#MingshiServerUtil.getSqlType() # 根据SQL语句 = 【{}】从库里获取到的sql类型 = 【{}】与原生匹配到的sql类型 = 【{}】不一致。", msSql, sqlTypeFromLibrary, sqlType);
-        } else {
-            sqlType = sqlTypeFromLibrary;
         }
         return sqlType;
     }
@@ -447,8 +377,6 @@ public class MingshiServerUtil {
             tableNameList = SqlParserUtils.updateTable(msSql);
         } else if (sqlType.equals(Const.SQL_TYPE_DELETE.toLowerCase())) {
             tableNameList = SqlParserUtils.deleteTable(msSql);
-        } else {
-            // log.error("# MingshiServerUtil.getMsAuditLogDo() # 根据SQL语句 = 【{}】获取表名时，该SQL语句不是select、insert、update、delete。", msSql);
         }
         if (null != tableNameList && !tableNameList.isEmpty()) {
             for (String table : tableNameList) {
@@ -729,7 +657,7 @@ public class MingshiServerUtil {
     public void flushSkywalkingAgentInformationToDb() {
         try {
             AtomicBoolean atomicBoolean = AgentInformationSingleton.getAtomicBoolean();
-            if (atomicBoolean.get() == false) {
+            if (false == atomicBoolean.get()) {
                 // 只有当数据有变动时，才将其刷入到数据库中；2022-06-28 17:35:54
                 return;
             }
@@ -1007,9 +935,6 @@ public class MingshiServerUtil {
 
         // 将公共队列中有多少元素没有被消费发送到Redis中统计，便于日常的系统调优；2022-07-23 11:33:39
         statisticsProcessorAndIoThreadQueueSize();
-
-        // 统计kafka消费者每秒拿到多少消息；2022-07-28 13:57:05
-        // statisticsKafkaConsumerRecords();
 
         // flushSegmentToDb(segmentList);
 

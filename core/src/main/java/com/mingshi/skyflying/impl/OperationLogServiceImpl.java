@@ -33,7 +33,7 @@ public class OperationLogServiceImpl extends BaseParentServiceImpl<OperationLog,
 
   @Override
   public ServerResponse<String> getOperationLog(String userName, Integer pageNo, Integer pageSize) {
-    Map<String, Object> hashMap = new HashMap(Const.INITAL_SIZE);
+    Map<String, Object> hashMap = new HashMap<>(Const.INITAL_SIZE);
     if (null == pageNo) {
       pageNo = 1;
     }

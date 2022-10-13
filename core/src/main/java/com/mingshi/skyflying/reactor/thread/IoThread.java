@@ -56,13 +56,13 @@ public class IoThread extends Thread {
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
         skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
         processorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
-        segmentList = new LinkedList();
-        userHashSet = new HashSet();
-        segmentDetailDoList = new LinkedList();
-        segmentDetailUserNameIsNullDoList = new LinkedList();
-        spanList = new LinkedList();
-        msAlarmInformationDoLinkedListist = new LinkedList();
-        this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue(queueSize);
+        segmentList = new LinkedList<>();
+        userHashSet = new HashSet<>();
+        segmentDetailDoList = new LinkedList<>();
+        segmentDetailUserNameIsNullDoList = new LinkedList<>();
+        spanList = new LinkedList<>();
+        msAlarmInformationDoLinkedListist = new LinkedList<>();
+        this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
     }
@@ -291,15 +291,7 @@ public class IoThread extends Thread {
 
     private void getSegmentDetailFromJsonObject(ObjectNode jsonObject) {
         try {
-            String listString = null;
-            try {
-                JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_DO_LIST);
-                if (null != jsonNode) {
-                    listString = jsonNode.asText();
-                }
-            } catch (Exception e) {
-                log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
-            }
+            String listString = doSegmentDetaiDolList(jsonObject);
             if (StringUtil.isNotBlank(listString)) {
                 LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
                 // 之所将用户名判断放到这里来判断，而不是放到processor线程中判断，原因是为了提高效率。
@@ -323,17 +315,22 @@ public class IoThread extends Thread {
         }
     }
 
+    private String doSegmentDetaiDolList(ObjectNode jsonObject) {
+        String listString = null;
+        try {
+            JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_DO_LIST);
+            if (null != jsonNode) {
+                listString = jsonNode.asText();
+            }
+        } catch (Exception e) {
+            log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+        }
+        return listString;
+    }
+
     private void getSegmentDetailUserNameIsNullFromJsonObject(ObjectNode jsonObject) {
         try {
-            String listString = null;
-            try {
-                JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST);
-                if (null != jsonNode) {
-                    listString = jsonNode.asText();
-                }
-            } catch (Exception e) {
-                log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
-            }
+            String listString = doSegmentDetaiUserNameIsNullDolList(jsonObject);
             if (StringUtil.isNotBlank(listString)) {
                 LinkedList<MsSegmentDetailDo> segmentDetailList = JsonUtil.string2Obj(listString, LinkedList.class, MsSegmentDetailDo.class);
                 segmentDetailUserNameIsNullDoList.addAll(segmentDetailList);
@@ -341,6 +338,19 @@ public class IoThread extends Thread {
         } catch (Exception e) {
             log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
         }
+    }
+
+    private String doSegmentDetaiUserNameIsNullDolList(ObjectNode jsonObject) {
+        String listString = null;
+        try {
+            JsonNode jsonNode = jsonObject.get(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST);
+            if (null != jsonNode) {
+                listString = jsonNode.asText();
+            }
+        } catch (Exception e) {
+            log.error("# IoThread.getSegmentDetailFromJSONObject() # 将segmentDetail实例信息放入到 segmentDetailList 中出现了异常。", e);
+        }
+        return listString;
     }
 
     /**

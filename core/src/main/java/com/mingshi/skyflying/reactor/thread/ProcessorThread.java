@@ -25,11 +25,10 @@ public class ProcessorThread extends Thread {
     /**
      * 队列里存放的消息的个数；2022-06-01 09:42:19
      */
-    private final Integer queueSize = Const.QUEUE_SIZE;
+    private static final Integer queueSize = Const.QUEUE_SIZE;
 
     private Instant now = Instant.now();
     private SegmentConsumerService segmentConsumerService;
-    private Integer count = 0;
 
     public ProcessorThread(SegmentConsumerService segmentConsumerService) {
         this.segmentConsumerService = segmentConsumerService;
@@ -47,12 +46,6 @@ public class ProcessorThread extends Thread {
      **/
     public boolean offer(ConsumerRecord<String, Bytes> consumerRecord) {
         try {
-            // if (++count > (Const.RECORD_COUNT)) {
-            //   // 每10万条消息打印一次日志，否则会影响系统性能；2022-01-14 10:57:15
-            //   log.info("将调用链信息放入到processor队列中，当前队列中的元素个数【{}】，队列的容量【{}】。", processorLinkedBlockingQueue.size(), queueSize);
-            //   count = 0;
-            // }
-
             // 这里之所以使用阻塞队列的offer方法，是为了提升性能，提升性能的点：当队列满时，在不加锁的情况下，直接返回false。2022-06-01 09:44:53
             return processorLinkedBlockingQueue.offer(consumerRecord);
         } catch (Exception e) {

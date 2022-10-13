@@ -16,8 +16,7 @@ import jodd.util.StringUtil;
 public class UpdateAgentStatusHandler implements UpdateOperationRecord {
   @Override
   public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT_STATUS)) {
-      if (null != jsonNodes.get(Const.SERVICE_INSTANCE)) {
+    if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT_STATUS) && null != jsonNodes.get(Const.SERVICE_INSTANCE)) {
         String serviceInstance = jsonNodes.get(Const.SERVICE_INSTANCE).asText();
         StringBuilder stringBuilder = new StringBuilder();
         String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_SWITCH);
@@ -29,7 +28,6 @@ public class UpdateAgentStatusHandler implements UpdateOperationRecord {
           stringBuilder.append(agentSwitch.equals(Const.AGENT_STATUS_OFF) == true ? Const.AGENT_STATUS_OFF_DESC : Const.AGENT_STATUS_ON_DESC);
         }
         operationLog.setOperationDesc(StringUtil.isBlank(agentSwitch) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, serviceInstance));
-      }
     }
   }
 }

@@ -14,21 +14,19 @@ import jodd.util.StringUtil;
  * @Version 1.0
  **/
 public class UpdateMonitorTableDescHandler implements UpdateOperationRecord {
-  @Override
-  public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE_DESC)) {
-      if (null != jsonNodes.get(Const.TABLE_DESC)) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String value = UpdateOperationRecordFactory.getValue(methodName, Const.TABLE_DESC);
-        stringBuilder.append(value);
-        String tableName = null;
-        if (null != jsonNodes.get(Const.TABLE_NAME)) {
-          tableName = jsonNodes.get(Const.TABLE_NAME).asText();
-          stringBuilder.append(Const.COLON);
-          stringBuilder.append(jsonNodes.get(Const.TABLE_DESC).asText());
+    @Override
+    public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
+        if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE_DESC) && null != jsonNodes.get(Const.TABLE_DESC)) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String value = UpdateOperationRecordFactory.getValue(methodName, Const.TABLE_DESC);
+            stringBuilder.append(value);
+            String tableName = null;
+            if (null != jsonNodes.get(Const.TABLE_NAME)) {
+                tableName = jsonNodes.get(Const.TABLE_NAME).asText();
+                stringBuilder.append(Const.COLON);
+                stringBuilder.append(jsonNodes.get(Const.TABLE_DESC).asText());
+            }
+            operationLog.setOperationDesc(StringUtil.isBlank(tableName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, tableName));
         }
-        operationLog.setOperationDesc(StringUtil.isBlank(tableName) == true ? stringBuilder.toString() : stringBuilder.toString().replace(Const.POUND_KEY, tableName));
-      }
     }
-  }
 }

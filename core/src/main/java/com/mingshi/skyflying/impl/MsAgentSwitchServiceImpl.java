@@ -41,7 +41,7 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   @Override
   public ServerResponse<String> allAgentOperationRecord(String serviceInstance, Integer pageNo, Integer pageSize) {
 
-    HashMap<String, Object> hashMap = new HashMap(Const.INITAL_SIZE);
+    HashMap<String, Object> hashMap = new HashMap<>(Const.INITAL_SIZE);
     if (null == pageNo) {
       pageNo = 1;
     }

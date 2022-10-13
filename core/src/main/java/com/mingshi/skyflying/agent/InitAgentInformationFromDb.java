@@ -41,7 +41,7 @@ public class InitAgentInformationFromDb implements ApplicationRunner {
    **/
   private void setAgentInformation() {
     List<MsAgentInformationDo> msAgentInformationDos = msAgentInformationMapper.selectAll();
-    if (null != msAgentInformationDos && 0 < msAgentInformationDos.size()) {
+    if (null != msAgentInformationDos && !msAgentInformationDos.isEmpty()) {
       for (MsAgentInformationDo msAgentInformationDo : msAgentInformationDos) {
         String agentCode = msAgentInformationDo.getAgentCode();
         String agentName = msAgentInformationDo.getAgentName();
