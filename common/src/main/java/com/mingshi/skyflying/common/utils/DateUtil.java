@@ -268,7 +268,7 @@ public class DateUtil {
     setToRealFirstDay(calendar);
     calendar.add(Calendar.DATE, 6);
     Date date = DateUtil.getDayEndTime(calendar.getTime());
-    SimpleDateFormat dateFormat = new SimpleDateFormat(STANDARD_FORMAT);
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT);
 
     return dateFormat.format(date);
   }

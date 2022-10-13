@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;

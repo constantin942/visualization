@@ -16,6 +16,8 @@ public class MsSegmentDetailDo implements Cloneable {
 
   private Date gmtModified;
 
+
+
   private int isDelete;
 
   /**
@@ -134,5 +136,10 @@ public class MsSegmentDetailDo implements Cloneable {
    * 具体的SQL语句
    */
   private String dbStatement;
+
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 
 }
