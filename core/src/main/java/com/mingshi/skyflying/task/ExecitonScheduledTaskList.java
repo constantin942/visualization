@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * <B>主类名称: ScheduledTask</B>
@@ -58,7 +55,7 @@ public class ExecitonScheduledTaskList {
      **/
     public void doScheduledGetSegmentDetailDo(String key) {
         Instant now = Instant.now();
-        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetSegmentDetailDo()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.", key);
+        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetSegmentDetailDo()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
         try {
             // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
             List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
@@ -88,7 +85,7 @@ public class ExecitonScheduledTaskList {
      **/
     public void doScheduledUpdateUserNameByToken(String key) {
         Instant now = Instant.now();
-        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.", key);
+        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】。", key, Thread.currentThread().getName());
         try {
             // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
             List<String> tokenList = msSegmentDetailUsernameIsNullMapper.selectAllTokenUserNameIsNull();
@@ -124,23 +121,20 @@ public class ExecitonScheduledTaskList {
      **/
     public void doScheduledUpdateUserNameByGlobalTraceId(String key) {
         Instant now = Instant.now();
-        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于globalTraceId更新用户名。其分布式锁的 key = 【{}】.", key);
+        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于globalTraceId更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】。", key, Thread.currentThread().getName());
         try {
-            // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
-            List<String> globalTraceIdList = msSegmentDetailUsernameIsNullMapper.selectAllGlobalTraceIdUserNameIsNull();
-            for (String globalTraceId : globalTraceIdList) {
-                // 先从本地缓存Caffeine中根据globalTraceIdList获取用户名；
-                String userName = null;
-                userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
-                if (StringUtil.isNotBlank(userName)) {
-                    updateUserNameIsNullByGlobalTraceId(userName, globalTraceId);
-                } else {
-                    // 当本地缓存中不存在时，那么从表 ms_segment_detail 中获取；2022-08-01 15:24:34
-                    userName = msSegmentDetailDao.selectUserNameByGlobalTraceId(globalTraceId);
-                    if (StringUtil.isNotBlank(userName)) {
-                        updateUserNameIsNullByGlobalTraceId(userName, globalTraceId);
-                        MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userName);
-                    }
+            List<Map<String, String>> mapList = msSegmentDetailUsernameIsNullMapper.selectAllGlobalTraceIdUserNameIsNotNull();
+            if(null != mapList && !mapList.isEmpty()){
+                msSegmentDetailUsernameIsNullMapper.updateBatch(mapList);
+            }
+            for (int i = 0; i < mapList.size(); i++) {
+                Map<String, String> stringStringMap = mapList.get(i);
+                String globalTraceId = stringStringMap.get(Const.GLOBAL_TRACE_ID);
+                String userNameFromDb = stringStringMap.get(Const.USER_NAME);
+                String userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
+                if(StringUtil.isBlank(userName)){
+                    // 放入本地缓存；2022-10-13 13:44:26
+                    MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userNameFromDb);
                 }
             }
         } catch (Exception e) {

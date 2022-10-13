@@ -70,15 +70,16 @@ public class OperationAuditAspect {
     @Around("annotationPointCut()")
     public Object processLog(ProceedingJoinPoint joinPoint) {
         Instant instStart = Instant.now();
+        ServerResponse<String> resObj = null;
+        String methodName = null;
+        String orderId = null;
+        String userName = null;
+
         try {
             //获取到请求的属性
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             //获取到请求对象
             HttpServletRequest request = attributes.getRequest();
-
-            ServerResponse<String> resObj = null;
-            String methodName = null;
-            String orderId = null;
 
             Map<String, Object> map = aspectUtil.getRequestLog(joinPoint);
 

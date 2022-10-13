@@ -23,7 +23,11 @@ public interface MsSegmentDetailUsernameIsNullMapper {
 
     int updateByPrimaryKeySelective(MsSegmentDetailDo msSegmentDetailDo);
 
+    List<Map<String,String>> selectAllGlobalTraceIdUserNameIsNotNull();
+
     int updateUserNameByToken(Map<String,String> map);
 
     int updateUserNameByGlobalTraceId(Map<String,String> map);
+
+    int updateBatch(List<Map<String,String>> mapList);
 }
