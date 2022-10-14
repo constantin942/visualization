@@ -3,6 +3,7 @@ package com.mingshi.skyflying.service;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public interface MsAlarmInformationService extends ParentService<MsAlarmInformat
 
     ServerResponse<String> getAnomalyDetectionInfoByGroupByUserName(Integer pageNo, Integer pageSize);
 
+    @Transactional(rollbackFor = Exception.class)
+    void updateAnomalyDetectionInfo(AnomalyDetectionInfoBo anomalyDetectionInfoBo);
+
     /**
      * <B>方法名称：updateAnomalyDetectionInfo</B>
      * <B>概要说明：处置告警异常信息</B>
@@ -26,4 +30,6 @@ public interface MsAlarmInformationService extends ParentService<MsAlarmInformat
      * @Param [userName, matchRuleId, originalTime]
      **/
     void updateAnomalyDetectionInfos(List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos);
+
+    void deleteAnomalyDetection(Integer id);
 }

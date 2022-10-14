@@ -319,6 +319,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
+    @Async
     public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
             return;

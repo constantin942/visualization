@@ -34,6 +34,9 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 
+    @Resource
+    MsAlarmInformationService alarmInformationService;
+
 
     @Override
     public ServerResponse<String> getAllAlarmInfoDetailByUserName(String userName, Integer matchRuleId, String originalTime, Integer pageNo, Integer pageSize) {
@@ -141,9 +144,10 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
      * @Param [userName, matchRuleId, originalTime]
      */
     @Transactional(rollbackFor = Exception.class)
+    @Override
     public void updateAnomalyDetectionInfo(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
         // 逻辑删除告警信息；
-        deleteAnomalyDetection(anomalyDetectionInfoBo.getId());
+        alarmInformationService.deleteAnomalyDetection(anomalyDetectionInfoBo.getId());
         if (Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT.equals(anomalyDetectionInfoBo.getUpdateUserPortrait())) {
             // 插入粗粒度表
             anomalyDetectionBusiness.insertCoarse(anomalyDetectionInfoBo);
@@ -151,11 +155,10 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updateAnomalyDetectionInfos(@RequestBody List<AnomalyDetectionInfoBo> anomalyDetectionInfoBos) {
         //更新数据
         for (AnomalyDetectionInfoBo anomalyDetectionInfoBo : anomalyDetectionInfoBos) {
-            updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
+            alarmInformationService.updateAnomalyDetectionInfo(anomalyDetectionInfoBo);
         }
         //更新画像
         if (Objects.equals(anomalyDetectionInfoBos.get(0).getUpdateUserPortrait(), Const.ANOMALY_DETECTION_INFO_UPDATE_USER_PORTRAIT)) {
@@ -288,7 +291,8 @@ public class MsAlarmInformationServiceImpl implements MsAlarmInformationService 
      * @Date 2022年07月25日 14:07:08
      * @Param [userName, originalTime, matchRuleId]
      **/
-    private void deleteAnomalyDetection(Integer id) {
+    @Override
+    public void deleteAnomalyDetection(Integer id) {
         MsAlarmInformationDo msAlarmInformationDo = new MsAlarmInformationDo();
         msAlarmInformationDo.setId(id);
         msAlarmInformationDo.setIsDelete(1);
