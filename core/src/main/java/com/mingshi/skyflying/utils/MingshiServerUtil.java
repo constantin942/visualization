@@ -217,8 +217,6 @@ public class MingshiServerUtil {
         while (false == result) {
             IoThread ioThread = IoThreadLinkedBlockingQueue.getLinkedBlockingQueue(reactorIoThreadCount, mingshiServerUtil);
             if (null != ioThread) {
-                // 当队列满了后，把满的消息放入到Redis中
-                statisticsIoThreadQueueSizeByRedis(ioThread);
                 try {
                     result = ioThread.offer(jsonObject);
                 } catch (Exception e) {
@@ -231,25 +229,6 @@ public class MingshiServerUtil {
     }
 
     /**
-     * <B>方法名称：statisticsIoThreadQueueSizeByRedis</B>
-     * <B>概要说明：当队列满了后，把满的消息放入到Redis中</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年09月27日 14:09:51
-     * @Param [ioThread]
-     **/
-    private void statisticsIoThreadQueueSizeByRedis(IoThread ioThread) {
-        Integer queueSize = ioThread.getQueueSize();
-        if (queueSize.equals(ioThread.getQueueCapacity()) && Const.NUMBER_ZERO < queueSize) {
-            String key = DateTimeUtil.dateToStr(new Date());
-
-            redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + Const.RELATION_ID_CONNECTOR + ioThread.getName(), key, Double.valueOf(queueSize));
-        }
-    }
-
-
-    /**
      * <B>方法名称：getSqlType</B>
      * <B>概要说明：获取SQL语句的类型</B>
      *
@@ -259,12 +238,10 @@ public class MingshiServerUtil {
      * @Param [msSql]
      **/
     public String getSqlType(String msSql) {
-
         String sqlTypeFromLibrary = doGetSqlTypeFromLibrary(msSql);
         if(StringUtil.isNotBlank(sqlTypeFromLibrary)){
             return sqlTypeFromLibrary;
         }
-
         return doGetSqlType(msSql);
     }
 
