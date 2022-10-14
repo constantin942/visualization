@@ -284,8 +284,6 @@ public class AnomalyDetectionBusiness {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
         try {
-            // 清空本地缓存
-            MsCaffeineCache.getRedisLocalCache().cleanUp();
             // 时间维度
             userPortraitByTimeTask.updatePortrait();
             // 空间维度

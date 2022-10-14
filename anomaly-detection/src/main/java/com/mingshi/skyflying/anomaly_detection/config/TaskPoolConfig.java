@@ -1,11 +1,9 @@
 package com.mingshi.skyflying.anomaly_detection.config;
-
 import org.springframework.aop.interceptor.AsyncExecutionAspectSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -24,7 +22,7 @@ public class TaskPoolConfig {
         //活跃时间
         executor.setKeepAliveSeconds(60);
         //线程名字前缀
-        executor.setThreadNamePrefix("anomalyDetectionTask-");
+        executor.setThreadNamePrefix("msTask-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return executor;
     }

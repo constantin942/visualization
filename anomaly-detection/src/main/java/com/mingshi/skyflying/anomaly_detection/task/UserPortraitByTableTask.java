@@ -15,6 +15,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -61,6 +62,7 @@ public class UserPortraitByTableTask {
      * 每日定时任务 : 全量表生成用户画像 -> 放入Redis
      */
     @Scheduled(cron = "0 0 1 * * ?")
+    @Async
     public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         lock.lock();
