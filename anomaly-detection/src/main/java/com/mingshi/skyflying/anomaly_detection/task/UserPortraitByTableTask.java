@@ -245,21 +245,11 @@ public class UserPortraitByTableTask {
      * 获取某表访问次数
      */
     public Integer getCountByTable(String username, String tableName) {
-        String redisKey = buildKey(username, tableName);
-        // 从本地缓存读取
-        if (MsCaffeineCache.getRedisLocalCache() != null) {
-            String s = MsCaffeineCache.getFromRedisLocalCache(redisKey);
-            if (s != null) {
-                return Integer.parseInt(s);
-            }
+        String key = buildKey(username, tableName);
+        String counts = MsCaffeineCache.getFromPortraitByTableLocalCache(key);
+        if(counts == null) {
+            return null;
         }
-        // 从Redis中读取
-        Object o = redisPoolUtil.get(redisKey);
-        if (o == null) return null;
-        // 放入本地缓存
-        if (MsCaffeineCache.getRedisLocalCache() != null) {
-            MsCaffeineCache.putIntoRedisLocalCache(redisKey, (String) o);
-        }
-        return Integer.parseInt((String) o);
+        return Integer.valueOf(counts);
     }
 }

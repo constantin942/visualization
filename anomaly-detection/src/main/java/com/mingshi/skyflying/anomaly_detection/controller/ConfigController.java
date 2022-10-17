@@ -75,10 +75,8 @@ public class ConfigController {
     public ServerResponse setDemoMode(@RequestParam Boolean enable) {
         if (Boolean.TRUE.equals(enable)) {
             portraitConfigMapper.setDemoMode("1");
-            MsCaffeineCache.getRedisLocalCache().put(AnomalyConst.DEMO_MODE, "1");
         } else {
             portraitConfigMapper.setDemoMode("0");
-            MsCaffeineCache.getRedisLocalCache().put(AnomalyConst.DEMO_MODE, "0");
         }
         return ServerResponse.createBySuccess();
     }

@@ -2,20 +2,21 @@ package com.mingshi.skyflying.reactor.thread;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.agent.AgentInformationSingleton;
+import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.domain.SegmentDo;
 import com.mingshi.skyflying.common.domain.Span;
+import com.mingshi.skyflying.common.reactor.queue.InitProcessorByLinkedBlockingQueue;
+import com.mingshi.skyflying.common.reactor.queue.IoThreadLinkedBlockingQueue;
+import com.mingshi.skyflying.common.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
-import com.mingshi.skyflying.reactor.queue.IoThreadLinkedBlockingQueue;
-import com.mingshi.skyflying.statistics.InformationOverviewSingleton;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
+
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;

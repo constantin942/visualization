@@ -1,11 +1,14 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.caffeine.ConfigCache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
@@ -41,22 +44,42 @@ public class UserPortraitTask {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
+    @Resource
+    AnomalyDetectionBusiness anomalyDetectionBusiness;
+
 
     /**
      * <B>方法名称：fetchUserPortrait</B>
      * <B>概要说明：定时5分钟拉取用户画像。这个方法是每个实例都需要执行的，所以不需要获取分布式锁。</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-17 11:26:13
      * @Param []
-     * @return void
      **/
     @Scheduled(cron = "0 0 1 * * ?")
+    @Async
     public void fetchUserPortrait() {
-        // TODO: 2022/10/17 定时拉取用户画像；
         try {
+            // 定时拉取用户画像；
+            anomalyDetectionBusiness.getPortraitFromRedis();
         } catch (Exception e) {
-            log.error("");
+            log.error("定时拉取用户画像失败");
+        }
+    }
+
+
+    @Scheduled(cron = "0 0 2 * * ?")
+    @Async
+    public void fetchPortraitConfig() {
+        try {
+            // 定时拉取画像配置信息；
+            ConfigCache configCache = MsCaffeineCache.getConfigCache();
+            configCache.setPortraitConfig(anomalyDetectionBusiness.getConfig());
+            configCache.setEnableTimeRule(anomalyDetectionBusiness.getEnableRule(AnomalyConst.TIME_SUF));
+            configCache.setEnableTableRule(anomalyDetectionBusiness.getEnableRule(AnomalyConst.TABLE_SUF));
+        } catch (Exception e) {
+            log.error("定时拉取用户画像失败");
         }
     }
 }

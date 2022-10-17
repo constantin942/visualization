@@ -2,8 +2,8 @@ package com.mingshi.skyflying.kafka.consumer;
 
 import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.reactor.queue.IoThreadLinkedBlockingQueue;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.reactor.queue.IoThreadLinkedBlockingQueue;
 import com.mingshi.skyflying.utils.AiitKafkaConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

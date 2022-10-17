@@ -111,7 +111,7 @@ public class UserPortraitByTimeTask {
     }
 
     /**
-     * 组装Redis的Key
+     * 组装Key
      */
     private String buildKey(String username, String interval) {
         return username + ":" + interval;
@@ -376,29 +376,12 @@ public class UserPortraitByTimeTask {
      * 获取该用户画像所定义该时段正常访问频率
      */
     public Double getRateByInterVal(String username, String interval) {
-        String redisKey = buildKey(username, interval);
-        Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
-        // 从本地缓存读取
-        if (redisLocalCache != null) {
-            String s = redisLocalCache.getIfPresent(redisKey);
-            if (s != null) {
-                return Double.parseDouble(s);
-            }
-        }
-        // 从Redis读取
-        Object o = redisPoolUtil.get(redisKey);
-        if (o == null) {
-            updatePortrait();
-        }
-        o = redisPoolUtil.get(redisKey);
-        if(o == null) {
-            // redis中也没有
+        String key = buildKey(username, interval);
+        String rate = MsCaffeineCache.getFromPortraitByTimeLocalCache(key);
+        if(rate == null) {
             return null;
         }
-        if (redisLocalCache != null) {
-            redisLocalCache.put(redisKey, (String) o);
-        }
-        return Double.parseDouble((String) o);
+        return Double.parseDouble(rate);
     }
 
     /**

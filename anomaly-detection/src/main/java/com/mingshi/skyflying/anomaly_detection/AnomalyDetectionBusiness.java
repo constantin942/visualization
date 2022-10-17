@@ -115,23 +115,9 @@ public class AnomalyDetectionBusiness {
      * 是否为演示模式
      */
     private boolean isDemoMode() {
-        //这里其实不是缓存在Redis中, 但由于只有一个数据, 比较特殊, 也先放在这个cache里
-        Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
-        if (redisLocalCache != null) {
-            //从本地缓存中获取
-            String s = redisLocalCache.getIfPresent(AnomalyConst.DEMO_MODE);
-            if (s != null) {
-                return "1".equals(s);
-            }
-        }
-        //从数据库中获取
         String mode = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
         if (mode == null) {
             return false;
-        }
-        if (redisLocalCache != null) {
-            //加入本地缓存
-            redisLocalCache.put(AnomalyConst.DEMO_MODE, mode);
         }
         return "1".equals(mode);
     }
@@ -350,10 +336,13 @@ public class AnomalyDetectionBusiness {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
                 return;
             }
-            Boolean enableTimeRule = getEnableRule(AnomalyConst.TIME_SUF);
-            Boolean enableTableRule = getEnableRule(AnomalyConst.TABLE_SUF);
-            PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-            boolean isDemoMode = isDemoMode();
+            userPortraitInitDone(segmentDetaiDolList);
+            Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
+            Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
+            PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
+            boolean isDemoMode = false;
+            // TODO: 交付时删掉下面这一行
+            isDemoMode = isDemoMode();
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
@@ -393,21 +382,11 @@ public class AnomalyDetectionBusiness {
     /**
      * 获取规则开关
      */
-    private Boolean getEnableRule(String suffix) {
+    public Boolean getEnableRule(String suffix) {
         String key = AnomalyConst.RULE_PREFIX + suffix;
-        // 从本地缓存读取
-        if (MsCaffeineCache.getRedisLocalCache() != null) {
-            String enable = MsCaffeineCache.getFromRedisLocalCache(key);
-            if (enable != null) {
-                return Boolean.valueOf(enable);
-            }
-        }
         // 从Redis中读取
         Object o = redisPoolUtil.get(key);
         if (o != null) {
-            if (MsCaffeineCache.getRedisLocalCache() != null) {
-                MsCaffeineCache.putIntoRedisLocalCache(key, (String) o);
-            }
             return Boolean.parseBoolean((String) o);
         }
         return cacheRuleEnable(suffix);
@@ -572,5 +551,6 @@ public class AnomalyDetectionBusiness {
         // 时间画像
         map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
         strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+        MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
     }
 }
