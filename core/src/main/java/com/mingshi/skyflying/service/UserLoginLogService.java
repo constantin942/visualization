@@ -2,6 +2,7 @@ package com.mingshi.skyflying.service;
 
 
 import com.mingshi.skyflying.common.domain.UserLoginLog;
+import com.mingshi.skyflying.common.service.ParentService;
 
 /**
  *

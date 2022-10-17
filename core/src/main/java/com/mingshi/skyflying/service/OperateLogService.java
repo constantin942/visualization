@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.service;
 
 import com.mingshi.skyflying.common.domain.OperationLog;
+import com.mingshi.skyflying.common.service.ParentService;
 
 /**
  * <B>方法名称：OperateLogService</B>

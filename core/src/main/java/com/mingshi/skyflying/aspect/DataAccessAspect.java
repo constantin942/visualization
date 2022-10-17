@@ -10,7 +10,7 @@ import com.mingshi.skyflying.common.utils.DateUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.service.OperateLogService;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;

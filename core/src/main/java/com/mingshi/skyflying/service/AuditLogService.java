@@ -2,6 +2,7 @@ package com.mingshi.skyflying.service;
 
 import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.service.ParentService;
 
 public interface AuditLogService extends ParentService<MsDmsAuditLogDo, Long> {
 

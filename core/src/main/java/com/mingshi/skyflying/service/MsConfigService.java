@@ -2,6 +2,7 @@ package com.mingshi.skyflying.service;
 
 import com.mingshi.skyflying.common.domain.MsConfigDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.service.ParentService;
 
 /**
  * <B>类名称：MsConfigService</B>

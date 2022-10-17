@@ -9,10 +9,10 @@ import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
-import com.mingshi.skyflying.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.dao.MsSegmentDetailUsernameIsNullMapper;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

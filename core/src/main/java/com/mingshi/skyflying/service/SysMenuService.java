@@ -2,6 +2,7 @@ package com.mingshi.skyflying.service;
 
 import com.mingshi.skyflying.common.domain.SysMenu;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.service.ParentService;
 
 /**
  *

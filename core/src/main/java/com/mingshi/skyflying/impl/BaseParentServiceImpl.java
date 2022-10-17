@@ -3,7 +3,7 @@
  */
 package com.mingshi.skyflying.impl;
 
-import com.mingshi.skyflying.service.ParentService;
+import com.mingshi.skyflying.common.service.ParentService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;

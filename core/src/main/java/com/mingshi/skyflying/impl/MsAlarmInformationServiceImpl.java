@@ -7,7 +7,7 @@ import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.MsAlarmInformationMapper;
+import com.mingshi.skyflying.common.dao.MsAlarmInformationMapper;
 import com.mingshi.skyflying.service.MsAlarmInformationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

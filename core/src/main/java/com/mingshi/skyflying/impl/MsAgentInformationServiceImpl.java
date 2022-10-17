@@ -1,6 +1,6 @@
 package com.mingshi.skyflying.impl;
 
-import com.mingshi.skyflying.agent.AgentInformationSingleton;
+import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
 import com.mingshi.skyflying.common.domain.MsAgentSwitchDo;
@@ -9,7 +9,7 @@ import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.MsAgentInformationMapper;
+import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
 import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
 import com.mingshi.skyflying.service.MsAgentInformationService;
 import lombok.extern.slf4j.Slf4j;

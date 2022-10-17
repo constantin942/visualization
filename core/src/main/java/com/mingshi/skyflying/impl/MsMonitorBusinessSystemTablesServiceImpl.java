@@ -5,10 +5,10 @@ import com.mingshi.skyflying.common.domain.MsMonitorBusinessSystemTablesDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.MsMonitorBusinessSystemTablesMapper;
-import com.mingshi.skyflying.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.common.dao.MsMonitorBusinessSystemTablesMapper;
+import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.service.MsMonitorBusinessSystemTablesService;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

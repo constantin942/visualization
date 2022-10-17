@@ -6,9 +6,9 @@ import com.mingshi.skyflying.common.domain.MsConfigDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.MsConfigDao;
+import com.mingshi.skyflying.common.dao.MsConfigDao;
 import com.mingshi.skyflying.service.MsConfigService;
-import com.mingshi.skyflying.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

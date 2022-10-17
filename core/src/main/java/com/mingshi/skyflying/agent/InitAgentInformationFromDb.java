@@ -1,9 +1,10 @@
 package com.mingshi.skyflying.agent;
 
+import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.dao.MsAgentInformationMapper;
+import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
