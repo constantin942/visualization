@@ -1,11 +1,9 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
-import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
@@ -21,21 +19,15 @@ import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.common.kafka.producer.records.ConsumerRecords;
 import com.mingshi.skyflying.common.utils.*;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -48,7 +40,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AnomalyDetectionBusiness {
-    @Value("${spring.kafka.producer.anomaly-detection-consume-failed-topic}")
+    @Value("${spring.kafka.producer.anomaly-detection-consume-failed-topic:11}")
     private String anomalyDetectionConsumeFailedTopic;
 
     @Resource
@@ -97,7 +89,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-库表维度
      */
     public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList
-        , PortraitConfig portraitConfig, boolean isDemoMode) {
+            , PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
@@ -194,7 +186,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-时间维度
      */
     public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList
-        , PortraitConfig portraitConfig, boolean isDemoMode) {
+            , PortraitConfig portraitConfig, boolean isDemoMode) {
         if (segmentDetailDo.getUserName() == null) return;
         if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
@@ -208,7 +200,7 @@ public class AnomalyDetectionBusiness {
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                , time, segmentDetailDo.getGlobalTraceId());
+                    , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -322,7 +314,6 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    @Async
     public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
@@ -477,7 +468,6 @@ public class AnomalyDetectionBusiness {
     /**
      * 钉钉告警
      */
-    @Async
     public void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
         HashSet<String> set = new HashSet<>();
         for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
@@ -542,4 +532,16 @@ public class AnomalyDetectionBusiness {
         return false;
     }
 
+    /**
+     * 从Redis中获取画像信息
+     */
+    public void getPortraitFromRedis() {
+        // 库表画像
+        Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
+        Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+        MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
+        // 时间画像
+        map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
+        strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+    }
 }

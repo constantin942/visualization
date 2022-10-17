@@ -1,8 +1,8 @@
 package com.mingshi.skyflying.reactor.thread;
 
+import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.kafka.consumer.GracefulShutdown;
 import com.mingshi.skyflying.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.service.SegmentConsumerService;
 import lombok.extern.slf4j.Slf4j;

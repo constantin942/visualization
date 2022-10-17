@@ -62,9 +62,6 @@ public class UserPortraitByTimeTask {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
-    @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTime:}")
-    private String PREFIX;
-
     private final Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
@@ -100,22 +97,24 @@ public class UserPortraitByTimeTask {
      * value : 对应时段的访问频率
      */
     public void cachePortraitByTime(List<UserPortraitByTimeDo> userPortraitByTimeDos) {
+        Map<String, Object> map = new HashMap<>();
         for (UserPortraitByTimeDo userPortraitByTimeDo : userPortraitByTimeDos) {
             String username = userPortraitByTimeDo.getUsername();
             String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
             String afternoonRate = String.valueOf(userPortraitByTimeDo.getAfternoonRate());
             String nightRate = String.valueOf(userPortraitByTimeDo.getNightRate());
-            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.MORNING), morningRate, EXPIRE);
-            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.AFTERNOON), afternoonRate, EXPIRE);
-            redisPoolUtil.set(buildRedisKey(username, AnomalyConst.NIGHT), nightRate, EXPIRE);
+            map.put(buildKey(username, AnomalyConst.MORNING), morningRate);
+            map.put(buildKey(username, AnomalyConst.AFTERNOON), afternoonRate);
+            map.put(buildKey(username, AnomalyConst.NIGHT), nightRate);
         }
+        redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX, map);
     }
 
     /**
      * 组装Redis的Key
      */
-    private String buildRedisKey(String username, String interval) {
-        return PREFIX + username + ":" + interval;
+    private String buildKey(String username, String interval) {
+        return username + ":" + interval;
     }
 
 
@@ -377,7 +376,7 @@ public class UserPortraitByTimeTask {
      * 获取该用户画像所定义该时段正常访问频率
      */
     public Double getRateByInterVal(String username, String interval) {
-        String redisKey = buildRedisKey(username, interval);
+        String redisKey = buildKey(username, interval);
         Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
         // 从本地缓存读取
         if (redisLocalCache != null) {
@@ -410,7 +409,6 @@ public class UserPortraitByTimeTask {
         Double morningRate = getRateByInterVal(username, AnomalyConst.MORNING);
         Double afternoonRate = getRateByInterVal(username, AnomalyConst.AFTERNOON);
         Double nightRate = getRateByInterVal(username, AnomalyConst.NIGHT);
-
         morningRate = morningRate == null ? 0.33 : morningRate;
         afternoonRate = afternoonRate == null ? 0.33 : afternoonRate;
         nightRate = nightRate == null ? 0.33 : nightRate;

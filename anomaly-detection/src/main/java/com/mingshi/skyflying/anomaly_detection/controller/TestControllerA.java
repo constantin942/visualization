@@ -6,6 +6,7 @@ import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: 唐郑翔
@@ -32,6 +34,9 @@ public class TestControllerA {
 
     @Resource
     UserPortraitByTableTask tableTask;
+
+    @Resource
+    RedisPoolUtil redisPoolUtil;
 
     @GetMapping("period")
     public void testPeriod() {
@@ -75,6 +80,13 @@ public class TestControllerA {
     public void createPortrait() {
         tableTask.createUserPortraitTask();
         timeTask.createUserPortraitTask();
+    }
+
+    @GetMapping("fuzGet")
+    public void fuzGet(@RequestParam(value = "prefix")String prefix) {
+        Map<String, String> stringStringMap = redisPoolUtil.fuzGet(prefix);
+        System.out.println(stringStringMap.size());
+
     }
 
 }

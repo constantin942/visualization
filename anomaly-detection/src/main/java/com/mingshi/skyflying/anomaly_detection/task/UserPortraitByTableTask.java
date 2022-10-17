@@ -6,6 +6,7 @@ import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
+import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
@@ -49,10 +50,8 @@ public class UserPortraitByTableTask {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
-    @Value("${anomalyDetection.redisKey.portraitByTime.prefix:anomaly_detection:portraitByTable:}")
-    private String PREFIX;
 
-    private final static Integer EXPIRE = 100000;
+    private static final Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
      */
@@ -90,17 +89,18 @@ public class UserPortraitByTableTask {
         List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitConfig.getRuleTablePeriod());
         HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
         portraitByTableList2Map(userPortraitByTableDos, outerMap);
+        HashMap<String, Object> map = new HashMap<>();
         for (Map.Entry<String, HashMap<String, Integer>> outerEntry : outerMap.entrySet()) {
             String username = outerEntry.getKey();
             for (Map.Entry<String, Integer> innerEntry : outerEntry.getValue().entrySet()) {
-                String redisKey = buildRedisKey(username, innerEntry.getKey());
-                redisPoolUtil.set(redisKey, innerEntry.getValue(), EXPIRE);
+                map.put(buildKey(username, innerEntry.getKey()), innerEntry.getValue().toString());
             }
         }
+        redisPoolUtil.hmset(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX, map);
     }
 
-    public String buildRedisKey(String username, String key) {
-        return PREFIX + username + ":" + key;
+    public String buildKey(String username, String key) {
+        return username + ":" + key;
     }
 
     /**
@@ -245,7 +245,7 @@ public class UserPortraitByTableTask {
      * 获取某表访问次数
      */
     public Integer getCountByTable(String username, String tableName) {
-        String redisKey = buildRedisKey(username, tableName);
+        String redisKey = buildKey(username, tableName);
         // 从本地缓存读取
         if (MsCaffeineCache.getRedisLocalCache() != null) {
             String s = MsCaffeineCache.getFromRedisLocalCache(redisKey);
