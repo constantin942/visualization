@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.kafka.consumer;
+package com.mingshi.skyflying.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

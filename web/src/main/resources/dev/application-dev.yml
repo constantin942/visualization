@@ -90,6 +90,10 @@ spring:
 
   kafka:
     bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+    # 由于某种原因，异常检测没有执行成功，那么就把这些消息发送到这个topic中；
+    anomaly-detection-consume-failed-topic: anomaly-detection-consume-failed-topic
+    # 告警信息发送到这个topic中；
+    anomaly-detection-alarm-topic: anomaly-detection-alarm-topic
     producer:
       topic: skywalking-segments
       # 发生错误后，消息重发的次数。
@@ -123,6 +127,8 @@ spring:
       agent-switch-response-topic: agent-switch-response-topic
       group: skyflying-consumer-group
       agent-switch-response-group: agent-switch-response-group
+      # 异常检测用的消费者组
+      anomaly-detection-consume-failed-and-alarm-group: anomaly-detection-consume-failed-and-alarm-group
 mybatis-plus:
   configuration:
     #    在控制台中输出SQL语句；2021-12-02 18:40:52
@@ -146,7 +152,7 @@ reactor:
   processor:
     enable: true
     thread:
-      count: 4
+      count: 1
   iothread:
     thread:
-      count: 4
+      count: 1
