@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.kafka.producer;
+package com.mingshi.skyflying.common.kafka.producer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;

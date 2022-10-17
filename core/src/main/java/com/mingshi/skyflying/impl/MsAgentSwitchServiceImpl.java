@@ -8,7 +8,7 @@ import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.SnowflakeIdWorker;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
-import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
+import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.service.MsAgentSwitchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
