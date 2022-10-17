@@ -51,6 +51,24 @@ public class IoThread extends Thread {
     private MingshiServerUtil mingshiServerUtil;
     private Integer capacity;
 
+    private Map<String, Integer> everydayVisitedTimesMap = null;
+    // 用户总的访问次数；2022-10-14 13:59:31
+    private Map<String, Integer> userAccessBehaviorAllVisitedTimesMap = null;
+    // 用户最后的访问时间；2022-10-14 14:05:16
+    private  Map<String, String> userAccessBehaviorLatestVisitedTimeMap = null;
+    // 表最后的访问时间；2022-10-14 14:05:16
+    private Map<String, String> tableLatestVisitedTimeMap = null;
+    // 统计表每天的访问次数；2022-10-14 14:22:59
+    private Map<String/* 表名 */, Map<String/* 每天的日期，格式是：yyyy-MM-dd */, Long/* 访问次数 */>> tableEverydayVisitedTimesMap = null;
+    // 统计用户访问过的表的次数；2022-10-14 14:55:50
+    private Map<String/* 用户名 */, Map<String/* 表名 */, Double/* 访问次数 */>> userAccessBehaviorAllVisitedTablesMap = null;
+    // 统计表被用户访问过的次数；2022-10-14 15:11:17
+    private Map<String/* 表名 */, Map<String/* 用户名 */, Double/* 访问次数 */>> tableByHowManyUserVisitedMap = null;
+    // 统计每个表操作类型次数；2022-10-14 16:48:04
+    private Map<String/* 表名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> tableOperationTypeMap = null;
+    // 统计每个用户的操作类型次数
+    private Map<String/* 用户名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> userOperationTypeMap = null;
+
     public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
@@ -65,6 +83,16 @@ public class IoThread extends Thread {
         this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
+
+        this.everydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.tableEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.userAccessBehaviorAllVisitedTablesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.tableByHowManyUserVisitedMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.tableOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.userOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
     }
 
     /**
@@ -152,7 +180,7 @@ public class IoThread extends Thread {
                 // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
                 getSkywalkingAgentNameFromJsonObject(jsonObject);
 
-                getSegmentFromJsonObject(jsonObject);
+//                getSegmentFromJsonObject(jsonObject);
 
                 // 统计processorThread线程的QPS；2022-07-23 11:15:29
                 getProcessorThreadQpsFromJsonObject(jsonObject);
@@ -289,6 +317,15 @@ public class IoThread extends Thread {
         }
     }
 
+    /**
+     * <B>方法名称：getSegmentDetailFromJsonObject</B>
+     * <B>概要说明：获取用户访问详情信息</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-15 09:34:56
+     * @Param [jsonObject]
+     **/
     private void getSegmentDetailFromJsonObject(ObjectNode jsonObject) {
         try {
             String listString = doSegmentDetaiDolList(jsonObject);
@@ -307,6 +344,10 @@ public class IoThread extends Thread {
                             userHashSet.add(userName);
                         }
                     }
+
+                    // 对各个指标进行统计；2022-10-14 17:29:03
+                    mingshiServerUtil.doStatistics(msSegmentDetailDo, everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap);
+
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
             }
@@ -392,6 +433,9 @@ public class IoThread extends Thread {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
                 mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
                 currentTime = Instant.now();
+
+                // 将数据统计信息发送到Redis中；2022-10-15 09:37:43
+                mingshiServerUtil.flushStatisticsToRedis(everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap);
 
                 long timeMillis = DateTimeUtil.getTimeMillis(now);
                 if (0 < timeMillis) {

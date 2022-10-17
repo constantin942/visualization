@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -239,14 +240,15 @@ public class MingshiServerUtil {
      **/
     public String getSqlType(String msSql) {
         String sqlTypeFromLibrary = doGetSqlTypeFromLibrary(msSql);
-        if(StringUtil.isNotBlank(sqlTypeFromLibrary)){
+        if (StringUtil.isNotBlank(sqlTypeFromLibrary)) {
             return sqlTypeFromLibrary;
         }
         return doGetSqlType(msSql);
     }
 
     private String doGetSqlTypeFromLibrary(String msSql) {
-        String sqlType = null;;
+        String sqlType = null;
+        ;
         try {
             sqlType = SqlParserUtils.getSqlType(msSql);
             if (StringUtil.isNotBlank(sqlType)) {
@@ -407,36 +409,665 @@ public class MingshiServerUtil {
      * @Date 2022年07月18日 16:07:28
      * @Param [count]
      **/
-    public void flushSegmentDetailCountToRedis(List<MsSegmentDetailDo> list) {
-        Instant now = Instant.now();
-        if (!list.isEmpty()) {
-            Integer count = list.size();
-            try {
-                Map<String, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
-                for (MsSegmentDetailDo msSegmentDetailDo : list) {
-                    String userName = msSegmentDetailDo.getUserName();
-                    String startTime = msSegmentDetailDo.getStartTime();
-                    String tableName = msSegmentDetailDo.getMsTableName();
-                    String dbInstance = msSegmentDetailDo.getDbInstance();
-                    String dbType = msSegmentDetailDo.getDbType();
-                    String peer = msSegmentDetailDo.getPeer();
-                    String serviceCode = msSegmentDetailDo.getServiceCode();
-                    if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
-                        // 信息概况 -> 用户访问行为
-                        flushUserAccessBehaviorToRedis(dbType, userName, startTime, peer, dbInstance, tableName, serviceCode);
+//    public void flushSegmentDetailCountToRedis(List<MsSegmentDetailDo> list) {
+//        Instant now = Instant.now();
+//        if(list.isEmpty()){
+//            return;
+//        }
+//        try {
+//            Map<String, Integer> everydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 用户总的访问次数；2022-10-14 13:59:31
+//            Map<String, Integer> userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 用户最后的访问时间；2022-10-14 14:05:16
+//            Map<String, String> userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 表最后的访问时间；2022-10-14 14:05:16
+//            Map<String, String> tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//
+//            // 统计表每天的访问次数；2022-10-14 14:22:59
+//            Map<String/* 表名 */, Map<String/* 每天的日期，格式是：yyyy-MM-dd */, Long/* 访问次数 */>> tableEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计用户访问过的表的次数；2022-10-14 14:55:50
+//            Map<String/* 用户名 */, Map<String/* 表名 */, Double/* 访问次数 */>> userAccessBehaviorAllVisitedTablesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计表被用户访问过的次数；2022-10-14 15:11:17
+//            Map<String/* 表名 */, Map<String/* 用户名 */, Double/* 访问次数 */>> tableByHowManyUserVisitedMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计每个表操作类型次数；2022-10-14 16:48:04
+//            Map<String/* 表名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> tableOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计每个用户的操作类型次数
+//            Map<String/* 用户名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> userOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//
+//            for (MsSegmentDetailDo msSegmentDetailDo : list) {
+//                // 对各个指标进行统计；2022-10-14 17:29:03
+//                doStatistics(msSegmentDetailDo,everydayVisitedTimesMap,userAccessBehaviorAllVisitedTimesMap,userAccessBehaviorLatestVisitedTimeMap,tableLatestVisitedTimeMap,tableEverydayVisitedTimesMap,userAccessBehaviorAllVisitedTablesMap,tableByHowManyUserVisitedMap,tableOperationTypeMap,userOperationTypeMap);
+//            }
+//
+//            // 将统计好的各个指标进行统计发送到Redis中；2022-10-14 17:28:56
+//            flushStatisticsToRedis(everydayVisitedTimesMap,userAccessBehaviorAllVisitedTimesMap,userAccessBehaviorLatestVisitedTimeMap,tableLatestVisitedTimeMap,tableEverydayVisitedTimesMap,userAccessBehaviorAllVisitedTablesMap,tableByHowManyUserVisitedMap,tableOperationTypeMap,userOperationTypeMap);
+//
+////            log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
+//        } catch (Exception e) {
+//            log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
+//        }
+//    }
+//    public void flushSegmentDetailCountToRedis(List<MsSegmentDetailDo> list) {
+//        Instant now = Instant.now();
+//        if(list.isEmpty()){
+//            return;
+//        }
+//        try {
+//            Map<String, Integer> everydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 用户总的访问次数；2022-10-14 13:59:31
+//            Map<String, Integer> userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 用户最后的访问时间；2022-10-14 14:05:16
+//            Map<String, String> userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 表最后的访问时间；2022-10-14 14:05:16
+//            Map<String, String> tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//
+//            // 统计表每天的访问次数；2022-10-14 14:22:59
+//            Map<String/* 表名 */, Map<String/* 每天的日期，格式是：yyyy-MM-dd */, Long/* 访问次数 */>> tableEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计用户访问过的表的次数；2022-10-14 14:55:50
+//            Map<String/* 用户名 */, Map<String/* 表名 */, Double/* 访问次数 */>> userAccessBehaviorAllVisitedTablesMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计表被用户访问过的次数；2022-10-14 15:11:17
+//            Map<String/* 表名 */, Map<String/* 用户名 */, Double/* 访问次数 */>> tableByHowManyUserVisitedMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计每个表操作类型次数；2022-10-14 16:48:04
+//            Map<String/* 表名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> tableOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//            // 统计每个用户的操作类型次数
+//            Map<String/* 用户名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> userOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+//
+//            for (MsSegmentDetailDo msSegmentDetailDo : list) {
+//                // 对各个指标进行统计；2022-10-14 17:29:03
+//                doStatistics(msSegmentDetailDo,everydayVisitedTimesMap,userAccessBehaviorAllVisitedTimesMap,userAccessBehaviorLatestVisitedTimeMap,tableLatestVisitedTimeMap,tableEverydayVisitedTimesMap,userAccessBehaviorAllVisitedTablesMap,tableByHowManyUserVisitedMap,tableOperationTypeMap,userOperationTypeMap);
+//            }
+//
+//            // 将统计好的各个指标进行统计发送到Redis中；2022-10-14 17:28:56
+//            flushToRedis(everydayVisitedTimesMap,userAccessBehaviorAllVisitedTimesMap,userAccessBehaviorLatestVisitedTimeMap,tableLatestVisitedTimeMap,tableEverydayVisitedTimesMap,userAccessBehaviorAllVisitedTablesMap,tableByHowManyUserVisitedMap,tableOperationTypeMap,userOperationTypeMap);
+//
+////            log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", list.size(), DateTimeUtil.getTimeMillis(now));
+//        } catch (Exception e) {
+//            log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
+//        }
+//    }
 
-                        // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
-                        statisticVisitedCountByEveryday(msSegmentDetailDo, map);
-                    }
+    /**
+     * <B>方法名称：flushStatisticsToRedis</B>
+     * <B>概要说明：将统计好的各个指标进行统计发送到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:29:32
+     * @Param [everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap]
+     * @return void
+     **/
+    public void flushStatisticsToRedis(Map<String, Integer> everydayVisitedTimesMap, Map<String, Integer> userAccessBehaviorAllVisitedTimesMap, Map<String, String> userAccessBehaviorLatestVisitedTimeMap, Map<String, String> tableLatestVisitedTimeMap, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap, Map<String, Map<String, Double>> tableOperationTypeMap, Map<String, Map<String, Double>> userOperationTypeMap) {
+        // 将用户的最后访问时间更新到Redis中
+        flushUserAccessBehaviorLatestVisitedTimeToRedis(userAccessBehaviorLatestVisitedTimeMap);
+
+        // 将用户的访问次数累加到Redis中
+        flushUserAccessBehaviorAllVisitedTimesToRedis(userAccessBehaviorAllVisitedTimesMap);
+
+        // 将表每天的访问次数发送到Redis中
+        flushTableEverydayVisitedTimes(tableEverydayVisitedTimesMap);
+
+        // 将条最后的访问时间更新到Redis中；
+        flushTableLatestVisitiedTime(tableLatestVisitedTimeMap);
+
+        // 更新每天采集情况和总的采集情况到Redis；2022-07-20 14:17:03
+        updateEverydayStatisticToRedis(everydayVisitedTimesMap);
+
+        // 将用户访问过的表的次数发送到Redis中；
+        flushUserAccessBehaviorAllVisitedTables(userAccessBehaviorAllVisitedTablesMap);
+
+        // 将表被用户访问的次数发送Redis中；
+        flushTableByHowManyUserVisited(tableByHowManyUserVisitedMap);
+
+        // 将每个表的操作类型次数发送到Redis中；
+        flushTableOperationType(userOperationTypeMap);
+
+        // 统计每个用户操作类型次数；
+        flushUserOperationType(userOperationTypeMap);
+    }
+
+    /**
+     * <B>方法名称：doStatistics</B>
+     * <B>概要说明：对各个指标进行统计</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:27:55
+     * @Param [msSegmentDetailDo, everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap]
+     * @return void
+     **/
+    public void doStatistics(MsSegmentDetailDo msSegmentDetailDo,Map<String, Integer> everydayVisitedTimesMap, Map<String, Integer> userAccessBehaviorAllVisitedTimesMap, Map<String, String> userAccessBehaviorLatestVisitedTimeMap, Map<String, String> tableLatestVisitedTimeMap, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap, Map<String, Map<String, Double>> tableOperationTypeMap, Map<String, Map<String, Double>> userOperationTypeMap) {
+        String userName = msSegmentDetailDo.getUserName();
+        String startTime = msSegmentDetailDo.getStartTime();
+        String tableName = msSegmentDetailDo.getMsTableName();
+        String dbInstance = msSegmentDetailDo.getDbInstance();
+        String dbType = msSegmentDetailDo.getDbType();
+        String peer = msSegmentDetailDo.getPeer();
+        String serviceCode = msSegmentDetailDo.getServiceCode();
+        if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
+
+            // 对用户总的访问次数进行本地累加
+            userAccessBehaviorAllVisitedTimes(userName, userAccessBehaviorAllVisitedTimesMap);
+
+            // 更新用户的最后访问时间
+            userAccessBehaviorLatestVisitedTime(userName, startTime, userAccessBehaviorLatestVisitedTimeMap);
+
+            // 将表每天的访问次数在本地进行累加
+            tableEverydayVisitedTimes(tableName, peer, dbInstance, startTime, tableEverydayVisitedTimesMap);
+
+            // 更新表最后的访问时间
+            tableLatestVisitedTime(peer, dbInstance, tableName, startTime,tableLatestVisitedTimeMap);
+
+            // 统计用户访问过的表的次数；
+            userAccessBehaviorAllVisitedTables(peer, dbInstance, tableName, userName,userAccessBehaviorAllVisitedTablesMap);
+
+            // 统计表被用户访问的次数；
+            tableByHowManyUserVisited(peer, dbInstance, tableName, userName, serviceCode,tableByHowManyUserVisitedMap);
+
+            // 统计每个表操作类型次数；
+            tableOperationType( dbType,  peer,  dbInstance,  tableName,tableOperationTypeMap);
+
+            // 统计每个用户操作类型次数；
+            userOperationType(dbType, userName,userOperationTypeMap);
+
+            // 实时将用户访问行为信息发送到redis中
+            setTableEnableStatus(dbType, peer, dbInstance, tableName, userName);
+
+            // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
+            statisticVisitedCountByEveryday(msSegmentDetailDo, everydayVisitedTimesMap);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushUserOperationType</B>
+     * <B>概要说明：统计每个用户操作类型次数；</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:22:44
+     * @Param [userOperationTypeMap]
+     * @return void
+     **/
+    private void flushUserOperationType(Map<String, Map<String, Double>> userOperationTypeMap) {
+        if(null == userOperationTypeMap || userOperationTypeMap.isEmpty()){
+            return;
+        }
+        try {
+            Instant now = Instant.now();
+            Iterator<String> iterator = userOperationTypeMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String userName = iterator.next();
+                Map<String, Double> operationTypeCountMap = userOperationTypeMap.get(userName);
+                if(null == operationTypeCountMap || operationTypeCountMap.isEmpty()){
+                    continue;
                 }
-
-                // 更新每天采集情况和总的采集情况到Redis；2022-07-20 14:17:03
-                updateEverydayStatisticToRedis(map);
-
-                log.info("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时统计【{}】条segmentDetail数据到Redis的哈希表中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
-            } catch (Exception e) {
-                log.error("# MingshiServerUtil.flushSegmentDetailCountToRedis() # 实时segmentDetail数据的统计数量保存到Redis的哈希表中，出现了异常。", e);
+                Iterator<String> iterator1 = operationTypeCountMap.keySet().iterator();
+                while(iterator1.hasNext()){
+                    String operationType = iterator1.next();
+                    Double count = operationTypeCountMap.get(operationType);
+                    if(null == count){
+                        continue;
+                    }
+                    // 有序集合：统计每个用户操作类型次数；
+                    redisPoolUtil.zSetIncrementScore(userName, operationType, count);
+                }
             }
+            userOperationTypeMap.clear();
+//            log.info("# MingshiServerUtil.flushUserOperationType() #  将统计每个用户操作类型次数【{}条】发送到Redis中，耗时【{}】毫秒。", userOperationTypeMap.size(),DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushUserOperationType() # 将统计每个用户操作类型次数发送到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：userOperationType</B>
+     * <B>概要说明：统计每个用户操作类型次数</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:16:15
+     * @Param [dbType, userName, userOperationTypeMap]
+     * @return void
+     **/
+    private void userOperationType(String dbType, String userName, Map<String, Map<String, Double>> userOperationTypeMap) {
+        String key = Const.ZSET_USER_OPERATION_TYPE + userName;
+        Map<String, Double> operationTypeCountMap = userOperationTypeMap.get(key);
+        if(null == operationTypeCountMap){
+            operationTypeCountMap = new HashMap<>();
+            operationTypeCountMap.put(dbType, 1d);
+            userOperationTypeMap.put(key,operationTypeCountMap);
+        }else{
+            Double count = operationTypeCountMap.get(dbType);
+            operationTypeCountMap.put(dbType,null == count ? 1 : count + 1);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushTableOperationType</B>
+     * <B>概要说明：对每个表的操作类型次数发送到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:00:34
+     * @Param [userOperationTypeMap]
+     * @return void
+     **/
+    private void flushTableOperationType(Map<String, Map<String, Double>> userOperationTypeMap) {
+        try {
+            if(null == userOperationTypeMap || userOperationTypeMap.isEmpty()){
+                return;
+            }
+            Instant now = Instant.now();
+            Iterator<String> iterator = userOperationTypeMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String tableName = iterator.next();
+                Map<String, Double> operationTypeMap = userOperationTypeMap.get(tableName);
+                if(null == operationTypeMap || operationTypeMap.isEmpty()){
+                    continue;
+                }
+                Iterator<String> iterator1 = operationTypeMap.keySet().iterator();
+                while(iterator1.hasNext()){
+                    String operationType = iterator1.next();
+                    Double count = operationTypeMap.get(operationType);
+                    if(null == count || 0 >= count){
+                        continue;
+                    }
+                    // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
+                    redisPoolUtil.zSetIncrementScore(tableName, operationType, count);
+                }
+            }
+            userOperationTypeMap.clear();
+//            log.info("# MingshiServerUtil.flushTableOperationType() # 将对每个表的操作类型次数【{}条】发送到Redis中，耗时【{}】毫秒。", userOperationTypeMap.size(),DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushTableOperationType() # 将对每个表的操作类型次数发送到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：tableOperationType</B>
+     * <B>概要说明：本地暂存每个表的操作类型次数</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 17:02:22
+     * @Param [dbType, peer, dbInstance, tableName, userOperationTypeMap]
+     * @return void
+     **/
+    private void tableOperationType(String dbType, String peer, String dbInstance, String tableName,Map<String/* 表名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> tableOperationTypeMap ) {
+        try {
+            // 累加用户对数据库表资源的访问次数；
+            String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+            if (tableName.contains(Const.EN_COMMA)) {
+                String[] split = tableName.split(Const.EN_COMMA);
+                for (String tn : split) {
+                    // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+                    zsetVlue = doGetTableName(peer, dbInstance, tn);
+                    doTableOperationType(zsetVlue,dbType,tableOperationTypeMap);
+                }
+            } else {
+                doTableOperationType(zsetVlue,dbType,tableOperationTypeMap);
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.userOperationType() # 本地暂存每个表的操作类型次数，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doUserOperationType</B>
+     * <B>概要说明：统计对每个表的操作类型</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 16:57:53
+     * @Param [zsetVlue, dbType, userOperationTypeMap]
+     * @return void
+     **/
+    private void doTableOperationType(String zsetVlue, String dbType, Map<String, Map<String, Double>> tableOperationTypeMap) {
+        // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
+        String key = Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue;
+        Map<String, Double> operationTypeMap = tableOperationTypeMap.get(key);
+        if(null == operationTypeMap){
+            operationTypeMap = new HashMap<>();
+            operationTypeMap.put(dbType, 1d);
+            tableOperationTypeMap.put(key,operationTypeMap);
+        }else{
+            Double count = operationTypeMap.get(dbType);
+            operationTypeMap.put(dbType, null == count ? 1d : count + 1);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushTableByHowManyUserVisited</B>
+     * <B>概要说明：将表被用户访问的次数发送Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 15:24:17
+     * @Param [tableByHowManyUserVisitedMap]
+     * @return void
+     **/
+    private void flushTableByHowManyUserVisited(Map<String, Map<String, Double>> tableByHowManyUserVisitedMap) {
+        if(null ==tableByHowManyUserVisitedMap || tableByHowManyUserVisitedMap.isEmpty()){
+            return;
+        }
+        try {
+            Instant now = Instant.now();
+            Iterator<String> iterator = tableByHowManyUserVisitedMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String tableName = iterator.next();
+                Map<String, Double> userNameVisitedTimeMap = tableByHowManyUserVisitedMap.get(tableName);
+                if(null == userNameVisitedTimeMap || userNameVisitedTimeMap.isEmpty()){
+                    continue;
+                }
+                Iterator<String> iterator1 = userNameVisitedTimeMap.keySet().iterator();
+                while (iterator1.hasNext()){
+                    String userName = iterator1.next();
+                    Double count = userNameVisitedTimeMap.get(userName);
+                    if(null == count){
+                        continue;
+                    }
+                    redisPoolUtil.zSetIncrementScore(tableName, userName, count);
+                }
+            }
+            tableByHowManyUserVisitedMap.clear();
+//            log.info("# MingshiServerUtil.flushTableByHowManyUserVisited() # 将表被用户访问的次数【{}】发送到Redis中，耗时【{}】毫秒。",tableByHowManyUserVisitedMap.size(), DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushTableByHowManyUserVisited() # 将表被用户访问的次数发送Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：tableByHowManyUserVisited</B>
+     * <B>概要说明：统计表被用户访问的次数</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 15:12:29
+     * @Param [dbType, peer, dbInstance, tableName, userName, startTime, serviceCode, tableByHowManyUserVisitedMap]
+     * @return void
+     **/
+    private void tableByHowManyUserVisited(String peer, String dbInstance, String tableName, String userName, String serviceCode, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap) {
+        // 累加用户对数据库表资源的访问次数；
+        String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+        String serviceCodeName = AgentInformationSingleton.get(serviceCode);
+        if (StringUtil.isNotBlank(serviceCodeName)) {
+            serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
+        }
+
+        if (tableName.contains(Const.EN_COMMA)) {
+            String[] split = tableName.split(Const.EN_COMMA);
+            for (String tn : split) {
+                // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+                zsetVlue = doGetTableName(peer, dbInstance, tn);
+                // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+                doTableByHowManyUserVisited(zsetVlue,userName,serviceCode,tableByHowManyUserVisitedMap);
+            }
+        } else {
+            // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+            doTableByHowManyUserVisited(zsetVlue,userName,serviceCode,tableByHowManyUserVisitedMap);
+        }
+    }
+
+    private void doTableByHowManyUserVisited(String zsetVlue, String userName, String serviceCode, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap) {
+        String tableName = Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue;
+        String userName1 = serviceCode + Const.DOLLAR + userName;
+
+        Map<String, Double> userNameVisitedTimeMap = tableByHowManyUserVisitedMap.get(tableName);
+        if(null == userNameVisitedTimeMap){
+            userNameVisitedTimeMap = new HashMap<>();
+            userNameVisitedTimeMap.put(userName, 1d);
+            tableByHowManyUserVisitedMap.put(tableName,userNameVisitedTimeMap);
+        }else{
+            Double count = userNameVisitedTimeMap.get(userName1);
+            userNameVisitedTimeMap.put(userName1,null == count? 1 : count + 1);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushUserAccessBehaviorAllVisitedTables</B>
+     * <B>概要说明：将本地统计用户访问过的表的次数发送到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 15:09:11
+     * @Param [userAccessBehaviorAllVisitedTablesMap]
+     * @return void
+     **/
+    private void flushUserAccessBehaviorAllVisitedTables(Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap) {
+        try {
+            if(null == userAccessBehaviorAllVisitedTablesMap || userAccessBehaviorAllVisitedTablesMap.isEmpty()){
+                return;
+            }
+            Instant now = Instant.now();
+            Iterator<String> iterator = userAccessBehaviorAllVisitedTablesMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String userName = iterator.next();
+                Map<String, Double> tableCountMap = userAccessBehaviorAllVisitedTablesMap.get(userName);
+                if(null == tableCountMap || tableCountMap.isEmpty()){
+                    continue;
+                }
+                Iterator<String> iterator1 = tableCountMap.keySet().iterator();
+                while(iterator1.hasNext()){
+                    String tableName = iterator1.next();
+                    Double count = tableCountMap.get(tableName);
+                    redisPoolUtil.zSetIncrementScore(userName, tableName, null == count ? 1 : count);
+                }
+            }
+            userAccessBehaviorAllVisitedTablesMap.clear();
+//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTables() # 将本地统计用户访问过的表的次数【{}】发送到Redis中，耗时【{}】毫秒。",userAccessBehaviorAllVisitedTablesMap.size(), DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTables() # 将本地统计用户访问过的表的次数发送到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：userAccessBehaviorAllVisitedTables</B>
+     * <B>概要说明：统计用户访问过的表的次数</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 14:58:16
+     * @Param [peer, dbInstance, tableName, userName, userAccessBehaviorAllVisitedTablesMap]
+     * @return void
+     **/
+    private void userAccessBehaviorAllVisitedTables(String peer, String dbInstance, String tableName, String userName, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap) {
+        // 累加用户对数据库表资源的访问次数；
+        try {
+            String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+            if (tableName.contains(Const.EN_COMMA)) {
+                String[] split = tableName.split(Const.EN_COMMA);
+                for (String tn : split) {
+                    // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+                    zsetVlue = doGetTableName(peer, dbInstance, tn);
+                    // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
+                    String key = Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName;
+                    doUserAccessBehaviorAllVisitedTables(zsetVlue, key,userAccessBehaviorAllVisitedTablesMap);
+                }
+            } else {
+                // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
+                String key = Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName;
+                doUserAccessBehaviorAllVisitedTables(zsetVlue, key,userAccessBehaviorAllVisitedTablesMap);
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.userAccessBehaviorAllVisitedTables() # 在本地统计用户访问过的表的次数时，出现了异常。", e);
+        }
+    }
+
+    private void doUserAccessBehaviorAllVisitedTables(String zsetVlue, String key, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap) {
+        Map<String, Double> tableVisitedTimesMap = userAccessBehaviorAllVisitedTablesMap.get(key);
+        if(null == tableVisitedTimesMap){
+            tableVisitedTimesMap = new HashMap<>();
+            tableVisitedTimesMap.put(zsetVlue, 1d);
+            userAccessBehaviorAllVisitedTablesMap.put(key, tableVisitedTimesMap);
+        }else{
+            Double count = tableVisitedTimesMap.get(zsetVlue);
+            tableVisitedTimesMap.put(zsetVlue, null == count ? 1d : count + 1);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushTableLatestVisitiedTime</B>
+     * <B>概要说明：将表的最后访问时间更新到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 14:53:34
+     * @Param [tableLatestVisitedTimeMap]
+     * @return void
+     **/
+    private void flushTableLatestVisitiedTime(Map<String, String> tableLatestVisitedTimeMap) {
+        try {
+            if(null == tableLatestVisitedTimeMap || tableLatestVisitedTimeMap.isEmpty()){
+                return;
+            }
+            Instant now = Instant.now();
+            Iterator<String> iterator = tableLatestVisitedTimeMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String tableName = iterator.next();
+                String time = tableLatestVisitedTimeMap.get(tableName);
+                if(StringUtil.isBlank(time)){
+                    continue;
+                }
+                redisPoolUtil.set(tableName, time);
+            }
+            tableLatestVisitedTimeMap.clear();
+//            log.info("# MingshiServerUtil.flushTableLatestVisitiedTime() # 将表的最后访问时间更新到Redis中【{}条】，耗时【{}】毫秒。", tableLatestVisitedTimeMap.size(), DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushTableLatestVisitiedTime() # 将表的最后访问时间更新到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：tableLatestVisitedTime</B>
+     * <B>概要说明：更新表最后的访问时间</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 14:48:12
+     * @Param [peer, dbInstance, tableName, startTime, tableLatestVisitedTimeMap]
+     * @return void
+     **/
+    private void tableLatestVisitedTime(String peer, String dbInstance, String tableName, String startTime, Map<String, String> tableLatestVisitedTimeMap) {
+        String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+
+        if(null == tableLatestVisitedTimeMap){
+            tableLatestVisitedTimeMap = new HashMap<>();
+        }
+
+        if (tableName.contains(Const.EN_COMMA)) {
+            String[] split = tableName.split(Const.EN_COMMA);
+            for (String tn : split) {
+                // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+                zsetVlue = doGetTableName(peer, dbInstance, tn);
+                // 记录每一个数据库表最后的被访问的时间；
+                String key = Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue;
+                tableLatestVisitedTimeMap.put(key, startTime);
+            }
+        } else {
+            // 记录每一个数据库表最后的被访问的时间；
+            String key = Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue;
+            tableLatestVisitedTimeMap.put(key, startTime);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushTableEverydayVisitedTimes</B>
+     * <B>概要说明：将表每天的访问次数发送到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-14 14:39:52
+     * @Param [tableEverydayVisitedTimesMap]
+     * @return void
+     **/
+    private void flushTableEverydayVisitedTimes(Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
+        try {
+            if(null == tableEverydayVisitedTimesMap || tableEverydayVisitedTimesMap.isEmpty()){
+                return;
+            }
+            Instant now = Instant.now();
+            Iterator<String> iterator = tableEverydayVisitedTimesMap.keySet().iterator();
+            while(iterator.hasNext()){
+                String tableName = iterator.next();
+                Map<String, Long> timeTimesMap = tableEverydayVisitedTimesMap.get(tableName);
+                if(null != timeTimesMap && !timeTimesMap.isEmpty()){
+                    Iterator<String> iterator1 = timeTimesMap.keySet().iterator();
+                    while(iterator1.hasNext()){
+                        String time = iterator1.next();
+                        Long count = timeTimesMap.get(time);
+                        redisPoolUtil.hsetIncrBy(tableName, time, null == count ? 1L : count);
+                    }
+                    tableEverydayVisitedTimesMap.clear();
+                }
+            }
+//            log.info("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数【{}条】发送到Redis中耗时【{}毫秒】.", tableEverydayVisitedTimesMap.size(),DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数发送到Redis中，出现了异常.", e);
+        }
+    }
+
+    private void tableEverydayVisitedTimes(String tableName, String peer, String dbInstance, String startTime, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
+        // 累加用户对数据库表资源的访问次数；
+        String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+        Date date = DateTimeUtil.strToDate(startTime);
+        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
+
+        if (tableName.contains(Const.EN_COMMA)) {
+            String[] split = tableName.split(Const.EN_COMMA);
+            for (String tn : split) {
+                // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+                zsetVlue = doGetTableName(peer, dbInstance, tn);
+                String key = Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue;
+                doTableEverydayVisitedTimes(key, startTimeNew,tableEverydayVisitedTimesMap);
+            }
+        } else {
+            // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
+            String key = Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue;
+            doTableEverydayVisitedTimes(key, startTimeNew,tableEverydayVisitedTimesMap);
+        }
+    }
+
+    private void doTableEverydayVisitedTimes(String key, String startTime, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
+        // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
+        if(null == tableEverydayVisitedTimesMap){
+            tableEverydayVisitedTimesMap = new HashMap<>();
+        }
+        Map<String, Long> timeTimesMap = tableEverydayVisitedTimesMap.get(key);
+        if(null == timeTimesMap){
+            timeTimesMap = new HashMap<>();
+            timeTimesMap.put(startTime, 1L);
+            tableEverydayVisitedTimesMap.put(key, timeTimesMap);
+        }else{
+            Long count = timeTimesMap.get(startTime);
+            if(null == count){
+                timeTimesMap.put(startTime, 1L);
+            }else{
+                timeTimesMap.put(startTime, count + 1L);
+            }
+        }
+    }
+
+    /**
+     * <B>方法名称：userAccessBehaviorLatestVisitedTime</B>
+     * <B>概要说明：更新用户的最后访问时间</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-14 14:08:18
+     * @Param [userName, startTime, userAccessBehaviorLatestVisitedTimeMap]
+     **/
+    private void userAccessBehaviorLatestVisitedTime(String userName, String startTime, Map<String, String> userAccessBehaviorLatestVisitedTimeMap) {
+        if (null == userAccessBehaviorLatestVisitedTimeMap) {
+            userAccessBehaviorLatestVisitedTimeMap = new HashMap<>();
+        }
+        userAccessBehaviorLatestVisitedTimeMap.put(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName, startTime);
+    }
+
+    /**
+     * <B>方法名称：userAccessBehaviorAllVisitedTimes</B>
+     * <B>概要说明：对用户总的访问次数进行本地累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-14 14:03:34
+     * @Param [userName, userAccessBehaviorAllVisitedTimesMap]
+     **/
+    private void userAccessBehaviorAllVisitedTimes(String userName, Map<String, Integer> userAccessBehaviorAllVisitedTimesMap) {
+        if (null == userAccessBehaviorAllVisitedTimesMap) {
+            userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        }
+        // 用户访问次数 + 1；
+        String key = Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName;
+        Integer count = userAccessBehaviorAllVisitedTimesMap.get(key);
+        if (null != count) {
+            userAccessBehaviorAllVisitedTimesMap.put(key, count + 1);
+        } else {
+            userAccessBehaviorAllVisitedTimesMap.put(key, 1);
         }
     }
 
@@ -460,6 +1091,7 @@ public class MingshiServerUtil {
                 // 更新总的采集情况；
                 redisPoolUtil.incr(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS, value.longValue());
             }
+            map.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.updateEverydayStatisticToRedis() # 更新每天采集情况和总的采集情况到Redis时，出现了异常。 ", e);
         }
@@ -502,15 +1134,15 @@ public class MingshiServerUtil {
      **/
     public void flushUserNameToRedis(Set<String> userHashSet) {
         if (!userHashSet.isEmpty()) {
-            Integer count = userHashSet.size();
+//            Integer count = userHashSet.size();
             try {
-                Instant now = Instant.now();
+//                Instant now = Instant.now();
                 for (String userName : userHashSet) {
                     redisPoolUtil.sadd(Const.SET_DATA_STATISTICS_HOW_MANY_USERS, userName);
                     // 将用户名放到本地内存中；2022-07-19 10:12:13
                     InformationOverviewSingleton.put(userName);
                 }
-                log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+//                log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
                 userHashSet.clear();
             } catch (Exception e) {
                 log.error("# MingshiServerUtil.flushUserNameToRedis() # 实时将用户名发送到redis中，出现了异常。", e);
@@ -519,86 +1151,132 @@ public class MingshiServerUtil {
     }
 
     /**
-     * <B>方法名称：flushUserAccessBehaviorToRedis</B>
-     * <B>概要说明：实时将用户访问行为信息发送到redis中 </B>
+     * <B>方法名称：flushUserAccessBehaviorLatestVisitedTimeToRedis</B>
+     * <B>概要说明：将用户的最后访问时间更新到Redis中</B>
      *
      * @return void
      * @Author zm
-     * @Date 2022年07月20日 14:07:54
-     * @Param [userName, startTime, peer, dbInstance, tableName]
+     * @Date 2022-10-14 14:14:16
+     * @Param [userAccessBehaviorLatestVisitedTimeMap]
      **/
-    private void flushUserAccessBehaviorToRedis(String dbType, String userName, String startTime, String peer, String dbInstance, String tableName, String serviceCode) {
+    private void flushUserAccessBehaviorLatestVisitedTimeToRedis(Map<String, String> userAccessBehaviorLatestVisitedTimeMap) {
         try {
-            // 用户访问次数 + 1；
-            redisPoolUtil.incr(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + userName, 1);
-            if (StringUtil.isNotBlank(startTime)) {
-                // 更新用户对数据库最后的访问时间；
-                redisPoolUtil.set(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName, startTime);
+            Instant now = Instant.now();
+            // 更新用户对数据库最后的访问时间；
+            if (null != userAccessBehaviorLatestVisitedTimeMap && !userAccessBehaviorLatestVisitedTimeMap.isEmpty()) {
+                Iterator<String> iterator = userAccessBehaviorLatestVisitedTimeMap.keySet().iterator();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    String value = userAccessBehaviorLatestVisitedTimeMap.get(key);
+                    redisPoolUtil.set(key, value);
+                }
+                userAccessBehaviorLatestVisitedTimeMap.clear();
             }
-
-            doFlushUserAccessBehaviorToRedis(dbType, peer, dbInstance, tableName, userName, startTime, serviceCode);
-
+//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的最后访问时间【{}条】更新到Redis中耗时【{}毫秒】.", userAccessBehaviorLatestVisitedTimeMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
-            log.error("# MingshiServerUtil.doFlushUserAccessBehaviorToRedis() # 实时将用户访问行为信息发送到redis中，出现了异常。", e);
+            log.error("# MingshiServerUtil.flushUserAccessBehaviorLatestVisitedTimeToRedis() # 将用户的最后访问时间更新到Redis中，出现了异常。", e);
         }
     }
 
     /**
-     * <B>方法名称：doFlushUserAccessBehaviorToRedis</B>
-     * <B>概要说明：实时将用户访问行为信息发送到redis中</B>
+     * <B>方法名称：flushUserAccessBehaviorAllVisitedTimesToRedis</B>
+     * <B>概要说明：将用户的访问次数累加到Redis中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-14 14:14:40
+     * @Param [userAccessBehaviorLatestVisitedTimeMap, userAccessBehaviorAllVisitedTimesMap]
+     **/
+    private void flushUserAccessBehaviorAllVisitedTimesToRedis(Map<String, Integer> userAccessBehaviorAllVisitedTimesMap) {
+        try {
+            Instant now = Instant.now();
+            if (null != userAccessBehaviorAllVisitedTimesMap && !userAccessBehaviorAllVisitedTimesMap.isEmpty()) {
+                Iterator<String> iterator = userAccessBehaviorAllVisitedTimesMap.keySet().iterator();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    Integer value = userAccessBehaviorAllVisitedTimesMap.get(key);
+                    redisPoolUtil.incr(key, null == value ? 1 : value);
+                }
+                userAccessBehaviorAllVisitedTimesMap.clear();
+            }
+//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的访问次数【{}条】累加到Redis中耗时【{}毫秒】.", userAccessBehaviorAllVisitedTimesMap.size(), DateTimeUtil.getTimeMillis(now));
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的访问次数累加到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：setTableEnableStatus</B>
+     * <B>概要说明：设置表的启用状态</B>
      *
      * @return void
      * @Author zm
      * @Date 2022年07月20日 17:07:45
      * @Param [peer, dbInstance, tableName, userName, startTime]
      **/
-    private void doFlushUserAccessBehaviorToRedis(String dbType, String peer, String dbInstance, String tableName, String userName, String startTime, String serviceCode) {
+    private void setTableEnableStatus(String dbType, String peer, String dbInstance, String tableName, String userName) {
         // 累加用户对数据库表资源的访问次数；
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
-        String serviceCodeName = AgentInformationSingleton.get(serviceCode);
-        if (StringUtil.isNotBlank(serviceCodeName)) {
-            serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
-        }
-
-        Date date = DateTimeUtil.strToDate(startTime);
-        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
         if (tableName.contains(Const.EN_COMMA)) {
             String[] split = tableName.split(Const.EN_COMMA);
             for (String tn : split) {
                 // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
                 zsetVlue = doGetTableName(peer, dbInstance, tn);
-                // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
-                redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
-                // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-                redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
-                // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
-
-                // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
-                // 记录每一个数据库表最后的被访问的时间；
-                redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
                 LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
             }
         } else {
-            // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
-            redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
-            // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-            redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
-            // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
-
-            // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
-            // 记录每一个数据库表最后的被访问的时间；
-            redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
             LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
         }
-        // 有序集合：统计每个用户操作类型次数；
-        redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
-
     }
+
+//    private void doFlushUserAccessBehaviorToRedis(String dbType, String peer, String dbInstance, String tableName, String userName, String startTime, String serviceCode) {
+//        // 累加用户对数据库表资源的访问次数；
+//        String zsetVlue = doGetTableName(peer, dbInstance, tableName);
+//        String serviceCodeName = AgentInformationSingleton.get(serviceCode);
+//        if (StringUtil.isNotBlank(serviceCodeName)) {
+//            serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
+//        }
+//
+//        Date date = DateTimeUtil.strToDate(startTime);
+//        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
+//
+//        if (tableName.contains(Const.EN_COMMA)) {
+//            String[] split = tableName.split(Const.EN_COMMA);
+//            for (String tn : split) {
+//                // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
+//                zsetVlue = doGetTableName(peer, dbInstance, tn);
+//                // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
+//                redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
+//                // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
+//                redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+//                // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+//                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
+//
+//                // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
+//                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
+//                // 记录每一个数据库表最后的被访问的时间；
+//                redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
+//                LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
+//            }
+//        } else {
+//            // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
+//            redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
+//            // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
+//            redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
+//            // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
+//            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
+//
+//            // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
+//            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
+//            // 记录每一个数据库表最后的被访问的时间；
+//            redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
+//            LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
+//        }
+//        // 有序集合：统计每个用户操作类型次数；
+//        redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
+//
+//    }
 
     /**
      * <B>方法名称：flushAbnormalToDB</B>
@@ -614,7 +1292,7 @@ public class MingshiServerUtil {
             try {
                 Instant now = Instant.now();
                 msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
-                log.info("#MingshiServerUtil.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+//                log.info("#MingshiServerUtil.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
                 msAlarmInformationDoLinkedListist.clear();
             } catch (Exception e) {
                 log.error("# MingshiServerUtil.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
@@ -655,7 +1333,7 @@ public class MingshiServerUtil {
                 msAgentInformationMapper.insertBatch(list);
                 // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
                 AgentInformationSingleton.setAtomicBooleanToFalse();
-                log.info("#MingshiServerUtil.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
+//                log.info("#MingshiServerUtil.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
             }
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
@@ -690,7 +1368,7 @@ public class MingshiServerUtil {
 
             Instant now = Instant.now();
             redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, skywalkingAgentTimeMap);
-            log.info("#MingshiServerUtil.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", skywalkingAgentTimeMap.size(), DateTimeUtil.getTimeMillis(now));
+//            log.info("#MingshiServerUtil.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", skywalkingAgentTimeMap.size(), DateTimeUtil.getTimeMillis(now));
             skywalkingAgentTimeMap.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
@@ -717,14 +1395,31 @@ public class MingshiServerUtil {
         } catch (Exception e) {
             log.error("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中出现了异常。", segmentDetailDoList.size(), e);
         }
-        // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
-        flushSegmentDetailCountToRedis(segmentDetailDoList);
 
         log.info("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
         if (Boolean.TRUE.equals(isClear)) {
             segmentDetailDoList.clear();
         }
     }
+//    public void flushSegmentDetailToDb(List<MsSegmentDetailDo> segmentDetailDoList, Boolean isClear) {
+//        if (segmentDetailDoList.isEmpty()) {
+//            return;
+//        }
+//
+//        Instant now = Instant.now();
+//        try {
+//            msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
+//        } catch (Exception e) {
+//            log.error("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中出现了异常。", segmentDetailDoList.size(), e);
+//        }
+//        // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
+//        flushSegmentDetailCountToRedis(segmentDetailDoList);
+//
+////        log.info("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
+//        if (Boolean.TRUE.equals(isClear)) {
+//            segmentDetailDoList.clear();
+//        }
+//    }
 
     /**
      * <B>方法名称：flushSegmentDetailUserNameIsNullToDB</B>
@@ -739,7 +1434,7 @@ public class MingshiServerUtil {
         if (!segmentDetaiUserNameIsNullDolList.isEmpty()) {
             Instant now = Instant.now();
             msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
-            log.info("# MingshiServerUtil.flushSegmentDetailUserNameIsNullToDb() # 将没有用户名的链路信息【{}条】插入到表中用时【{}】毫秒。 ", segmentDetaiUserNameIsNullDolList.size(), DateTimeUtil.getTimeMillis(now));
+//            log.info("# MingshiServerUtil.flushSegmentDetailUserNameIsNullToDb() # 将没有用户名的链路信息【{}条】插入到表中用时【{}】毫秒。 ", segmentDetaiUserNameIsNullDolList.size(), DateTimeUtil.getTimeMillis(now));
             segmentDetaiUserNameIsNullDolList.clear();
         }
     }
