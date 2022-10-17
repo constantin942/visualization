@@ -3,12 +3,9 @@ package com.mingshi.skyflying.anomaly_detection.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.N;
-import org.redisson.spring.cache.CacheConfig;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -88,8 +85,10 @@ public class MsCaffeineCache implements ApplicationRunner {
      **/
     private void initUserPortraitLocalCache() {
         // 当项目启动时，加载用户画像信息；
-        anomalyDetectionBusiness.getPortraitFromRedis();
-        userPortraitInitDone = true;
+        Boolean portraitFromRedis = anomalyDetectionBusiness.getPortraitFromRedis();
+        if(Boolean.TRUE.equals(portraitFromRedis)){
+            userPortraitInitDone = true;
+        }
     }
 
     private static void createAllCaffeine() {

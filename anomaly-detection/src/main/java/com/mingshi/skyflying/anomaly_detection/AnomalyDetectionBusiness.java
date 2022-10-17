@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.anomaly_detection;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
@@ -543,14 +542,26 @@ public class AnomalyDetectionBusiness {
     /**
      * 从Redis中获取画像信息
      */
-    public void getPortraitFromRedis() {
-        // 库表画像
-        Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
-        Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
-        MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
-        // 时间画像
-        map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
-        strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
-        MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
+    public Boolean getPortraitFromRedis() {
+        try {
+            // 库表画像
+            Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
+            if(null == map){
+                return false;
+            }
+            Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+            MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
+            // 时间画像
+            map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
+            if(null == map){
+                return false;
+            }
+            strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+            MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
+        } catch (Exception e) {
+            log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，出现了异常。", e);
+            return false;
+        }
+        return true;
     }
 }
