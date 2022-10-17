@@ -16,15 +16,16 @@ import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
+import com.mingshi.skyflying.common.enums.RecordEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.DingUtils;
-import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
+import com.mingshi.skyflying.common.kafka.producer.records.ConsumerRecords;
+import com.mingshi.skyflying.common.utils.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AnomalyDetectionBusiness {
-
+    @Value("${spring.kafka.producer.anomaly-detection-consume-failed-topic}")
+    private String anomalyDetectionConsumeFailedTopic;
 
     @Resource
     UserPortraitByTimeTask userPortraitByTimeTask;
@@ -80,6 +82,9 @@ public class AnomalyDetectionBusiness {
     @Resource
     DingAlarmConfigMapper dingAlarmConfigMapper;
 
+    @Resource
+    AiitKafkaProducer aiitKafkaProducer;
+
     @Lazy
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
@@ -92,7 +97,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-库表维度
      */
     public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList
-            , PortraitConfig portraitConfig, boolean isDemoMode) {
+        , PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
@@ -118,10 +123,10 @@ public class AnomalyDetectionBusiness {
     private boolean isDemoMode() {
         //这里其实不是缓存在Redis中, 但由于只有一个数据, 比较特殊, 也先放在这个cache里
         Cache<String, String> redisLocalCache = MsCaffeineCache.getRedisLocalCache();
-        if(redisLocalCache != null) {
+        if (redisLocalCache != null) {
             //从本地缓存中获取
             String s = redisLocalCache.getIfPresent(AnomalyConst.DEMO_MODE);
-            if(s != null) {
+            if (s != null) {
                 return "1".equals(s);
             }
         }
@@ -130,7 +135,7 @@ public class AnomalyDetectionBusiness {
         if (mode == null) {
             return false;
         }
-        if(redisLocalCache != null) {
+        if (redisLocalCache != null) {
             //加入本地缓存
             redisLocalCache.put(AnomalyConst.DEMO_MODE, mode);
         }
@@ -189,7 +194,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-时间维度
      */
     public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList
-            , PortraitConfig portraitConfig, boolean isDemoMode) {
+        , PortraitConfig portraitConfig, boolean isDemoMode) {
         if (segmentDetailDo.getUserName() == null) return;
         if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
@@ -203,7 +208,7 @@ public class AnomalyDetectionBusiness {
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                    , time, segmentDetailDo.getGlobalTraceId());
+                , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -319,16 +324,20 @@ public class AnomalyDetectionBusiness {
      */
     @Async
     public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
-            return;
-        }
         try {
+            if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
+                return;
+            }
+
+            // 如果用户画像没有初始化完毕，那么将其发送到Kafka中；2022-10-17 10:30:28
+            userPortraitInitDone(segmentDetaiDolList);
+
             Boolean enableTimeRule = getEnableRule(AnomalyConst.TIME_SUF);
             Boolean enableTableRule = getEnableRule(AnomalyConst.TABLE_SUF);
             PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
             boolean isDemoMode = isDemoMode();
             if (Boolean.TRUE.equals(enableTableRule)) {
-                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig,isDemoMode);
+                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
             if (Boolean.TRUE.equals(enableTimeRule)) {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
@@ -337,6 +346,27 @@ public class AnomalyDetectionBusiness {
             anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：userPortraitInitDone</B>
+     * <B>概要说明：当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-17 10:32:58
+     * @Param []
+     **/
+    private void userPortraitInitDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
+        // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
+        if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
+            try {
+                ConsumerRecords consumerRecords = new ConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), segmentDetaiDolList);
+                aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(consumerRecords));
+            } catch (Exception e) {
+                log.error("# AnomalyDetectionBusiness.waitUserPortraitInitDone() # 开始执行异常检测，由于用户画像还没有初始化完毕，在这里将待异常检测的信息发送到Kakfa的topic = 【{}】时，出现了异常。", anomalyDetectionConsumeFailedTopic, e);
+            }
         }
     }
 
