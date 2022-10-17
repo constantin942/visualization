@@ -17,7 +17,7 @@ import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.enums.RecordEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
-import com.mingshi.skyflying.common.kafka.producer.records.ConsumerRecords;
+import com.mingshi.skyflying.common.kafka.producer.records.MsConsumerRecords;
 import com.mingshi.skyflying.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -98,7 +98,9 @@ public class AnomalyDetectionBusiness {
             if (!isDemoMode && inPeriod(username, portraitConfig.getRuleTablePeriod())) {
                 continue;
             }
-            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) return;
+            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) {
+                return;
+            }
             List<MsSegmentDetailDo> list = new ArrayList<>();
             list.add(segmentDetailDo);
             //一条信息包含多张表名, 拆分一下
@@ -298,7 +300,9 @@ public class AnomalyDetectionBusiness {
      */
     public void insertCoarse(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
         MsSegmentDetailDo segmentDetail = segmentDetailMapper.selectByGlobalTraceId(anomalyDetectionInfoBo.getGlobalTraceId());
-        if (segmentDetail == null) return;
+        if (segmentDetail == null) {
+            return;
+        }
         if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TIME_ALARM.getCode())) {
             userPortraitByTimeTask.insertTimeCoarse(segmentDetail);
         }
@@ -321,8 +325,31 @@ public class AnomalyDetectionBusiness {
             }
 
             // 如果用户画像没有初始化完毕，那么将其发送到Kafka中；2022-10-17 10:30:28
-            userPortraitInitDone(segmentDetaiDolList);
+            Boolean aBoolean = userPortraitInitDone(segmentDetaiDolList);
+            if(Boolean.FALSE.equals(aBoolean)){
+                return;
+            }
+            // 进行异常检测
+            doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        } catch (Exception e) {
+            log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
+        }
+    }
 
+    /**
+     * <B>方法名称：doUserVisitedIsAbnormal</B>
+     * <B>概要说明：进行异常检测</B>
+     *
+     * @Author zm
+     * @Date 2022-10-17 15:27:40
+     * @Param [segmentDetaiDolList, msAlarmInformationDoList]
+     * @return void
+     **/
+    public void doUserVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        try {
+            if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
+                return;
+            }
             Boolean enableTimeRule = getEnableRule(AnomalyConst.TIME_SUF);
             Boolean enableTableRule = getEnableRule(AnomalyConst.TABLE_SUF);
             PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
@@ -336,7 +363,7 @@ public class AnomalyDetectionBusiness {
             highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
-            log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
+            log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
     }
 
@@ -349,16 +376,18 @@ public class AnomalyDetectionBusiness {
      * @Date 2022-10-17 10:32:58
      * @Param []
      **/
-    private void userPortraitInitDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
+    private Boolean userPortraitInitDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
         // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
         if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
             try {
-                ConsumerRecords consumerRecords = new ConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), segmentDetaiDolList);
-                aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(consumerRecords));
+                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode(), segmentDetaiDolList);
+                aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(msConsumerRecords));
+                return false;
             } catch (Exception e) {
                 log.error("# AnomalyDetectionBusiness.waitUserPortraitInitDone() # 开始执行异常检测，由于用户画像还没有初始化完毕，在这里将待异常检测的信息发送到Kakfa的topic = 【{}】时，出现了异常。", anomalyDetectionConsumeFailedTopic, e);
             }
         }
+        return true;
     }
 
     /**
