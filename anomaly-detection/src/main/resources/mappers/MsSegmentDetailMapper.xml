@@ -42,7 +42,7 @@
         id
         ,user_name, db_instance, ms_table_name, start_time
     </sql>
-    <select id="getInfoForCoarseDetail"  resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+    <select id="getInfoForCoarseDetail" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
         from ms_segment_detail
         where 1
@@ -56,10 +56,23 @@
             != 0
             );
     </select>
-    <select id="selectByGlobalTraceId" parameterType="string" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
-        select * from ms_segment_detail where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
+    <select id="selectByGlobalTraceId" parameterType="string"
+            resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+        select *
+        from ms_segment_detail
+        where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
     </select>
     <select id="selectTimeGap" parameterType="string" resultType="date">
-        select start_time from  ms_segment_detail where user_name = #{username,jdbcType=VARCHAR} order by start_time asc limit 1 ;
+        select start_time
+        from ms_segment_detail
+        where user_name = #{username,jdbcType=VARCHAR}
+        order by start_time asc limit 1;
     </select>
+    <select id="selectFirstVisitTime" resultType="java.util.Map">
+        select distinct user_name, min(start_time) as time
+        from ms_segment_detail
+        group by user_name
+        order by time;
+    </select>
+
 </mapper>

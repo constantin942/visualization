@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.anomaly_detection.caffeine.ConfigCache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
@@ -11,6 +12,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +49,9 @@ public class UserPortraitTask {
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 
+    @Resource
+    MsSegmentDetailMapper segmentDetailMapper;
+
 
     /**
      * <B>方法名称：fetchUserPortrait</B>
@@ -71,15 +76,35 @@ public class UserPortraitTask {
 
     @Scheduled(cron = "0 0 2 * * ?")
     @Async
-    public void fetchPortraitConfig() {
+    public void fetchPortraitConfigAndFirstTime() {
         try {
-            // 定时拉取画像配置信息；
+            // 定时拉取画像配置信息以及用户首次访问时间；
             ConfigCache configCache = MsCaffeineCache.getConfigCache();
             configCache.setPortraitConfig(anomalyDetectionBusiness.getConfig());
             configCache.setEnableTimeRule(anomalyDetectionBusiness.getEnableRule(AnomalyConst.TIME_SUF));
             configCache.setEnableTableRule(anomalyDetectionBusiness.getEnableRule(AnomalyConst.TABLE_SUF));
+            initFirstVisitTime(MsCaffeineCache.getUserFirstVisitLocalCache());
         } catch (Exception e) {
-            log.error("定时拉取用户画像失败");
+            log.error("定时拉取画像配置信息以及用户首次访问时间失败");
         }
     }
+
+
+    /**
+     * 将每个用户的首次访问时间存入cache
+     * @param userFirstVisitLocalCache
+     */
+    public void initFirstVisitTime(Cache<String, Date> userFirstVisitLocalCache) {
+        List<Map<String, String>> maps = segmentDetailMapper.selectFirstVisitTime();
+        for (Map<String, String> map : maps) {
+            try {
+                userFirstVisitLocalCache.put(map.get(AnomalyConst.USER_NAME)
+                        , new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT).parse(String.valueOf(map.get(AnomalyConst.TIME_SUF))));
+            } catch (ParseException e) {
+                log.error("时间格式转换失败");
+            }
+        }
+    }
+
+
 }

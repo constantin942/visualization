@@ -26,6 +26,8 @@ public class AnomalyConst {
 
     public static final String TABLE_NAME = "table_name";
 
+    public static final String USER_NAME = "user_name";
+
     public static final String COUNTS = "counts";
 
     public static final String NO_USER = "未知用户";
@@ -40,9 +42,12 @@ public class AnomalyConst {
 
     public static final Integer USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE = 10000;
 
+    public static final Integer USER_FIRST_VISIT_LOCAL_CACHE_SIZE = 3000;
+
     public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 5;
 
     public static final Integer USER_PORTRAIT_LOCAL_CACHE_EXPIRE = 12;
+
 
     public static final String REDIS_TIME_PORTRAIT_PREFIX = "anomaly_detection:portraitByTime:";
 

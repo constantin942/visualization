@@ -3,14 +3,25 @@ package com.mingshi.skyflying.anomaly_detection.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
+import com.mingshi.skyflying.anomaly_detection.task.UserPortraitTask;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
+import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -27,8 +38,17 @@ public class MsCaffeineCache implements ApplicationRunner {
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 
-    private static Cache<String, String> redisLocalCache = null;
+    @Resource
+    PortraitConfigMapper portraitConfigMapper;
 
+    @Resource
+    UserPortraitRulesMapper userPortraitRulesMapper;
+
+    @Resource
+    MsSegmentDetailMapper segmentDetailMapper;
+
+    @Resource
+    UserPortraitTask userPortraitTask;
     /**
      * 基于库表用户画像本地缓存
      */
@@ -38,8 +58,12 @@ public class MsCaffeineCache implements ApplicationRunner {
      * 基于时间用户画像本地缓存
      */
     private static Cache<String, String> userPortraitByTimeLocalCache = null;
+    /**
+     * 用户首次访问时间本地缓存
+     */
+    private static Cache<String, Date> userFirstVisitLocalCache = null;
 
-    private static ConfigCache configCache = null;
+    private static ConfigCache configCache = new ConfigCache();
     /**
      * 用户画像相关信息初始化完毕标识；
      */
@@ -62,7 +86,15 @@ public class MsCaffeineCache implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         createAllCaffeine();
         initConfigCache();
+        initFirstVisitTime();
         initUserPortraitLocalCache();
+    }
+
+    /**
+     * 缓存用户首次访问时间
+     */
+    private void initFirstVisitTime() {
+        userPortraitTask.initFirstVisitTime(userFirstVisitLocalCache);
     }
 
     /**
@@ -86,7 +118,7 @@ public class MsCaffeineCache implements ApplicationRunner {
     private void initUserPortraitLocalCache() {
         // 当项目启动时，加载用户画像信息；
         Boolean portraitFromRedis = anomalyDetectionBusiness.getPortraitFromRedis();
-        if(Boolean.TRUE.equals(portraitFromRedis)){
+        if (Boolean.TRUE.equals(portraitFromRedis)) {
             userPortraitInitDone = true;
         }
     }
@@ -96,6 +128,20 @@ public class MsCaffeineCache implements ApplicationRunner {
         createPortraitByTableLocalCache();
         // 创建基于时间用户画像本地缓存
         createPortraitByTimeLocalCache();
+        // 创建用户首次访问时间本地缓存
+        createFirstVisitTimeLocalCache();
+    }
+
+    private static void createFirstVisitTimeLocalCache() {
+        try {
+            log.info("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，开始初始化userFirstVisitLocalCache实例。");
+            userFirstVisitLocalCache = Caffeine.newBuilder()
+                    .maximumSize(AnomalyConst.USER_FIRST_VISIT_LOCAL_CACHE_SIZE)
+                    .build();
+            log.info("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，初始化userFirstVisitLocalCache实例完毕。");
+        } catch (Exception e) {
+            log.error("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，初始化userFirstVisitLocalCache实例时，出现了异常.", e);
+        }
     }
 
 
@@ -171,6 +217,7 @@ public class MsCaffeineCache implements ApplicationRunner {
     public static Cache<String, String> getUserPortraitByTimeLocalCache() {
         return userPortraitByTimeLocalCache;
     }
+
     public static ConfigCache getConfigCache() {
         return configCache;
     }
@@ -178,11 +225,20 @@ public class MsCaffeineCache implements ApplicationRunner {
     public static Boolean getEnableTimeRule() {
         return configCache.enableTimeRule;
     }
+
     public static Boolean getEnableTableRule() {
         return configCache.enableTableRule;
     }
-    public static  PortraitConfig getPortraitConfig() {
+
+    public static PortraitConfig getPortraitConfig() {
         return configCache.portraitConfig;
     }
 
+    public static Date getFromFirstVisitTime(String username) {
+        return userFirstVisitLocalCache.getIfPresent(username);
+    }
+
+    public static Cache<String, Date> getUserFirstVisitLocalCache() {
+        return userFirstVisitLocalCache;
+    }
 }

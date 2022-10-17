@@ -4,6 +4,7 @@ import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface MsSegmentDetailMapper {
 
@@ -12,4 +13,6 @@ public interface MsSegmentDetailMapper {
     MsSegmentDetailDo selectByGlobalTraceId(String traceId);
 
     Date selectTimeGap(String username);
+
+    List<Map<String, String>> selectFirstVisitTime();
 }

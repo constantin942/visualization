@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -125,7 +126,7 @@ public class AnomalyDetectionBusiness {
      * 判断用户是否在周期内
      */
     public boolean inPeriod(String username, int period) {
-        Date date = segmentDetailMapper.selectTimeGap(username);
+        Date date = MsCaffeineCache.getFromFirstVisitTime(username);
         if (date == null) {
             return true;
         }
@@ -341,15 +342,17 @@ public class AnomalyDetectionBusiness {
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
             boolean isDemoMode = false;
             // TODO: 交付时删掉下面这一行
-            isDemoMode = isDemoMode();
+//            isDemoMode = isDemoMode();
+            Instant now;
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
             if (Boolean.TRUE.equals(enableTimeRule)) {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
+
             }
-            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
+//            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+//            anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
