@@ -3,7 +3,7 @@ package com.mingshi.web.controller;
 import com.mingshi.skyflying.common.utils.DbUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.impl.SegmentConsumeServiceImpl;
-import com.mingshi.skyflying.kafka.producer.AiitKafkaProducer;
+import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

@@ -2,6 +2,7 @@ package com.mingshi.skyflying.common.kafka.producer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.kafka.producer.records.ConsumerRecords;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.PartitionInfo;

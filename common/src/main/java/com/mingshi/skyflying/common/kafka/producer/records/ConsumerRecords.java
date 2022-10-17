@@ -1,8 +1,23 @@
-package com.mingshi.skyflying.common.kafka.producer.records;/**
+package com.mingshi.skyflying.common.kafka.producer.records;
+
+import lombok.Data;
+
+/**
  * <B>类名称：ConsumerRecords</B>
  * <B>概要说明：</B>
  *
  * @Author zm
  * @Date 2022/10/17 10:59
- **/public class ConsumerRecords {
+ **/
+@Data
+public class ConsumerRecords<T> {
+    // 消息类型
+    private Integer recordType;
+    // 消息体
+    private T body;
+
+    public ConsumerRecords(Integer recordType,T body){
+        this.recordType = recordType;
+        this.body = body;
+    }
 }
