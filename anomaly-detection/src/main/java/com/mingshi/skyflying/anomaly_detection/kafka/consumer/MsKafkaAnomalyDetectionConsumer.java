@@ -123,7 +123,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                     } catch (Exception e) {
                         // ignore
                     }
-                }else{
+                } else {
                     // 用户画像已初始化完毕，消费消息；2022-10-17 15:25:14
                     consumeRecords();
                 }
@@ -136,25 +136,6 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
             } finally {
                 aiitKafkaConsumer.close();
             }
-        }
-    }
-
-    /**
-     * <B>方法名称：doUserVisitedIsAbnormal</B>
-     * <B>概要说明：进行异常检测</B>
-     *
-     * @Author zm
-     * @Date 2022-10-17 15:30:02
-     * @Param [segmentDetaiDolList, msAlarmInformationDoList]
-     * @return void
-     **/
-    private void doUserVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
-        Instant now = Instant.now();
-        try {
-            anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            log.info("# MsKafkaAnomalyDetectionConsumer.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
-        } catch (Exception e) {
-            log.error("# MsKafkaAnomalyDetectionConsumer.doConsume() # 执行异常检测时，出现了异常。", e);
         }
     }
 
@@ -172,28 +153,11 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
             ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(200));
             Integer count = records.count();
             for (ConsumerRecord<String, Bytes> consumerRecord : records) {
-                Instant now = Instant.now();
                 byte[] bytes = consumerRecord.value().get();
                 String recordStr = new String(bytes);
                 MsConsumerRecords msConsumerRecords = JsonUtil.string2Obj(recordStr, MsConsumerRecords.class);
                 if (msConsumerRecords.getRecordType().equals(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode())) {
-                    // 进行异常检测；2022-10-17 13:59:46
-                    List<MsSegmentDetailDo> segmentDetaiDolList = (List<MsSegmentDetailDo>) msConsumerRecords.getBody();
-                    // 判断是否是异常信息；2022-10-17 14:24:15
-                    LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
-                    // 进行异常检测
-                    anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                    log.info("# MsKafkaAnomalyDetectionConsumer.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
-
-                    if (enableReactorModelFlag) {
-                        // 使用reactor模型；2022-05-30 21:04:05
-                        mingshiServerUtil.doEnableReactorModel(null, null, null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
-                    } else {
-                        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
-                        mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
-                    }
-
-                    log.info("# MsKafkaAnomalyDetectionConsumer.consumeRecords() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                    msSegmentDetailDoConsumeFailed(msConsumerRecords);
                 } else if (msConsumerRecords.getRecordType().equals(RecordEnum.Anomaly_ALARM.getCode())) {
                     // 进行钉钉邮件告警；2022-10-17 14:00:00
                     log.info("");
@@ -206,6 +170,36 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
         } catch (Exception e) {
             log.error(" # MsKafkaAnomalyDetectionConsumer.consumeRecords() # 消费消息时，出现了异常。", e);
         }
+    }
+
+    /**
+     * <B>方法名称：msSegmentDetailDoConsumeFailed</B>
+     * <B>概要说明：进行异常检测</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-17 15:58:00
+     * @Param [msConsumerRecords]
+     **/
+    private void msSegmentDetailDoConsumeFailed(MsConsumerRecords msConsumerRecords) {
+        Instant now = Instant.now();
+        // 进行异常检测；2022-10-17 13:59:46
+        List<MsSegmentDetailDo> segmentDetaiDolList = (List<MsSegmentDetailDo>) msConsumerRecords.getBody();
+        // 判断是否是异常信息；2022-10-17 14:24:15
+        LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
+        // 进行异常检测
+        anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        log.info("# MsKafkaAnomalyDetectionConsumer.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+
+        if (enableReactorModelFlag) {
+            // 使用reactor模型；2022-05-30 21:04:05
+            mingshiServerUtil.doEnableReactorModel(null, null, null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
+        } else {
+            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
+            mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
+        }
+
+        log.info("# MsKafkaAnomalyDetectionConsumer.consumeRecords() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
     }
 
     /**
