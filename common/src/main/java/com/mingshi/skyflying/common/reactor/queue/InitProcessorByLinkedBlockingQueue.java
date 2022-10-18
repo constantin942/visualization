@@ -146,7 +146,7 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
         if (Const.NUMBER_ONE.equals(processorThreadList.size())) {
             return processorThreadList.get(Const.NUMBER_ZERO);
         }
-        int index = ReactorUtil.indexFor(indexAtomicInteger.incrementAndGet(), processorSize);
+        int index = ReactorUtil.indexForByProcessor(indexAtomicInteger.incrementAndGet(), processorSize);
         return processorThreadList.get(index);
     }
 

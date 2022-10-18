@@ -5,6 +5,7 @@ import com.mingshi.skyflying.common.reactor.thread.IoThread;
 import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.ReactorUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,13 +60,14 @@ public class IoThreadLinkedBlockingQueue {
      * @Param []
      **/
     public static Integer getIoThreadGraceShutdown() {
-        if(null != ioThreadGraceShutdown){
+        if (null != ioThreadGraceShutdown) {
             return ioThreadGraceShutdown.get();
-        }else{
+        } else {
             log.error("#  InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown()  # processor线程 = 【{}】要退出了，但 processorGraceShutdown 实例为null。");
             return -1;
         }
     }
+
     /**
      * 获取队列的容量；2021-11-17 14:35:19
      *
@@ -132,12 +134,13 @@ public class IoThreadLinkedBlockingQueue {
      * @Param [gracefulShutdown, localStatisticsThreadCount, flushToRocketMqInterval, mingshiServerUtil]
      **/
     public static IoThread getLinkedBlockingQueue(Integer reactorIoThreadCount, MingshiServerUtil mingshiServerUtil) {
+        Integer index = null;
         try {
             initLinkedBlockingQueueList(reactorIoThreadCount, mingshiServerUtil);
-            Integer index = indexFor(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
+            index =  ReactorUtil.indexForByIoThread(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
             return linkedBlockingQueueList.get(index);
         } catch (Exception e) {
-            log.error("# IoThreadLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。", e);
+            log.error("# IoThreadLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。计算出来的下标索引 = 【{}】，当前队列的大小 = 【{}】", index, linkedBlockingQueueList.size(), e);
         }
         return null;
     }
@@ -154,20 +157,20 @@ public class IoThreadLinkedBlockingQueue {
      * @Date 2022年06月01日 09:06:57
      * @Param [h, length]
      **/
-    private static int indexFor(int h, int length) {
-        if (null == TWO_POWER_FLAG) {
-            //
-            if (true == ReactorUtil.isTwoPower(length)) {
-                TWO_POWER_FLAG = true;
-            } else {
-                TWO_POWER_FLAG = false;
-            }
-        }
-        if (!TWO_POWER_FLAG.equals(null) && true == TWO_POWER_FLAG) {
-            // 使用按位与获取下标；2022-09-13 14:20:28
-            return h & (length - 1);
-        }
-        // 当length不是2的幂次方的时候，使用取模获取下标。2022-09-13 14:21:07
-        return h % length;
-    }
+//    private static int indexFor(int h, int length) {
+//        if (null == TWO_POWER_FLAG) {
+//            //
+//            if (true == ReactorUtil.isTwoPower(length)) {
+//                TWO_POWER_FLAG = true;
+//            } else {
+//                TWO_POWER_FLAG = false;
+//            }
+//        }
+//        if (!TWO_POWER_FLAG.equals(null) && true == TWO_POWER_FLAG) {
+//            // 使用按位与获取下标；2022-09-13 14:20:28
+//            return h & (length - 1);
+//        }
+//        // 当length不是2的幂次方的时候，使用取模获取下标。2022-09-13 14:21:07
+//        return h % length;
+//    }
 }

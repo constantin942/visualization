@@ -1518,7 +1518,7 @@ public class MingshiServerUtil {
     public void statisticsProcessorAndIoThreadQueueSize() {
         if (true == reactorProcessorEnable) {
             String name = Thread.currentThread().getName();
-            String key = DateTimeUtil.dateToStrYyyyMmDdHhMmSs(new Date()) + "-" + name;
+            String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
             List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
             if (!processorThreadList.isEmpty()) {
                 for (int i = 0; i < processorThreadList.size(); i++) {

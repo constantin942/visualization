@@ -140,14 +140,11 @@ public class Const {
     public static final String SPRING_SCHEDULED = "SpringScheduled";
     public static final String POST_DEVICES_HEARTEAT = "POST:/devices/heartbeat";
     public static final Integer QUEUE_SIZE = 1000;
-    public static final Integer RECORD_COUNT = 10 * 10000;
     public static final Long SLEEP_INTERVAL = 5L;
     public static final Integer INITIAL_PROCESSOR_THREAD_COUNT = 2;
     public static final Integer NUMBER_ZERO = 0;
-    public static final Integer IO_THREAD_QUEUE_SIZE = 1000;
-//    public static final Integer IO_THREAD_QUEUE_SIZE = 500;
+    public static final Integer IO_THREAD_QUEUE_SIZE = 500;
     public static final Integer FLUSH_TO_MQ_INTERVAL = 10;
-//    public static final Integer FLUSH_TO_MQ_INTERVAL = 5;
     public static final Integer CURRENT_TIME_RANDOM = 30;
     public static final String KEYS_ALL = "keys *";
     public static final CharSequence LIKE = "like";

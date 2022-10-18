@@ -10,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class ReactorUtil {
-  private static volatile Boolean TWO_POWER_FLAG = null;
+  private static volatile Boolean TWO_POWER_FLAG_BY_PROCESSOR = null;
+  private static volatile Boolean TWO_POWER_FLAG_BY_IOTHREADER = null;
 
   private ReactorUtil(){}
 
@@ -23,16 +24,33 @@ public class ReactorUtil {
    * @return int
    * 注意：这里要确保只有一个地方能够调用这个方法。如果多个地方调用这个方法这里就不合适了，因为 变量 TWO_POWER_FLAG 只会被初始化一次。
    **/
-  public static int indexFor(int h, int length) {
-    if(null == TWO_POWER_FLAG){
+  public static int indexForByProcessor(int h, int length) {
+    if(null == TWO_POWER_FLAG_BY_PROCESSOR){
       //
       if(true == isTwoPower(length)){
-        TWO_POWER_FLAG = true;
+          TWO_POWER_FLAG_BY_PROCESSOR = true;
       }else{
-        TWO_POWER_FLAG = false;
+          TWO_POWER_FLAG_BY_PROCESSOR = false;
       }
     }
-    if(true  == TWO_POWER_FLAG){
+    if(true  == TWO_POWER_FLAG_BY_PROCESSOR){
+      // 使用按位与获取下标；2022-09-13 14:20:28
+      return h & (length - 1);
+    }
+    // 当length不是2的幂次方的时候，使用取模获取下标。2022-09-13 14:21:07
+    return h % length;
+  }
+
+  public static int indexForByIoThread(int h, int length) {
+    if(null == TWO_POWER_FLAG_BY_IOTHREADER){
+      //
+      if(true == isTwoPower(length)){
+          TWO_POWER_FLAG_BY_IOTHREADER = true;
+      }else{
+          TWO_POWER_FLAG_BY_IOTHREADER = false;
+      }
+    }
+    if(true  == TWO_POWER_FLAG_BY_IOTHREADER){
       // 使用按位与获取下标；2022-09-13 14:20:28
       return h & (length - 1);
     }
