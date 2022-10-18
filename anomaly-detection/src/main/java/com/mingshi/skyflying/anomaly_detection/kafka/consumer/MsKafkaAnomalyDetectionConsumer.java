@@ -24,9 +24,7 @@ import org.apache.kafka.common.utils.Bytes;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
@@ -205,7 +203,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
 
         if (enableReactorModelFlag) {
             // 使用reactor模型；2022-05-30 21:04:05
-            mingshiServerUtil.doEnableReactorModel(null, null, null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
+            mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
         } else {
             mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
             mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);

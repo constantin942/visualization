@@ -6,20 +6,15 @@ import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.service.SegmentConsumerService;
+import com.mingshi.skyflying.common.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.common.type.KeyValue;
 import com.mingshi.skyflying.common.type.LogEntity;
 import com.mingshi.skyflying.common.type.RefType;
-import com.mingshi.skyflying.common.utils.CollectionUtils;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.component.ComponentsDefine;
-import com.mingshi.skyflying.common.dao.SegmentDao;
-import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
-import com.mingshi.skyflying.common.service.SegmentConsumerService;
-import com.mingshi.skyflying.common.statistics.InformationOverviewSingleton;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
@@ -49,18 +44,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     @Resource
     private MingshiServerUtil mingshiServerUtil;
     @Resource
-    private SegmentDao segmentDao;
-    @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
 
-
     @Override
-    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag, HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) throws Exception {
-        doConsume(consumerRecord, enableReactorModelFlag, statisticsProcessorThreadQpsMap);
+    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+        doConsume(consumerRecord, enableReactorModelFlag);
         return null;
     }
 
-    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag, HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) throws Exception {
+    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
         SegmentObject segmentObject = getSegmentObject(consumerRecord);
 
         HashSet<String> userHashSet = new HashSet<>();
@@ -97,15 +89,15 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 // 异常检测；2022-10-13 09:40:57
-                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+//                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
 
-            statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
+            HashMap<String, Integer> statisticsProcessorThreadQpsMap = statisticsProcessorThreadQps();
 
             // 将组装好的segment插入到表中；2022-04-20 16:34:01
             if (enableReactorModelFlag) {
                 // 使用reactor模型；2022-05-30 21:04:05
-                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, spanList, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
             } else {
                 disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
             }
@@ -148,8 +140,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> consumerRecord) throws Exception {
         SegmentObject segmentObject = null;
         try {
-            String s = JsonUtil.obj2String(consumerRecord);
-            System.out.println(s.length());
             segmentObject = SegmentObject.parseFrom(consumerRecord.value().get());
         } catch (InvalidProtocolBufferException e) {
             log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
@@ -167,7 +157,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年08月19日 18:08:34
      * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
      **/
-    private void disableReactorModel(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+    private void disableReactorModel(HashMap<String, Integer> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
         // 将QPS信息刷入Redis中；2022-06-27 13:42:13
         // mingshiServerUtil.flushQpsToRedis();
 
@@ -524,21 +514,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年07月23日 11:07:33
      * @Param [jsonObject]
      **/
-    private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) {
+    private HashMap<String, Integer> statisticsProcessorThreadQps() {
+        HashMap<String, Integer> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
         String key = Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName();
         String time = DateTimeUtil.dateToStrformat(new Date());
         if(null == statisticsProcessorThreadQpsMap){
             statisticsProcessorThreadQpsMap = new HashMap<>();
         }
-        Map<String, Integer> stringIntegerMap = statisticsProcessorThreadQpsMap.get(key);
-        if(null == stringIntegerMap){
-            stringIntegerMap = new HashMap<>(Const.NUMBER_EIGHT);
-            stringIntegerMap.put(time, 1);
-            statisticsProcessorThreadQpsMap.put(key, stringIntegerMap);
-        }else {
-            Integer count = stringIntegerMap.get(time);
-            stringIntegerMap.put(time, null == count ? 1 : 1 + count);
-        }
+        Integer accumuCount = statisticsProcessorThreadQpsMap.get(key);
+        statisticsProcessorThreadQpsMap.put(time, null == accumuCount ? 1 : 1 + accumuCount);
+        return statisticsProcessorThreadQpsMap;
     }
 
     /**

@@ -160,27 +160,18 @@ public class MingshiServerUtil {
      * @Date 2022年08月01日 15:08:05
      * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
      **/
-    public void doEnableReactorModel(Map<String, Map<String, Integer>> statisticsProcessorThreadQpsMap,
-                                     List<Span> spanList,
-                                     SegmentDo segmentDo,
+    public void doEnableReactorModel(Map<String, Integer> statisticsProcessorThreadQpsMap,
                                      List<MsSegmentDetailDo> segmentDetaiDolList,
                                      List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
                                      List<MsAlarmInformationDo> msAlarmInformationDoList,
                                      Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
         try {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
-            // if (null != segmentDo) {
-            //   jsonObject.put(Const.SEGMENT, JsonUtil.object2String(segmentDo));
-            // }
-
             /**
              * 统计当前线程的QPS；2022-07-23 11:05:16
              */
             if (null != statisticsProcessorThreadQpsMap && 0 < statisticsProcessorThreadQpsMap.size()) {
-                Map<String, Map<String, Integer>> objectObjectHashMap = new HashMap<>();
-                objectObjectHashMap.putAll(statisticsProcessorThreadQpsMap);
-                jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(objectObjectHashMap));
-                statisticsProcessorThreadQpsMap.clear();
+                jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(statisticsProcessorThreadQpsMap));
             }
             if (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
                 jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
@@ -194,9 +185,7 @@ public class MingshiServerUtil {
             if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
                 jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
             }
-
             doEnableReactorModel(jsonObject, reactorIoThreadCount, mingshiServerUtil);
-
         } catch (Exception e) {
             log.error("将清洗好的调用链信息放入到队列中出现了异常。", e);
         }
@@ -377,28 +366,6 @@ public class MingshiServerUtil {
         }
 
         return SqlTypeMap.getSqlTable(sqlType, msSql);
-    }
-
-    /**
-     * <B>方法名称：flushToDB</B>
-     * <B>概要说明：批量插入到数据库中</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年05月19日 18:05:20
-     * @Param []
-     **/
-    public void flushSegmentToDb(List<SegmentDo> segmentList) {
-        if (!segmentList.isEmpty()) {
-            try {
-                Instant now = Instant.now();
-                segmentDao.insertSelectiveBatch(segmentList);
-                log.info("将【{}】条segment数据插入到表中，耗时【{}】毫秒。", segmentList.size(), DateTimeUtil.getTimeMillis(now));
-                segmentList.clear();
-            } catch (Exception e) {
-                log.error("将segment数据批量插入到数据库中的时候，出现了异常。", e);
-            }
-        }
     }
 
     /**
@@ -1518,7 +1485,7 @@ public class MingshiServerUtil {
      * @Date 2022年07月23日 11:07:52
      * @Param [processorThreadQpsMap]
      **/
-    public void flushProcessorThreadQpsToRedis(Map<String, Map<String, Integer>> processorThreadQpsMap) {
+    public void flushProcessorThreadQpsToRedis(Map<String, Integer> processorThreadQpsMap) {
         try {
             if (null == processorThreadQpsMap || 0 == processorThreadQpsMap.size()) {
                 return;
@@ -1526,15 +1493,9 @@ public class MingshiServerUtil {
 
             Iterator<String> iterator = processorThreadQpsMap.keySet().iterator();
             while (iterator.hasNext()) {
-                String threadName = iterator.next();
-                Map<String, Integer> map = processorThreadQpsMap.get(threadName);
-                if (null == map || 0 == map.size()) {
-                    continue;
-                }
-                Iterator<String> iterator1 = map.keySet().iterator();
-                while (iterator1.hasNext()) {
-                    String time = iterator1.next();
-                    Integer count = map.get(time);
+                String time = iterator.next();
+                Integer count = processorThreadQpsMap.get(time);
+                if(null != count){
                     // 统计所有Processor线程总的QPS；2022-07-27 10:16:30
                     redisPoolUtil.zSetIncrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
                 }
@@ -1592,9 +1553,7 @@ public class MingshiServerUtil {
      * @Param [userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, msAlarmInformationDoLinkedListist]
      **/
     public void doInsertSegmentDetailIntoMySqlAndRedis(Set<String> userHashSet,
-                                                       Map<String, Map<String, Integer>> processorThreadQpsMap,
-                                                       List<SegmentDo> segmentList,
-                                                       List<Span> spanList,
+                                                       Map<String, Integer> processorThreadQpsMap,
                                                        Map<String, String> skywalkingAgentHeartBeatMap,
                                                        List<MsSegmentDetailDo> segmentDetailDoList,
                                                        List<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList,
@@ -1608,8 +1567,6 @@ public class MingshiServerUtil {
 
         // 将公共队列中有多少元素没有被消费发送到Redis中统计，便于日常的系统调优；2022-07-23 11:33:39
         statisticsProcessorAndIoThreadQueueSize();
-
-        // flushSegmentToDb(segmentList);
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         flushSkywalkingAgentInformationToDb();

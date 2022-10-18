@@ -39,7 +39,7 @@ public class AiitKafkaConsumerUtil {
      **/
     public void useNoReactorModel(ConsumerRecord<String, Bytes> consumerRecord) {
         try {
-            segmentConsumerService.consume(consumerRecord, false, null);
+            segmentConsumerService.consume(consumerRecord, false);
         } catch (Exception e) {
             log.error("清洗调用链信息时，出现了异常。", e);
         }

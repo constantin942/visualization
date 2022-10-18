@@ -7,8 +7,6 @@ import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.common.domain.SegmentDo;
-import com.mingshi.skyflying.common.domain.Span;
 import com.mingshi.skyflying.common.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.common.reactor.queue.IoThreadLinkedBlockingQueue;
 import com.mingshi.skyflying.common.statistics.InformationOverviewSingleton;
@@ -41,12 +39,10 @@ public class IoThread extends Thread {
 
     private Integer flushToRocketMqInterval = Const.FLUSH_TO_MQ_INTERVAL;
     private Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap = null;
-    private Map<String/* 线程名称 */, Map<String/* 时间 */, Integer/* 消费的数量 */>> processorThreadQpsMap = null;
-    private LinkedList<SegmentDo> segmentList = null;
+    private Map<String/* 时间 */, Integer/* 消费的数量 */> processorThreadQpsMap = null;
     private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
     private LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList = null;
     private HashSet<String> userHashSet = null;
-    private LinkedList<Span> spanList = null;
     private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
     private MingshiServerUtil mingshiServerUtil;
     private Integer capacity;
@@ -74,11 +70,9 @@ public class IoThread extends Thread {
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
         skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
         processorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
-        segmentList = new LinkedList<>();
         userHashSet = new HashSet<>();
         segmentDetailDoList = new LinkedList<>();
         segmentDetailUserNameIsNullDoList = new LinkedList<>();
-        spanList = new LinkedList<>();
         msAlarmInformationDoLinkedListist = new LinkedList<>();
         this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
@@ -180,12 +174,8 @@ public class IoThread extends Thread {
                 // 从json实例中获取探针名称信息，用于心跳；2022-06-27 13:40:44
                 getSkywalkingAgentNameFromJsonObject(jsonObject);
 
-//                getSegmentFromJsonObject(jsonObject);
-
                 // 统计processorThread线程的QPS；2022-07-23 11:15:29
                 getProcessorThreadQpsFromJsonObject(jsonObject);
-
-                // getIoThreadQueueFromJSONObject(jsonObject);
 
                 // 从json实例中获取segmentDetail实例的信息
                 getSegmentDetailFromJsonObject(jsonObject);
@@ -196,8 +186,6 @@ public class IoThread extends Thread {
                 // 从json实例中获取异常信息
                 getAbnormalFromJsonObject(jsonObject);
 
-                // 从json实例中获取segment的信息
-                // getSegmentFromJSONObject(jsonObject);
             }
 
             // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
@@ -279,35 +267,21 @@ public class IoThread extends Thread {
                 listString = jsonNode.asText();
             }
             if (StringUtil.isNotBlank(listString)) {
-                HashMap<String, Map<String, Integer>> map = JsonUtil.string2Obj(listString, HashMap.class);
+                Map<String, Integer> timeCountMap = JsonUtil.string2Obj(listString, HashMap.class);
                 if (0 == processorThreadQpsMap.size()) {
-                    if (null != map && 0 < map.size()) {
-                        processorThreadQpsMap.putAll(map);
+                    if (null != timeCountMap && 0 < timeCountMap.size()) {
+                        processorThreadQpsMap.putAll(timeCountMap);
                     }
                 } else {
-                    Iterator<String> iterator = map.keySet().iterator();
+                    Iterator<String> iterator = timeCountMap.keySet().iterator();
                     while (iterator.hasNext()) {
-                        String threadName = iterator.next();
-                        Map<String, Integer> timeCountMap = map.get(threadName);
-                        if (null == timeCountMap || 0 == timeCountMap.size()) {
-                            continue;
-                        }
-                        Map<String, Integer> map1 = processorThreadQpsMap.get(threadName);
-                        if (null == map1) {
-                            processorThreadQpsMap.put(threadName, timeCountMap);
-                            continue;
-                        }
-
-                        Iterator<String> iterator1 = timeCountMap.keySet().iterator();
-                        while (iterator1.hasNext()) {
-                            String time = iterator1.next();
-                            Integer count = timeCountMap.get(time);
-                            Integer integer = map1.get(time);
-                            if (null == integer) {
-                                map1.put(time, count);
-                            } else {
-                                map1.put(time, count + integer);
-                            }
+                        String time = iterator.next();
+                        Integer count = timeCountMap.get(time);
+                        Integer accumuCount = processorThreadQpsMap.get(time);
+                        if (null == accumuCount && null != count) {
+                            processorThreadQpsMap.put(time, count);
+                        } else if (null != accumuCount && null != count) {
+                            processorThreadQpsMap.put(time, count + accumuCount);
                         }
                     }
                 }
@@ -395,28 +369,6 @@ public class IoThread extends Thread {
     }
 
     /**
-     * <B>方法名称：getSegmentFromJSONObject</B>
-     * <B>概要说明：从json实例中获取segment的信息</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年06月01日 10:06:21
-     * @Param [jsonObject]
-     **/
-    private void getSegmentFromJsonObject(ObjectNode jsonObject) {
-        try {
-            JsonNode jsonNode = jsonObject.get(Const.SEGMENT);
-            if (null != jsonNode) {
-                String segmentStr = jsonNode.asText();
-                SegmentDo segmentDo = JsonUtil.string2Obj(segmentStr, SegmentDo.class);
-                segmentList.add(segmentDo);
-            }
-        } catch (Exception e) {
-            log.error("# IoThread.getSegmentFromJSONObject() # 将来自skywalking探针的审计日志放入到 segmentList 表中出现了异常。", e);
-        }
-    }
-
-    /**
      * <B>方法名称：insertSegmentDetailIntoMySQLAndRedis</B>
      * <B>概要说明：将来自skywalking的segmentDetail信息保存到MySQL数据库和Redis分布式缓存中</B>
      *
@@ -431,7 +383,7 @@ public class IoThread extends Thread {
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
             if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRUNNING())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-                mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, segmentList, spanList, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
+                mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
                 currentTime = Instant.now();
 
                 // 将数据统计信息发送到Redis中；2022-10-15 09:37:43
