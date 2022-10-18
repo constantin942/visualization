@@ -97,7 +97,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 // 异常检测；2022-10-13 09:40:57
-//                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
 
             statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);

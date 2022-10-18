@@ -89,4 +89,8 @@ public class TestControllerA {
 
     }
 
+    @GetMapping("updatePor")
+    public void updatePor() {
+        anomalyDetectionBusiness.updatePortrait();
+    }
 }

@@ -353,10 +353,11 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
 
             }
-            // 将告警检测发送到Kafka中
-            MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
-            aiitKafkaProducer.send(anomalyDetectionAlarmTopic, JsonUtil.obj2String(msConsumerRecords));
-//            anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
+            if (msAlarmInformationDoList.size() != 0) {
+                // 将告警检测发送到Kafka中
+                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
+                aiitKafkaProducer.send(anomalyDetectionAlarmTopic, JsonUtil.obj2String(msConsumerRecords));
+            }
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
