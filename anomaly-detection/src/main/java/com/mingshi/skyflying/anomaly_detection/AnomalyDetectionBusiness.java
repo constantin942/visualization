@@ -43,6 +43,9 @@ public class AnomalyDetectionBusiness {
     @Value("${spring.kafka.anomaly-detection-consume-failed-topic}")
     private String anomalyDetectionConsumeFailedTopic;
 
+    @Value("${spring.kafka.anomaly-detection-alarm-topic}")
+    private String anomalyDetectionAlarmTopic;
+
     @Resource
     UserPortraitByTimeTask userPortraitByTimeTask;
 
@@ -312,7 +315,7 @@ public class AnomalyDetectionBusiness {
 
             // 如果用户画像没有初始化完毕，那么将其发送到Kafka中；2022-10-17 10:30:28
             Boolean aBoolean = userPortraitInitDone(segmentDetaiDolList);
-            if(Boolean.FALSE.equals(aBoolean)){
+            if (Boolean.FALSE.equals(aBoolean)) {
                 return;
             }
             // 进行异常检测
@@ -326,10 +329,10 @@ public class AnomalyDetectionBusiness {
      * <B>方法名称：doUserVisitedIsAbnormal</B>
      * <B>概要说明：进行异常检测</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-17 15:27:40
      * @Param [segmentDetaiDolList, msAlarmInformationDoList]
-     * @return void
      **/
     public void doUserVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
@@ -342,8 +345,7 @@ public class AnomalyDetectionBusiness {
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
             boolean isDemoMode = false;
             // TODO: 交付时删掉下面这一行
-//            isDemoMode = isDemoMode();
-            Instant now;
+            isDemoMode = isDemoMode();
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
@@ -351,7 +353,9 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
 
             }
-//            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            // 将告警检测发送到Kafka中
+            MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
+            aiitKafkaProducer.send(anomalyDetectionAlarmTopic, JsonUtil.obj2String(msConsumerRecords));
 //            anomalyDetectionBusiness.dingAlarm(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
@@ -549,14 +553,14 @@ public class AnomalyDetectionBusiness {
         try {
             // 库表画像
             Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
-            if(null == map){
+            if (null == map) {
                 return false;
             }
             Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
             MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
             // 时间画像
             map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
-            if(null == map){
+            if (null == map) {
                 return false;
             }
             strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));

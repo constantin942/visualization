@@ -2,6 +2,7 @@ package com.mingshi.skyflying.anomaly_detection.kafka.consumer;
 
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
+import com.mingshi.skyflying.anomaly_detection.config.SpringUtil;
 import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
@@ -20,7 +21,12 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
@@ -42,11 +48,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MsKafkaAnomalyDetectionConsumer extends Thread {
     private List<String> consumerTopic;
     private String consumerGroup;
-    private String bootstrapServers;
-    private AnomalyDetectionBusiness anomalyDetectionBusiness;
     private Boolean enableReactorModelFlag;
     private MingshiServerUtil mingshiServerUtil;
-
+    private String bootstrapServers;
+    private AnomalyDetectionBusiness anomalyDetectionBusiness;
     /**
      * 初始化完成的标志；2022-07-28 17:12:32
      */
@@ -159,8 +164,15 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                 if (msConsumerRecords.getRecordType().equals(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode())) {
                     msSegmentDetailDoConsumeFailed(msConsumerRecords);
                 } else if (msConsumerRecords.getRecordType().equals(RecordEnum.Anomaly_ALARM.getCode())) {
-                    // 进行钉钉邮件告警；2022-10-17 14:00:00
-                    log.info("");
+                    // 进行钉钉告警；2022-10-17 14:00:00
+                    List<MsAlarmInformationDo> alarmInformationDos = (List<MsAlarmInformationDo>) msConsumerRecords.getBody();
+                    ObjectMapper mapper = new ObjectMapper();
+                    alarmInformationDos = mapper.convertValue(alarmInformationDos, new TypeReference<List<MsAlarmInformationDo>>() {
+                    });
+                    // 由于该类没有交由Spring管理, 所以这里采用反射的方式调用Spring管理的类
+                    ApplicationContext applicationContext = SpringUtil.getApplicationContext();
+                    AnomalyDetectionBusiness anomalyDetectionBusiness = applicationContext.getBean(AnomalyDetectionBusiness.class);
+                    anomalyDetectionBusiness.dingAlarm(alarmInformationDos);
                 }
             }
             if (count > 0) {
