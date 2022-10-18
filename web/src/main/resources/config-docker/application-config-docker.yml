@@ -77,6 +77,10 @@ spring:
 
   kafka:
     bootstrap-servers: ${kafka_bootstrap_servers}
+      # 由于某种原因，异常检测没有执行成功，那么就把这些消息发送到这个topic中；
+    anomaly-detection-consume-failed-topic: ${anomaly_detection_consume_failed_topic}
+      # 告警信息发送到这个topic中；
+    anomaly-detection-alarm-topic: ${anomaly_detection_alarm_topic}
     producer:
       topic: ${kafka_producer_topic}
       # 发生错误后，消息重发的次数。
@@ -109,6 +113,8 @@ spring:
       agent-switch-request-topic: ${agent_switch_request_topic}
       agent-switch-response-topic: ${agent_switch_response_topic}
       agent-switch-response-group: ${agent_switch_response_group}
+        # 异常检测用的消费者组
+      anomaly-detection-consume-failed-and-alarm-group: ${anomaly_detection_consume_failed_and_alarm_group}
 mybatis-plus:
   configuration:
     #    在控制台中输出SQL语句；2021-12-02 18:40:52
