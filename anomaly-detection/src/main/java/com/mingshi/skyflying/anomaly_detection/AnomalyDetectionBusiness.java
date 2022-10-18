@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AnomalyDetectionBusiness {
-    @Value("${spring.kafka.producer.anomaly-detection-consume-failed-topic:11}")
+    @Value("${spring.kafka.anomaly-detection-consume-failed-topic}")
     private String anomalyDetectionConsumeFailedTopic;
 
     @Resource
