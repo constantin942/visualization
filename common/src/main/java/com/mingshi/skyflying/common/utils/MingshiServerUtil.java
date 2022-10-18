@@ -160,7 +160,7 @@ public class MingshiServerUtil {
      * @Date 2022年08月01日 15:08:05
      * @Param [map, spanList, esSegmentDetaiDolList, segmentDo, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap]
      **/
-    public void doEnableReactorModel(Map<String, Map<String, Integer>> map,
+    public void doEnableReactorModel(Map<String, Map<String, Integer>> statisticsProcessorThreadQpsMap,
                                      List<Span> spanList,
                                      SegmentDo segmentDo,
                                      List<MsSegmentDetailDo> segmentDetaiDolList,
@@ -176,8 +176,11 @@ public class MingshiServerUtil {
             /**
              * 统计当前线程的QPS；2022-07-23 11:05:16
              */
-            if (null != map && 0 < map.size()) {
-                jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(map));
+            if (null != statisticsProcessorThreadQpsMap && 0 < statisticsProcessorThreadQpsMap.size()) {
+                Map<String, Map<String, Integer>> objectObjectHashMap = new HashMap<>();
+                objectObjectHashMap.putAll(statisticsProcessorThreadQpsMap);
+                jsonObject.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD, JsonUtil.obj2String(objectObjectHashMap));
+                statisticsProcessorThreadQpsMap.clear();
             }
             if (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
                 jsonObject.put(Const.SEGMENT_DETAIL_DO_LIST, JsonUtil.obj2String(segmentDetaiDolList));
@@ -980,9 +983,9 @@ public class MingshiServerUtil {
                         Long count = timeTimesMap.get(time);
                         redisPoolUtil.hsetIncrBy(tableName, time, null == count ? 1L : count);
                     }
-                    tableEverydayVisitedTimesMap.clear();
                 }
             }
+            tableEverydayVisitedTimesMap.clear();
 //            log.info("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数【{}条】发送到Redis中耗时【{}毫秒】.", tableEverydayVisitedTimesMap.size(),DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数发送到Redis中，出现了异常.", e);
@@ -1078,18 +1081,18 @@ public class MingshiServerUtil {
      * @Date 2022年07月20日 14:07:45
      * @Param [map]
      **/
-    private void updateEverydayStatisticToRedis(Map<String, Integer> map) {
+    private void updateEverydayStatisticToRedis(Map<String, Integer> everydayVisitedTimesMap) {
         try {
-            Iterator<String> iterator = map.keySet().iterator();
+            Iterator<String> iterator = everydayVisitedTimesMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String key = iterator.next();
-                Integer value = map.get(key);
+                Integer value = everydayVisitedTimesMap.get(key);
                 // 更新每天采集情况；
                 redisPoolUtil.hsetIncrBy(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, key, value.longValue());
                 // 更新总的采集情况；
                 redisPoolUtil.incr(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS, value.longValue());
             }
-            map.clear();
+            everydayVisitedTimesMap.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.updateEverydayStatisticToRedis() # 更新每天采集情况和总的采集情况到Redis时，出现了异常。 ", e);
         }

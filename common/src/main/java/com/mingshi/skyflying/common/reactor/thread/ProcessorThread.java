@@ -10,6 +10,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +23,10 @@ public class ProcessorThread extends Thread {
      * 当线程执行入队列操作时，不影响操作出队列的线程。也就是说，执行入队列的线程与执行出队列的线程互不影响。2022-06-01 09:47:30
      */
     private LinkedBlockingQueue<ConsumerRecord<String, Bytes>> processorLinkedBlockingQueue;
-
+    /**
+     * 统计processor线程QPS的map；2022-10-18 09:33:36
+     */
+    private HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
     /**
      * 队列里存放的消息的个数；2022-06-01 09:42:19
      */
@@ -112,7 +117,7 @@ public class ProcessorThread extends Thread {
                     TimeUnit.MILLISECONDS.sleep(Const.SLEEP_INTERVAL);
                 }
             } else {
-                segmentConsumerService.consume(consumerRecord, true);
+                segmentConsumerService.consume(consumerRecord, true, statisticsProcessorThreadQpsMap);
             }
         } catch (Throwable e) {
             log.error("线程【{}】在清洗调用链信息时，出现了异常。", e);

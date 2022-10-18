@@ -55,12 +55,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
 
     @Override
-    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
-        doConsume(consumerRecord, enableReactorModelFlag);
+    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag, HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) throws Exception {
+        doConsume(consumerRecord, enableReactorModelFlag, statisticsProcessorThreadQpsMap);
         return null;
     }
 
-    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag, HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) throws Exception {
         SegmentObject segmentObject = getSegmentObject(consumerRecord);
 
         HashSet<String> userHashSet = new HashSet<>();
@@ -97,10 +97,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 // 异常检测；2022-10-13 09:40:57
-                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+//                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
 
-            HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
             statisticsProcessorThreadQps(statisticsProcessorThreadQpsMap);
 
             // 将组装好的segment插入到表中；2022-04-20 16:34:01
@@ -149,6 +148,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private SegmentObject getSegmentObject(ConsumerRecord<String, Bytes> consumerRecord) throws Exception {
         SegmentObject segmentObject = null;
         try {
+            String s = JsonUtil.obj2String(consumerRecord);
+            System.out.println(s.length());
             segmentObject = SegmentObject.parseFrom(consumerRecord.value().get());
         } catch (InvalidProtocolBufferException e) {
             log.error("# consume() # 消费skywalking探针发送来的数据时，出现了异常。", e);
@@ -523,10 +524,21 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年07月23日 11:07:33
      * @Param [jsonObject]
      **/
-    private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> map) {
-        HashMap<String, Integer> hashMap = new HashMap<>(Const.NUMBER_EIGHT);
-        hashMap.put(DateTimeUtil.dateToStrformat(new Date()), 1);
-        map.put(Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName(), hashMap);
+    private void statisticsProcessorThreadQps(HashMap<String, Map<String, Integer>> statisticsProcessorThreadQpsMap) {
+        String key = Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName();
+        String time = DateTimeUtil.dateToStrformat(new Date());
+        if(null == statisticsProcessorThreadQpsMap){
+            statisticsProcessorThreadQpsMap = new HashMap<>();
+        }
+        Map<String, Integer> stringIntegerMap = statisticsProcessorThreadQpsMap.get(key);
+        if(null == stringIntegerMap){
+            stringIntegerMap = new HashMap<>(Const.NUMBER_EIGHT);
+            stringIntegerMap.put(time, 1);
+            statisticsProcessorThreadQpsMap.put(key, stringIntegerMap);
+        }else {
+            Integer count = stringIntegerMap.get(time);
+            stringIntegerMap.put(time, null == count ? 1 : 1 + count);
+        }
     }
 
     /**
