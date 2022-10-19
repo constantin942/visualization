@@ -7,17 +7,18 @@ import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogResponse;
 import com.aliyuncs.profile.DefaultProfile;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.dao.MsConfigDao;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.common.dao.MsConfigDao;
 import com.mingshi.skyflying.dao.MsDmsAuditLogDao;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -323,9 +324,13 @@ public class AuditLogServiceImpl implements AuditLogService {
 
                 segmentDetaiDolList.add(msSegmentDetailDo);
             }
+            // 将来自DMS的消息进行异常检测；2022-10-19 10:16:26
             anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-            mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
+            if(Boolean.TRUE.equals(MsCaffeineCache.getUserPortraitInitDone())){
+                // 当用户画像初始化成功了，才将来自DMS中的数据保存到数据库中；2022-10-19 10:31:52
+                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+                mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
+            }
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);
         }

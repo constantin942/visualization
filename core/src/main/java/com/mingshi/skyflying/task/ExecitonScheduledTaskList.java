@@ -3,16 +3,16 @@ package com.mingshi.skyflying.task;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
-import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +43,6 @@ public class ExecitonScheduledTaskList {
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
-
     /**
      * <B>方法名称：scheduledGetSegmentDetailDo</B>
      * <B>概要说明：定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录</B>
@@ -57,16 +56,19 @@ public class ExecitonScheduledTaskList {
         Instant now = Instant.now();
         log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetSegmentDetailDo()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
         try {
-            // 先从 ms_segment_detail_username_is_null 表中获取用户名为空的token；2022-08-01 15:17:21
+            // 先从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录；2022-10-19 10:39:17
             List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
-            while (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
+            while (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
                 LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
-                anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
-                msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
-                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-                segmentDetaiDolList.clear();
-                segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+                Boolean aBoolean = anomalyDetectionBusiness.userPortraitInitNotDone(segmentDetaiDolList);
+                if (Boolean.TRUE.equals(aBoolean)) {
+                    // 用户画像已初始化完毕，现在进行异常检测；
+                    anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                    msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
+                    mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+                    segmentDetaiDolList.clear();
+                    segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+                }
             }
         } catch (Exception e) {
             log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);

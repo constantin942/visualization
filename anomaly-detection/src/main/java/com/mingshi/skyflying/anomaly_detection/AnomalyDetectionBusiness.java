@@ -312,7 +312,9 @@ public class AnomalyDetectionBusiness {
                 return;
             }
 
-            // 如果用户画像没有初始化完毕，那么将其发送到Kafka中；2022-10-17 10:30:28
+            // 如果用户画像没有初始化成功，那么将待异常检测的消息（segmentDetaiDolList）发送到Kafka中。如果此时msAlarmInformationDoList不为空，那么这个集合中的消息也不管了，直接丢弃就好。
+            // 因为异常检测模块中有新的消费者会对待异常检测的消息（segmentDetaiDolList）重新进行异常检测。
+            // 2022-10-17 10:30:28
             Boolean aBoolean = userPortraitInitNotDone(segmentDetaiDolList);
             if (Boolean.FALSE.equals(aBoolean)) {
                 return;
@@ -389,7 +391,7 @@ public class AnomalyDetectionBusiness {
      * @Date 2022-10-17 10:32:58
      * @Param []
      **/
-    private Boolean userPortraitInitNotDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
+    public Boolean userPortraitInitNotDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
         // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
         if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
             try {
