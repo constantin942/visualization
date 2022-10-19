@@ -14,7 +14,6 @@ import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -138,7 +137,9 @@ public class UserPortraitByTableTask {
             String username = segmentDetail.getUserName();
             String dbInstance = segmentDetail.getDbInstance();
             String table = segmentDetail.getMsTableName();
-            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) continue;
+            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) {
+                continue;
+            }
             if (!table.contains(Const.EN_COMMA)) {
                 //只有一个表, 直接添加, 不用拆分
                 list.add(segmentDetail);
@@ -247,9 +248,9 @@ public class UserPortraitByTableTask {
     public Integer getCountByTable(String username, String tableName) {
         String key = buildKey(username, tableName);
         String counts = MsCaffeineCache.getFromPortraitByTableLocalCache(key);
-        if(counts == null) {
+        if(StringUtil.isBlank(counts)) {
             return null;
         }
-        return Integer.valueOf(counts);
+        return Integer.valueOf(counts.trim());
     }
 }
