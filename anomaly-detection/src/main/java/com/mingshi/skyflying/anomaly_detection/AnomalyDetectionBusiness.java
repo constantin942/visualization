@@ -90,8 +90,8 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-库表维度
      */
-    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig, boolean isDemoMode) {
-        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
+    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDoList, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig, boolean isDemoMode) {
+        for (MsSegmentDetailDo segmentDetailDo : segmentDetailDoList) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
             String table = segmentDetailDo.getMsTableName();
@@ -135,19 +135,16 @@ public class AnomalyDetectionBusiness {
         return betweenDays <= period;
     }
 
-    private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail,
-                                                   List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
-        String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
-        Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName);
-        if (count == null) {
+    private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo msSegmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
+        String tableName = msSegmentDetailDo.getDbInstance() + "." + msSegmentDetailDo.getMsTableName();
+        Integer count = userPortraitByTableTask.getCountByTable(msSegmentDetailDo.getUserName(), tableName);
+        if (null == count) {
             //没有用户画像
-            MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(segmentDetail);
+            MsAlarmInformationDo msAlarmInformationDo = doNoTablePortrait(msSegmentDetailDo);
             msAlarmInformationDoList.add(msAlarmInformationDo);
-        } else {
+        } else if (count < portraitConfig.getRuleTableCount()) {
             //有用户画像
-            if (count < portraitConfig.getRuleTableCount()) {
-                msAlarmInformationDoList.add(buildAlarmInfo(segmentDetail, AlarmEnum.TABLE_ALARM));
-            }
+            msAlarmInformationDoList.add(buildAlarmInfo(msSegmentDetailDo, AlarmEnum.TABLE_ALARM));
         }
     }
 
