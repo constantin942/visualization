@@ -165,8 +165,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                     // 进行钉钉告警；2022-10-17 14:00:00
                     List<MsAlarmInformationDo> alarmInformationDos = (List<MsAlarmInformationDo>) msConsumerRecords.getBody();
                     ObjectMapper mapper = new ObjectMapper();
-                    alarmInformationDos = mapper.convertValue(alarmInformationDos, new TypeReference<List<MsAlarmInformationDo>>() {
-                    });
+                    alarmInformationDos = mapper.convertValue(alarmInformationDos, new TypeReference<List<MsAlarmInformationDo>>() {});
                     // 由于该类没有交由Spring管理, 所以这里采用反射的方式调用Spring管理的类
                     ApplicationContext applicationContext = SpringUtil.getApplicationContext();
                     AnomalyDetectionBusiness anomalyDetectionBusiness = applicationContext.getBean(AnomalyDetectionBusiness.class);

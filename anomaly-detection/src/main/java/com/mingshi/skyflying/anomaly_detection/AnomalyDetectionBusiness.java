@@ -351,7 +351,6 @@ public class AnomalyDetectionBusiness {
             }
             if (Boolean.TRUE.equals(enableTimeRule)) {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
-
             }
 
             // 将异常告警信息发送到Kafka中；2022-10-19 10:07:34
@@ -503,13 +502,17 @@ public class AnomalyDetectionBusiness {
      * 钉钉告警
      */
     public void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        HashSet<String> set = new HashSet<>();
-        for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
-            set.add(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName());
-        }
-        DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
-        for (String str : set) {
-            dingAlarmHelper(str, dingAlarmConfig);
+        try {
+            HashSet<String> set = new HashSet<>();
+            for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
+                set.add(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName());
+            }
+            DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
+            for (String str : set) {
+                dingAlarmHelper(str, dingAlarmConfig);
+            }
+        } catch (Exception e) {
+            log.error("# AnomalyDetectionBusiness.dingAlarm() # 钉钉告警出现异常。", e);
         }
     }
 
