@@ -48,9 +48,12 @@ public class AnomalyConst {
 
     public static final Integer USER_PORTRAIT_LOCAL_CACHE_EXPIRE = 12;
 
+    public static final Integer ALARM_INHIBIT_LOCAL_CACHE_SIZE = 1000;
 
     public static final String REDIS_TIME_PORTRAIT_PREFIX = "anomaly_detection:portraitByTime:";
 
     public static final String REDIS_TABLE_PORTRAIT_PREFIX = "anomaly_detection:portraitByTable:";
+
+
 
 }

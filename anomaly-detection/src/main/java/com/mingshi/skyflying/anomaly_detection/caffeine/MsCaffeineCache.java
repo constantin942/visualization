@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -39,15 +40,6 @@ public class MsCaffeineCache implements ApplicationRunner {
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 
     @Resource
-    PortraitConfigMapper portraitConfigMapper;
-
-    @Resource
-    UserPortraitRulesMapper userPortraitRulesMapper;
-
-    @Resource
-    MsSegmentDetailMapper segmentDetailMapper;
-
-    @Resource
     UserPortraitTask userPortraitTask;
     /**
      * 基于库表用户画像本地缓存
@@ -63,7 +55,14 @@ public class MsCaffeineCache implements ApplicationRunner {
      */
     private static Cache<String, Date> userFirstVisitLocalCache = null;
 
+    /**
+     * 配置信息缓存
+     */
     private static ConfigCache configCache = new ConfigCache();
+    /**
+     * 告警抑制缓存
+     */
+    private static Cache<String, Instant> alarmInhibitCache = null;
     /**
      * 用户画像相关信息初始化完毕标识；
      */
@@ -130,6 +129,20 @@ public class MsCaffeineCache implements ApplicationRunner {
         createPortraitByTimeLocalCache();
         // 创建用户首次访问时间本地缓存
         createFirstVisitTimeLocalCache();
+        // 创建告警抑制本地缓存
+        createAlarmInhibitLocalCache();
+    }
+
+    private static void createAlarmInhibitLocalCache() {
+        try {
+            log.info("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，开始初始化alarmInhibitCache实例。");
+            alarmInhibitCache = Caffeine.newBuilder()
+                    .maximumSize(AnomalyConst.ALARM_INHIBIT_LOCAL_CACHE_SIZE)
+                    .build();
+            log.info("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，初始化alarmInhibitCache实例完毕。");
+        } catch (Exception e) {
+            log.error("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，初始化alarmInhibitCache实例时，出现了异常.", e);
+        }
     }
 
     private static void createFirstVisitTimeLocalCache() {
@@ -188,6 +201,13 @@ public class MsCaffeineCache implements ApplicationRunner {
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createPortraitByTimeLocalCache() # 项目启动，初始化userPortraitByTimeLocalCache实例时，出现了异常.", e);
         }
+    }
+
+    public static Instant getFromAlarmInhibitCache(String key) {
+        return alarmInhibitCache.getIfPresent(key);
+    }
+    public static void putIntoAlarmInhibitCache(String key, Instant date) {
+        alarmInhibitCache.put(key, date);
     }
 
     public static String getFromPortraitByTableLocalCache(String key) {

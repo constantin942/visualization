@@ -139,7 +139,7 @@ public class AnomalyDetectionBusiness {
 
     private void userVisitedTableIsAbnormalHandler(MsSegmentDetailDo segmentDetail,
                                                    List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig) {
-        String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
+        String tableName = segmentDetail.getDbInstance() + Const.SERVICE_ID_CONNECTOR + segmentDetail.getMsTableName();
         Integer count = userPortraitByTableTask.getCountByTable(segmentDetail.getUserName(), tableName);
         if (count == null) {
             //没有用户画像
@@ -538,13 +538,17 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否在告警间隔内
      */
-    private boolean isAlarmed(String redisKey, Integer gap) {
-        Object o = redisPoolUtil.get(redisKey);
-        if (o != null) {
-            return true;
+    private boolean isAlarmed(String key, Integer gap) {
+        Instant date = MsCaffeineCache.getFromAlarmInhibitCache(key);
+        if(date == null) {
+            MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
+            return false;
         }
-        redisPoolUtil.set(redisKey, 1, (long) gap * AnomalyConst.SECONDS);
-        return false;
+        if(DateTimeUtil.getTimeSeconds(date) >= (long) AnomalyConst.SECONDS * gap) {
+            MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
+            return false;
+        }
+        return true;
     }
 
     /**

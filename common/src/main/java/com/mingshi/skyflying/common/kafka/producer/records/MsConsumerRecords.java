@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.kafka.producer.records;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 
 /**
@@ -22,4 +23,5 @@ public class MsConsumerRecords<T> {
     }
     public MsConsumerRecords(){
     }
+
 }
