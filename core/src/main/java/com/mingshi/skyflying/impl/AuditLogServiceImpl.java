@@ -8,16 +8,19 @@ import com.aliyuncs.profile.DefaultProfile;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.dao.MsConfigDao;
+import com.mingshi.skyflying.common.domain.MsConfigDo;
+import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
+import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
-import com.mingshi.skyflying.common.dao.MsConfigDao;
 import com.mingshi.skyflying.dao.MsDmsAuditLogDao;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
 import com.mingshi.skyflying.service.AuditLogService;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -302,11 +305,10 @@ public class AuditLogServiceImpl implements AuditLogService {
      * @Date 2022年10月09日 09:10:02
      * @Param [list]
      **/
-    private void anomalyDetectionStatistics(List<MsDmsAuditLogDo> list) {
+    private void anomalyDetectionStatistics(List<MsDmsAuditLogDo> msDmsAuditLogDoList) {
         try {
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
-            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
-            for (MsDmsAuditLogDo msDmsAuditLogDo : list) {
+            for (MsDmsAuditLogDo msDmsAuditLogDo : msDmsAuditLogDoList) {
                 MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
                 msSegmentDetailDo.setUserName(msDmsAuditLogDo.getUserName());
                 msSegmentDetailDo.setDbUserName(msDmsAuditLogDo.getUserName());
@@ -323,9 +325,9 @@ public class AuditLogServiceImpl implements AuditLogService {
 
                 segmentDetaiDolList.add(msSegmentDetailDo);
             }
-            anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
-            mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
+            // 将来自DMS的消息进行异常检测；2022-10-19 10:16:26
+            anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
+            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);
         }

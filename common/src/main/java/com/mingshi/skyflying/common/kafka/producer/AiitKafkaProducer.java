@@ -56,6 +56,33 @@ public class AiitKafkaProducer {
     }
 
     /**
+     * <B>方法名称：sendWithKey</B>
+     * <B>概要说明：将消息指定key发送到Kafka中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-19 09:50:55
+     * @Param [topic, key, obj]
+     * @return void
+     **/
+    public void sendWithKey(String topic, String key, String obj) {
+        //发送消息
+        ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key, Bytes.wrap(obj.getBytes()));
+        future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                //处理发送失败的情况；在这里做降级逻辑，将发送失败的消息要么存入到数据库中，要么写入本地磁盘中；
+                log.info("发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】", topic, throwable.getMessage());
+            }
+
+            @Override
+            public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
+                //成功的处理
+                // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
+            }
+        });
+    }
+
+    /**
      * 自定义topic
      */
     public void send(String topic, String obj) {

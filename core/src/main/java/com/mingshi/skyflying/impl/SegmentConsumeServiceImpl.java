@@ -66,8 +66,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             // 将用户名、token、globalTraceId放入到本地内存，并关联起来；2022-07-07 16:15:53
             setUserNameTokenGlobalTraceIdToLocalMemory(segment);
 
-            // 判断是否是异常信息；2022-06-07 18:00:13
-            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = null;
             // 存放用户名不为空的链路信息；
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = null;
             // 存放用户名为空的链路信息；
@@ -86,10 +84,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 segmentDetaiUserNameIsNullDolList = new LinkedList<>();
                 // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
                 segmentDetaiDolList = getSegmentDetaiDolList(consumerRecord, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
-                // 判断是否是异常信息；2022-06-07 18:00:13
-                msAlarmInformationDoList = new LinkedList<>();
                 // 异常检测；2022-10-13 09:40:57
-//                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                doUserVisitedIsAbnormal(segmentDetaiDolList);
             }
 
             HashMap<String, Integer> statisticsProcessorThreadQpsMap = statisticsProcessorThreadQps();
@@ -97,9 +93,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             // 将组装好的segment插入到表中；2022-04-20 16:34:01
             if (enableReactorModelFlag) {
                 // 使用reactor模型；2022-05-30 21:04:05
-                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList, skywalkingAgentHeartBeatMap);
+                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, skywalkingAgentHeartBeatMap);
             } else {
-                disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList);
+                disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList);
             }
         } catch (Exception e) {
             log.error("清洗调用链信息时，出现了异常。", e);
@@ -115,12 +111,16 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022-10-13 09:41:04
      * @Param [segmentDetaiDolList, msAlarmInformationDoList]
      **/
-    private void doUserVisitedIsAbnormal(LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
+    private void doUserVisitedIsAbnormal(LinkedList<MsSegmentDetailDo> segmentDetaiDolList) {
         Instant now = Instant.now();
         try {
             if (!segmentDetaiDolList.isEmpty()) {
-                anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                Boolean aBoolean = anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
+                if(Boolean.TRUE.equals(aBoolean)){
+                    log.info("# SegmentConsumeServiceImpl.doConsume() # 用户画像初始化成功，异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                }else{
+                    log.info("# SegmentConsumeServiceImpl.doConsume() # 用户画像初始化失败，将异常检测【{}条】发送到Kafka的生产者缓冲区中耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                }
             }
         } catch (Exception e) {
             log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);
@@ -157,9 +157,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年08月19日 18:08:34
      * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
      **/
-    private void disableReactorModel(HashMap<String, Integer> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, LinkedList<MsAlarmInformationDo> msAlarmInformationDoList) {
-        // 将QPS信息刷入Redis中；2022-06-27 13:42:13
-        // mingshiServerUtil.flushQpsToRedis();
+    private void disableReactorModel(HashMap<String, Integer> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
 
         // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentInformationToDb();
@@ -172,26 +170,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
-        // 插入segment数据；2022-05-23 10:15:22
-        // LinkedList<SegmentDo> segmentDoLinkedList = new LinkedList<>();
-        // if (null != segment) {
-        //   segmentDoLinkedList.add(segment);
-        //   mingshiServerUtil.flushSegmentToDB(segmentDoLinkedList);
-        // }
-
         // 将表名字插入到监管表中；2022-07-13 14:16:57
         mingshiServerUtil.insertMonitorTables();
 
-        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
+        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
 
         mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
 
-        // 将异常信息插入到MySQL中；2022-06-07 18:16:44
-        LinkedList<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = new LinkedList<>();
-        if (null != msAlarmInformationDoList && !msAlarmInformationDoList.isEmpty()) {
-            msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
-        }
-        mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoLinkedListist);
     }
 
     /**

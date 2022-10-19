@@ -3,15 +3,9 @@ package com.mingshi.skyflying.anomaly_detection.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitTask;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
-import com.mingshi.skyflying.common.domain.UserPortraitRulesDo;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -22,9 +16,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @Author: 唐郑翔
@@ -66,7 +60,7 @@ public class MsCaffeineCache implements ApplicationRunner {
     /**
      * 用户画像相关信息初始化完毕标识；
      */
-    private static volatile Boolean userPortraitInitDone = false;
+    private static volatile AtomicBoolean userPortraitInitDone = new AtomicBoolean(Boolean.FALSE);
 
     /**
      * <B>方法名称：getUserPortraitInitDone</B>
@@ -78,7 +72,20 @@ public class MsCaffeineCache implements ApplicationRunner {
      * @Param []
      **/
     public static Boolean getUserPortraitInitDone() {
-        return userPortraitInitDone;
+        return userPortraitInitDone.get();
+    }
+
+    /**
+     * <B>方法名称：setUserPortraitInitDone</B>
+     * <B>概要说明：设置用户画像信息初始化是否完毕的标识</B>
+     *
+     * @Author zm
+     * @Date 2022-10-19 14:10:02
+     * @Param [flag]
+     * @return void
+     **/
+    public static void setUserPortraitInitDone(Boolean flag) {
+        userPortraitInitDone.set(flag);
     }
 
     @Override
@@ -118,7 +125,7 @@ public class MsCaffeineCache implements ApplicationRunner {
         // 当项目启动时，加载用户画像信息；
         Boolean portraitFromRedis = anomalyDetectionBusiness.getPortraitFromRedis();
         if (Boolean.TRUE.equals(portraitFromRedis)) {
-            userPortraitInitDone = true;
+            userPortraitInitDone.set(true);
         }
     }
 
