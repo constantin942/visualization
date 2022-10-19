@@ -27,7 +27,6 @@ import org.springframework.context.ApplicationContext;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -163,7 +162,12 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                     msSegmentDetailDoConsumeFailed(msConsumerRecords);
                 } else if (msConsumerRecords.getRecordType().equals(RecordEnum.Anomaly_ALARM.getCode())) {
                     // 进行钉钉告警；2022-10-17 14:00:00
+
                     List<MsAlarmInformationDo> alarmInformationDos = (List<MsAlarmInformationDo>) msConsumerRecords.getBody();
+                    // 将异常信息保存到数据库中；2022-10-19 10:55:04
+                    mingshiServerUtil.flushAbnormalToDb(alarmInformationDos);
+
+                    // 对异常信息进行钉钉告警；2022-10-19 10:55:34
                     ObjectMapper mapper = new ObjectMapper();
                     alarmInformationDos = mapper.convertValue(alarmInformationDos, new TypeReference<List<MsAlarmInformationDo>>() {});
                     // 由于该类没有交由Spring管理, 所以这里采用反射的方式调用Spring管理的类
@@ -194,18 +198,15 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
         Instant now = Instant.now();
         // 进行异常检测；2022-10-17 13:59:46
         List<MsSegmentDetailDo> segmentDetaiDolList = (List<MsSegmentDetailDo>) msConsumerRecords.getBody();
-        // 判断是否是异常信息；2022-10-17 14:24:15
-        LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
         // 进行异常检测
-        anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+        anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList);
         log.info("# MsKafkaAnomalyDetectionConsumer.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
 
         if (enableReactorModelFlag) {
             // 使用reactor模型；2022-05-30 21:04:05
-            mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
+            mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, null);
         } else {
             mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-            mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
         }
 
         log.info("# MsKafkaAnomalyDetectionConsumer.consumeRecords() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));

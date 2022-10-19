@@ -43,7 +43,6 @@ public class IoThread extends Thread {
     private LinkedList<MsSegmentDetailDo> segmentDetailDoList = null;
     private LinkedList<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList = null;
     private HashSet<String> userHashSet = null;
-    private List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist = null;
     private MingshiServerUtil mingshiServerUtil;
     private Integer capacity;
 
@@ -73,7 +72,6 @@ public class IoThread extends Thread {
         userHashSet = new HashSet<>();
         segmentDetailDoList = new LinkedList<>();
         segmentDetailUserNameIsNullDoList = new LinkedList<>();
-        msAlarmInformationDoLinkedListist = new LinkedList<>();
         this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
@@ -183,39 +181,12 @@ public class IoThread extends Thread {
                 // 从json实例中获取用户名为空的segmentDetail实例信息
                 getSegmentDetailUserNameIsNullFromJsonObject(jsonObject);
 
-                // 从json实例中获取异常信息
-                getAbnormalFromJsonObject(jsonObject);
-
             }
 
             // 将segment信息和SQL审计日志插入到表中；2022-05-30 17:50:12
             insertSegmentDetailIntoMySqlAndRedis();
         } catch (Throwable e) {
             log.error("# IoThread.run() # 将segment信息、及对应的索引信息和SQL审计日志信息在本地攒批和批量插入时 ，出现了异常。", e);
-        }
-    }
-
-    /**
-     * <B>方法名称：getAbnormalFromJSONObject</B>
-     * <B>概要说明：将异常信息信息放入到 msAlarmInformationDoLinkedListist 中</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年06月02日 11:06:40
-     * @Param [jsonObject]
-     **/
-    private void getAbnormalFromJsonObject(ObjectNode jsonObject) {
-        try {
-            JsonNode jsonNode = jsonObject.get(Const.ABNORMAL);
-            if (null != jsonNode) {
-                String listString = jsonNode.asText();
-                if (StringUtil.isNotBlank(listString)) {
-                    LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = JsonUtil.string2Obj(listString, LinkedList.class, MsAlarmInformationDo.class);
-                    msAlarmInformationDoLinkedListist.addAll(msAlarmInformationDoList);
-                }
-            }
-        } catch (Exception e) {
-            log.error("# IoThread.getAbnormalFromJSONObject() # 将异常信息放入到 msAlarmInformationDoLinkedListist 中出现了异常。", e);
         }
     }
 
@@ -383,7 +354,7 @@ public class IoThread extends Thread {
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
             if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRUNNING())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
-                mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList, msAlarmInformationDoLinkedListist);
+                mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList);
                 currentTime = Instant.now();
 
                 // 将数据统计信息发送到Redis中；2022-10-15 09:37:43

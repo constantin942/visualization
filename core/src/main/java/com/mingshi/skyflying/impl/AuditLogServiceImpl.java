@@ -306,7 +306,6 @@ public class AuditLogServiceImpl implements AuditLogService {
     private void anomalyDetectionStatistics(List<MsDmsAuditLogDo> list) {
         try {
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
-            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
             for (MsDmsAuditLogDo msDmsAuditLogDo : list) {
                 MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
                 msSegmentDetailDo.setUserName(msDmsAuditLogDo.getUserName());
@@ -325,11 +324,10 @@ public class AuditLogServiceImpl implements AuditLogService {
                 segmentDetaiDolList.add(msSegmentDetailDo);
             }
             // 将来自DMS的消息进行异常检测；2022-10-19 10:16:26
-            anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
             if(Boolean.TRUE.equals(MsCaffeineCache.getUserPortraitInitDone())){
                 // 当用户画像初始化成功了，才将来自DMS中的数据保存到数据库中；2022-10-19 10:31:52
                 mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-                mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
             }
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);

@@ -306,7 +306,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList) {
         try {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
                 return;
@@ -320,7 +320,7 @@ public class AnomalyDetectionBusiness {
                 return;
             }
             // 用户画像已初始化完毕，现在进行异常检测；
-            doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+            doUserVisitedIsAbnormal(segmentDetaiDolList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
@@ -335,11 +335,12 @@ public class AnomalyDetectionBusiness {
      * @Date 2022-10-17 15:27:40
      * @Param [segmentDetaiDolList, msAlarmInformationDoList]
      **/
-    public void doUserVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
+    public void doUserVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList) {
         try {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
                 return;
             }
+            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();

@@ -5,7 +5,6 @@ import com.mingshi.skyflying.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;
-import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
@@ -18,7 +17,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <B>主类名称: ScheduledTask</B>
@@ -59,11 +61,10 @@ public class ExecitonScheduledTaskList {
             // 先从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录；2022-10-19 10:39:17
             List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
             while (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
-                LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
                 Boolean aBoolean = anomalyDetectionBusiness.userPortraitInitNotDone(segmentDetaiDolList);
                 if (Boolean.TRUE.equals(aBoolean)) {
                     // 用户画像已初始化完毕，现在进行异常检测；
-                    anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                    anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList);
                     msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
                     mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
                     segmentDetaiDolList.clear();

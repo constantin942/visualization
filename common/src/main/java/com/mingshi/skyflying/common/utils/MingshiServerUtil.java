@@ -163,7 +163,6 @@ public class MingshiServerUtil {
     public void doEnableReactorModel(Map<String, Integer> statisticsProcessorThreadQpsMap,
                                      List<MsSegmentDetailDo> segmentDetaiDolList,
                                      List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList,
-                                     List<MsAlarmInformationDo> msAlarmInformationDoList,
                                      Map<String/* skywalking探针名字 */, String/* skywalking探针最近一次发来消息的时间 */> skywalkingAgentHeartBeatMap) {
         try {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
@@ -178,9 +177,6 @@ public class MingshiServerUtil {
             }
             if (null != segmentDetaiUserNameIsNullDolList && !segmentDetaiUserNameIsNullDolList.isEmpty()) {
                 jsonObject.put(Const.SEGMENT_DETAIL_USERNAME_IS_NULL_DO_LIST, JsonUtil.obj2String(segmentDetaiUserNameIsNullDolList));
-            }
-            if (null != msAlarmInformationDoList && !msAlarmInformationDoList.isEmpty()) {
-                jsonObject.put(Const.ABNORMAL, JsonUtil.obj2String(msAlarmInformationDoList));
             }
             if (null != skywalkingAgentHeartBeatMap && 0 < skywalkingAgentHeartBeatMap.size()) {
                 jsonObject.put(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, JsonUtil.obj2String(skywalkingAgentHeartBeatMap));
@@ -1562,8 +1558,7 @@ public class MingshiServerUtil {
                                                        Map<String, Integer> processorThreadQpsMap,
                                                        Map<String, String> skywalkingAgentHeartBeatMap,
                                                        List<MsSegmentDetailDo> segmentDetailDoList,
-                                                       List<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList,
-                                                       List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist) {
+                                                       List<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList) {
 
         // 将用户名发送到redis中
         flushUserNameToRedis(userHashSet);
@@ -1588,9 +1583,6 @@ public class MingshiServerUtil {
 
         // 将没有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
-
-        // 将异常信息持久化到MySQL数据库中；2022-09-27 14:52:01
-        flushAbnormalToDb(msAlarmInformationDoLinkedListist);
 
     }
 }
