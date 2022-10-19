@@ -15,6 +15,7 @@ public class Const {
     public static final String IO_THREAD = "io_Thread_";
     public static final String PROCESSOR_THREAD = "processor_thread_";
     public static final String GLOBAL_TRACE_ID = "globalTraceId";
+    public static final String ANOMALY_DETECTION_ALARM_KEY = "anomalyDetectionAlarmKey";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

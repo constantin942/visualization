@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,7 +91,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-库表维度
      */
     public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList
-            , PortraitConfig portraitConfig, boolean isDemoMode) {
+        , PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
@@ -177,7 +176,7 @@ public class AnomalyDetectionBusiness {
      * 判断是否告警-时间维度
      */
     public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList
-            , PortraitConfig portraitConfig, boolean isDemoMode) {
+        , PortraitConfig portraitConfig, boolean isDemoMode) {
         if (segmentDetailDo.getUserName() == null) return;
         if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
@@ -191,7 +190,7 @@ public class AnomalyDetectionBusiness {
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
             log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                    , time, segmentDetailDo.getGlobalTraceId());
+                , time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -314,11 +313,11 @@ public class AnomalyDetectionBusiness {
             }
 
             // 如果用户画像没有初始化完毕，那么将其发送到Kafka中；2022-10-17 10:30:28
-            Boolean aBoolean = userPortraitInitDone(segmentDetaiDolList);
+            Boolean aBoolean = userPortraitInitNotDone(segmentDetaiDolList);
             if (Boolean.FALSE.equals(aBoolean)) {
                 return;
             }
-            // 进行异常检测
+            // 用户画像已初始化完毕，现在进行异常检测；
             doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
@@ -339,7 +338,6 @@ public class AnomalyDetectionBusiness {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
                 return;
             }
-            userPortraitInitDone(segmentDetaiDolList);
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
@@ -353,18 +351,37 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
 
             }
-            if (msAlarmInformationDoList.size() != 0) {
-                // 将告警检测发送到Kafka中
-                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
-                aiitKafkaProducer.send(anomalyDetectionAlarmTopic, JsonUtil.obj2String(msConsumerRecords));
-            }
+
+            // 将异常告警信息发送到Kafka中；2022-10-19 10:07:34
+            sendMsAlarmInformationDoToKafka(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
     }
 
     /**
-     * <B>方法名称：userPortraitInitDone</B>
+     * <B>方法名称：sendMsAlarmInformationDoToKafka</B>
+     * <B>概要说明：将异常告警信息发送到Kafka中</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-19 10:07:44
+     * @Param [msAlarmInformationDoList]
+     **/
+    private void sendMsAlarmInformationDoToKafka(List<MsAlarmInformationDo> msAlarmInformationDoList) {
+        try {
+            if (msAlarmInformationDoList.size() != 0) {
+                // 将告警检测发送到Kafka中
+                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
+                aiitKafkaProducer.sendWithKey(anomalyDetectionAlarmTopic, Const.ANOMALY_DETECTION_ALARM_KEY, JsonUtil.obj2String(msConsumerRecords));
+            }
+        } catch (Exception e) {
+            log.error("# AnomalyDetectionBusiness.sendMsAlarmInformationDoToKafka() # 将告警消息发送到Kafka中的时候，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：userPortraitInitNotDone</B>
      * <B>概要说明：当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中</B>
      *
      * @return void
@@ -372,7 +389,7 @@ public class AnomalyDetectionBusiness {
      * @Date 2022-10-17 10:32:58
      * @Param []
      **/
-    private Boolean userPortraitInitDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
+    private Boolean userPortraitInitNotDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
         // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
         if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
             try {
@@ -380,7 +397,7 @@ public class AnomalyDetectionBusiness {
                 aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(msConsumerRecords));
                 return false;
             } catch (Exception e) {
-                log.error("# AnomalyDetectionBusiness.waitUserPortraitInitDone() # 开始执行异常检测，由于用户画像还没有初始化完毕，在这里将待异常检测的信息发送到Kakfa的topic = 【{}】时，出现了异常。", anomalyDetectionConsumeFailedTopic, e);
+                log.error("# AnomalyDetectionBusiness.userPortraitInitNotDone() # 开始执行异常检测，由于用户画像还没有初始化完毕，在这里将待异常检测的信息发送到Kakfa的topic = 【{}】时，出现了异常。", anomalyDetectionConsumeFailedTopic, e);
             }
         }
         return true;

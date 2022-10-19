@@ -89,7 +89,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 判断是否是异常信息；2022-06-07 18:00:13
                 msAlarmInformationDoList = new LinkedList<>();
                 // 异常检测；2022-10-13 09:40:57
-//                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+                doUserVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
             }
 
             HashMap<String, Integer> statisticsProcessorThreadQpsMap = statisticsProcessorThreadQps();
@@ -182,7 +182,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         // 将表名字插入到监管表中；2022-07-13 14:16:57
         mingshiServerUtil.insertMonitorTables();
 
-        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
+        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
 
         mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
 

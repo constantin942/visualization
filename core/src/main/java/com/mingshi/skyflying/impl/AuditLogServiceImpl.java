@@ -324,7 +324,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 segmentDetaiDolList.add(msSegmentDetailDo);
             }
             anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
+            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
             mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);

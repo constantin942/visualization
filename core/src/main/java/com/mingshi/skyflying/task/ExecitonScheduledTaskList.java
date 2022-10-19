@@ -62,9 +62,9 @@ public class ExecitonScheduledTaskList {
             while (null != segmentDetaiDolList && 0 < segmentDetaiDolList.size()) {
                 LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
                 anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.FALSE);
                 mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
                 msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
+                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
                 segmentDetaiDolList.clear();
                 segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
             }

@@ -91,7 +91,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
         // broker接收不到一个consumer的心跳, 持续该时间, 就认为故障了，会将其踢出消费组，对应的Partition也会被重新分配给其他consumer，默认是10秒
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30 * 1000);
         // 一次poll最大拉取消息的条数，如果消费者处理速度很快，可以设置大点，如果处理速度一般，可以设置小点
-        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
+        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
         // 如果两次poll操作间隔超过了这个时间，broker就会认为这个consumer处理能力太弱，会将其踢出消费组，将分区分配给别的consumer消费
         properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 60 * 1000);
         // 把消息的key从字节数组反序列化为字符串
@@ -121,7 +121,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
             while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
                 if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
                     try {
-                        TimeUnit.MILLISECONDS.sleep(500);
+                        TimeUnit.MILLISECONDS.sleep(1000);
                         log.error("# MsKafkaAnomalyDetectionConsumer.doRun() # 开始执行异常检测，由于用户画像还没有初始化完毕，在这里循环等待。");
                     } catch (Exception e) {
                         // ignore
@@ -205,7 +205,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
             // 使用reactor模型；2022-05-30 21:04:05
             mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, msAlarmInformationDoList, null);
         } else {
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList, Boolean.TRUE);
+            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
             mingshiServerUtil.flushAbnormalToDb(msAlarmInformationDoList);
         }
 
