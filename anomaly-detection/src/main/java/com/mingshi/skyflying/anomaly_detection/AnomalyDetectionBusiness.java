@@ -338,8 +338,29 @@ public class AnomalyDetectionBusiness {
             }
             LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
+            // 做健壮性的判断；2022-10-19 14:13:25
+            if(null == enableTableRule || !enableTableRule.equals(Boolean.TRUE) || !enableTableRule.equals(Boolean.FALSE)){
+                log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTableRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
+                MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
+                userPortraitInitNotDone(segmentDetaiDolList);
+                return;
+            }
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
+            if(null == enableTimeRule || !enableTimeRule.equals(Boolean.TRUE) || !enableTimeRule.equals(Boolean.FALSE)){
+                log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTimeRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
+                MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
+                userPortraitInitNotDone(segmentDetaiDolList);
+                return;
+            }
+
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
+            if(null == portraitConfig){
+                log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则的配置信息。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
+                MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
+                userPortraitInitNotDone(segmentDetaiDolList);
+                return;
+            }
+            
             boolean isDemoMode = false;
             // TODO: 交付时删掉下面这一行
             isDemoMode = isDemoMode();
@@ -389,7 +410,7 @@ public class AnomalyDetectionBusiness {
      **/
     public Boolean userPortraitInitNotDone(List<MsSegmentDetailDo> segmentDetaiDolList) {
         // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
-        if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
+        if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone()) && !segmentDetaiDolList.isEmpty()) {
             try {
                 MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode(), segmentDetaiDolList);
                 aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(msConsumerRecords));
