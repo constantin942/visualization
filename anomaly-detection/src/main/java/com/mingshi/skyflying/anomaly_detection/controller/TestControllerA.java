@@ -56,7 +56,7 @@ public class TestControllerA {
         List<MsAlarmInformationDo> msAlarmInformationDoList = new ArrayList<>();
         List<MsSegmentDetailDo> list = new ArrayList<>();
         list.add(msSegmentDetailDo);
-        anomalyDetectionBusiness.userVisitedIsAbnormal(list, msAlarmInformationDoList);
+        anomalyDetectionBusiness.userVisitedIsAbnormal(list);
         System.out.println(msAlarmInformationDoList.get(0));
     }
 
