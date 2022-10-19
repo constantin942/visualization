@@ -90,8 +90,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-库表维度
      */
-    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList
-        , PortraitConfig portraitConfig, boolean isDemoMode) {
+    public void userVisitedTableIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             String username = segmentDetailDo.getUserName();
             String dbInstance = segmentDetailDo.getDbInstance();
@@ -165,8 +164,7 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-时间维度
      */
-    public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList,
-                                          PortraitConfig portraitConfig, boolean isDemoMode) {
+    public void userVisitedTimeIsAbnormal(List<MsSegmentDetailDo> segmentDetailDos, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig, boolean isDemoMode) {
         for (MsSegmentDetailDo segmentDetailDo : segmentDetailDos) {
             userVisitedTimeIsAbnormalHelper(segmentDetailDo, msAlarmInformationDoList, portraitConfig, isDemoMode);
         }
@@ -175,9 +173,10 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警-时间维度
      */
-    public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList
-        , PortraitConfig portraitConfig, boolean isDemoMode) {
-        if (segmentDetailDo.getUserName() == null) return;
+    public void userVisitedTimeIsAbnormalHelper(MsSegmentDetailDo segmentDetailDo, List<MsAlarmInformationDo> msAlarmInformationDoList, PortraitConfig portraitConfig, boolean isDemoMode) {
+        if (segmentDetailDo.getUserName() == null) {
+            return;
+        }
         if (portraitConfig == null) {
             portraitConfig = portraitConfigMapper.selectOne();
         }
@@ -189,8 +188,7 @@ public class AnomalyDetectionBusiness {
         String time = segmentDetailDo.getStartTime();
         String interval = getInterval(time);
         if (interval == null || interval.length() == 0) {
-            log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}"
-                , time, segmentDetailDo.getGlobalTraceId());
+            log.error("userVisitedTimeIsAbnormal中提取访问记录时间失败, 具体时间为{}, globalTraceId为{}", time, segmentDetailDo.getGlobalTraceId());
             return;
         }
         Double rateByInterVal = userPortraitByTimeTask.getRateByInterVal(userName, interval);
@@ -336,17 +334,17 @@ public class AnomalyDetectionBusiness {
             if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
                 return;
             }
-            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
+
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
             // 做健壮性的判断；2022-10-19 14:13:25
-            if(null == enableTableRule || !enableTableRule.equals(Boolean.TRUE) || !enableTableRule.equals(Boolean.FALSE)){
+            if (null == enableTableRule || !enableTableRule.equals(Boolean.TRUE) || !enableTableRule.equals(Boolean.FALSE)) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTableRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
                 return;
             }
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
-            if(null == enableTimeRule || !enableTimeRule.equals(Boolean.TRUE) || !enableTimeRule.equals(Boolean.FALSE)){
+            if (null == enableTimeRule || !enableTimeRule.equals(Boolean.TRUE) || !enableTimeRule.equals(Boolean.FALSE)) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTimeRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
@@ -354,13 +352,14 @@ public class AnomalyDetectionBusiness {
             }
 
             PortraitConfig portraitConfig = MsCaffeineCache.getPortraitConfig();
-            if(null == portraitConfig){
+            if (null == portraitConfig) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则的配置信息。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
                 return;
             }
-            
+
+            LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
             boolean isDemoMode = false;
             // TODO: 交付时删掉下面这一行
             isDemoMode = isDemoMode();
