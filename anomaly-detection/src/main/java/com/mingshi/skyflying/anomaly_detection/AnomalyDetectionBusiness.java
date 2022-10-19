@@ -537,7 +537,6 @@ public class AnomalyDetectionBusiness {
     private void dingAlarmHelper(String redisKey, DingAlarmConfig dingAlarmConfig) {
         Integer gap = dingAlarmConfig.getGap();
         if (Boolean.FALSE.equals(isAlarmed(redisKey, gap))) {
-            redisPoolUtil.set(redisKey, 1, (long) gap * AnomalyConst.SECONDS);
             String message = buildDingAlarmInfo(redisKey);
             try {
                 List<String> mobiles = null;
