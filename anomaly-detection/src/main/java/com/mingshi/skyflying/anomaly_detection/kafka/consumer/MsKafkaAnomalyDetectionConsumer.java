@@ -159,10 +159,9 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                 String recordStr = new String(bytes);
                 MsConsumerRecords msConsumerRecords = JsonUtil.string2Obj(recordStr, MsConsumerRecords.class);
                 if (msConsumerRecords.getRecordType().equals(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode())) {
-                    msSegmentDetailDoConsumeFailed(msConsumerRecords);
+                    // 对待异常检测的数据（之前是因为用户画像没有初始化完毕），再次进行异常检测；2022-10-19 11:23:24
+                    msSegmentDetailDoReConsume(msConsumerRecords);
                 } else if (msConsumerRecords.getRecordType().equals(RecordEnum.Anomaly_ALARM.getCode())) {
-                    // 进行钉钉告警；2022-10-17 14:00:00
-
                     List<MsAlarmInformationDo> alarmInformationDos = (List<MsAlarmInformationDo>) msConsumerRecords.getBody();
                     // 将异常信息保存到数据库中；2022-10-19 10:55:04
                     mingshiServerUtil.flushAbnormalToDb(alarmInformationDos);
@@ -186,7 +185,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
     }
 
     /**
-     * <B>方法名称：msSegmentDetailDoConsumeFailed</B>
+     * <B>方法名称：msSegmentDetailDoReConsume</B>
      * <B>概要说明：进行异常检测</B>
      *
      * @return void
@@ -194,22 +193,13 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
      * @Date 2022-10-17 15:58:00
      * @Param [msConsumerRecords]
      **/
-    private void msSegmentDetailDoConsumeFailed(MsConsumerRecords msConsumerRecords) {
+    private void msSegmentDetailDoReConsume(MsConsumerRecords msConsumerRecords) {
         Instant now = Instant.now();
         // 进行异常检测；2022-10-17 13:59:46
         List<MsSegmentDetailDo> segmentDetaiDolList = (List<MsSegmentDetailDo>) msConsumerRecords.getBody();
         // 进行异常检测
         anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList);
-        log.info("# MsKafkaAnomalyDetectionConsumer.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
-
-        if (enableReactorModelFlag) {
-            // 使用reactor模型；2022-05-30 21:04:05
-            mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, null);
-        } else {
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-        }
-
-        log.info("# MsKafkaAnomalyDetectionConsumer.consumeRecords() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+        log.info("# MsKafkaAnomalyDetectionConsumer.msSegmentDetailDoReConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
     }
 
     /**

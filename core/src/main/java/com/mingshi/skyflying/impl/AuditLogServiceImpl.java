@@ -7,10 +7,12 @@ import com.aliyuncs.dms_enterprise.model.v20181101.ListSQLExecAuditLogResponse;
 import com.aliyuncs.profile.DefaultProfile;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsConfigDao;
-import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.domain.MsConfigDo;
+import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
+import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
+import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
@@ -303,10 +305,10 @@ public class AuditLogServiceImpl implements AuditLogService {
      * @Date 2022年10月09日 09:10:02
      * @Param [list]
      **/
-    private void anomalyDetectionStatistics(List<MsDmsAuditLogDo> list) {
+    private void anomalyDetectionStatistics(List<MsDmsAuditLogDo> msDmsAuditLogDoList) {
         try {
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
-            for (MsDmsAuditLogDo msDmsAuditLogDo : list) {
+            for (MsDmsAuditLogDo msDmsAuditLogDo : msDmsAuditLogDoList) {
                 MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
                 msSegmentDetailDo.setUserName(msDmsAuditLogDo.getUserName());
                 msSegmentDetailDo.setDbUserName(msDmsAuditLogDo.getUserName());
@@ -325,10 +327,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             }
             // 将来自DMS的消息进行异常检测；2022-10-19 10:16:26
             anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
-            if(Boolean.TRUE.equals(MsCaffeineCache.getUserPortraitInitDone())){
-                // 当用户画像初始化成功了，才将来自DMS中的数据保存到数据库中；2022-10-19 10:31:52
-                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-            }
+            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);
         }

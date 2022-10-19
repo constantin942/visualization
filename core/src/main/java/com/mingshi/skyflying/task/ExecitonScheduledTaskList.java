@@ -61,15 +61,11 @@ public class ExecitonScheduledTaskList {
             // 先从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录；2022-10-19 10:39:17
             List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
             while (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
-                Boolean aBoolean = anomalyDetectionBusiness.userPortraitInitNotDone(segmentDetaiDolList);
-                if (Boolean.TRUE.equals(aBoolean)) {
-                    // 用户画像已初始化完毕，现在进行异常检测；
-                    anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList);
-                    msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
-                    mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-                    segmentDetaiDolList.clear();
-                    segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
-                }
+                anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
+                msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
+                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+                segmentDetaiDolList.clear();
+                segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
             }
         } catch (Exception e) {
             log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);

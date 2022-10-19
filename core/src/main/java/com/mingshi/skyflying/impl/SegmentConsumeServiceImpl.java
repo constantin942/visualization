@@ -115,8 +115,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         Instant now = Instant.now();
         try {
             if (!segmentDetaiDolList.isEmpty()) {
-                anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
-                log.info("# SegmentConsumeServiceImpl.doConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                Boolean aBoolean = anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
+                if(Boolean.TRUE.equals(aBoolean)){
+                    log.info("# SegmentConsumeServiceImpl.doConsume() # 用户画像初始化成功，异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                }else{
+                    log.info("# SegmentConsumeServiceImpl.doConsume() # 用户画像初始化失败，将异常检测【{}条】发送到Kafka的生产者缓冲区中耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+                }
             }
         } catch (Exception e) {
             log.error("# SegmentConsumeServiceImpl.doConsume() # 执行异常检测时，出现了异常。", e);

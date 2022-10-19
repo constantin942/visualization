@@ -306,24 +306,20 @@ public class AnomalyDetectionBusiness {
     /**
      * 判断是否告警
      */
-    public void userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList) {
+    public Boolean userVisitedIsAbnormal(List<MsSegmentDetailDo> segmentDetaiDolList) {
         try {
-            if (null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()) {
-                return;
-            }
-
-            // 如果用户画像没有初始化成功，那么将待异常检测的消息（segmentDetaiDolList）发送到Kafka中。如果此时msAlarmInformationDoList不为空，那么这个集合中的消息也不管了，直接丢弃就好。
-            // 因为异常检测模块中有新的消费者会对待异常检测的消息（segmentDetaiDolList）重新进行异常检测。
-            // 2022-10-17 10:30:28
+            // 当项目启动后，如果用户画像没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中
             Boolean aBoolean = userPortraitInitNotDone(segmentDetaiDolList);
             if (Boolean.FALSE.equals(aBoolean)) {
-                return;
+                // 用户画像初始化失败，将消息发送到Kakfa中；2022-10-19 11:17:09
+                return aBoolean;
             }
             // 用户画像已初始化完毕，现在进行异常检测；
             doUserVisitedIsAbnormal(segmentDetaiDolList);
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
         }
+        return Boolean.TRUE;
     }
 
     /**
@@ -384,7 +380,7 @@ public class AnomalyDetectionBusiness {
 
     /**
      * <B>方法名称：userPortraitInitNotDone</B>
-     * <B>概要说明：当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中</B>
+     * <B>概要说明：当项目启动后，如果用户画像没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中</B>
      *
      * @return void
      * @Author zm
