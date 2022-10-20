@@ -5,20 +5,10 @@ import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.anomaly_detection.caffeine.ConfigCache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
-import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
-import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -27,7 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <B>方法名称：UserPortraitTask</B>
@@ -62,12 +54,16 @@ public class UserPortraitTask {
      * @Date 2022-10-17 11:26:13
      * @Param []
      **/
-    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 */1 * * * ?")
     @Async
     public void fetchUserPortrait() {
         try {
             // 定时拉取用户画像；
-            anomalyDetectionBusiness.getPortraitFromRedis();
+            Boolean portraitFromRedis = anomalyDetectionBusiness.getPortraitFromRedis();
+            if(Boolean.TRUE.equals(portraitFromRedis)){
+                MsCaffeineCache.setUserPortraitInitDone(Boolean.TRUE);
+            }
         } catch (Exception e) {
             log.error("定时拉取用户画像失败");
         }
