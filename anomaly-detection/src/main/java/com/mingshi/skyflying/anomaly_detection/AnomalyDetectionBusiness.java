@@ -576,11 +576,11 @@ public class AnomalyDetectionBusiness {
      */
     private boolean isAlarmed(String key, Integer gap) {
         Instant date = MsCaffeineCache.getFromAlarmInhibitCache(key);
-        if(date == null) {
+        if (date == null) {
             MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
             return false;
         }
-        if(DateTimeUtil.getTimeSeconds(date) >= (long) AnomalyConst.SECONDS * gap) {
+        if (DateTimeUtil.getTimeSeconds(date) >= (long) AnomalyConst.SECONDS * gap) {
             MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
             return false;
         }
@@ -594,18 +594,16 @@ public class AnomalyDetectionBusiness {
         try {
             // 库表画像
             Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
-            if (null == map) {
-                return false;
-            }
             Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
-            MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
+            if (null != strMap) {
+                MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
+            }
             // 时间画像
             map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
-            if (null == map) {
-                return false;
-            }
             strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
-            MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
+            if (null != strMap) {
+                MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
+            }
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，出现了异常。", e);
             return false;
