@@ -138,6 +138,9 @@ public class IoThreadLinkedBlockingQueue {
         try {
             initLinkedBlockingQueueList(reactorIoThreadCount, mingshiServerUtil);
             index =  ReactorUtil.indexForByIoThread(INDEX.incrementAndGet(), linkedBlockingQueueList.size());
+            if(0 > index){
+                index = Math.abs(index);
+            }
             return linkedBlockingQueueList.get(index);
         } catch (Exception e) {
             log.error("# IoThreadLinkedBlockingQueue.getLinkedBlockingQueue() # 在非优雅关机的情况下，获取IoThread线程所属内存队列时，出现了异常。计算出来的下标索引 = 【{}】，当前队列的大小 = 【{}】", index, linkedBlockingQueueList.size(), e);

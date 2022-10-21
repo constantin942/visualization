@@ -1098,15 +1098,15 @@ public class MingshiServerUtil {
      **/
     public void flushUserNameToRedis(Set<String> userHashSet) {
         if (!userHashSet.isEmpty()) {
-//            Integer count = userHashSet.size();
+            Integer count = userHashSet.size();
             try {
-//                Instant now = Instant.now();
+                Instant now = Instant.now();
                 for (String userName : userHashSet) {
                     redisPoolUtil.sadd(Const.SET_DATA_STATISTICS_HOW_MANY_USERS, userName);
                     // 将用户名放到本地内存中；2022-07-19 10:12:13
                     InformationOverviewSingleton.put(userName);
                 }
-//                log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名发送到redis中，耗时【{}】毫秒。", count, DateTimeUtil.getTimeMillis(now));
+                log.info("# MingshiServerUtil.flushUserNameToRedis() # 实时统计将【{}】条用户名【{}】发送到redis中，耗时【{}】毫秒。", count, JsonUtil.obj2String(userHashSet), DateTimeUtil.getTimeMillis(now));
                 userHashSet.clear();
             } catch (Exception e) {
                 log.error("# MingshiServerUtil.flushUserNameToRedis() # 实时将用户名发送到redis中，出现了异常。", e);
@@ -1125,7 +1125,7 @@ public class MingshiServerUtil {
      **/
     private void flushUserAccessBehaviorLatestVisitedTimeToRedis(Map<String, String> userAccessBehaviorLatestVisitedTimeMap) {
         try {
-            Instant now = Instant.now();
+//            Instant now = Instant.now();
             // 更新用户对数据库最后的访问时间；
             if (null != userAccessBehaviorLatestVisitedTimeMap && !userAccessBehaviorLatestVisitedTimeMap.isEmpty()) {
                 Iterator<String> iterator = userAccessBehaviorLatestVisitedTimeMap.keySet().iterator();
@@ -1283,7 +1283,7 @@ public class MingshiServerUtil {
             }
             CopyOnWriteMap<String, String> instance = AgentInformationSingleton.getInstance();
             if (null != instance && 0 < instance.size()) {
-                Instant now = Instant.now();
+//                Instant now = Instant.now();
                 LinkedList<MsAgentInformationDo> list = new LinkedList<>();
                 Iterator<String> iterator = instance.keySet().iterator();
                 while (iterator.hasNext()) {
@@ -1331,7 +1331,7 @@ public class MingshiServerUtil {
                 }
             }
 
-            Instant now = Instant.now();
+//            Instant now = Instant.now();
             redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, skywalkingAgentTimeMap);
 //            log.info("#MingshiServerUtil.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", skywalkingAgentTimeMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
@@ -1399,7 +1399,7 @@ public class MingshiServerUtil {
             if (!segmentDetaiUserNameIsNullDolList.isEmpty()) {
                 Instant now = Instant.now();
                 msSegmentDetailUsernameIsNullMapper.insertSelectiveBatch(segmentDetaiUserNameIsNullDolList);
-                //            log.info("# MingshiServerUtil.flushSegmentDetailUserNameIsNullToDb() # 将没有用户名的链路信息【{}条】插入到表中用时【{}】毫秒。 ", segmentDetaiUserNameIsNullDolList.size(), DateTimeUtil.getTimeMillis(now));
+                log.info("# MingshiServerUtil.flushSegmentDetailUserNameIsNullToDb() # 将没有用户名的链路信息【{}条】插入到表中用时【{}】毫秒。 ", segmentDetaiUserNameIsNullDolList.size(), DateTimeUtil.getTimeMillis(now));
                 segmentDetaiUserNameIsNullDolList.clear();
             }
         } catch (Exception e) {
@@ -1492,7 +1492,7 @@ public class MingshiServerUtil {
             if (null == processorThreadQpsMap || 0 == processorThreadQpsMap.size()) {
                 return;
             }
-
+//            Instant now = Instant.now();
             Iterator<String> iterator = processorThreadQpsMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String time = iterator.next();
@@ -1502,6 +1502,7 @@ public class MingshiServerUtil {
                     redisPoolUtil.zSetIncrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
                 }
             }
+//            log.info("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中用时【{}毫秒】【{}秒】。", DateTimeUtil.getTimeMillis(now), DateTimeUtil.getSecond(now));
             processorThreadQpsMap.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中的时候，出现了异常。", e);
@@ -1518,31 +1519,34 @@ public class MingshiServerUtil {
      * @Param []
      **/
     public void statisticsProcessorAndIoThreadQueueSize() {
-        if (true == reactorProcessorEnable) {
-            String name = Thread.currentThread().getName();
-            String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
-            List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
-            if (!processorThreadList.isEmpty()) {
-                for (int i = 0; i < processorThreadList.size(); i++) {
-                    ProcessorThread processorThread = processorThreadList.get(i);
-                    Integer queueSize = processorThread.getQueueSize();
-                    if (0 < queueSize) {
-                        redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + processorThread.getName(), key, Double.valueOf(queueSize));
-                    }
-                }
-            }
-
-            List<IoThread> ioThreadList = IoThreadLinkedBlockingQueue.getLinkedBlockingQueueList();
-            if (!ioThreadList.isEmpty()) {
-                for (int i = 0; i < ioThreadList.size(); i++) {
-                    IoThread ioThread = ioThreadList.get(i);
-                    Integer size = ioThread.getQueueSize();
-                    if (0 < size) {
-                        redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + ioThread.getName(), key, size.doubleValue());
-                    }
+        if (true != reactorProcessorEnable) {
+            return;
+        }
+//        Instant now = Instant.now();
+        String name = Thread.currentThread().getName();
+        String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
+        List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
+        if (!processorThreadList.isEmpty()) {
+            for (int i = 0; i < processorThreadList.size(); i++) {
+                ProcessorThread processorThread = processorThreadList.get(i);
+                Integer queueSize = processorThread.getQueueSize();
+                if (0 < queueSize) {
+                    redisPoolUtil.zSetIncrementScore(Const.FIRST_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + processorThread.getName(), key, Double.valueOf(queueSize));
                 }
             }
         }
+
+        List<IoThread> ioThreadList = IoThreadLinkedBlockingQueue.getLinkedBlockingQueueList();
+        if (!ioThreadList.isEmpty()) {
+            for (int i = 0; i < ioThreadList.size(); i++) {
+                IoThread ioThread = ioThreadList.get(i);
+                Integer size = ioThread.getQueueSize();
+                if (0 < size) {
+                    redisPoolUtil.zSetIncrementScore(Const.SECOND_QUEUE_SIZE_ZSET_BY_LINKED_BLOCKING_QUEUE + ioThread.getName(), key, size.doubleValue());
+                }
+            }
+        }
+//        log.info("# MingshiServerUtil.statisticsProcessorAndIoThreadQueueSize() # 将Processor线程【{}】和IoThread线程【{}】对应的队列大小发送到Redis中进行统计用时【{}毫秒】【{}秒】。", processorThreadList.size(), ioThreadList.size(), DateTimeUtil.getTimeMillis(now), DateTimeUtil.getSecond(now));
     }
 
     /**
@@ -1559,7 +1563,6 @@ public class MingshiServerUtil {
                                                        Map<String, String> skywalkingAgentHeartBeatMap,
                                                        List<MsSegmentDetailDo> segmentDetailDoList,
                                                        List<MsSegmentDetailDo> segmentDetailUserNameIsNullDoList) {
-
         // 将用户名发送到redis中
         flushUserNameToRedis(userHashSet);
 
@@ -1578,11 +1581,12 @@ public class MingshiServerUtil {
         // 将业务系统中不存在的表批量插入到数据库中
         insertMonitorTables();
 
+        // 耗时较多，因为是直接批量插入到数据库中；2022-10-21 09:47:32
         // 将带有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailToDb(segmentDetailDoList);
 
+        // 耗时较多，因为是直接批量插入到数据库中；2022-10-21 09:47:32
         // 将没有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
-
     }
 }
