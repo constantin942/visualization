@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.config.GracefulShutdown;
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.common.reactor.queue.IoThreadLinkedBlockingQueue;
@@ -350,7 +349,6 @@ public class IoThread extends Thread {
      **/
     private void insertSegmentDetailIntoMySqlAndRedis() {
         try {
-            Instant now = Instant.now();
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
             if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRUNNING())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
@@ -359,11 +357,6 @@ public class IoThread extends Thread {
 
                 // 将数据统计信息发送到Redis中；2022-10-15 09:37:43
                 mingshiServerUtil.flushStatisticsToRedis(everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap);
-
-                long timeMillis = DateTimeUtil.getTimeMillis(now);
-                if (0 < timeMillis) {
-                    log.info("# IoThread.insertSegmentDetailIntoMySQLAndRedis() # 当前线程【{}】持久化一次数据操作，用时【{}】毫秒。", Thread.currentThread().getName(), timeMillis);
-                }
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
