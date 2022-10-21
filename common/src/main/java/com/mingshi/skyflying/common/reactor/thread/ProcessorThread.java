@@ -24,14 +24,14 @@ public class ProcessorThread extends Thread {
     /**
      * 队列里存放的消息的个数；2022-06-01 09:42:19
      */
-    private static final Integer queueSize = Const.QUEUE_SIZE;
+    private static final Integer QUEUE_SIZE = Const.QUEUE_SIZE;
 
     private Instant now = Instant.now();
     private SegmentConsumerService segmentConsumerService;
 
     public ProcessorThread(SegmentConsumerService segmentConsumerService) {
         this.segmentConsumerService = segmentConsumerService;
-        this.processorLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
+        this.processorLinkedBlockingQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
     }
 
     /**

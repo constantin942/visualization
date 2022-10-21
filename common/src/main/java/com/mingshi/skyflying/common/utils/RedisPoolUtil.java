@@ -681,7 +681,7 @@ public class RedisPoolUtil {
             if (keySet != null) {
                 List<String> values = stringRedisTemplate.opsForValue().multiGet(keySet);
                 List<String> keys = new ArrayList<>(keySet);
-                HashMap<String, String> res = new HashMap<>();
+                HashMap<String, String> res = new HashMap<>(Const.NUMBER_EIGHT);
                 for(int i = 0; i < keys.size(); i++) {
                     res.put(keys.get(i), values.get(i));
                 }

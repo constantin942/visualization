@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.anomaly_detection.task;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
@@ -10,20 +9,18 @@ import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeD
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
-import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -96,7 +93,7 @@ public class UserPortraitByTimeTask {
      * value : 对应时段的访问频率
      */
     public void cachePortraitByTime(List<UserPortraitByTimeDo> userPortraitByTimeDos) {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
         for (UserPortraitByTimeDo userPortraitByTimeDo : userPortraitByTimeDos) {
             String username = userPortraitByTimeDo.getUsername();
             String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
@@ -122,7 +119,9 @@ public class UserPortraitByTimeTask {
      */
     public void insertYesterdayInfo2Coarse() {
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
-        if (segmentDetails == null) return;
+        if (segmentDetails == null) {
+            return;
+        }
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
         if (!list.isEmpty()) {
             coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
@@ -169,7 +168,7 @@ public class UserPortraitByTimeTask {
      */
     public List<CoarseSegmentDetailOnTimeDo> getCoarseSegmentDetailOnTime(List<MsSegmentDetailDo> segmentDetails) {
         //每个用户对应一个数组, 数组存储每个时段的访问次数
-        HashMap<String, int[]> map = new HashMap<>();
+        HashMap<String, int[]> map = new HashMap<>(Const.NUMBER_EIGHT);
         for (MsSegmentDetailDo segmentDetail : segmentDetails) {
             String username = segmentDetail.getUserName();
             int hour = Integer.parseInt(segmentDetail.getStartTime());
@@ -387,7 +386,7 @@ public class UserPortraitByTimeTask {
      * 获取用户访问频率
      */
     public Map<String, Double> getVisitRate(String username) {
-        Map<String, Double> map = new HashMap<>();
+        Map<String, Double> map = new HashMap<>(Const.NUMBER_EIGHT);
         Double morningRate = getRateByInterVal(username, AnomalyConst.MORNING);
         Double afternoonRate = getRateByInterVal(username, AnomalyConst.AFTERNOON);
         Double nightRate = getRateByInterVal(username, AnomalyConst.NIGHT);

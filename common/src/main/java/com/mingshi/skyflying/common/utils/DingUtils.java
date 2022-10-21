@@ -1,37 +1,20 @@
 package com.mingshi.skyflying.common.utils;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.Reader;
 import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -102,14 +85,8 @@ public class DingUtils {
             // 从响应模型中获取响应实体
             responseEntity = response.getEntity();
             log.info("钉钉告警响应内容:{}", EntityUtils.toString(responseEntity));
-//            System.out.println("响应状态为:" + response.getStatusLine());
-//            if (responseEntity != null) {
-//                System.out.println("响应内容长度为:" + responseEntity.getContentLength());
-//                System.out.println("响应内容为:" + EntityUtils.toString(responseEntity));
-//            }
         } catch (Exception e) {
             log.error("钉钉告警失败{}", e.getMessage());
-//            e.printStackTrace();
         } finally {
             try {
                 // 释放资源

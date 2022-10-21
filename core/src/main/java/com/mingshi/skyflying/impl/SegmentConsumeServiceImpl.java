@@ -505,7 +505,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         String key = Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName();
         String time = DateTimeUtil.dateToStrformat(new Date());
         if(null == statisticsProcessorThreadQpsMap){
-            statisticsProcessorThreadQpsMap = new HashMap<>();
+            statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
         }
         Integer accumuCount = statisticsProcessorThreadQpsMap.get(key);
         statisticsProcessorThreadQpsMap.put(time, null == accumuCount ? 1 : 1 + accumuCount);

@@ -84,9 +84,9 @@ public class UserPortraitByTableTask {
     public void cachePortraitByTable() {
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitConfig.getRuleTablePeriod());
-        HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
+        HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>(Const.NUMBER_EIGHT);
         portraitByTableList2Map(userPortraitByTableDos, outerMap);
-        HashMap<String, Object> map = new HashMap<>();
+        HashMap<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
         for (Map.Entry<String, HashMap<String, Integer>> outerEntry : outerMap.entrySet()) {
             String username = outerEntry.getKey();
             for (Map.Entry<String, Integer> innerEntry : outerEntry.getValue().entrySet()) {
@@ -107,7 +107,7 @@ public class UserPortraitByTableTask {
                                          HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap) {
         for (UserPortraitByTableDo userPortraitByTableDo : userPortraitByTableDos) {
             String username = userPortraitByTableDo.getUsername();
-            HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
+            HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>(Const.NUMBER_EIGHT));
             int count = innerMap.getOrDefault(userPortraitByTableDo.getTableName(), userPortraitByTableDo.getCount());
             innerMap.put(userPortraitByTableDo.getTableName(), count + userPortraitByTableDo.getCount());
             outerMap.put(username, innerMap);
@@ -164,13 +164,13 @@ public class UserPortraitByTableTask {
      * 根据全量信息获取用户画像(粗粒度表)
      */
     private List<UserPortraitByTableDo> getUserPortraitByTable(List<MsSegmentDetailDo> segmentDetails) {
-        HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>();
+        HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>(Const.NUMBER_EIGHT);
         for (MsSegmentDetailDo segmentDetail : segmentDetails) {
             String username = segmentDetail.getUserName();
             String dbInstance = segmentDetail.getDbInstance();
             String table = segmentDetail.getMsTableName();
             String tableName = dbInstance + "." + table;
-            HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>());
+            HashMap<String, Integer> innerMap = outerMap.getOrDefault(username, new HashMap<>(Const.NUMBER_EIGHT));
             int count = innerMap.getOrDefault(tableName, 0);
             innerMap.put(tableName, ++count);
             outerMap.put(username, innerMap);

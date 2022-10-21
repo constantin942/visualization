@@ -424,7 +424,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     public ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String userName) {
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         queryMap.put(Const.USER_NAME, userName);
-        HashMap<String, List<UserUsualAndUnusualVisitedData>> resMap = new HashMap<>();
+        HashMap<String, List<UserUsualAndUnusualVisitedData>> resMap = new HashMap<>(Const.NUMBER_EIGHT);
         List<UserUsualAndUnusualVisitedData> highList = anomalyDetectionBusiness.getFrequentList(userName);
         List<UserUsualAndUnusualVisitedData> lowList = anomalyDetectionBusiness.getUnFrequentList(userName);
         highList.sort((o1, o2) -> (int) (o2.getVisitedCount() - o1.getVisitedCount()));

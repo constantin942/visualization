@@ -11,9 +11,13 @@ import lombok.Data;
  **/
 @Data
 public class MsConsumerRecords<T> {
-    // 消息类型
+    /**
+     * 消息类型
+     */
     private Integer recordType;
-    // 消息体
+    /**
+     * 消息体
+     */
     private T body;
 
     public MsConsumerRecords(Integer recordType, T body){

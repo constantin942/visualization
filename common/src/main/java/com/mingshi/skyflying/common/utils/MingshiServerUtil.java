@@ -501,7 +501,7 @@ public class MingshiServerUtil {
         String key = Const.ZSET_USER_OPERATION_TYPE + userName;
         Map<String, Double> operationTypeCountMap = userOperationTypeMap.get(key);
         if (null == operationTypeCountMap) {
-            operationTypeCountMap = new HashMap<>();
+            operationTypeCountMap = new HashMap<>(Const.NUMBER_EIGHT);
             operationTypeCountMap.put(dbType, 1d);
             userOperationTypeMap.put(key, operationTypeCountMap);
         } else {
@@ -590,7 +590,7 @@ public class MingshiServerUtil {
         String key = Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue;
         Map<String, Double> operationTypeMap = tableOperationTypeMap.get(key);
         if (null == operationTypeMap) {
-            operationTypeMap = new HashMap<>();
+            operationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
             operationTypeMap.put(dbType, 1d);
             tableOperationTypeMap.put(key, operationTypeMap);
         } else {
@@ -673,7 +673,7 @@ public class MingshiServerUtil {
 
         Map<String, Double> userNameVisitedTimeMap = tableByHowManyUserVisitedMap.get(tableName);
         if (null == userNameVisitedTimeMap) {
-            userNameVisitedTimeMap = new HashMap<>();
+            userNameVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
             userNameVisitedTimeMap.put(userName, 1d);
             tableByHowManyUserVisitedMap.put(tableName, userNameVisitedTimeMap);
         } else {
@@ -751,7 +751,7 @@ public class MingshiServerUtil {
     private void doUserAccessBehaviorAllVisitedTables(String zsetVlue, String key, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap) {
         Map<String, Double> tableVisitedTimesMap = userAccessBehaviorAllVisitedTablesMap.get(key);
         if (null == tableVisitedTimesMap) {
-            tableVisitedTimesMap = new HashMap<>();
+            tableVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
             tableVisitedTimesMap.put(zsetVlue, 1d);
             userAccessBehaviorAllVisitedTablesMap.put(key, tableVisitedTimesMap);
         } else {
@@ -802,7 +802,7 @@ public class MingshiServerUtil {
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
 
         if (null == tableLatestVisitedTimeMap) {
-            tableLatestVisitedTimeMap = new HashMap<>();
+            tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         }
 
         if (tableName.contains(Const.EN_COMMA)) {
@@ -878,11 +878,11 @@ public class MingshiServerUtil {
     private void doTableEverydayVisitedTimes(String key, String startTime, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
         // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
         if (null == tableEverydayVisitedTimesMap) {
-            tableEverydayVisitedTimesMap = new HashMap<>();
+            tableEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
         }
         Map<String, Long> timeTimesMap = tableEverydayVisitedTimesMap.get(key);
         if (null == timeTimesMap) {
-            timeTimesMap = new HashMap<>();
+            timeTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
             timeTimesMap.put(startTime, 1L);
             tableEverydayVisitedTimesMap.put(key, timeTimesMap);
         } else {
@@ -906,7 +906,7 @@ public class MingshiServerUtil {
      **/
     private void userAccessBehaviorLatestVisitedTime(String userName, String startTime, Map<String, String> userAccessBehaviorLatestVisitedTimeMap) {
         if (null == userAccessBehaviorLatestVisitedTimeMap) {
-            userAccessBehaviorLatestVisitedTimeMap = new HashMap<>();
+            userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         }
         userAccessBehaviorLatestVisitedTimeMap.put(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + userName, startTime);
     }

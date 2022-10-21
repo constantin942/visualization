@@ -29,19 +29,19 @@ public class HighRiskOptServiceImpl {
     @Resource
     HighRiskOptMapper highRiskOptMapper;
 
-    private  Integer HIGH_RISK_SIZE;
+    private Integer highRiskSize;
 
-    private static final Cache<String, HighRiskOpt> cache = Caffeine.newBuilder()
+    private static final Cache<String, HighRiskOpt> STRING_HIGH_RISK_OPT_CACHE = Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(100)
             .build();
 
     @PostConstruct
     private void cacheHighRiskOpt() {
-        List<HighRiskOpt> highRiskOpts = highRiskOptMapper.selectAll();
-        HIGH_RISK_SIZE = highRiskOpts.size();
-        for (HighRiskOpt highRiskOpt : highRiskOpts) {
-            cache.put(highRiskOpt.getKeyword(), highRiskOpt);
+        List<HighRiskOpt> highRiskOptList = highRiskOptMapper.selectAll();
+        highRiskSize = highRiskOptList.size();
+        for (HighRiskOpt highRiskOpt : highRiskOptList) {
+            STRING_HIGH_RISK_OPT_CACHE.put(highRiskOpt.getKeyword(), highRiskOpt);
         }
     }
 
@@ -56,12 +56,12 @@ public class HighRiskOptServiceImpl {
 
     private void cacheHighRiskOpt(List<HighRiskOpt> highRiskOpts) {
         for (HighRiskOpt highRiskOpt : highRiskOpts) {
-            cache.put(highRiskOpt.getKeyword(), highRiskOpt);
+            STRING_HIGH_RISK_OPT_CACHE.put(highRiskOpt.getKeyword(), highRiskOpt);
         }
     }
 
     public void visitIsAbnormal(List<MsSegmentDetailDo> segmentDetailDoList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-        if (cache.estimatedSize() != HIGH_RISK_SIZE) {
+        if (STRING_HIGH_RISK_OPT_CACHE.estimatedSize() != highRiskSize) {
             // 有缓存过期
             cacheHighRiskOpt();
         }
@@ -70,7 +70,7 @@ public class HighRiskOptServiceImpl {
                 continue;
             }
             String optType = segmentDetailDo.getDbType().toUpperCase(Locale.ROOT).trim();
-            HighRiskOpt highRiskOpt = cache.getIfPresent(optType);
+            HighRiskOpt highRiskOpt = STRING_HIGH_RISK_OPT_CACHE.getIfPresent(optType);
             if (highRiskOpt != null && highRiskOpt.getEnable() != 0) {
                 msAlarmInformationDoList.add(buildAlarmInfo(segmentDetailDo, highRiskOpt.getAlarmInfo()));
             }

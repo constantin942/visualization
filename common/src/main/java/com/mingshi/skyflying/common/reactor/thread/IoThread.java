@@ -46,21 +46,37 @@ public class IoThread extends Thread {
     private Integer capacity;
 
     private Map<String, Integer> everydayVisitedTimesMap = null;
-    // 用户总的访问次数；2022-10-14 13:59:31
+    /**
+     * 用户总的访问次数；2022-10-14 13:59:31
+      */
     private Map<String, Integer> userAccessBehaviorAllVisitedTimesMap = null;
-    // 用户最后的访问时间；2022-10-14 14:05:16
+    /**
+     * 用户最后的访问时间；2022-10-14 14:05:16
+      */
     private  Map<String, String> userAccessBehaviorLatestVisitedTimeMap = null;
-    // 表最后的访问时间；2022-10-14 14:05:16
+    /**
+     * 表最后的访问时间；2022-10-14 14:05:16
+     */
     private Map<String, String> tableLatestVisitedTimeMap = null;
-    // 统计表每天的访问次数；2022-10-14 14:22:59
+    /**
+     * 统计表每天的访问次数；2022-10-14 14:22:59
+     */
     private Map<String/* 表名 */, Map<String/* 每天的日期，格式是：yyyy-MM-dd */, Long/* 访问次数 */>> tableEverydayVisitedTimesMap = null;
-    // 统计用户访问过的表的次数；2022-10-14 14:55:50
+    /**
+     * 统计用户访问过的表的次数；2022-10-14 14:55:50
+     */
     private Map<String/* 用户名 */, Map<String/* 表名 */, Double/* 访问次数 */>> userAccessBehaviorAllVisitedTablesMap = null;
-    // 统计表被用户访问过的次数；2022-10-14 15:11:17
+    /**
+     * 统计表被用户访问过的次数；2022-10-14 15:11:17
+     */
     private Map<String/* 表名 */, Map<String/* 用户名 */, Double/* 访问次数 */>> tableByHowManyUserVisitedMap = null;
-    // 统计每个表操作类型次数；2022-10-14 16:48:04
+    /**
+     * 统计每个表操作类型次数；2022-10-14 16:48:04
+     */
     private Map<String/* 表名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> tableOperationTypeMap = null;
-    // 统计每个用户的操作类型次数
+    /**
+     * 统计每个用户的操作类型次数
+     */
     private Map<String/* 用户名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> userOperationTypeMap = null;
 
     public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {

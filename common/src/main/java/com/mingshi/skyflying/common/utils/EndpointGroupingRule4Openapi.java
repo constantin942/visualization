@@ -31,13 +31,13 @@ public class EndpointGroupingRule4Openapi {
     private final Map<String, Map<String, StringFormatGroup>> groupedRules = new HashMap<>(Const.NUMBER_EIGHT);
 
     void addDirectLookup(String serviceName, String endpointName, String endpointGroupName) {
-        Map<String, String> endpointNameLookup = directLookup.computeIfAbsent(serviceName, name -> new HashMap<>());
+        Map<String, String> endpointNameLookup = directLookup.computeIfAbsent(serviceName, name -> new HashMap<>(Const.NUMBER_EIGHT));
         endpointNameLookup.put(endpointName, endpointGroupName);
     }
 
     void addGroupedRule(String serviceName, String endpointGroupName, String ruleRegex) {
         String rulesGroupkey = getGroupedRulesKey(ruleRegex);
-        Map<String, StringFormatGroup> rules = groupedRules.computeIfAbsent(serviceName, name -> new HashMap<>());
+        Map<String, StringFormatGroup> rules = groupedRules.computeIfAbsent(serviceName, name -> new HashMap<>(Const.NUMBER_EIGHT));
         StringFormatGroup formatGroup = rules.computeIfAbsent(rulesGroupkey, name -> new StringFormatGroup());
         formatGroup.addRule(endpointGroupName, ruleRegex);
     }
