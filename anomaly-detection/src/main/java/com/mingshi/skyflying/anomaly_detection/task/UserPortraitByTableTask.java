@@ -49,8 +49,6 @@ public class UserPortraitByTableTask {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
-
-    private static final Integer EXPIRE = 100000;
     /**
      * Redis分布式锁Key
      */

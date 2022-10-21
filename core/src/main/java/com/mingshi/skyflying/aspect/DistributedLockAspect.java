@@ -40,7 +40,8 @@ public class DistributedLockAspect {
        *  当业务执行时间超过了锁的默认时间30秒，就自动延续时间，可放心使用；
        *  注：不要使用tryLock()方法时，私自设置有效期，否则不会自动延续时间；
        * */
-      if (getLock = redissonLock.tryLock()) {
+        getLock = redissonLock.tryLock();
+        if (Boolean.TRUE.equals(getLock)) {
         return pjp.proceed();
       } else {
         /**没有获取到分布式锁*/

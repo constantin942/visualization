@@ -28,7 +28,7 @@ public class InformationOverviewSingleton implements ApplicationRunner {
   @Resource
   private RedisPoolUtil redisPoolUtil;
 
-  private static volatile Map<String, Integer> userCountHashMap = new ConcurrentHashMap();
+  private static volatile Map<String, Integer> userCountHashMap = new ConcurrentHashMap<>();
 
   @Override
   public void run(ApplicationArguments args) throws Exception {

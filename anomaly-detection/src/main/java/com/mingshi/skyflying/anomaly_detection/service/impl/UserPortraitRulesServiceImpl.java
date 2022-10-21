@@ -97,11 +97,11 @@ public class UserPortraitRulesServiceImpl implements UserPortraitRulesService {
      */
     @Override
     public boolean cacheRule(Integer ruleId, Integer isDelete) {
-        boolean enable = isDelete != 1;
-        if (ruleId == 1) {
+        boolean enable = !isDelete.equals(Const.NUMBER_ONE);
+        if (Const.NUMBER_ONE.equals(ruleId)) {
             redisPoolUtil.set(AnomalyConst.RULE_PREFIX + AnomalyConst.TIME_SUF, enable, EXPIRE);
         }
-        if (ruleId == 2) {
+        if (Const.NUMBER_TWO.equals(ruleId)) {
             redisPoolUtil.set(AnomalyConst.RULE_PREFIX + AnomalyConst.TABLE_SUF, enable, EXPIRE);
         }
         return enable;

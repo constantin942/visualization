@@ -45,7 +45,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MsKafkaAnomalyDetectionConsumer extends Thread {
     private List<String> consumerTopic;
     private String consumerGroup;
-    private Boolean enableReactorModelFlag;
     private MingshiServerUtil mingshiServerUtil;
     private String bootstrapServers;
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
@@ -56,12 +55,11 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
 
     private KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-    public MsKafkaAnomalyDetectionConsumer(AnomalyDetectionBusiness anomalyDetectionBusiness, String bootstrapServers, List<String> consumerTopic, String consumerGroup, Boolean enableReactorModelFlag, MingshiServerUtil mingshiServerUtil) {
+    public MsKafkaAnomalyDetectionConsumer(AnomalyDetectionBusiness anomalyDetectionBusiness, String bootstrapServers, List<String> consumerTopic, String consumerGroup, MingshiServerUtil mingshiServerUtil) {
         this.bootstrapServers = bootstrapServers;
         this.consumerTopic = consumerTopic;
         this.consumerGroup = consumerGroup;
         this.anomalyDetectionBusiness = anomalyDetectionBusiness;
-        this.enableReactorModelFlag = enableReactorModelFlag;
         this.mingshiServerUtil = mingshiServerUtil;
     }
 
@@ -199,7 +197,10 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
         List<MsSegmentDetailDo> segmentDetaiDolList = (List<MsSegmentDetailDo>) msConsumerRecords.getBody();
         // 进行异常检测
         anomalyDetectionBusiness.doUserVisitedIsAbnormal(segmentDetaiDolList);
-        log.info("# MsKafkaAnomalyDetectionConsumer.msSegmentDetailDoReConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+        long timeMillis = DateTimeUtil.getTimeMillis(now);
+        if(Const.NUM_FIVE < timeMillis){
+            log.info("# MsKafkaAnomalyDetectionConsumer.msSegmentDetailDoReConsume() # 异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), DateTimeUtil.getTimeMillis(now));
+        }
     }
 
     /**

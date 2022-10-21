@@ -32,8 +32,6 @@ public class AiitKafkaAnomalyDetectionConsumerRunner implements ApplicationRunne
     private String anomalyDetectionConsumeFailedTopic;
     @Value("${spring.kafka.consumer.anomaly-detection-consume-failed-and-alarm-group}")
     private String anomalyDetectionConsumeFailedAndAlarmGroup;
-    @Value("${reactor.processor.enable}")
-    private boolean reactorProcessorEnable;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
     @Resource
@@ -62,7 +60,7 @@ public class AiitKafkaAnomalyDetectionConsumerRunner implements ApplicationRunne
         List<String> consumerTopicList = new ArrayList<>();
         consumerTopicList.add(anomalyDetectionAlarmTopic);
         consumerTopicList.add(anomalyDetectionConsumeFailedTopic);
-        MsKafkaAnomalyDetectionConsumer msKafkaAnomalyDetectionConsumer = new MsKafkaAnomalyDetectionConsumer(anomalyDetectionBusiness, bootstrapServers, consumerTopicList, anomalyDetectionConsumeFailedAndAlarmGroup, reactorProcessorEnable, mingshiServerUtil);
+        MsKafkaAnomalyDetectionConsumer msKafkaAnomalyDetectionConsumer = new MsKafkaAnomalyDetectionConsumer(anomalyDetectionBusiness, bootstrapServers, consumerTopicList, anomalyDetectionConsumeFailedAndAlarmGroup, mingshiServerUtil);
         msKafkaAnomalyDetectionConsumer.setName("aiit_kafka_anomaly_detection_consumer");
         msKafkaAnomalyDetectionConsumer.start();
     }

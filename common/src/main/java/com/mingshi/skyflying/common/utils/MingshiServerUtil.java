@@ -57,8 +57,6 @@ public class MingshiServerUtil {
     @Resource
     private MsMonitorBusinessSystemTablesMapper msMonitorBusinessSystemTablesMapper;
     @Resource
-    private SegmentDao segmentDao;
-    @Resource
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private MsConfigDao msConfigDao;
@@ -234,7 +232,6 @@ public class MingshiServerUtil {
 
     private String doGetSqlTypeFromLibrary(String msSql) {
         String sqlType = null;
-        ;
         try {
             sqlType = SqlParserUtils.getSqlType(msSql);
             if (StringUtil.isNotBlank(sqlType)) {
@@ -482,7 +479,7 @@ public class MingshiServerUtil {
         flushTableByHowManyUserVisited(tableByHowManyUserVisitedMap);
 
         // 将每个表的操作类型次数发送到Redis中；
-        flushTableOperationType(userOperationTypeMap);
+        flushTableOperationType(tableOperationTypeMap);
 
         // 统计每个用户操作类型次数；
         flushUserOperationType(userOperationTypeMap);
@@ -532,7 +529,7 @@ public class MingshiServerUtil {
             userOperationType(dbType, userName, userOperationTypeMap);
 
             // 实时将用户访问行为信息发送到redis中
-            setTableEnableStatus(dbType, peer, dbInstance, tableName, userName);
+            setTableEnableStatus(peer, dbInstance, tableName);
 
             // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
             statisticVisitedCountByEveryday(msSegmentDetailDo, everydayVisitedTimesMap);
@@ -553,7 +550,6 @@ public class MingshiServerUtil {
             return;
         }
         try {
-            Instant now = Instant.now();
             Iterator<String> iterator = userOperationTypeMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String userName = iterator.next();
@@ -573,7 +569,6 @@ public class MingshiServerUtil {
                 }
             }
             userOperationTypeMap.clear();
-//            log.info("# MingshiServerUtil.flushUserOperationType() #  将统计每个用户操作类型次数【{}条】发送到Redis中，耗时【{}】毫秒。", userOperationTypeMap.size(),DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushUserOperationType() # 将统计每个用户操作类型次数发送到Redis中，出现了异常。", e);
         }
@@ -615,7 +610,6 @@ public class MingshiServerUtil {
             if (null == userOperationTypeMap || userOperationTypeMap.isEmpty()) {
                 return;
             }
-            Instant now = Instant.now();
             Iterator<String> iterator = userOperationTypeMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String tableName = iterator.next();
@@ -635,7 +629,6 @@ public class MingshiServerUtil {
                 }
             }
             userOperationTypeMap.clear();
-//            log.info("# MingshiServerUtil.flushTableOperationType() # 将对每个表的操作类型次数【{}条】发送到Redis中，耗时【{}】毫秒。", userOperationTypeMap.size(),DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushTableOperationType() # 将对每个表的操作类型次数发送到Redis中，出现了异常。", e);
         }
@@ -706,7 +699,6 @@ public class MingshiServerUtil {
             return;
         }
         try {
-            Instant now = Instant.now();
             Iterator<String> iterator = tableByHowManyUserVisitedMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String tableName = iterator.next();
@@ -725,7 +717,6 @@ public class MingshiServerUtil {
                 }
             }
             tableByHowManyUserVisitedMap.clear();
-//            log.info("# MingshiServerUtil.flushTableByHowManyUserVisited() # 将表被用户访问的次数【{}】发送到Redis中，耗时【{}】毫秒。",tableByHowManyUserVisitedMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushTableByHowManyUserVisited() # 将表被用户访问的次数发送Redis中，出现了异常。", e);
         }
@@ -791,7 +782,6 @@ public class MingshiServerUtil {
             if (null == userAccessBehaviorAllVisitedTablesMap || userAccessBehaviorAllVisitedTablesMap.isEmpty()) {
                 return;
             }
-            Instant now = Instant.now();
             Iterator<String> iterator = userAccessBehaviorAllVisitedTablesMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String userName = iterator.next();
@@ -807,7 +797,6 @@ public class MingshiServerUtil {
                 }
             }
             userAccessBehaviorAllVisitedTablesMap.clear();
-//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTables() # 将本地统计用户访问过的表的次数【{}】发送到Redis中，耗时【{}】毫秒。",userAccessBehaviorAllVisitedTablesMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTables() # 将本地统计用户访问过的表的次数发送到Redis中，出现了异常。", e);
         }
@@ -871,7 +860,6 @@ public class MingshiServerUtil {
             if (null == tableLatestVisitedTimeMap || tableLatestVisitedTimeMap.isEmpty()) {
                 return;
             }
-            Instant now = Instant.now();
             Iterator<String> iterator = tableLatestVisitedTimeMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String tableName = iterator.next();
@@ -882,7 +870,6 @@ public class MingshiServerUtil {
                 redisPoolUtil.set(tableName, time);
             }
             tableLatestVisitedTimeMap.clear();
-//            log.info("# MingshiServerUtil.flushTableLatestVisitiedTime() # 将表的最后访问时间更新到Redis中【{}条】，耗时【{}】毫秒。", tableLatestVisitedTimeMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushTableLatestVisitiedTime() # 将表的最后访问时间更新到Redis中，出现了异常。", e);
         }
@@ -934,7 +921,6 @@ public class MingshiServerUtil {
             if (null == tableEverydayVisitedTimesMap || tableEverydayVisitedTimesMap.isEmpty()) {
                 return;
             }
-            Instant now = Instant.now();
             Iterator<String> iterator = tableEverydayVisitedTimesMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String tableName = iterator.next();
@@ -949,7 +935,6 @@ public class MingshiServerUtil {
                 }
             }
             tableEverydayVisitedTimesMap.clear();
-//            log.info("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数【{}条】发送到Redis中耗时【{}毫秒】.", tableEverydayVisitedTimesMap.size(),DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushTableEverydayVisitedTimes() # 将表每天的访问次数发送到Redis中，出现了异常.", e);
         }
@@ -1125,7 +1110,6 @@ public class MingshiServerUtil {
      **/
     private void flushUserAccessBehaviorLatestVisitedTimeToRedis(Map<String, String> userAccessBehaviorLatestVisitedTimeMap) {
         try {
-//            Instant now = Instant.now();
             // 更新用户对数据库最后的访问时间；
             if (null != userAccessBehaviorLatestVisitedTimeMap && !userAccessBehaviorLatestVisitedTimeMap.isEmpty()) {
                 Iterator<String> iterator = userAccessBehaviorLatestVisitedTimeMap.keySet().iterator();
@@ -1136,7 +1120,6 @@ public class MingshiServerUtil {
                 }
                 userAccessBehaviorLatestVisitedTimeMap.clear();
             }
-//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的最后访问时间【{}条】更新到Redis中耗时【{}毫秒】.", userAccessBehaviorLatestVisitedTimeMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushUserAccessBehaviorLatestVisitedTimeToRedis() # 将用户的最后访问时间更新到Redis中，出现了异常。", e);
         }
@@ -1153,7 +1136,6 @@ public class MingshiServerUtil {
      **/
     private void flushUserAccessBehaviorAllVisitedTimesToRedis(Map<String, Integer> userAccessBehaviorAllVisitedTimesMap) {
         try {
-            Instant now = Instant.now();
             if (null != userAccessBehaviorAllVisitedTimesMap && !userAccessBehaviorAllVisitedTimesMap.isEmpty()) {
                 Iterator<String> iterator = userAccessBehaviorAllVisitedTimesMap.keySet().iterator();
                 while (iterator.hasNext()) {
@@ -1163,7 +1145,6 @@ public class MingshiServerUtil {
                 }
                 userAccessBehaviorAllVisitedTimesMap.clear();
             }
-//            log.info("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的访问次数【{}条】累加到Redis中耗时【{}毫秒】.", userAccessBehaviorAllVisitedTimesMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushUserAccessBehaviorAllVisitedTimesToRedis() # 将用户的访问次数累加到Redis中，出现了异常。", e);
         }
@@ -1178,7 +1159,7 @@ public class MingshiServerUtil {
      * @Date 2022年07月20日 17:07:45
      * @Param [peer, dbInstance, tableName, userName, startTime]
      **/
-    private void setTableEnableStatus(String dbType, String peer, String dbInstance, String tableName, String userName) {
+    private void setTableEnableStatus(String peer, String dbInstance, String tableName) {
         // 累加用户对数据库表资源的访问次数；
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
 
@@ -1194,54 +1175,6 @@ public class MingshiServerUtil {
         }
     }
 
-//    private void doFlushUserAccessBehaviorToRedis(String dbType, String peer, String dbInstance, String tableName, String userName, String startTime, String serviceCode) {
-//        // 累加用户对数据库表资源的访问次数；
-//        String zsetVlue = doGetTableName(peer, dbInstance, tableName);
-//        String serviceCodeName = AgentInformationSingleton.get(serviceCode);
-//        if (StringUtil.isNotBlank(serviceCodeName)) {
-//            serviceCode = serviceCodeName.equals(Const.DOLLAR) == true ? serviceCode : serviceCodeName;
-//        }
-//
-//        Date date = DateTimeUtil.strToDate(startTime);
-//        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
-//
-//        if (tableName.contains(Const.EN_COMMA)) {
-//            String[] split = tableName.split(Const.EN_COMMA);
-//            for (String tn : split) {
-//                // 将表信息保存到Redis中；0：表示接收处理操作这个表的数据；1：表示拒绝处理操作这个表的数据；
-//                zsetVlue = doGetTableName(peer, dbInstance, tn);
-//                // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
-//                redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
-//                // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-//                redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
-//                // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-//                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
-//
-//                // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-//                redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
-//                // 记录每一个数据库表最后的被访问的时间；
-//                redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-//                LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
-//            }
-//        } else {
-//            // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
-//            redisPoolUtil.hsetIncrBy(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue, startTimeNew, 1L);
-//            // 将用户访问过的表放到这个用户对应的有序集合zset中；2022-07-20 14:30:07
-//            redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + userName, zsetVlue, 1);
-//            // 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
-//            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, serviceCode + Const.DOLLAR + userName, 1);
-//
-//            // 有序集合：存放对每个表操作类型统计；2022-07-22 15:47:48
-//            redisPoolUtil.zSetIncrementScore(Const.ZSET_TABLE_OPERATION_TYPE + zsetVlue, dbType, 1);
-//            // 记录每一个数据库表最后的被访问的时间；
-//            redisPoolUtil.set(Const.STRING_TABLE_LATEST_VISITED_TIME + zsetVlue, startTime);
-//            LoadAllEnableMonitorTablesFromDb.getTableEnableStatus(zsetVlue);
-//        }
-//        // 有序集合：统计每个用户操作类型次数；
-//        redisPoolUtil.zSetIncrementScore(Const.ZSET_USER_OPERATION_TYPE + userName, dbType, 1);
-//
-//    }
-
     /**
      * <B>方法名称：flushAbnormalToDB</B>
      * <B>概要说明：将异常信息批量插入到MySQL中</B>
@@ -1256,7 +1189,7 @@ public class MingshiServerUtil {
             try {
                 Instant now = Instant.now();
                 msAlarmInformationMapper.insertSelectiveBatch(msAlarmInformationDoLinkedListist);
-//                log.info("#MingshiServerUtil.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
+                log.info("#MingshiServerUtil.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
             } catch (Exception e) {
                 log.error("# MingshiServerUtil.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
             } finally {
@@ -1283,7 +1216,6 @@ public class MingshiServerUtil {
             }
             CopyOnWriteMap<String, String> instance = AgentInformationSingleton.getInstance();
             if (null != instance && 0 < instance.size()) {
-//                Instant now = Instant.now();
                 LinkedList<MsAgentInformationDo> list = new LinkedList<>();
                 Iterator<String> iterator = instance.keySet().iterator();
                 while (iterator.hasNext()) {
@@ -1298,7 +1230,6 @@ public class MingshiServerUtil {
                 msAgentInformationMapper.insertBatch(list);
                 // 本次刷新过后，只有当真的有数据变更后，下次才将其刷入到MySQL中；2022-06-28 17:51:11
                 AgentInformationSingleton.setAtomicBooleanToFalse();
-//                log.info("#MingshiServerUtil.flushSkywalkingAgentInformationToDb()# 将探针名称信息【{}条】批量插入到MySQL数据库中耗时【{}】毫秒。", instance.size(), DateTimeUtil.getTimeMillis(now));
             }
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushSkywalkingAgentInformationToDb() # 将探针名称信息批量插入到MySQL数据库中出现了异常。", e);
@@ -1331,9 +1262,7 @@ public class MingshiServerUtil {
                 }
             }
 
-//            Instant now = Instant.now();
             redisPoolUtil.hsetBatch(Const.SKYWALKING_AGENT_HEART_BEAT_DO_LIST, skywalkingAgentTimeMap);
-//            log.info("#MingshiServerUtil.flushSkywalkingAgentNameToRedis()# 将探针名称信息【{}条】批量插入到Redis中耗时【{}】毫秒。", skywalkingAgentTimeMap.size(), DateTimeUtil.getTimeMillis(now));
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushSkywalkingAgentNameToRedis() # 将探针名称信息批量插入到Redis中出现了异常。", e);
         } finally {
@@ -1473,7 +1402,6 @@ public class MingshiServerUtil {
             if (null == processorThreadQpsMap || 0 == processorThreadQpsMap.size()) {
                 return;
             }
-//            Instant now = Instant.now();
             Iterator<String> iterator = processorThreadQpsMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String time = iterator.next();
@@ -1483,7 +1411,6 @@ public class MingshiServerUtil {
                     redisPoolUtil.zSetIncrementScore(Const.QPS_ZSET_ALL_PROCESSOR_THREAD, time, Long.valueOf(count));
                 }
             }
-//            log.info("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中用时【{}毫秒】【{}秒】。", DateTimeUtil.getTimeMillis(now), DateTimeUtil.getSecond(now));
             processorThreadQpsMap.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushProcessorThreadQpsToRedis() # 将每一个processor线程的QPS发送到Redis中的时候，出现了异常。", e);
@@ -1503,7 +1430,6 @@ public class MingshiServerUtil {
         if (true != reactorProcessorEnable) {
             return;
         }
-//        Instant now = Instant.now();
         String name = Thread.currentThread().getName();
         String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
         List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
@@ -1527,7 +1453,6 @@ public class MingshiServerUtil {
                 }
             }
         }
-//        log.info("# MingshiServerUtil.statisticsProcessorAndIoThreadQueueSize() # 将Processor线程【{}】和IoThread线程【{}】对应的队列大小发送到Redis中进行统计用时【{}毫秒】【{}秒】。", processorThreadList.size(), ioThreadList.size(), DateTimeUtil.getTimeMillis(now), DateTimeUtil.getSecond(now));
     }
 
     /**
