@@ -8,4 +8,5 @@ COPY web/target/ROOT.jar .
 
 ENV JAVA_OPTS=""
 
-ENTRYPOINT java ${JAVA_OPTS}-Djava.security.egd=file:/dev/./urandom -jar /home/apps/ROOT.jar
+CMD java ${JAVA_OPTS}-Djava.security.egd=file:/dev/./urandom -jar /home/apps/ROOT.jar
+#ENTRYPOINT java ${JAVA_OPTS}-Djava.security.egd=file:/dev/./urandom -jar /home/apps/ROOT.jar
