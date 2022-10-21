@@ -36,9 +36,6 @@ import java.util.Map;
 public class UserPortraitTask {
 
     @Resource
-    RedisPoolUtil redisPoolUtil;
-
-    @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
 
     @Resource
@@ -61,7 +58,7 @@ public class UserPortraitTask {
         try {
             // 定时拉取用户画像；
             Boolean portraitFromRedis = anomalyDetectionBusiness.getPortraitFromRedis();
-            if(Boolean.TRUE.equals(portraitFromRedis)){
+            if (Boolean.TRUE.equals(portraitFromRedis)) {
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.TRUE);
             }
         } catch (Exception e) {
@@ -88,6 +85,7 @@ public class UserPortraitTask {
 
     /**
      * 将每个用户的首次访问时间存入cache
+     *
      * @param userFirstVisitLocalCache
      */
     public void initFirstVisitTime(Cache<String, Date> userFirstVisitLocalCache) {
@@ -101,6 +99,4 @@ public class UserPortraitTask {
             }
         }
     }
-
-
 }

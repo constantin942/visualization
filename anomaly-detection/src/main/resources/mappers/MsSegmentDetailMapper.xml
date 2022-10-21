@@ -69,9 +69,9 @@
         order by start_time asc limit 1;
     </select>
     <select id="selectFirstVisitTime" resultType="java.util.Map">
-        select distinct user_name, min(start_time) as time
-        from ms_segment_detail
-        group by user_name
+        select distinct username, min(create_time) as time
+        from coarse_segment_detail_on_time
+        group by username
         order by time;
     </select>
 

@@ -534,10 +534,10 @@ public class AnomalyDetectionBusiness {
     /**
      * 告警单条消息
      */
-    private void dingAlarmHelper(String redisKey, DingAlarmConfig dingAlarmConfig) {
+    private void dingAlarmHelper(String key, DingAlarmConfig dingAlarmConfig) {
         Integer gap = dingAlarmConfig.getGap();
-        if (Boolean.FALSE.equals(isAlarmed(redisKey, gap))) {
-            String message = buildDingAlarmInfo(redisKey);
+        if (Boolean.FALSE.equals(isAlarmed(key, gap))) {
+            String message = buildDingAlarmInfo(key);
             try {
                 List<String> mobiles = null;
                 if (!StringUtil.isEmpty(dingAlarmConfig.getMobiles())) {
