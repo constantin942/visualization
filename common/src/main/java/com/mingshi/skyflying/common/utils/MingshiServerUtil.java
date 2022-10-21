@@ -1365,25 +1365,6 @@ public class MingshiServerUtil {
             segmentDetailDoList.clear();
         }
     }
-//    public void flushSegmentDetailToDb(List<MsSegmentDetailDo> segmentDetailDoList, Boolean isClear) {
-//        if (segmentDetailDoList.isEmpty()) {
-//            return;
-//        }
-//
-//        Instant now = Instant.now();
-//        try {
-//            msSegmentDetailDao.insertSelectiveBatch(segmentDetailDoList);
-//        } catch (Exception e) {
-//            log.error("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中出现了异常。", segmentDetailDoList.size(), e);
-//        }
-//        // 实时segmentDetail数据的统计数量保存到Redis的哈希表中
-//        flushSegmentDetailCountToRedis(segmentDetailDoList);
-//
-////        log.info("#MingshiServerUtil.flushSegmentDetailToDB()# 将segmentDetail实例信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", segmentDetailDoList.size(), DateTimeUtil.getTimeMillis(now));
-//        if (Boolean.TRUE.equals(isClear)) {
-//            segmentDetailDoList.clear();
-//        }
-//    }
 
     /**
      * <B>方法名称：flushSegmentDetailUserNameIsNullToDB</B>
