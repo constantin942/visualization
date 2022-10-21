@@ -31,7 +31,7 @@ public class AgentInformationSingleton {
   }
 
   private AgentInformationSingleton() {
-    copyOnWriteMap = new CopyOnWriteMap();
+    copyOnWriteMap = new CopyOnWriteMap<>();
   }
 
   static class Singleton {

@@ -17,7 +17,7 @@ public class CaffeineRemovalGlobalTraceIdUserNameListener implements RemovalList
   @Override
   public void onRemoval(@org.checkerframework.checker.nullness.qual.Nullable String key, @org.checkerframework.checker.nullness.qual.Nullable String value, RemovalCause removalCause) {
     if(!removalCause.equals(RemovalCause.REPLACED)){
-      // log.error("# CaffeineRemovalGlobalTraceIdUserNameListener.onRemoval() # 要将Caffine实例中的 Key =【{}】 ，值 = 【{}】移除，其原因是 【{}】。", key, value, removalCause);
+        // ignore
     }
   }
 }

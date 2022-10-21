@@ -77,7 +77,7 @@ public class AiitKafkaProducer {
             @Override
             public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
                 //成功的处理
-                // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
+                // ignore
             }
         });
     }
@@ -98,7 +98,7 @@ public class AiitKafkaProducer {
             @Override
             public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
                 //成功的处理
-                // log.info("发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic, stringObjectSendResult.toString());
+                // ignore
             }
         });
     }

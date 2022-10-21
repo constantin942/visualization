@@ -91,7 +91,7 @@ public class AiitKafkaConsumerUtil {
      **/
     private static void waitingCreateProcessorsThread() {
         try {
-            while (false == InitProcessorByLinkedBlockingQueue.getCreateProcessorsFinishedFlag()) {
+            while (Boolean.FALSE.equals(InitProcessorByLinkedBlockingQueue.getCreateProcessorsFinishedFlag())) {
                 log.error("processor线程还没有创建完毕，等待一会。");
                 TimeUnit.SECONDS.sleep(50);
             }

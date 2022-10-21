@@ -57,67 +57,6 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     return sysOperatorDao.updateByPrimaryKeySelective(sysOperator);
   }
 
-  /**
-   * @return com.zhejiang.mobile.common.response.ServerResponse<java.lang.String>
-   * @Author zhaoming
-   * @Description 新增用户
-   * @Date 下午4:05 2021/6/8
-   * @Param [userName, password, phone]
-   **/
-  @Override
-  @Transactional(rollbackFor = Exception.class)
-  public ServerResponse<String> addSysUser(String userName, String password, String phone, Integer roleId, String creator) throws Exception {
-    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);
-    /** 判断传递的参数是否为空*/
-    if (StringUtil.isBlank(password)) {
-      return new ServerResponse<>(AiitExceptionCode.PASSWORD_IS_EMPTY);
-    }
-    if (StringUtil.isBlank(userName)) {
-      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
-    }
-    /** 判断用户名是否已被注册过*/
-    SysOperator sysOperator = sysOperatorDao.selectByUserName(userName);
-    if (null != sysOperator) {
-      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_ALREADY_REGISTEDRED);
-    }
-
-    /** 获取盐值*/
-    String salt = userUtil.getSalt();
-    /** 将密码与盐值一起加密，防止密码明文存储*/
-    String passwordSalt = userUtil.getPassword(password, salt);
-    SysOperator sysOperator1 = new SysOperator();
-    if (StringUtil.isNotBlank(phone)) {
-      sysOperator1.setPhone(phone);
-    }
-    sysOperator1.setUserName(userName);
-    sysOperator1.setSalt(salt);
-    sysOperator1.setPassword(passwordSalt);
-    sysOperator1.setCreator(creator);
-
-    int resultCount = sysOperatorDao.insertSelective(sysOperator1);
-    if (resultCount == 0) {
-      throw new Exception("将用户=" + userName + "的信息插入表中失败。");
-    } else {
-      // 操作用户数据保存成功后，将该用户的角色信息保存到表中；2021-06-10 09:54:23
-      SysOperatorRole sysOperatorRole = new SysOperatorRole();
-      sysOperatorRole.setRoleId(roleId);
-      sysOperatorRole.setCreator(creator);
-      if (null != sysOperator1.getId()) {
-        sysOperatorRole.setOperatorId(sysOperator1.getId());
-        int insertResult = sysOperatorRoleDao.insertSelective(sysOperatorRole);
-        if (1 != insertResult) {
-          log.error("将用户的角色信息插入表中失败。");
-          throw new Exception("将用户=" + userName + "的角色信息插入表中失败。");
-        } else {
-          log.info("将用户的角色信息=【{}】插入到表中成功。", JsonUtil.obj2String(sysOperatorRole));
-        }
-      } else {
-        throw new Exception("将用户=" + userName + "的信息插入表中成功，但没有获取到对应的记录ID。");
-      }
-    }
-    return serverResponse;
-  }
-
   @Override
   public ServerResponse<String> changePassword(String userName, String oldPassword, String newPassword) {
     ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.SUCCESS);

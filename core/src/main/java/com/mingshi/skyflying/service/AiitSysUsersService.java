@@ -17,8 +17,6 @@ public interface AiitSysUsersService extends ParentService<SysOperator, Long> {
 
   int updateByPrimaryKeySelective(SysOperator sysOperator);
 
-  ServerResponse<String> addSysUser(String userName, String password, String phone, Integer roleId, String creator) throws Exception;
-
   ServerResponse<String> changePassword(String userName, String oldPassword, String newPassword);
 
   ServerResponse<SysOperator> login(String userName, String password);
