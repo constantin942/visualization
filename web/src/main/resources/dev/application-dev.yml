@@ -125,6 +125,8 @@ spring:
       topic: skywalking-segments
       agent-switch-request-topic: agent-switch-request-topic
       agent-switch-response-topic: agent-switch-response-topic
+      send-state-exception-info-topic: send-state-exception-info-topic
+      send-state-exception-info-agent-group: send-state-exception-info-agent-group
       group: skyflying-consumer-group
       agent-switch-response-group: agent-switch-response-group
       # 异常检测用的消费者组

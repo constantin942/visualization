@@ -113,6 +113,8 @@ spring:
       agent-switch-request-topic: ${agent_switch_request_topic}
       agent-switch-response-topic: ${agent_switch_response_topic}
       agent-switch-response-group: ${agent_switch_response_group}
+      send-state-exception-info-topic: ${send_state_exception_info_topic}
+      send-state-exception-info-agent-group: ${send_state_exception_info_agent_group}
         # 异常检测用的消费者组
       anomaly-detection-consume-failed-and-alarm-group: ${anomaly_detection_consume_failed_and_alarm_group}
 mybatis-plus:

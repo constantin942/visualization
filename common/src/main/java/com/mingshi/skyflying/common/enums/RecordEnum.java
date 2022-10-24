@@ -8,8 +8,12 @@ package com.mingshi.skyflying.common.enums;
  * @Date 2022/10/17 11:01
  **/
 public enum RecordEnum {
-    MsSegmentDetailDo_Consume_Failed(0, "消费失败"),
-    Anomaly_ALARM(1, "异常告警");
+    MSSEGMENTDETAILDO_CONSUME_FAILED(0, "消费失败"),
+    ANOMALY_ALARM(1, "异常告警"),
+    SEND_RECORDS_STATE(2, "探针已发送消息记录信息"),
+    AGENT_SWITCH(3, "探针开关信息"),
+    EXCEPTION_INFO(4, "异常信息")
+    ;
     private Integer code;
 
     private String desc;

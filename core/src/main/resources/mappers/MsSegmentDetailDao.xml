@@ -28,13 +28,18 @@
         <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
         <result column="token" jdbcType="VARCHAR" property="token"/>
         <result column="user_login_ip" jdbcType="VARCHAR" property="userLoginIp"/>
+
+        <result column="parent_service" jdbcType="VARCHAR" property="parentService"/>
+        <result column="parent_service_instance" jdbcType="VARCHAR" property="parentServiceInstance"/>
+        <result column="parent_endpoint" jdbcType="VARCHAR" property="parentEndpoint"/>
+
     </resultMap>
     <sql id="Base_Column_List">
         id
         , user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
-    ms_table_name,db_user_name,user_portrait_flag_by_visited_time,user_portrait_flag_by_visited_table_everyday
+    ms_table_name,db_user_name,parent_service,parent_service_instance,parent_endpoint
     </sql>
     <sql id="Blob_Column_List">
         db_statement
@@ -342,12 +347,10 @@
                ms_table_name,
                global_trace_id,
                operation_type,
-               user_portrait_flag_by_visited_table_everyday,
                user_portrait_flag_by_visited_time
         from ms_segment_detail
         where is_delete = 0
           and user_name is not null
-          and (user_portrait_flag_by_visited_table_everyday = 0 or user_portrait_flag_by_visited_table_everyday is null)
           and operation_type = 'sql'
           and ms_table_name is not null
     </select>
@@ -608,7 +611,7 @@
         (user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
         span_id, component, service_code, peer, endpoint_name,
         start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-        db_user_name, db_statement, ms_table_name, operation_type)
+        db_user_name, db_statement, ms_table_name, operation_type,parent_service,parent_service_instance,parent_endpoint)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
@@ -633,7 +636,11 @@
             #{item.dbUserName,jdbcType=VARCHAR},
             #{item.dbStatement,jdbcType=VARCHAR},
             #{item.msTableName,jdbcType=VARCHAR},
-            #{item.operationType,jdbcType=VARCHAR}
+            #{item.operationType,jdbcType=VARCHAR},
+
+            #{item.parentService,jdbcType=VARCHAR},
+            #{item.parentServiceInstance,jdbcType=VARCHAR},
+            #{item.parentEndpoint,jdbcType=VARCHAR}
             )
         </foreach>
     </insert>
@@ -718,6 +725,17 @@
             <if test="token != null">
                 token,
             </if>
+
+
+            <if test="parentService != null">
+                parent_service,
+            </if>
+            <if test="parentServiceInstance != null">
+                parent_service_instance,
+            </if>
+            <if test="parentEndpoin != null">
+                parent_endpoin,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -798,6 +816,18 @@
             <if test="token != null">
                 #{token,jdbcType=VARCHAR},
             </if>
+
+
+            <if test="parentService != null">
+                #{parentService,jdbcType=VARCHAR},
+            </if>
+            <if test="parentServiceInstance != null">
+                #{parentServiceInstance,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                #{parentEndpoint,jdbcType=VARCHAR},
+            </if>
+
         </trim>
     </insert>
     <update id="updateBatch" parameterType="java.util.List">
@@ -822,14 +852,7 @@
         <foreach collection="list" item="item" index="index" open="" close="" separator=";">
             update ms_segment_detail
             <set>
-                is_delete = 0,
-                <if test="item.userPortraitFlagByVisitedTime != null and item.userPortraitFlagByVisitedTime != ''">
-                    user_portrait_flag_by_visited_time = #{item.userPortraitFlagByVisitedTime},
-                </if>
-                <if
-                        test="item.userPortraitFlagByVisitedTableEveryday != null and item.userPortraitFlagByVisitedTableEveryday != ''">
-                    user_portrait_flag_by_visited_table_everyday = #{item.userPortraitFlagByVisitedTableEveryday},
-                </if>
+                is_delete = 0
             </set>
             where id=#{item.id}
         </foreach>

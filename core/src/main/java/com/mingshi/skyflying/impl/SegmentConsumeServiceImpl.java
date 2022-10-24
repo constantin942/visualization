@@ -83,7 +83,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 // 存放用户名暂时为空的链路信息；
                 segmentDetaiUserNameIsNullDolList = new LinkedList<>();
                 // 组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理
-                segmentDetaiDolList = getSegmentDetaiDolList(consumerRecord, segmentDetaiUserNameIsNullDolList, segment, segmentObject);
+                segmentDetaiDolList = getSegmentDetaiDolList(segmentDetaiUserNameIsNullDolList, segment, segmentObject);
                 // 异常检测；2022-10-13 09:40:57
                 doUserVisitedIsAbnormal(segmentDetaiDolList);
             }
@@ -222,24 +222,24 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年09月07日 11:09:24
      * @Param [segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segment, segmentObject]
      **/
-    private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(ConsumerRecord<String, Bytes> consumerRecord, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
+    private LinkedList<MsSegmentDetailDo> getSegmentDetaiDolList(LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentDo segment, SegmentObject segmentObject) {
         LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
         try {
             String reorganizingSpans = segment.getReorganizingSpans();
             if (StringUtil.isBlank(reorganizingSpans)) {
-                putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+                putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
                 return segmentDetaiDolList;
             }
             List<LinkedHashMap> list = JsonUtil.string2Obj(reorganizingSpans, List.class, LinkedHashMap.class);
             if (null == list || list.isEmpty() || 1 == list.size()) {
-                putSegmentDetailDoIntoList(consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
+                putSegmentDetailDoIntoList(segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject);
                 return segmentDetaiDolList;
             }
             for (int i = 1; i < list.size(); i++) {
                 LinkedHashMap map = list.get(i);
 
                 // 给MsSegmentDetailDo实例赋值
-                MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(consumerRecord, map, segment, list.get(0));
+                MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
                 String logs = String.valueOf(map.get(Const.LOGS));
                 Boolean isError = false;
 
@@ -326,13 +326,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年08月19日 08:08:49
      * @Param [msSegmentDetailDo, map, segment]
      **/
-    private MsSegmentDetailDo getMsSegmentDetailDo(ConsumerRecord<String, Bytes> consumerRecord, LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
+    private MsSegmentDetailDo getMsSegmentDetailDo(LinkedHashMap map, SegmentDo segment, LinkedHashMap map1) {
         Object url = map1.get(Const.URL);
         MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-        msSegmentDetailDo.setTopic(consumerRecord.topic());
-        msSegmentDetailDo.setParition(consumerRecord.partition());
-        msSegmentDetailDo.setOffset(consumerRecord.offset());
-
         msSegmentDetailDo.setOperationName(String.valueOf(url));
 
         Integer spanId = null;
@@ -362,6 +358,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         msSegmentDetailDo.setParentSegmentId(segment.getParentSegmentId());
         msSegmentDetailDo.setCurrentSegmentId(segment.getCurrentSegmentId());
         msSegmentDetailDo.setUserLoginIp(segment.getIp());
+        msSegmentDetailDo.setParentService(segment.getParentService());
+        msSegmentDetailDo.setParentEndpoint(segment.getParentEndpoint());
+        msSegmentDetailDo.setParentServiceInstance(segment.getParentServiceInstance());
         return msSegmentDetailDo;
     }
 
@@ -374,13 +373,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022年09月13日 16:09:09
      * @Param [consumerRecord, segment, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, segmentObject]
      **/
-    private void putSegmentDetailDoIntoList(ConsumerRecord<String, Bytes> consumerRecord, SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
+    private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
         if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
             MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-            msSegmentDetailDo.setTopic(consumerRecord.topic());
-            msSegmentDetailDo.setParition(consumerRecord.partition());
-            msSegmentDetailDo.setOffset(consumerRecord.offset());
 
+            msSegmentDetailDo.setParentService(segment.getParentService());
+            msSegmentDetailDo.setParentEndpoint(segment.getParentEndpoint());
+            msSegmentDetailDo.setParentServiceInstance(segment.getParentServiceInstance());
             msSegmentDetailDo.setUserLoginIp(segment.getIp());
             msSegmentDetailDo.setUserName(segment.getUserName());
             msSegmentDetailDo.setToken(segment.getToken());
@@ -530,6 +529,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             String ref = segmentObject.getRef();
             if (!StringUtil.isBlank(ref)) {
                 TraceSegmentRef traceSegmentRef = JsonUtil.string2Obj(ref, TraceSegmentRef.class);
+                String parentService = traceSegmentRef.getParentService();
+                segment.setParentService(parentService);
+                String parentServiceInstance = traceSegmentRef.getParentServiceInstance();
+                segment.setParentServiceInstance(parentServiceInstance);
+                String parentEndpoint = traceSegmentRef.getParentEndpoint();
+                segment.setParentEndpoint(parentEndpoint);
+
                 String parentSegmentId = traceSegmentRef.getTraceSegmentId();
                 segment.setParentSegmentId(parentSegmentId);
                 return parentSegmentId;

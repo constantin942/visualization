@@ -388,7 +388,7 @@ public class AnomalyDetectionBusiness {
         try {
             if (msAlarmInformationDoList.size() != 0) {
                 // 将告警检测发送到Kafka中
-                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.Anomaly_ALARM.getCode(), msAlarmInformationDoList);
+                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.ANOMALY_ALARM.getCode(), msAlarmInformationDoList);
                 aiitKafkaProducer.sendWithKey(anomalyDetectionAlarmTopic, Const.ANOMALY_DETECTION_ALARM_KEY, JsonUtil.obj2String(msConsumerRecords));
             }
         } catch (Exception e) {
@@ -409,7 +409,7 @@ public class AnomalyDetectionBusiness {
         // 当项目启动后，如果用户画像一直没有初始化完毕，那么将待异常检测的用户行为信息发送到Kafka中。
         if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone()) && !segmentDetaiDolList.isEmpty()) {
             try {
-                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode(), segmentDetaiDolList);
+                MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.MSSEGMENTDETAILDO_CONSUME_FAILED.getCode(), segmentDetaiDolList);
                 aiitKafkaProducer.send(anomalyDetectionConsumeFailedTopic, JsonUtil.obj2String(msConsumerRecords));
                 return false;
             } catch (Exception e) {

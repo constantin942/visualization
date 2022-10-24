@@ -1,8 +1,18 @@
 package com.mingshi.skyflying.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.MsAgentSwitchDo;
+import com.mingshi.skyflying.common.domain.SendStateRecord;
 import com.mingshi.skyflying.common.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.common.reactor.thread.ProcessorThread;
 import com.mingshi.skyflying.common.service.SegmentConsumerService;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
+import com.mingshi.skyflying.dao.MsExceptionInfoMapper;
+import com.mingshi.skyflying.dao.SendStateRecordMapper;
+import com.mingshi.skyflying.domain.MsExceptionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
@@ -10,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +38,120 @@ public class AiitKafkaConsumerUtil {
     private boolean reactorProcessorEnable;
     @Resource
     private SegmentConsumerService segmentConsumerService;
+    @Resource
+    private MsAgentSwitchMapper msAgentSwitchMapper;
+    @Resource
+    private MsExceptionInfoMapper msExceptionInfoMapper;
+    @Resource
+    private SendStateRecordMapper sendStateRecordMapper;
+
+    /**
+     * <B>方法名称：handleExceptionInfo</B>
+     * <B>概要说明：将探针发来的异常信息保存到数据库中</B>
+     *
+     * @Author zm
+     * @Date 2022-10-24 14:59:45
+     * @Param [jsonNodes]
+     * @return void
+     **/
+    public void handleExceptionInfo(ObjectNode jsonNodes) {
+        try {
+            JsonNode body = jsonNodes.get("body");
+            if (null == body) {
+                return;
+            }
+            ObjectNode jsonObject = JsonUtil.string2Obj(body.asText(), ObjectNode.class);
+            JsonNode exceptionInfo = jsonObject.get("exceptionInfo");
+            JsonNode serviceInstanceName = jsonObject.get("serviceInstanceName");
+            JsonNode serviceCode = jsonObject.get("serviceCode");
+            MsExceptionInfo msExceptionInfo = new MsExceptionInfo();
+            if (null != exceptionInfo) {
+                msExceptionInfo.setExceptionInfo(exceptionInfo.asText());
+            }
+            if (null != serviceInstanceName) {
+                msExceptionInfo.setServiceInstanceName(serviceInstanceName.asText());
+            }
+            if (null != serviceCode) {
+                msExceptionInfo.setServiceCode(serviceCode.asText());
+            }
+            msExceptionInfoMapper.insertSelective(msExceptionInfo);
+        } catch (Exception e) {
+            log.error("# AiitKafkaConsumerUtil.handleExceptionInfo() # 将探针发来的异常信息保存到数据库中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：handleSendRecordsState</B>
+     * <B>概要说明：保存探针已发送成功的链路信息，用于排查网关发送消息丢失，导致用户名没有的情况</B>
+     *
+     * @Author zm
+     * @Date 2022-10-24 15:31:47
+     * @Param [jsonNodes]
+     * @return void
+     **/
+    public void handleSendRecordsState(ObjectNode jsonNodes) {
+        try {
+            JsonNode body = jsonNodes.get("body");
+            if(null == body){
+                return;
+            }
+            List<SendStateRecord> sendStateRecordList = JsonUtil.string2Obj(body.asText(),List.class, SendStateRecord.class);
+            if(!sendStateRecordList.isEmpty()){
+                sendStateRecordMapper.insertSelectiveBatch(sendStateRecordList);
+            }
+        } catch (Exception e) {
+            log.error("# AiitKafkaConsumerUtil.handleSendRecordsState() # 将探针发来的异常信息保存到数据库中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：updateMsAgentSwitchStatus</B>
+     * <B>概要说明：更新探针的状态</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年08月25日 14:08:10
+     * @Param [value]
+     **/
+    public void updateMsAgentSwitchStatus(String value) {
+        try {
+            ObjectNode jsonNodes = JsonUtil.string2Obj(value, ObjectNode.class);
+            String requestId = null;
+            if (null == jsonNodes.get(Const.REQUEST_ID)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatus() # 从Kafka中获取探针返回的信息【{}】时，没有获取到请求id（request_id）参数。", value);
+                return;
+            }
+            if (null == jsonNodes.get(Const.AGENT_OPERATION_TYPE)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatus() # 从Kafka中获取探针返回的信息【{}】时，没有获取到请求类型（{}）参数。", value, Const.AGENT_OPERATION_TYPE);
+                return;
+            }
+            requestId = jsonNodes.get(Const.REQUEST_ID).asText();
+            String responseStatus = null;
+            if (null == jsonNodes.get(Const.RESPONSE_STATUS)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatus() # 从Kafka中获取探针返回的信息【{}】时，没有获取到探针操作状态（status）参数。", value);
+                return;
+            }
+            responseStatus = jsonNodes.get(Const.RESPONSE_STATUS).asText();
+
+            MsAgentSwitchDo msAgentSwitchDo = new MsAgentSwitchDo();
+            msAgentSwitchDo.setRequestId(requestId);
+            msAgentSwitchDo.setReceiveKafkaResponseParams(value);
+            msAgentSwitchDo.setReceiveKafkaStatus(responseStatus);
+
+            String operationType = jsonNodes.get(Const.AGENT_OPERATION_TYPE).asText();
+            if (Const.AGENT_QUERY.equals(operationType) && null != jsonNodes.get(Const.AGENT_STATUS)) {
+                String agentStatus = jsonNodes.get(Const.AGENT_STATUS).asText();
+                msAgentSwitchDo.setAgentSwitchStatus(Const.TRUE.equals(agentStatus) ? Const.AGENT_STATUS_ON : Const.AGENT_STATUS_OFF);
+            }
+
+            Integer result = msAgentSwitchMapper.updateByRequestId(msAgentSwitchDo);
+            if (!Const.NUMBER_ONE.equals(result)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatus() # 更新探针【{}】的状态失败。", value);
+            }
+        } catch (Exception e) {
+            log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatus() # 更新探针【{}】的状态时，出现了异常。", value, e);
+        }
+    }
 
     /**
      * <B>方法名称：useNoReactorModel</B>

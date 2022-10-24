@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.kafka.consumer;
 
-import com.mingshi.skyflying.dao.MsAgentSwitchMapper;
 import com.mingshi.skyflying.utils.AiitKafkaConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +8,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,12 +28,11 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
     private String segmentConsumerTopic;
     @Value("${spring.kafka.consumer.agent-switch-response-topic}")
     private String agentSwitchResponseTopic;
+    @Value("${spring.kafka.consumer.send-state-exception-info-topic}")
+    private String sendStateExceptionInfoTopic;
     @Value("${spring.kafka.consumer.group}")
     private String segmentConsumerGroup;
-    @Value("${spring.kafka.consumer.agent-switch-response-group}")
-    private String agentSwitchResponseGroup;
-    @Resource
-    private MsAgentSwitchMapper msAgentSwitchMapper;
+
     @Resource
     private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
 
@@ -50,26 +49,21 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
             }
             // 创建MsKafkaSegmentsConsumer消费者线程，并启动
             createMsKafkaSegmentsConsumer();
-            // 创建MsKafkaAgentSwitchConsumer消费者线程，并启动
-            createMsKafkaAgentSwitchConsumer();
+            // 创建createMsKafkaConsumer消费者线程，并启动
+            createMsKafkaConsumer();
         } catch (Exception e) {
             log.error("# AiitKafkaConsumerRunner.run() # 创建并启动Kafka消费者出现了异常。", e);
         }
     }
 
-    /**
-     * <B>方法名称：createMsKafkaAgentSwitchConsumer</B>
-     * <B>概要说明：创建MsKafkaAgentSwitchConsumer消费者线程，并启动</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年08月25日 11:08:34
-     * @Param []
-     **/
-    private void createMsKafkaAgentSwitchConsumer() {
-        MsKafkaAgentSwitchConsumer msKafkaAgentSwitchConsumer = new MsKafkaAgentSwitchConsumer(bootstrapServers, agentSwitchResponseTopic, agentSwitchResponseGroup, msAgentSwitchMapper);
-        msKafkaAgentSwitchConsumer.setName("msKafkaAgentSwitchConsumer");
-        msKafkaAgentSwitchConsumer.start();
+    private void createMsKafkaConsumer() {
+        LinkedList<String> topicList = new LinkedList<>();
+        topicList.add(agentSwitchResponseTopic);
+        topicList.add(sendStateExceptionInfoTopic);
+
+        MsKafkaConsumer msKafkaConsumer = new MsKafkaConsumer(bootstrapServers, topicList, "send-state-exception-info-group", aiitKafkaConsumerUtil);
+        msKafkaConsumer.setName("msKafkaSendStateAndExceptionConsumer");
+        msKafkaConsumer.start();
     }
 
     /**

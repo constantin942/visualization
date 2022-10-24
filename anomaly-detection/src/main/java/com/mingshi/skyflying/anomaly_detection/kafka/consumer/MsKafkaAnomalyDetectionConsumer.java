@@ -156,10 +156,10 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
                 byte[] bytes = consumerRecord.value().get();
                 String recordStr = new String(bytes);
                 MsConsumerRecords msConsumerRecords = JsonUtil.string2Obj(recordStr, MsConsumerRecords.class);
-                if (msConsumerRecords.getRecordType().equals(RecordEnum.MsSegmentDetailDo_Consume_Failed.getCode())) {
+                if (msConsumerRecords.getRecordType().equals(RecordEnum.MSSEGMENTDETAILDO_CONSUME_FAILED.getCode())) {
                     // 对待异常检测的数据（之前是因为用户画像没有初始化完毕），再次进行异常检测；2022-10-19 11:23:24
                     msSegmentDetailDoReConsume(msConsumerRecords);
-                } else if (msConsumerRecords.getRecordType().equals(RecordEnum.Anomaly_ALARM.getCode())) {
+                } else if (msConsumerRecords.getRecordType().equals(RecordEnum.ANOMALY_ALARM.getCode())) {
                     List<MsAlarmInformationDo> alarmInformationDos = (List<MsAlarmInformationDo>) msConsumerRecords.getBody();
                     // 将异常信息保存到数据库中；2022-10-19 10:55:04
                     mingshiServerUtil.flushAbnormalToDb(alarmInformationDos);

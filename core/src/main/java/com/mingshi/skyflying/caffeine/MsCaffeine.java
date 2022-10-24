@@ -2,9 +2,9 @@ package com.mingshi.skyflying.caffeine;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -37,7 +37,7 @@ public class MsCaffeine implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
     try {
-      log.info("# MsCaffeine.run() # 项目启动，开始初始化Caffeine实例。");
+        log.info("# MsCaffeine.run() # 项目启动，开始初始化Caffeine实例。");
       createAllCaffeine();
       log.info("# MsCaffeine.run() # 项目启动，初始化Caffeine实例完毕。");
       doRun();

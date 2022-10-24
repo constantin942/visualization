@@ -28,13 +28,16 @@
         <result column="current_segment_id" jdbcType="VARCHAR" property="currentSegmentId"/>
         <result column="db_statement" jdbcType="LONGVARCHAR" property="dbStatement"/>
         <result column="user_login_ip" jdbcType="LONGVARCHAR" property="userLoginIp"/>
+        <result column="parent_service" jdbcType="VARCHAR" property="parentService"/>
+        <result column="parent_service_instance" jdbcType="VARCHAR" property="parentServiceInstance"/>
+        <result column="parent_endpoint" jdbcType="VARCHAR" property="parentEndpoint"/>
     </resultMap>
     <sql id="Base_Column_List">
         id
         , user_login_ip, user_name, service_code, start_time, db_type, db_user_name, operation_name, token,
     global_trace_id, parent_segment_id, operation_type, ms_table_name, db_instance, gmt_create,
     gmt_modified, is_delete, span_id, component, peer, endpoint_name, service_instance_name,
-    end_time, parent_span_id, current_segment_id, db_statement
+    end_time, parent_span_id, current_segment_id, db_statement,parent_service,parent_service_instance,parent_endpoint
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
         select
@@ -117,7 +120,7 @@
         (user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
         span_id, component, service_code, peer, endpoint_name,
         start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
-        db_user_name, db_statement, ms_table_name, operation_type)
+        db_user_name, db_statement, ms_table_name, operation_type,parent_service,parent_service_instance,parent_endpoint)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
@@ -142,7 +145,10 @@
             #{item.dbUserName,jdbcType=VARCHAR},
             #{item.dbStatement,jdbcType=VARCHAR},
             #{item.msTableName,jdbcType=VARCHAR},
-            #{item.operationType,jdbcType=VARCHAR}
+            #{item.operationType,jdbcType=VARCHAR},
+            #{item.parentService,jdbcType=VARCHAR},
+            #{item.parentServiceInstance,jdbcType=VARCHAR},
+            #{item.parentEndpoint,jdbcType=VARCHAR}
             )
         </foreach>
     </insert>
@@ -227,6 +233,16 @@
             <if test="userLoginIp != null">
                 user_login_ip,
             </if>
+
+            <if test="parentService != null">
+                parent_service,
+            </if>
+            <if test="parentServiceInstance != null">
+                parent_service_instance,
+            </if>
+            <if test="parentEndpoin != null">
+                parent_endpoin,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -306,6 +322,15 @@
             </if>
             <if test="userLoginIp != null">
                 #{userLoginIp,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="parentService != null">
+                #{parentService,jdbcType=VARCHAR},
+            </if>
+            <if test="parentServiceInstance != null">
+                #{parentServiceInstance,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                #{parentEndpoint,jdbcType=VARCHAR},
             </if>
         </trim>
     </insert>
