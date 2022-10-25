@@ -11,6 +11,7 @@ import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.dao.MsAlarmInformationMapper;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.enums.RecordEnum;
@@ -57,6 +58,10 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     MsSegmentDetailMapper segmentDetailMapper;
+
+    @Resource
+    MsAlarmInformationMapper alarmInformationMapper;
+
     @Resource
     RedissonClient redissonClient;
     @Resource
@@ -219,6 +224,9 @@ public class AnomalyDetectionBusiness {
         msAlarmInformationDo.setUserName(segmentDetailDo.getUserName());
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDetailDo.getStartTime()));
         msAlarmInformationDo.setGlobalTraceId(segmentDetailDo.getGlobalTraceId());
+        msAlarmInformationDo.setMsTableName(segmentDetailDo.getMsTableName());
+        msAlarmInformationDo.setStartTime(segmentDetailDo.getStartTime());
+        msAlarmInformationDo.setDbInstance(segmentDetailDo.getDbInstance());
         String content = "";
         if (alarmEnum == AlarmEnum.NEW_USER) {
             msAlarmInformationDo.setMatchRuleId(AlarmEnum.NEW_USER.getCode());
@@ -283,15 +291,15 @@ public class AnomalyDetectionBusiness {
      * 插入粗粒度表
      */
     public void insertCoarse(AnomalyDetectionInfoBo anomalyDetectionInfoBo) {
-        MsSegmentDetailDo segmentDetail = segmentDetailMapper.selectByGlobalTraceId(anomalyDetectionInfoBo.getGlobalTraceId());
-        if (segmentDetail == null) {
+        MsAlarmInformationDo alarmInformationDo = alarmInformationMapper.selectByGlobalTraceId(anomalyDetectionInfoBo.getGlobalTraceId());
+        if (alarmInformationDo == null) {
             return;
         }
         if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TIME_ALARM.getCode())) {
-            userPortraitByTimeTask.insertTimeCoarse(segmentDetail);
+            userPortraitByTimeTask.insertTimeCoarse(alarmInformationDo);
         }
         if (Objects.equals(anomalyDetectionInfoBo.getMatchRuleId(), AlarmEnum.TABLE_ALARM.getCode())) {
-            userPortraitByTableTask.insertTableCoarse(segmentDetail);
+            userPortraitByTableTask.insertTableCoarse(alarmInformationDo);
         }
     }
 

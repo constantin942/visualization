@@ -29,4 +29,24 @@ public class MsAlarmInformationDo {
     private String alarmContent;
 
     private String globalTraceId;
+
+    /**
+     * 链路请求开始的时间
+     */
+    private String startTime;
+
+    /**
+     * 数据库实例地址
+     */
+    private String dbInstance;
+
+    /**
+     * SQL语句中表的名字
+     */
+    private String msTableName;
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }

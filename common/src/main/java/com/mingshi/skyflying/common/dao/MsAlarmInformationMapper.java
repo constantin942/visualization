@@ -30,4 +30,6 @@ public interface MsAlarmInformationMapper {
     List<String> selectAllUserName();
 
     Integer selectAllByGroupByUserNameCount();
+
+    MsAlarmInformationDo selectByGlobalTraceId(String traceId);
 }

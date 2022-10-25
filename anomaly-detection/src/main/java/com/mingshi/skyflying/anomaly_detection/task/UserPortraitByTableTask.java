@@ -8,6 +8,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -161,6 +162,40 @@ public class UserPortraitByTableTask {
     }
 
     /**
+     * 拆分全量信息表中的表名
+     */
+    public List<MsAlarmInformationDo> splitTableByAlarm(List<MsAlarmInformationDo> alarmDetails) {
+        List<MsAlarmInformationDo> list = new ArrayList<>();
+        for (MsAlarmInformationDo alarmDetail : alarmDetails) {
+            String username = alarmDetail.getUserName();
+            String dbInstance = alarmDetail.getDbInstance();
+            String table = alarmDetail.getMsTableName();
+            if (StringUtil.isEmpty(username) || StringUtil.isEmpty(dbInstance) || StringUtil.isEmpty(table)) {
+                continue;
+            }
+            if (!table.contains(Const.EN_COMMA)) {
+                //只有一个表, 直接添加, 不用拆分
+                list.add(alarmDetail);
+                continue;
+            }
+            String[] tableNames = alarmDetail.getMsTableName().split(Const.EN_COMMA);
+            for (String tableName : tableNames) {
+                MsAlarmInformationDo msAlarmInformationDo = null;
+                try {
+                    msAlarmInformationDo = (MsAlarmInformationDo) alarmDetail.clone();
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                    log.error("拆分全量信息表中的表名时深拷贝出现异常, {}", e.getMessage());
+                }
+                assert msAlarmInformationDo != null;
+                msAlarmInformationDo.setMsTableName(tableName);
+                list.add(msAlarmInformationDo);
+            }
+        }
+        return list;
+    }
+
+    /**
      * 根据全量信息获取用户画像(粗粒度表)
      */
     private List<UserPortraitByTableDo> getUserPortraitByTable(List<MsSegmentDetailDo> segmentDetails) {
@@ -200,25 +235,25 @@ public class UserPortraitByTableTask {
     /**
      * 插入库表粗粒度表/画像表
      */
-    public void insertTableCoarse(MsSegmentDetailDo segmentDetailDo) {
-        List<MsSegmentDetailDo> list = new ArrayList<>();
-        list.add(segmentDetailDo);
-        List<MsSegmentDetailDo> segmentDetails = splitTable(list);
-        for (MsSegmentDetailDo segmentDetail : segmentDetails) {
-            insertTableCoarseHelper(segmentDetail);
+    public void insertTableCoarse(MsAlarmInformationDo alarmInformationDo) {
+        List<MsAlarmInformationDo> list = new ArrayList<>();
+        list.add(alarmInformationDo);
+        List<MsAlarmInformationDo> alarmInformationDetails = splitTableByAlarm(list);
+        for (MsAlarmInformationDo alarmInformationDetail : alarmInformationDetails) {
+            insertTableCoarseHelper(alarmInformationDetail);
         }
     }
 
-    private void insertTableCoarseHelper(MsSegmentDetailDo segmentDetail) {
-        String username = segmentDetail.getUserName();
+    private void insertTableCoarseHelper(MsAlarmInformationDo alarmDetail) {
+        String username = alarmDetail.getUserName();
         Date time = null;
         try {
-            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(segmentDetail.getStartTime());
+            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(alarmDetail.getStartTime());
         } catch (ParseException e) {
-            log.error("提取时间失败----{}", segmentDetail.getStartTime());
+            log.error("提取时间失败----{}", alarmDetail.getStartTime());
             return;
         }
-        String tableName = segmentDetail.getDbInstance() + "." + segmentDetail.getMsTableName();
+        String tableName = alarmDetail.getDbInstance() + "." + alarmDetail.getMsTableName();
         UserPortraitByTableDo userPortraitByTable = userPortraitByTableMapper.selectByNameAndTime(username, time, tableName);
         if (userPortraitByTable == null) {
             // 没有该用户当天粗粒度/画像信息

@@ -12,10 +12,21 @@
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
     <result column="alarm_content" jdbcType="VARCHAR" property="alarmContent" />
     <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId" />
+    <result column="start_time" jdbcType="TIMESTAMP" property="startTime"/>
+    <result column="db_instance" jdbcType="VARCHAR" property="dbInstance"/>
+    <result column="ms_table_name" jdbcType="VARCHAR" property="msTableName"/>
   </resultMap>
   <sql id="Base_Column_List">
-    id, is_delete, update_user_portrait, gmt_create, gmt_modified, user_name, alarm_content, global_trace_id, original_time, match_rule_id
+    id, is_delete, update_user_portrait, gmt_create, gmt_modified, user_name,
+    alarm_content, global_trace_id, original_time, match_rule_id,
+    start_time, db_instance, ms_table_name
   </sql>
+  <select id="selectByGlobalTraceId" parameterType="string"
+          resultType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+    select *
+    from ms_alarm_information
+    where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
@@ -62,6 +73,7 @@
       LIMIT #{pageNo},#{pageSize}
     </if>
   </select>
+
   <select id="selectAllByGroupByUserNameCount" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) as counts from (select user_name as userName,match_rule_id as matchRuleId
                                     from ms_alarm_information

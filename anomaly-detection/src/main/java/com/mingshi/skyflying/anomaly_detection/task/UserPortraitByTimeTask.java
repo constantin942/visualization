@@ -11,6 +11,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
@@ -241,19 +242,19 @@ public class UserPortraitByTimeTask {
     /**
      * 插入时间粗粒度表
      */
-    public void insertTimeCoarse(MsSegmentDetailDo segmentDetailDo) {
-        String username = segmentDetailDo.getUserName();
+    public void insertTimeCoarse(MsAlarmInformationDo alarmInformationDo) {
+        String username = alarmInformationDo.getUserName();
         Date time = null;
         try {
-            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(segmentDetailDo.getStartTime());
+            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(alarmInformationDo.getStartTime());
         } catch (ParseException e) {
-            log.error("提取时间失败----{}", segmentDetailDo.getStartTime());
+            log.error("提取时间失败----{}", alarmInformationDo.getStartTime());
             return;
         }
         Pattern pattern = Pattern.compile("\\d+-\\d+-\\d+\\s+(\\d+):");
-        Matcher m = pattern.matcher(segmentDetailDo.getStartTime());
+        Matcher m = pattern.matcher(alarmInformationDo.getStartTime());
         if (!m.find()) {
-            log.error("提取时间异常{}", segmentDetailDo.getStartTime());
+            log.error("提取时间异常{}", alarmInformationDo.getStartTime());
             throw new AiitException("提取时间异常");
 
         }
