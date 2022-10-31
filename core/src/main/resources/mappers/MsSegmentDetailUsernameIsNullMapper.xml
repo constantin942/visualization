@@ -53,32 +53,7 @@
         group by token
     </select>
     <select id="selectAllUserNameIsNotNull" resultMap="BaseResultMap">
-        select id,
-               user_login_ip,
-               user_name,
-               service_code,
-               start_time,
-               db_type,
-               db_user_name,
-               operation_name,
-               token,
-               global_trace_id,
-               parent_segment_id,
-               operation_type,
-               ms_table_name,
-               db_instance,
-               gmt_create,
-               gmt_modified,
-               is_delete,
-               span_id,
-               component,
-               peer,
-               endpoint_name,
-               service_instance_name,
-               end_time,
-               parent_span_id,
-               current_segment_id,
-               db_statement
+        select <include refid="Base_Column_List"/>
         from ms_segment_detail_username_is_null
         where user_name is not null
         order by id asc limit 50
@@ -432,13 +407,4 @@
             where global_trace_id = #{item.globalTraceId,jdbcType=VARCHAR}
         </foreach>
     </update>
-    <!--    <update id="updateBatch" parameterType="list" keyProperty="id" useGeneratedKeys="true">-->
-    <!--        <foreach collection="list" index="index" item="item" open="" separator=";" close="">-->
-    <!--            update t_acl-->
-    <!--            <set>-->
-    <!--                user_name = #{item.userName,jdbcType=VARCHAR},-->
-    <!--            </set>-->
-    <!--            WHERE device_id = #{item.deviceId,jdbcType=VARCHAR} and acl_number = #{item.aclNumber,jdbcType=VARCHAR}-->
-    <!--        </foreach>-->
-    <!--    </update>-->
 </mapper>
