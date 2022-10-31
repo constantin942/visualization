@@ -1,25 +1,23 @@
 package com.mingshi.skyflying.anomaly_detection.dao;
 
-import com.mingshi.skyflying.anomaly_detection.domain.DicItem;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public interface DingAlarmConfigMapper {
     int deleteByPrimaryKey(Integer id);
 
-    int insert(DingAlarmConfig record);
+    int insert(DingAlarmConfig dingAlarmConfig);
 
-    int insertSelective(DingAlarmConfig record);
+    int insertSelective(DingAlarmConfig dingAlarmConfig);
 
     DingAlarmConfig selectByPrimaryKey(Integer id);
 
     DingAlarmConfig selectOne();
 
-    int updateByPrimaryKeySelective(DingAlarmConfig record);
+    int updateByPrimaryKeySelective(DingAlarmConfig dingAlarmConfig);
 
-    int updateByPrimaryKey(DingAlarmConfig record);
+    int updateByPrimaryKey(DingAlarmConfig dingAlarmConfig);
 
     ArrayList<Integer> selectGapDic();
 }

@@ -362,6 +362,9 @@ public class DateTimeUtil {
    * @Param [stringDate]
    **/
   public static long getSecondByDate(String stringDate) {
+    if(StringUtil.isBlank(stringDate)){
+        return -1L;
+    }
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
     long timeEnd = System.currentTimeMillis();
     return Math.abs((timeEnd - timeFrom) / 1000);
@@ -377,6 +380,9 @@ public class DateTimeUtil {
    * @Param [stringDate]
    **/
   public static long getMilliSecondByDate(String stringDate) {
+    if(StringUtil.isBlank(stringDate)){
+        return -1L;
+    }
     long timeFrom = DateTimeUtil.strToDate(stringDate).getTime();
     long timeEnd = System.currentTimeMillis();
     return Math.abs((timeEnd - timeFrom));
@@ -442,7 +448,7 @@ public class DateTimeUtil {
     //上午结束时间
     amEnd.setTime(amEndTime);
     //处于开始时间之后，和结束时间之前的判断
-    if ((date.after(amBegin) && date.before(amEnd))) {
+    if (date.after(amBegin) && date.before(amEnd)) {
       return true;
     } else {
       return false;
@@ -770,16 +776,6 @@ public class DateTimeUtil {
 
 
   /**
-   * 获取当前简单的年月日
-   *
-   * @return
-   */
-  public static String getCurrentSimpleDateStr() {
-    SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT_STR_002);
-    return sdf.format(DateTimeUtil.getNow());
-  }
-
-  /**
    * 根据指定的Format转化java.util.Date到String
    *
    * @param dt   java.util.Date instance
@@ -808,7 +804,7 @@ public class DateTimeUtil {
     String sRet = null;
 
     try {
-      sRet = formatter.format(dt).toString();
+      sRet = formatter.format(dt);
     } catch (Exception e) {
       sRet = null;
     }

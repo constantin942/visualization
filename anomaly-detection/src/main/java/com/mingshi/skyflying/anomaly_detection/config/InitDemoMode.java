@@ -8,6 +8,8 @@ package com.mingshi.skyflying.anomaly_detection.config;
  * @Date 2022/10/31 13:45
  **/
 public class InitDemoMode {
+    private InitDemoMode(){}
+
     private static volatile Boolean isDemoMode = Boolean.FALSE;
 
     public static Boolean getIsDemoMode() {
