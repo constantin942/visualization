@@ -14,15 +14,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Aiit@123
-    #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    #    url: jdbc:mysql://10.0.102.64:3306/skywalking_mingshi?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    #    url: jdbc:mysql://10.0.107.46:3306/es_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    #    url: jdbc:mysql://10.0.107.46:3306/zm_mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywalking?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/zm_skywalking_test?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   #    url: jdbc:mysql://10.0.107.46:3306/mingshi-skywalking-demonstration?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-  #    url: jdbc:mysql://10.0.107.46:3306/mingshi_skywlking_server?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-  #    url: jdbc:mysql://10.0.107.46:3306/lanjing?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     hikari:
       # 连接池中允许的最小连接数。缺省值：10
       minimum-idle: 10
