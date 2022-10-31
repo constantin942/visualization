@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
+import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
@@ -116,17 +117,6 @@ public class AnomalyDetectionBusiness {
                 userVisitedTableIsAbnormalHandler(segmentDetail, msAlarmInformationDoList, portraitConfig);
             }
         }
-    }
-
-    /**
-     * 是否为演示模式
-     */
-    private boolean isDemoMode() {
-        String mode = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
-        if (mode == null) {
-            return false;
-        }
-        return "1".equals(mode);
     }
 
     /**
@@ -366,9 +356,9 @@ public class AnomalyDetectionBusiness {
             }
 
             LinkedList<MsAlarmInformationDo> msAlarmInformationDoList = new LinkedList<>();
-            boolean isDemoMode = false;
-            // TODO: 交付时删掉下面这一行
-//            isDemoMode = isDemoMode();
+
+            // 获取演示模式标识；2022-10-31 13:57:30
+            Boolean isDemoMode = InitDemoMode.getIsDemoMode();
             if (Boolean.TRUE.equals(enableTableRule)) {
                 userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }

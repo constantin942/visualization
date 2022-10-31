@@ -1,11 +1,9 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
-import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
-import com.mingshi.skyflying.anomaly_detection.dao.DicItemMapper;
+import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.DicItem;
 import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
@@ -19,7 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author: 唐郑翔
@@ -73,11 +72,7 @@ public class ConfigController {
 
     @PutMapping("setDemoMode")
     public ServerResponse setDemoMode(@RequestParam Boolean enable) {
-        if (Boolean.TRUE.equals(enable)) {
-            portraitConfigMapper.setDemoMode("1");
-        } else {
-            portraitConfigMapper.setDemoMode("0");
-        }
+        InitDemoMode.setIsDemoMode(enable);
         return ServerResponse.createBySuccess();
     }
 
