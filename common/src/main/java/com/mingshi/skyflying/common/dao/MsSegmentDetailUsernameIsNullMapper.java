@@ -30,4 +30,8 @@ public interface MsSegmentDetailUsernameIsNullMapper {
     int updateUserNameByGlobalTraceId(Map<String,String> map);
 
     int updateBatch(List<Map<String,String>> mapList);
+
+    int updateNoUserName(List<Map<String,String>> mapList);
+
+    List<Map<String,String>> selectAllNoUserNameBeforeSixHours(String gmtModified);
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ public class ExecitonScheduledTaskList {
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
+
     /**
      * <B>方法名称：scheduledGetSegmentDetailDo</B>
      * <B>概要说明：定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录</B>
@@ -123,7 +125,7 @@ public class ExecitonScheduledTaskList {
         log.info("开始执行 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByGlobalTraceId()# 定时基于globalTraceId更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】。", key, Thread.currentThread().getName());
         try {
             List<Map<String, String>> mapList = msSegmentDetailUsernameIsNullMapper.selectAllGlobalTraceIdUserNameIsNotNull();
-            if(null != mapList && !mapList.isEmpty()){
+            if (null != mapList && !mapList.isEmpty()) {
                 msSegmentDetailUsernameIsNullMapper.updateBatch(mapList);
             }
             for (int i = 0; i < mapList.size(); i++) {
@@ -131,7 +133,7 @@ public class ExecitonScheduledTaskList {
                 String globalTraceId = stringStringMap.get(Const.GLOBAL_TRACE_ID);
                 String userNameFromDb = stringStringMap.get(Const.USER_NAME);
                 String userName = MsCaffeine.getUserNameByGlobalTraceId(globalTraceId);
-                if(StringUtil.isBlank(userName)){
+                if (StringUtil.isBlank(userName)) {
                     // 放入本地缓存；2022-10-13 13:44:26
                     MsCaffeine.putUserNameByGlobalTraceId(globalTraceId, userNameFromDb);
                 }
@@ -209,5 +211,43 @@ public class ExecitonScheduledTaskList {
         log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。开始时间 startTime = 【{}】，endTime = 【{}】。", startTime, endTime);
         auditLogService.autoFetchAuditlogByDms(startTime, endTime);
         log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
+    }
+
+    /**
+     * <B>方法名称：doScheduledHandleNoUserName</B>
+     * <B>概要说明：将六个小时之前收到的没有登录系统用户名的信息，把数据库用户名当做登录系统的用户名。
+     * 这些没有登录系统的用户名，主要分为三类：
+     * 1）定时任务，这个已能够实时处理；
+     * 2）不需要登录，这个和蓝景的晓军已确认过，确实存在很多不需要登录的接口；
+     * 3）探针出现了bug，不能捕获登录系统的用户名，但这种情况基本很少出现。</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-10-31 09:52:02
+     * @Param [key]
+     **/
+    public void doScheduledHandleNoUserName(String key) {
+        try {
+            log.info("开始执行 #scheduledGetDmsAuditLog.doScheduledHandleNoUserName()# 定时将六个小时之前收到的没有登录系统用户名的信息，把数据库用户名当做登录系统的用户名。。其分布式锁的 key = 【{}】.", key);
+            Instant start = Instant.now();
+            String startTime = null;
+            String endTime = null;
+
+            Instant minus = Instant.now().minus(Const.NUMBER_SIX, ChronoUnit.HOURS);
+
+            String queryTime = DateTimeUtil.instantToString1(minus);
+            // 获取六小时之前没有用户名的记录；2022-10-31 10:06:13
+            List<Map<String, String>> list = msSegmentDetailUsernameIsNullMapper.selectAllNoUserNameBeforeSixHours(queryTime);
+            if(null != list && !list.isEmpty()){
+                msSegmentDetailUsernameIsNullMapper.updateNoUserName(list);
+            }
+
+            endTime = DateTimeUtil.dateToStrformat(new Date());
+            log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。开始时间 startTime = 【{}】，endTime = 【{}】。", startTime, endTime);
+            auditLogService.autoFetchAuditlogByDms(startTime, endTime);
+            log.info("执行结束 #scheduledGetDmsAuditLog.scheduledGetDmsAuditLog()# 定时获取dms的审计日志。耗时 = 【{}】毫秒。", DateTimeUtil.getTimeMillis(start));
+        } catch (Exception e) {
+            log.error("# scheduledGetDmsAuditLog.doScheduledHandleNoUserName() # 将六个小时之前收到的没有登录系统用户名的信息，把数据库用户名当做登录系统的用户名时，出现了异常。", e);
+        }
     }
 }

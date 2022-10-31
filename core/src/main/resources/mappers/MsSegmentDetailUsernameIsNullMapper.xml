@@ -58,6 +58,13 @@
         where user_name is not null
         order by id asc limit 50
     </select>
+    <select id="selectAllNoUserNameBeforeSixHours" parameterType="java.lang.String"  resultType="java.util.Map">
+        select operation_name AS operationName, db_user_name as dbUserName
+        from ms_segment_detail_username_is_null
+        where user_name is null and gmt_modified  &lt; #{gmtModified,jdbcType=DATE} and db_user_name is not null
+        group by operation_name, db_user_name
+        order by count(*) desc;
+    </select>
     <select id="selectAllGlobalTraceIdUserNameIsNull" resultType="java.lang.String">
         select global_trace_id
         from ms_segment_detail_username_is_null
@@ -405,6 +412,14 @@
             update ms_segment_detail_username_is_null
             set  user_name=#{item.userName,jdbcType=VARCHAR}
             where global_trace_id = #{item.globalTraceId,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+    <update id="updateNoUserName" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update ms_segment_detail_username_is_null
+            set user_name = #{item.dbUserName,jdbcType=VARCHAR}
+            where db_user_name = #{item.dbUserName,jdbcType=VARCHAR}
+            and operation_name = #{item.operationName,jdbcType=VARCHAR}
         </foreach>
     </update>
 </mapper>
