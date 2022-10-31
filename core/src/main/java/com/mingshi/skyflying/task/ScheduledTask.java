@@ -92,7 +92,7 @@ public class ScheduledTask {
     /**
      * 每隔30分钟执行一次：
      */
-//  @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "0 */1 * * * ?")
     // @Scheduled(cron = "0 */30 * * * ?")
     public void scheduledGetDmsAuditLog() {
         execitonScheduledTaskList.doScheduledGetDmsAuditLog(Const.SCHEDULED_GET_DMS_AUDIT_LOG);
@@ -113,6 +113,6 @@ public class ScheduledTask {
      **/
     @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     public void scheduledHandleNoUserName() {
-        execitonScheduledTaskList.doScheduledHandleNoUserName(Const.SCHEDULED_GET_DMS_AUDIT_LOG);
+        execitonScheduledTaskList.doScheduledHandleNoUserName(Const.SCHEDULED_HANDLE_NO_USER_NAME);
     }
 }

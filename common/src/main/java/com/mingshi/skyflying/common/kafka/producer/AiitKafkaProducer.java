@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.common.kafka.producer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class AiitKafkaProducer {
 
     @Value("${spring.kafka.producer.topic}")
     private String producerTopic;
-    private AtomicInteger LOG_INTEVAL = new AtomicInteger(0);
+    private AtomicInteger PRINT_LOG_INTEVAL = new AtomicInteger(0);
 
     /**
      * 自定义topic
@@ -71,7 +72,7 @@ public class AiitKafkaProducer {
             @Override
             public void onFailure(Throwable throwable) {
                 //处理发送失败的情况；在这里做降级逻辑，将发送失败的消息要么存入到数据库中，要么写入本地磁盘中；
-                log.info("发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】", topic, throwable.getMessage());
+                log.info(Const.SEND_FAIL, topic, throwable.getMessage());
             }
 
             @Override
@@ -92,7 +93,7 @@ public class AiitKafkaProducer {
             @Override
             public void onFailure(Throwable throwable) {
                 //处理发送失败的情况；在这里做降级逻辑，将发送失败的消息要么存入到数据库中，要么写入本地磁盘中；
-                log.info("发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】", topic, throwable.getMessage());
+                log.info(Const.SEND_FAIL, topic, throwable.getMessage());
             }
 
             @Override
@@ -150,7 +151,7 @@ public class AiitKafkaProducer {
             @Override
             public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
                 //成功的处理
-                if (0 == LOG_INTEVAL.incrementAndGet() % 500) {
+                if (0 == PRINT_LOG_INTEVAL.incrementAndGet() % 500) {
                     log.info("发送消息成功  *** 发送消息成功 *** 发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic);
                 }
             }

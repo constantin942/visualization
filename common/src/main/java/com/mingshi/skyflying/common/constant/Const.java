@@ -9,14 +9,12 @@ public class Const {
     public static final String TOTAL = "total";
     public static final String ROWS = "rows";
     public static final String STATUS = "status";
-    public static final String QUEUE = "queue:";
-    public static final String FIRST = "first:";
-    public static final String SECOND = "second:";
     public static final String IO_THREAD = "io_Thread_";
     public static final String PROCESSOR_THREAD = "processor_thread_";
     public static final String GLOBAL_TRACE_ID = "globalTraceId";
     public static final String ANOMALY_DETECTION_ALARM_KEY = "anomalyDetectionAlarmKey";
     public static final Integer NUMBER_TWO = 2;
+    public static final String SEND_FAIL = "发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -53,9 +51,6 @@ public class Const {
     public static final String AGENT_SWITCH = "agentSwitch";
     public static final String AGENT_ON_OFF = "agentOnOff";
     public static final String AGENT_CODE = "agentCode";
-    public static final String TOPIC = "topic";
-    public static final String PARTITION = "partition";
-    public static final String OFFSET = "offset";
     public static final String AGENT_STATUS_OFF_DESC = "关闭";
     public static final String AGENT_STATUS_ON_DESC = "开启";
     public static final String HANDLER = "handler";
@@ -86,16 +81,14 @@ public class Const {
     public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
     public static final String SCHEDULED_UPDATE_USER_NAME_BY_TOKEN = "redisson:key:scheduledUpdateUserNameByToken";
     public static final String SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID = "redisson:key:scheduledUpdateUserNameByGlobalTraceId";
-    public static final String SCHEDULED_UPDATE_USER_PORTRAIT = "redisson:key:scheduledUpdateUserPortrait";
-    public static final String SCHEDULED_GET_NO_CHECK_ABNORMAL_RECORD = "redisson:key:scheduledGetNoCheckAbnormalRecord";
     public static final String SCHEDULED_GET_DMS_AUDIT_LOG = "redisson:key:scheduledGetDmsAuditLog";
+    public static final String SCHEDULED_HANDLE_NO_USER_NAME = "redisson:key:scheduledHanleNoUserName";
 
     public static final String AGENT_STATUS_UNKNOWN = "状态未知";
     public static final String AGENT_QUERY = "agent_query";
     public static final String AGENT_STATUS_ON = "on";
     public static final String AGENT_STATUS_OFF = "off";
 
-    public static final String MSG = "msg";
     public static final String RESPONSE_STATUS = "responseStatus";
     public static final String AGENT_STATUS = "agentStatus";
     public static final String SERVICE_INSTANCE = "serviceInstance";
@@ -119,8 +112,6 @@ public class Const {
     public static final String REDIS = "Redis";
     public static final String HTTP_BODY = "http.body";
     public static final String URL = "url";
-    public static final CharSequence DING_TALK = "dingtalk";
-    public static final String HTTP_METHOD = "http.method";
     public static final String TAGS = "tags";
     public static final Object USERNAME = "username";
     public static final Object NICKNAME = "nickname";

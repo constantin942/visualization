@@ -9,7 +9,7 @@ public class AlarmData {
 
     String alarmName;
 
-    String alarmData;
+    String alarmInfo;
 
     int matchRuleId;
 

@@ -6,6 +6,8 @@ package com.mingshi.skyflying.common.constant;
  * @Date: create in 2022/10/12
  */
 public class AnomalyConst {
+    private AnomalyConst(){}
+
     public static final String RULE_PREFIX = "anomaly_detection:enableRule:";
 
     public static final String MORNING = "morning";
