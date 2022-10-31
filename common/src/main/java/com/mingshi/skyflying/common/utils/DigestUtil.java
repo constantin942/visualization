@@ -12,7 +12,6 @@ import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.Locale;
 
 
 /**
@@ -261,29 +260,6 @@ public class DigestUtil {
       log.error("general security exception occurs, detail exception is ", e);
       return null;
     }
-  }
-
-  /**
-   * byte[]字节组转为字符串
-   *
-   * @param b
-   * @return
-   */
-  private static String byte2hex(byte[] b) {
-    String hs = "";
-    String stmp = "";
-    for (int n = 0; n < b.length; n++) {
-      stmp = (Integer.toHexString(b[n] & 0XFF));
-      if (stmp.length() == 1) {
-        hs = hs + "0" + stmp;
-      } else {
-        hs = hs + stmp;
-      }
-      if (n < b.length - 1) {
-        hs = hs + ":";
-      }
-    }
-    return hs.toUpperCase(Locale.ENGLISH);
   }
 
   /**

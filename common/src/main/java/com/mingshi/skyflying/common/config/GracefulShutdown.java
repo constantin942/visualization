@@ -31,7 +31,7 @@ public class GracefulShutdown {
         RUNNING = false;
     }
 
-    public static Boolean getRUNNING(){
+    public static Boolean getRunning(){
         return RUNNING;
     }
 }

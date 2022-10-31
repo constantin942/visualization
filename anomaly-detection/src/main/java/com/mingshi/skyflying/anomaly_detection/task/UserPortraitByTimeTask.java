@@ -197,7 +197,7 @@ public class UserPortraitByTimeTask {
         String username = entry.getKey();
         int[] counter = entry.getValue();
         int sum = 0;
-        for (int i = 1; i < 24; i++) {
+        for (int i = 1; i < Const.NUM_TWENTY_FOUR; i++) {
             sum += counter[i];
         }
         return buildCoarseSegmentOnTimeHelper(counter, username, sum, null);

@@ -115,7 +115,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
 
     private void doRun() {
         try {
-            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+            while (Boolean.TRUE.equals(GracefulShutdown.getRunning())) {
                 if (Boolean.FALSE.equals(MsCaffeineCache.getUserPortraitInitDone())) {
                     try {
                         TimeUnit.MILLISECONDS.sleep(1000);

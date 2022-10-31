@@ -145,13 +145,13 @@ public class IoThread extends Thread {
     public void run() {
         int queueSize = -1;
         try {
-            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+            while (Boolean.TRUE.equals(GracefulShutdown.getRunning())) {
                 doRun(Boolean.FALSE);
             }
             queueSize = ioThreadLinkedBlockingQueue.size();
             log.error("# IoThread.run() # IoThread线程 = 【{}】要退出了。此时jvm关闭的标志位 = 【{}】，还没有执行finally代码块之前，线程对应的队列中元素的个数 = 【{}】。",
                 Thread.currentThread().getName(),
-                Boolean.TRUE.equals(GracefulShutdown.getRUNNING()),
+                Boolean.TRUE.equals(GracefulShutdown.getRunning()),
                 queueSize);
         } finally {
             Instant now = Instant.now();
@@ -366,7 +366,7 @@ public class IoThread extends Thread {
     private void insertSegmentDetailIntoMySqlAndRedis() {
         try {
             long isShouldFlush = DateTimeUtil.getSecond(currentTime) - flushToRocketMqInterval;
-            if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRUNNING())) {
+            if (isShouldFlush >= 0 || Boolean.FALSE.equals(GracefulShutdown.getRunning())) {
                 // 当满足了间隔时间或者jvm进程退出时，就要把本地攒批的数据保存到MySQL数据库中；2022-06-01 10:38:04
                 mingshiServerUtil.doInsertSegmentDetailIntoMySqlAndRedis(userHashSet, processorThreadQpsMap, skywalkingAgentHeartBeatMap, segmentDetailDoList, segmentDetailUserNameIsNullDoList);
                 currentTime = Instant.now();

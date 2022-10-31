@@ -66,11 +66,11 @@ public class ProcessorThread extends Thread {
     public void run() {
         Integer queueSize = 0;
         try {
-            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+            while (Boolean.TRUE.equals(GracefulShutdown.getRunning())) {
                 doRun(Boolean.FALSE);
             }
             queueSize = getQueueSize();
-            log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程 = 【{}】要退出了。此时jvm关闭的标志位 = 【{}】，还没有执行finally代码块之前，线程对应的队列中元素的个数 = 【{}】。", Thread.currentThread().getName(), GracefulShutdown.getRUNNING(), queueSize);
+            log.error("# ProcessorHandlerByLinkedBlockingQueue.run() # processor线程 = 【{}】要退出了。此时jvm关闭的标志位 = 【{}】，还没有执行finally代码块之前，线程对应的队列中元素的个数 = 【{}】。", Thread.currentThread().getName(), GracefulShutdown.getRunning(), queueSize);
         } finally {
             Instant now = Instant.now();
             try {

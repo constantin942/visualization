@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class DingUtils {
-    /*
+    /**
      ** 生成时间戳和验证信息
      */
     public static String encode(String secret) throws Exception {
@@ -42,7 +42,7 @@ public class DingUtils {
         return "&timestamp=" + timestamp + "&sign=" + sign;
     }
 
-    /* param: message 要发送的信息
+    /** param: message 要发送的信息
      ** return: void 无返回值
      ** 作用：把传入的message发送给钉钉机器人*/
     public static void dingRequest(String message, String Webhook, String secret, List<String> mobiles) {

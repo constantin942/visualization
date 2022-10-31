@@ -17,11 +17,11 @@ public interface MsAlarmInformationMapper {
 
     void insertSelectiveBatch(List<MsAlarmInformationDo> msAlarmInformationDoLinkedListist);
 
-		List<MsAlarmInformationDo> selectAll(Map<String, Object> queryMap);
+    List<MsAlarmInformationDo> selectAll(Map<String, Object> queryMap);
 
-		List<Map<String,Object>> selectAllUserTimes(Map<String, Object> queryMap);
+    List<Map<String, Object>> selectAllUserTimes(Map<String, Object> queryMap);
 
-		List<Map<String,Object>> selectAllByGroupByUserName(Map<String, Object> queryMap);
+    List<Map<String, Object>> selectAllByGroupByUserName(Map<String, Object> queryMap);
 
     Integer selectAllUserTimesCount(Map<String, Object> queryMap);
 

@@ -28,8 +28,6 @@ import java.time.Instant;
 public class TestController {
   @Value("${spring.datasource.url}")
   private String url;
-  // @Value("${doc_dir_path}")
-  private String docDirPath;
 
   @Autowired
   DriverManagerDataSource driverManagerDataSource;

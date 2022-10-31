@@ -117,7 +117,7 @@ public class MsKafkaSegmentsConsumer extends Thread {
 
     private void doRun() {
         try {
-            while (Boolean.TRUE.equals(GracefulShutdown.getRUNNING())) {
+            while (Boolean.TRUE.equals(GracefulShutdown.getRunning())) {
                 consumeRecords();
             }
         } finally {

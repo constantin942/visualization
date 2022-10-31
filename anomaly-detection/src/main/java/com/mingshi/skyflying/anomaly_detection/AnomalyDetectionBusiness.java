@@ -127,7 +127,7 @@ public class AnomalyDetectionBusiness {
         if (date == null) {
             return true;
         }
-        int betweenDays = (int) ((new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24) + 0.5);
+        int betweenDays = (int) ((System.currentTimeMillis() - date.getTime()) / (1000 * 60 * 60 * 24) + 0.5);
         return betweenDays <= period;
     }
 
@@ -245,11 +245,11 @@ public class AnomalyDetectionBusiness {
             return null;
         }
         int time = Integer.parseInt(m.group(1));
-        if (time >= 5 && time < 13) {
+        if (time >= Const.NUM_FIVE && time < Const.NUM_THIRTEEN) {
             return AnomalyConst.MORNING;
-        } else if (time >= 13 && time < 21) {
+        } else if (time >= Const.NUM_THIRTEEN && time < Const.NUM_TWENTY_ONE) {
             return AnomalyConst.AFTERNOON;
-        } else if ((time >= 21 && time < 24) || (time >= 0 && time < 5)) {
+        } else if ((time >= Const.NUM_TWENTY_ONE && time < Const.NUM_TWENTY_FOUR) || (time >= Const.NUMBER_ZERO && time < Const.NUM_FIVE)) {
             return AnomalyConst.NIGHT;
         } else {
             log.error("提取时间出错, 原数据{}, 提取后{}", timeStr, time);

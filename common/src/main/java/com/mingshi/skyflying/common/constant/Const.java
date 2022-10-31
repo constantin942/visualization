@@ -15,6 +15,9 @@ public class Const {
     public static final String ANOMALY_DETECTION_ALARM_KEY = "anomalyDetectionAlarmKey";
     public static final Integer NUMBER_TWO = 2;
     public static final String SEND_FAIL = "发送消息失败  *** 发送消息失败 *** 发送消息失败的异步回调，topic = 【{}】，msg = 【{}】";
+    public static final int NUM_THIRTEEN = 13;
+    public static final int NUM_TWENTY_ONE = 21;
+    public static final int NUM_TWENTY_FOUR = 24;
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -75,7 +78,9 @@ public class Const {
     public static final int NUMBER_TWENTY_FOUR = 24;
     public static final int NUMBER_TWELVE = 12;
 
-    //3小时
+    /**
+     * 3小时
+     */
     public static final Integer REDIS_SESSION_EXTIME = 60 * 60 * 3;
 
     public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
