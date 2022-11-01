@@ -589,7 +589,7 @@
         order by count(*) desc limit 1;
     </select>
     <select id="selectAlarmData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
-        SELECT COUNT(*) as alarm_data, match_rule_id
+        SELECT COUNT(*) as alarm_info, match_rule_id
         FROM ms_alarm_information
         where match_rule_id is not NULL
           and update_user_portrait = 0
