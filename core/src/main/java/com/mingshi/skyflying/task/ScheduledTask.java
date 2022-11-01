@@ -33,8 +33,8 @@ public class ScheduledTask {
     /**
      * 每隔30分钟执行一次：
      */
-//  @Scheduled(cron = "0 */1 * * * ?")
-    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
+  @Scheduled(cron = "0 */20 * * * ?")
+//    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     /**
      * 每隔2小时执行一次；
      */
@@ -53,8 +53,8 @@ public class ScheduledTask {
      * @Param []
      **/
     // 每隔30分钟执行一次：
-//  @Scheduled(cron = "0 */1 * * * ?")
-    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
+  @Scheduled(cron = "0 */15 * * * ?")
+//    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     // 每隔2小时执行一次；
     // @Scheduled(cron = "0 0 0/2 * * ?")
     public void scheduledUpdateUserNameByToken() {
@@ -71,8 +71,8 @@ public class ScheduledTask {
      * @Param []
      **/
     // 每隔30分钟执行一次：
-//  @Scheduled(cron = "0 */1 * * * ?")
-    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
+  @Scheduled(cron = "0 */12 * * * ?")
+//    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
 
     // 每隔2小时执行一次；
     // @Scheduled(cron = "0 0 0/2 * * ?")
@@ -92,7 +92,7 @@ public class ScheduledTask {
     /**
      * 每隔30分钟执行一次：
      */
-  @Scheduled(cron = "0 */1 * * * ?")
+//  @Scheduled(cron = "0 */1 * * * ?")
     // @Scheduled(cron = "0 */30 * * * ?")
     public void scheduledGetDmsAuditLog() {
         execitonScheduledTaskList.doScheduledGetDmsAuditLog(Const.SCHEDULED_GET_DMS_AUDIT_LOG);
@@ -111,7 +111,8 @@ public class ScheduledTask {
      * @Date 2022-10-31 09:52:02
      * @Param [key]
      **/
-    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
+    @Scheduled(cron = "0 */15 * * * ?")
+//    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     public void scheduledHandleNoUserName() {
         execitonScheduledTaskList.doScheduledHandleNoUserName(Const.SCHEDULED_HANDLE_NO_USER_NAME);
     }

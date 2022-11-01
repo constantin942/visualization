@@ -7,7 +7,6 @@ import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
@@ -15,7 +14,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -94,7 +92,7 @@ public class UserPortraitTask {
             try {
                 userFirstVisitLocalCache.put(map.get(AnomalyConst.USER_NAME)
                         , new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT).parse(String.valueOf(map.get(AnomalyConst.TIME_SUF))));
-            } catch (ParseException e) {
+            } catch (Exception e) {
                 log.error("时间格式转换失败");
             }
         }

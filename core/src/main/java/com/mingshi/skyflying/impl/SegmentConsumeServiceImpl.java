@@ -332,7 +332,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         String parentEndpoint = msSegmentDetailDo.getParentEndpoint();
         String userName = msSegmentDetailDo.getUserName();
         // 如果是来自spring框架提供的定时任务，那么用户名是空的。此时把访问数据库的用户名（dbUserName）当做登录系统的用户名（userName）；2022-10-28 17:11:23
-        if(StringUtil.isBlank(userName) && (operationName.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED) || parentEndpoint.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED))){
+        if((StringUtil.isBlank(userName) && StringUtil.isNotBlank(operationName) && StringUtil.isNotBlank(parentEndpoint)) &&
+            (operationName.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED) || parentEndpoint.contains(Const.SPRING_SCHEDULED) || parentEndpoint.startsWith(Const.SPRING_SCHEDULED))){
             msSegmentDetailDo.setUserName(value);
         }
     }

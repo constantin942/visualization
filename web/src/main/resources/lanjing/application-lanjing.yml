@@ -147,7 +147,7 @@ reactor:
   processor:
     enable: true
     thread:
-      count: 4
+      count: 1
   iothread:
     thread:
-      count: 8
+      count: 1

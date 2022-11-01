@@ -52,11 +52,11 @@ public class TestController {
    * @Param []
    * @return void
    **/
-  @GetMapping(value = "/createDbDocument")
-  public void createDbDocument() {
-    String dataBaseName = url.split("/")[3].split("useUnicode")[0].replace("?","");
-    dbUtil.createWord(dataBaseName, docDirPath);
-  }
+//  @GetMapping(value = "/createDbDocument")
+//  public void createDbDocument() {
+//    String dataBaseName = url.split("/")[3].split("useUnicode")[0].replace("?","");
+//    dbUtil.createWord(dataBaseName, docDirPath);
+//  }
 
   @GetMapping(value = "/sendMsg")
   public void testSendMsgToKafka(String topic){
