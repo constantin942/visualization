@@ -366,6 +366,9 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
 
+            // 宇翔，你看看加在这个地方，是否合适？
+            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
+
             // 将异常告警信息发送到Kafka中；2022-10-19 10:07:34
             sendMsAlarmInformationDoToKafka(msAlarmInformationDoList);
         } catch (Exception e) {
