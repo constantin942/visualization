@@ -637,7 +637,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 userName = iterator.next();
             }
         }
-
         if (StringUtil.isNotBlank(userName)) {
             if (userName.contains(Const.DOLLAR)) {
                 String[] split = userName.split("\\" + Const.DOLLAR);
@@ -645,6 +644,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
                     userName = split[1] + "（" + serviceCodeName + "）";
                 }
+            }else{
+                userName = dbName + Const.DOLLAR + userName;
             }
             tableCoarseInfo.setUsualVisitedUser(userName);
         } else {
