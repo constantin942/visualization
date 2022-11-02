@@ -92,7 +92,6 @@ public class DataAccessAspect {
       // 获取用户名
       resObj = getUserName(map, request, instStart, orderId);
       if (null != resObj) {
-        // 先暂时注释掉，等以后前端启用用户名登录后，再启用；2022-09-07 16:30:47
         return resObj;
       }
       userName = (String) map.get(Const.USER_NAME);

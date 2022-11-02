@@ -56,7 +56,7 @@ public class OperationAuditAspect {
     /**
      * 只对加了@AspectAnnotation注解的方法进行拦截；
      */
-    @Pointcut("@annotation(com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation)")
+    @Pointcut("@annotation(com.mingshi.skyflying.common.aspect.OperationAuditAspectAnnotation)")
     private void annotationPointCut() {
     }
 
@@ -91,7 +91,6 @@ public class OperationAuditAspect {
             // 获取用户名
             resObj = getUserName(map, request, instStart, orderId);
             if (null != resObj) {
-                // 先暂时注释掉，等以后前端启用用户名登录后，再启用；2022-09-07 16:30:47
                 return resObj;
             }
             userName = (String) map.get(Const.USER_NAME);

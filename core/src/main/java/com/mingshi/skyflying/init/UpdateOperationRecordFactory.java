@@ -40,6 +40,23 @@ public class UpdateOperationRecordFactory {
     updateSkywalkingAgentOnAndOffMap.put(Const.AGENT_SWITCH, "更新探针（" + Const.POUND_KEY + "）状态");
     updateSkywalkingAgentOnAndOffMap.put(Const.HANDLER, new UpdateAgentStatusHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_SKYWALKING_AGENT_STATUS, updateSkywalkingAgentOnAndOffMap);
+
+    Map<String, Object> setAkSkMap = new ConcurrentHashMap<>();
+    setAkSkMap.put(Const.HANDLER, new SetAkSkHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.SET_AK_SK, setAkSkMap);
+
+    Map<String, Object> updateDingConfigMap = new ConcurrentHashMap<>();
+    updateDingConfigMap.put(Const.HANDLER, new DingdingAlarmConfigHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_DINGDING_CONFIG, updateDingConfigMap);
+
+    Map<String, Object> changePasswordMap = new ConcurrentHashMap<>();
+    changePasswordMap.put(Const.HANDLER, new ChangePasswrodHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.USER_CHANGE_PASSWORD, changePasswordMap);
+
+    Map<String, Object> updateHighRiskOptMap = new ConcurrentHashMap<>();
+    updateHighRiskOptMap.put(Const.HANDLER, new UpdateHighRiskOptHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_HIGH_RISK_OPT, updateHighRiskOptMap);
+
   }
 
   public static String getValue(String key, String opreation) {

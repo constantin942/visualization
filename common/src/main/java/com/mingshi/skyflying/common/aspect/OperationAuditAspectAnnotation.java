@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.aspect;
+package com.mingshi.skyflying.common.aspect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

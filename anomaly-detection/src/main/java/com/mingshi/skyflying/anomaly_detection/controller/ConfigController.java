@@ -8,6 +8,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
+import com.mingshi.skyflying.common.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +82,7 @@ public class ConfigController {
         return ServerResponse.createBySuccess(highRiskOptMapper.selectAll());
     }
 
+    @OperationAuditAspectAnnotation(isStart = true)
     @PutMapping("updateHighRiskOpt")
     public ServerResponse updateHighRiskOpt(@RequestBody List<HighRiskOpt> highRiskOpts) {
         return ServerResponse.createBySuccess(highRiskOptService.updateHighRiskOpt(highRiskOpts));
@@ -96,6 +98,7 @@ public class ConfigController {
         return ServerResponse.createBySuccess(dingAlarmConfigMapper.selectGapDic());
     }
 
+    @OperationAuditAspectAnnotation(isStart = true)
     @PutMapping("updateDingConfig")
     public ServerResponse updateDingConfig(@RequestBody DingAlarmConfig dingAlarmConfig) {
         dingAlarmConfigMapper.updateByPrimaryKeySelective(dingAlarmConfig);
