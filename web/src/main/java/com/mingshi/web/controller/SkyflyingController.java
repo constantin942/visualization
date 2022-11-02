@@ -127,7 +127,7 @@ public class SkyflyingController {
      **/
     @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/setRegion")
-    public ServerResponse<String> setRegionIntoDb(@RequestParam(value = "region") String region) {
+    public ServerResponse<String> setRegion(@RequestParam(value = "region") String region) {
         return msConfigService.setRegionIntoDb(region);
     }
 

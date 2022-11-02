@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.init;
+package com.mingshi.skyflying.handler;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
@@ -13,12 +13,12 @@ import com.mingshi.skyflying.common.domain.OperationLog;
  * @Param
  * @return
  **/
-public class SetAkSkHandler implements UpdateOperationRecord {
+public class DingdingAlarmConfigHandler implements UpdateOperationRecord {
   @Override
   public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    if (null != jsonNodes && methodName.equals(Const.SET_AK_SK)) {
+    if (null != jsonNodes && methodName.equals(Const.UPDATE_DINGDING_CONFIG)) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(Const.SET_AK_SK_DESC);
+        stringBuilder.append(Const.UPDATE_DINGDING_CONFIG_DESC);
         operationLog.setOperationDesc(stringBuilder.toString());
     }
   }

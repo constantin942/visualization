@@ -7,7 +7,7 @@ import com.mingshi.skyflying.common.domain.SysOperator;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.*;
-import com.mingshi.skyflying.init.UpdateOperationRecordFactory;
+import com.mingshi.skyflying.handler.UpdateOperationRecordFactory;
 import com.mingshi.skyflying.service.OperateLogService;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;

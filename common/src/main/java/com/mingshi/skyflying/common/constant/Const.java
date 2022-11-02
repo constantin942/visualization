@@ -18,6 +18,7 @@ public class Const {
     public static final int NUM_THIRTEEN = 13;
     public static final int NUM_TWENTY_ONE = 21;
     public static final int NUM_TWENTY_FOUR = 24;
+    public static final String FROM_DMS = " [ from dms ]";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -52,6 +53,8 @@ public class Const {
     public static final String UPDATE_HIGH_RISK_OPT = "updateHighRiskOpt";
     public static final String SET_AK_SK = "setAkSk";
     public static final String SET_AK_SK_DESC = "更新ak和sk配置信息";
+    public static final String SET_REGION = "setRegion";
+    public static final String SET_REGION_DESC = "更新数据库实例所属区域信息";
     public static final String UPDATE_MONITOR_TABLE = "updateMonitorTable";
     public static final String UPDATE_MONITOR_TABLE_DESC = "updateMonitorTableDesc";
     public static final String UPDATE_SKYWALKING_AGENT = "updateSkywalkingAgent";

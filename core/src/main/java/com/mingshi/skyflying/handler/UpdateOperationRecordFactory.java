@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.init;
+package com.mingshi.skyflying.handler;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
@@ -44,6 +44,10 @@ public class UpdateOperationRecordFactory {
     Map<String, Object> setAkSkMap = new ConcurrentHashMap<>();
     setAkSkMap.put(Const.HANDLER, new SetAkSkHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.SET_AK_SK, setAkSkMap);
+
+    Map<String, Object> setRegionMap = new ConcurrentHashMap<>();
+    setRegionMap.put(Const.HANDLER, new SetRegionHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.SET_REGION, setRegionMap);
 
     Map<String, Object> updateDingConfigMap = new ConcurrentHashMap<>();
     updateDingConfigMap.put(Const.HANDLER, new DingdingAlarmConfigHandler());
