@@ -14,10 +14,7 @@ import com.mingshi.skyflying.common.domain.MsDmsAuditLogDo;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.dao.MsDmsAuditLogDao;
 import com.mingshi.skyflying.dao.MsScheduledTaskDao;
 import com.mingshi.skyflying.service.AuditLogService;
@@ -310,7 +307,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             LinkedList<MsSegmentDetailDo> segmentDetaiDolList = new LinkedList<>();
             for (MsDmsAuditLogDo msDmsAuditLogDo : msDmsAuditLogDoList) {
                 MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-                msSegmentDetailDo.setUserName(msDmsAuditLogDo.getUserName());
+                msSegmentDetailDo.setUserName(msDmsAuditLogDo.getUserName() + Const.FROM_DMS);
                 msSegmentDetailDo.setDbUserName(msDmsAuditLogDo.getUserName());
                 msSegmentDetailDo.setComponent(msDmsAuditLogDo.getSqlSource());
                 msSegmentDetailDo.setStartTime(msDmsAuditLogDo.getOpTime());
@@ -327,7 +324,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             }
             // 将来自DMS的消息进行异常检测；2022-10-19 10:16:26
             anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
-            mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
+            mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, null);
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.anomalyDetectionStatistics() # 将DMS中的数据库审计日志转换成来自探针的数据库SQL语句，并进行异常检测和统计时，出现了异常。", e);
         }
@@ -356,8 +353,15 @@ public class AuditLogServiceImpl implements AuditLogService {
         // 获取表名；2022-06-06 14:11:21
         try {
             if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
-                String tableName = mingshiServerUtil.getTableName(sqlType1, msSql);
-                msDmsAuditLogDo.setMsTableName(tableName);
+                StringBuffer tableName = new StringBuffer();
+                List<String> tableNameList = SqlParserUtils.getAllTableNameBySQL(msSql);
+                if(null != tableNameList && !tableNameList.isEmpty()){
+                    for (int i = 0; i < tableNameList.size(); i++) {
+                        String str = tableNameList.get(i).replaceAll("`","");
+                        tableName.append(str);
+                    }
+                }
+                msDmsAuditLogDo.setMsTableName(tableName.toString());
             }
         } catch (Exception e) {
             log.error("# AuditLogServiceImpl.getMsDmsAuditLogDo() # 根据sql语句 = 【{}】获取表名时，出现了异常。", msSql, e);
@@ -369,11 +373,19 @@ public class AuditLogServiceImpl implements AuditLogService {
         msDmsAuditLogDo.setOpTime(sqlExecAuditLog.getOpTime());
         msDmsAuditLogDo.setUserName(sqlExecAuditLog.getUserName());
         msDmsAuditLogDo.setUserId(sqlExecAuditLog.getUserId());
-        msDmsAuditLogDo.setInstanceName(sqlExecAuditLog.getInstanceName());
+
+        String instanceName = sqlExecAuditLog.getInstanceName();
+
+        if(StringUtil.isNotBlank(msSchemaName)){
+            instanceName = instanceName.replaceAll(msSchemaName,"").replaceAll("@","").split("【")[0];
+        }
+        msDmsAuditLogDo.setInstanceName(instanceName);
+//        datalineage_test@rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306【rm-uf62wuyxmbzmk8d71】
+//        rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306
         msDmsAuditLogDo.setInstanceId(sqlExecAuditLog.getInstanceId());
         msDmsAuditLogDo.setDbId(sqlExecAuditLog.getDbId());
         msDmsAuditLogDo.setLogic(sqlExecAuditLog.getLogic());
-        msDmsAuditLogDo.setSqlType(sqlExecAuditLog.getSQLType());
+        msDmsAuditLogDo.setSqlType(StringUtil.isNotBlank(sqlType1) == true ? sqlType1 : sqlExecAuditLog.getSQLType());
         msDmsAuditLogDo.setExecState(sqlExecAuditLog.getExecState());
         msDmsAuditLogDo.setAffectRows(sqlExecAuditLog.getAffectRows());
         msDmsAuditLogDo.setElapsedTime(sqlExecAuditLog.getElapsedTime());

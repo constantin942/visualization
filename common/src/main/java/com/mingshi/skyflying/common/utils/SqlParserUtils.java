@@ -1,5 +1,10 @@
 package com.mingshi.skyflying.common.utils;
 
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
+import com.alibaba.druid.sql.parser.SQLStatementParser;
+import com.alibaba.druid.stat.TableStat;
 import com.mingshi.skyflying.common.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
@@ -65,6 +70,30 @@ public class SqlParserUtils {
         CLASS_MAP.put(Truncate.class, Const.SQL_TYPE_TRUNCATE);
         CLASS_MAP.put(Update.class, Const.SQL_TYPE_UPDATE);
         CLASS_MAP.put(Upsert.class, Const.SQL_TYPE_UPSERT);
+    }
+
+
+    /**
+     * <B>方法名称：getAllTableNameBySQL</B>
+     * <B>概要说明：通过阿里巴巴的druid解析表名</B>
+     *
+     * @Author zm
+     * @Date 2022-11-02 14:04:54
+     * @Param [sql]
+     * @return java.util.List<java.lang.String>
+     **/
+    public static List<String> getAllTableNameBySQL(String sql) {
+        SQLStatementParser parser = new MySqlStatementParser(sql);
+        // 使用Parser解析生成AST，这里SQLStatement就是AST
+        SQLStatement sqlStatement = parser.parseStatement();
+        MySqlSchemaStatVisitor visitor = new MySqlSchemaStatVisitor();
+        sqlStatement.accept(visitor);
+        Map<TableStat.Name, TableStat> tables = visitor.getTables();
+        List<String> allTableName = new ArrayList<>();
+        for (TableStat.Name t : tables.keySet()) {
+            allTableName.add(t.getName());
+        }
+        return allTableName;
     }
 
     /**
