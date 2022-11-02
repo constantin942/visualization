@@ -38,8 +38,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Component
 public class MingshiServerUtil {
-    @Value("${reactor.processor.enable}")
-    private boolean reactorProcessorEnable;
     @Value("${reactor.iothread.thread.count}")
     private Integer reactorIoThreadCount;
     @Resource
@@ -1341,9 +1339,6 @@ public class MingshiServerUtil {
      * @Param []
      **/
     public void statisticsProcessorAndIoThreadQueueSize() {
-        if (true != reactorProcessorEnable) {
-            return;
-        }
         String name = Thread.currentThread().getName();
         String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
         List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();

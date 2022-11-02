@@ -27,12 +27,6 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     @Value("${reactor.processor.thread.count}")
     private Integer reactorProcessorThreadCount;
 
-    /**
-     * 是否开启reactor模式的开关；2022-06-01 09:28:28
-     */
-    @Value("${reactor.processor.enable}")
-    private boolean reactorProcessorEnable;
-
     @Resource
     private SegmentConsumerService segmentConsumerService;
 
@@ -84,9 +78,9 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
      * @Param []
      **/
     public static Integer getProcessorGraceShutdown() {
-        if(null != processorGraceShutdown){
+        if (null != processorGraceShutdown) {
             return processorGraceShutdown.get();
-        }else{
+        } else {
             log.error("#  InitProcessorByLinkedBlockingQueue.decrementProcessorGraceShutdown()  # processor线程 = 【{}】要退出了，但 processorGraceShutdown 实例为null。");
             return -1;
         }
@@ -98,19 +92,17 @@ public class InitProcessorByLinkedBlockingQueue implements ApplicationRunner {
     }
 
     private void doRun() {
-        if (true == reactorProcessorEnable) {
-            if (null == reactorProcessorThreadCount || Const.NUMBER_ZERO > reactorProcessorThreadCount) {
-                // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
-                reactorProcessorThreadCount = Const.INITIAL_PROCESSOR_THREAD_COUNT;
-            }
-            processorSize = reactorProcessorThreadCount;
-            indexAtomicInteger = new AtomicInteger(Const.NUMBER_ZERO);
-            processorThreadList = new ArrayList<>(reactorProcessorThreadCount);
-            // 项目启动成功后，创建指定数量的processor线程；
-            createProcessors();
-            createProcessorsFinishedFlag = true;
-            processorGraceShutdown = new AtomicInteger(processorSize);
+        if (null == reactorProcessorThreadCount || Const.NUMBER_ZERO > reactorProcessorThreadCount) {
+            // 在开启reactor模式的情况下，如果配置文件中没有设置创建processor线程的数量，那么默认设置为4；2022-06-01 09:32:11
+            reactorProcessorThreadCount = Const.INITIAL_PROCESSOR_THREAD_COUNT;
         }
+        processorSize = reactorProcessorThreadCount;
+        indexAtomicInteger = new AtomicInteger(Const.NUMBER_ZERO);
+        processorThreadList = new ArrayList<>(reactorProcessorThreadCount);
+        // 项目启动成功后，创建指定数量的processor线程；
+        createProcessors();
+        createProcessorsFinishedFlag = true;
+        processorGraceShutdown = new AtomicInteger(processorSize);
     }
 
     /**

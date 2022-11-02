@@ -111,7 +111,7 @@ public class ProcessorThread extends Thread {
                     TimeUnit.MILLISECONDS.sleep(Const.SLEEP_INTERVAL);
                 }
             } else {
-                segmentConsumerService.consume(consumerRecord, true);
+                segmentConsumerService.consume(consumerRecord);
             }
         } catch (Throwable e) {
             log.error("线程【{}】在清洗调用链信息时，出现了异常。", e);

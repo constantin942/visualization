@@ -145,7 +145,6 @@ server:
 
 reactor:
   processor:
-    enable: true
     thread:
       count: 1
   iothread:
