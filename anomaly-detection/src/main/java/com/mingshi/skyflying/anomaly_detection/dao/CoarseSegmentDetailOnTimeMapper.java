@@ -12,6 +12,8 @@ public interface CoarseSegmentDetailOnTimeMapper {
 
     List<VisitCountOnTimeInterval> selectInfoInPeriod(Integer portraitByTimePeriod);
 
+    List<CoarseSegmentDetailOnTimeDo> selectPeriodInfo(Integer portraitByTimePeriod);
+
     CoarseSegmentDetailOnTimeDo selectOneByUsername(String username);
 
     CoarseSegmentDetailOnTimeDo selectOneByNameAndTime(@Param("username") String username, @Param("time") Date time);

@@ -9,7 +9,6 @@ import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -725,6 +724,7 @@ public class SkyflyingController {
 
     @GetMapping(value = "/getVisitRate")
     public ServerResponse<Map<String, Double>> getVisitRate(@RequestParam("username") String username) {
-        return ServerResponse.createBySuccess(timeTask.getVisitRate(username));
+//        return ServerResponse.createBySuccess(timeTask.getVisitRate(username));
+        return ServerResponse.createBySuccess(timeTask.getVisitTimeByHour(username));
     }
 }

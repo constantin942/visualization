@@ -17,6 +17,7 @@ spring:
 #    url: jdbc:mysql://10.0.107.46:3306/zm_skywalking_test?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   #    url: jdbc:mysql://10.0.107.46:3306/mingshi-skywalking-demonstration?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/jiyan_test_mingshi_data_access?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     hikari:
       # 连接池中允许的最小连接数。缺省值：10
       minimum-idle: 10

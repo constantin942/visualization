@@ -1,13 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
-    <resultMap id="CountOnTimeIntervalMap"
-               type="com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
+    <resultMap id="CountOnTimeIntervalMap" type="com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
         <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="counts" jdbcType="INTEGER" property="counts"/>
         <result column="morning_count" jdbcType="INTEGER" property="morningCount"/>
         <result column="afternoon_count" jdbcType="INTEGER" property="afternoonCount"/>
         <result column="night_count" jdbcType="INTEGER" property="nightCount"/>
+    </resultMap>
+    <resultMap id="CountOnHourIntervalMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="counts" jdbcType="INTEGER" property="counts"/>
+        <result column="time_interval_count_0_1" jdbcType="INTEGER" property="timeIntervalCount01"/>
+        <result column="time_interval_count_1_2" jdbcType="INTEGER" property="timeIntervalCount12"/>
+        <result column="time_interval_count_2_3" jdbcType="INTEGER" property="timeIntervalCount23"/>
+        <result column="time_interval_count_3_4" jdbcType="INTEGER" property="timeIntervalCount34"/>
+        <result column="time_interval_count_4_5" jdbcType="INTEGER" property="timeIntervalCount45"/>
+        <result column="time_interval_count_5_6" jdbcType="INTEGER" property="timeIntervalCount56"/>
+        <result column="time_interval_count_6_7" jdbcType="INTEGER" property="timeIntervalCount67"/>
+        <result column="time_interval_count_7_8" jdbcType="INTEGER" property="timeIntervalCount78"/>
+        <result column="time_interval_count_8_9" jdbcType="INTEGER" property="timeIntervalCount89"/>
+        <result column="time_interval_count_9_10" jdbcType="INTEGER" property="timeIntervalCount910"/>
+        <result column="time_interval_count_10_11" jdbcType="INTEGER" property="timeIntervalCount1011"/>
+        <result column="time_interval_count_11_12" jdbcType="INTEGER" property="timeIntervalCount1112"/>
+        <result column="time_interval_count_12_13" jdbcType="INTEGER" property="timeIntervalCount1213"/>
+        <result column="time_interval_count_13_14" jdbcType="INTEGER" property="timeIntervalCount1314"/>
+        <result column="time_interval_count_14_15" jdbcType="INTEGER" property="timeIntervalCount1415"/>
+        <result column="time_interval_count_15_16" jdbcType="INTEGER" property="timeIntervalCount1516"/>
+        <result column="time_interval_count_16_17" jdbcType="INTEGER" property="timeIntervalCount1617"/>
+        <result column="time_interval_count_17_18" jdbcType="INTEGER" property="timeIntervalCount1718"/>
+        <result column="time_interval_count_18_19" jdbcType="INTEGER" property="timeIntervalCount1819"/>
+        <result column="time_interval_count_19_20" jdbcType="INTEGER" property="timeIntervalCount1920"/>
+        <result column="time_interval_count_20_21" jdbcType="INTEGER" property="timeIntervalCount2021"/>
+        <result column="time_interval_count_21_22" jdbcType="INTEGER" property="timeIntervalCount2122"/>
+        <result column="time_interval_count_22_23" jdbcType="INTEGER" property="timeIntervalCount2223"/>
+        <result column="time_interval_count_23_24" jdbcType="INTEGER" property="timeIntervalCount2324"/>
     </resultMap>
     <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         <id column="id" jdbcType="INTEGER" property="id"/>
@@ -41,15 +68,14 @@
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id
-        , username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3,
-    time_interval_count_3_4, time_interval_count_4_5, time_interval_count_5_6, time_interval_count_6_7,
-    time_interval_count_7_8, time_interval_count_8_9, time_interval_count_9_10, time_interval_count_10_11,
-    time_interval_count_11_12, time_interval_count_12_13, time_interval_count_13_14,
-    time_interval_count_14_15, time_interval_count_15_16, time_interval_count_16_17,
-    time_interval_count_17_18, time_interval_count_18_19, time_interval_count_19_20,
-    time_interval_count_20_21, time_interval_count_21_22, time_interval_count_22_23,
-    time_interval_count_23_24, create_time, update_time
+        id, username, counts, time_interval_count_0_1, time_interval_count_1_2, time_interval_count_2_3,
+        time_interval_count_3_4, time_interval_count_4_5, time_interval_count_5_6, time_interval_count_6_7,
+        time_interval_count_7_8, time_interval_count_8_9, time_interval_count_9_10, time_interval_count_10_11,
+        time_interval_count_11_12, time_interval_count_12_13, time_interval_count_13_14,
+        time_interval_count_14_15, time_interval_count_15_16, time_interval_count_16_17,
+        time_interval_count_17_18, time_interval_count_18_19, time_interval_count_19_20,
+        time_interval_count_20_21, time_interval_count_21_22, time_interval_count_22_23,
+        time_interval_count_23_24, create_time, update_time
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
         select
@@ -472,5 +498,38 @@
         from coarse_segment_detail_on_time
         where username = #{username,jdbcType=VARCHAR}
           and 1 > to_days(#{time,jdbcType=DATE}) - TO_DAYS(`create_time`) limit 1
+    </select>
+    <select id="selectPeriodInfo" parameterType="integer" resultMap="CountOnHourIntervalMap">
+        select
+            username,
+            sum(counts) as counts,
+            sum(time_interval_count_0_1) as time_interval_count_0_1,
+            sum(time_interval_count_1_2) as time_interval_count_1_2,
+            sum(time_interval_count_2_3) as time_interval_count_2_3,
+            sum(time_interval_count_3_4) as time_interval_count_3_4,
+            sum(time_interval_count_4_5) as time_interval_count_4_5,
+            sum(time_interval_count_5_6) as time_interval_count_5_6,
+            sum(time_interval_count_6_7) as time_interval_count_6_7,
+            sum(time_interval_count_7_8) as time_interval_count_7_8,
+            sum(time_interval_count_8_9) as time_interval_count_8_9,
+            sum(time_interval_count_9_10) as time_interval_count_9_10,
+            sum(time_interval_count_10_11) as time_interval_count_10_11,
+            sum(time_interval_count_11_12) as time_interval_count_11_12,
+            sum(time_interval_count_12_13) as time_interval_count_12_13,
+            sum(time_interval_count_13_14) as time_interval_count_13_14,
+            sum(time_interval_count_14_15) as time_interval_count_14_15,
+            sum(time_interval_count_15_16) as time_interval_count_15_16,
+            sum(time_interval_count_16_17) as time_interval_count_16_17,
+            sum(time_interval_count_17_18) as time_interval_count_17_18,
+            sum(time_interval_count_18_19) as time_interval_count_18_19,
+            sum(time_interval_count_19_20) as time_interval_count_19_20,
+            sum(time_interval_count_20_21) as time_interval_count_20_21,
+            sum(time_interval_count_21_22) as time_interval_count_21_22,
+            sum(time_interval_count_22_23) as time_interval_count_22_23,
+            sum(time_interval_count_23_24) as time_interval_count_23_24
+        from coarse_segment_detail_on_time
+        where #{portraitByTimePeriod,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        and is_deleted = 0
+        group by username
     </select>
 </mapper>

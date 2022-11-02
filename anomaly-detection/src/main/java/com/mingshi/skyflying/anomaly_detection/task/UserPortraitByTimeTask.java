@@ -79,7 +79,7 @@ public class UserPortraitByTimeTask {
             insertYesterdayInfo2Coarse();
             //2. 粗粒度表生成用户画像
             //3. 放入Redis
-            updatePortrait();
+            cachePortraitByTime();
         } catch (Exception e) {
             log.error("生成用户画像异常");
         } finally {
@@ -93,16 +93,40 @@ public class UserPortraitByTimeTask {
      * key : PREFIX + username + 时段(早中晚)
      * value : 对应时段的访问频率
      */
-    public void cachePortraitByTime(List<UserPortraitByTimeDo> userPortraitByTimeDos) {
-        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-        for (UserPortraitByTimeDo userPortraitByTimeDo : userPortraitByTimeDos) {
-            String username = userPortraitByTimeDo.getUsername();
-            String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
-            String afternoonRate = String.valueOf(userPortraitByTimeDo.getAfternoonRate());
-            String nightRate = String.valueOf(userPortraitByTimeDo.getNightRate());
-            map.put(buildKey(username, AnomalyConst.MORNING), morningRate);
-            map.put(buildKey(username, AnomalyConst.AFTERNOON), afternoonRate);
-            map.put(buildKey(username, AnomalyConst.NIGHT), nightRate);
+    public void cachePortraitByTime() {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        List<CoarseSegmentDetailOnTimeDo> coarseSegmentDetailOnTimeDos = coarseSegmentDetailOnTimeMapper.selectPeriodInfo(portraitConfig.getRuleTimePeriod());
+        Map<String, Object> map = new HashMap<>(Const.NUMBER_THIRTY_TWO);
+        for (CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTimeDo : coarseSegmentDetailOnTimeDos) {
+            String username = coarseSegmentDetailOnTimeDo.getUsername();
+            List<String> intervals = new ArrayList<>();
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount01()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount12()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount23()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount34()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount45()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount56()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount67()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount78()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount89()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount910()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1011()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1112()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1213()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1314()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1415()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1516()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1617()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1718()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1819()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount1920()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount2021()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount2122()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount2223()));
+            intervals.add(String.valueOf(coarseSegmentDetailOnTimeDo.getTimeIntervalCount2324()));
+            for (int i = 0; i < Const.NUM_TWENTY_FOUR; i++) {
+                map.put(buildKey(username, AnomalyConst.INTERVALS[i]), intervals.get(i));
+            }
         }
         redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX, map);
     }
@@ -364,11 +388,7 @@ public class UserPortraitByTimeTask {
      * 更新用户画像
      */
     public void updatePortrait() {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        //2. 粗粒度表生成用户画像
-        List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());
-        //3. 放入Redis
-        cachePortraitByTime(userPortraitByTimeDos);
+        cachePortraitByTime();
     }
 
     /**
@@ -397,6 +417,31 @@ public class UserPortraitByTimeTask {
         map.put("morning", morningRate);
         map.put("afternoon", afternoonRate);
         map.put("night", nightRate);
+        return map;
+    }
+
+    /**
+     * 获取
+     */
+    public Double getTimeByInterVal(String username, String interval) {
+        String key = buildKey(username, interval);
+        String count = MsCaffeineCache.getFromPortraitByTimeLocalCache(key);
+        if(count == null) {
+            return null;
+        }
+        return Double.parseDouble(count);
+    }
+
+    /**
+     * 获取用户各个时间段访问次数
+     */
+    public Map<String, Double> getVisitTimeByHour(String username) {
+        Map<String, Double> map = new HashMap<>(Const.NUMBER_THIRTY_TWO);
+        for(String interval : AnomalyConst.INTERVALS) {
+            Double hourCount = getTimeByInterVal(username, interval);
+            hourCount = hourCount == null ? 0 : hourCount;
+            map.put(interval, hourCount);
+        }
         return map;
     }
 }

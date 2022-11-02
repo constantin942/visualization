@@ -57,5 +57,60 @@ public class AnomalyConst {
     public static final String REDIS_TABLE_PORTRAIT_PREFIX = "anomaly_detection:portraitByTable:";
 
 
+    public static final String INTERVAL1 = "interval1";
+
+    public static final String INTERVAL2 = "interval2";
+
+    public static final String INTERVAL3 = "interval3";
+
+    public static final String INTERVAL4 = "interval4";
+
+    public static final String INTERVAL5 = "interval5";
+
+    public static final String INTERVAL6 = "interval6";
+
+    public static final String INTERVAL7 = "interval7";
+
+    public static final String INTERVAL8 = "interval8";
+
+    public static final String INTERVAL9 = "interval9";
+
+    public static final String INTERVAL10 = "interval10";
+
+    public static final String INTERVAL11 = "interval11";
+
+    public static final String INTERVAL12 = "interval12";
+
+    public static final String INTERVAL13 = "interval13";
+
+    public static final String INTERVAL14 = "interval14";
+
+    public static final String INTERVAL15 = "interval15";
+
+    public static final String INTERVAL16 = "interval16";
+
+    public static final String INTERVAL17 = "interval17";
+
+    public static final String INTERVAL18 = "interval18";
+
+    public static final String INTERVAL19 = "interval19";
+
+    public static final String INTERVAL20 = "interval20";
+
+    public static final String INTERVAL21 = "interval21";
+
+    public static final String INTERVAL22 = "interval22";
+
+    public static final String INTERVAL23 = "interval23";
+
+    public static final String INTERVAL24 = "interval24";
+
+    public static final String[] INTERVALS = {INTERVAL1, INTERVAL2
+            , INTERVAL3, INTERVAL4, INTERVAL5, INTERVAL6, INTERVAL7
+            , INTERVAL8, INTERVAL9, INTERVAL10, INTERVAL11, INTERVAL12
+            , INTERVAL13, INTERVAL14, INTERVAL15, INTERVAL16, INTERVAL17
+            , INTERVAL18, INTERVAL19, INTERVAL20, INTERVAL21, INTERVAL22
+            , INTERVAL23, INTERVAL24};
+
 
 }

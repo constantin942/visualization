@@ -101,6 +101,7 @@ public class Const {
     public static final String AGENT_OPERATION_TYPE = "operationType";
 
     public static final Integer NUMBER_EIGHT = 8;
+    public static final Integer NUMBER_THIRTY_TWO = 32;
     public static final String MYSQL = "mysql";
     public static final String FAIL = "FAIL";
     public static final String PAGE_NO = "pageNo";

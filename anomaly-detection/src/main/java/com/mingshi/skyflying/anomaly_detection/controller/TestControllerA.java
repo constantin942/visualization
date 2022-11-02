@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
@@ -68,6 +67,10 @@ public class TestControllerA {
     @GetMapping("cachePortraitByTable")
     public void cachePortraitByTable() {
         tableTask.cachePortraitByTable();
+    }
+    @GetMapping("cachePortraitByTime")
+    public void cachePortraitByTime() {
+        timeTask.createUserPortraitTask();
     }
 
 
