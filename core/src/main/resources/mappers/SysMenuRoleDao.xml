@@ -30,7 +30,7 @@
     select
     <include refid="Base_Column_List" />
     from sys_menu_role
-    where role_id=#{roleId,jdbcType=BIGINT} and  is_delete=0
+    where role_id=#{roleId,jdbcType=BIGINT} and  is_delete=0 order by menu_id asc
   </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.SysMenuRole">
     insert into sys_menu_role
