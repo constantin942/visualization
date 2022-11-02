@@ -16,7 +16,6 @@ import com.mingshi.skyflying.domain.MsExceptionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -34,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class AiitKafkaConsumerUtil {
-    @Value("${reactor.processor.enable}")
-    private boolean reactorProcessorEnable;
     @Resource
     private SegmentConsumerService segmentConsumerService;
     @Resource
@@ -49,10 +46,10 @@ public class AiitKafkaConsumerUtil {
      * <B>方法名称：handleExceptionInfo</B>
      * <B>概要说明：将探针发来的异常信息保存到数据库中</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-24 14:59:45
      * @Param [jsonNodes]
-     * @return void
      **/
     public void handleExceptionInfo(ObjectNode jsonNodes) {
         try {
@@ -84,19 +81,19 @@ public class AiitKafkaConsumerUtil {
      * <B>方法名称：handleSendRecordsState</B>
      * <B>概要说明：保存探针已发送成功的链路信息，用于排查网关发送消息丢失，导致用户名没有的情况</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-24 15:31:47
      * @Param [jsonNodes]
-     * @return void
      **/
     public void handleSendRecordsState(ObjectNode jsonNodes) {
         try {
             JsonNode body = jsonNodes.get("body");
-            if(null == body){
+            if (null == body) {
                 return;
             }
-            List<SendStateRecord> sendStateRecordList = JsonUtil.string2Obj(body.asText(),List.class, SendStateRecord.class);
-            if(!sendStateRecordList.isEmpty()){
+            List<SendStateRecord> sendStateRecordList = JsonUtil.string2Obj(body.asText(), List.class, SendStateRecord.class);
+            if (!sendStateRecordList.isEmpty()) {
                 sendStateRecordMapper.insertSelectiveBatch(sendStateRecordList);
             }
         } catch (Exception e) {
@@ -153,32 +150,10 @@ public class AiitKafkaConsumerUtil {
         }
     }
 
-    /**
-     * <B>方法名称：useNoReactorModel</B>
-     * <B>概要说明：使用非reactor模式清洗调用链信息</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年05月19日 17:05:03
-     * @Param [record]
-     **/
-    public void useNoReactorModel(ConsumerRecord<String, Bytes> consumerRecord) {
-        try {
-            segmentConsumerService.consume(consumerRecord, false);
-        } catch (Exception e) {
-            log.error("清洗调用链信息时，出现了异常。", e);
-        }
-    }
-
     public void doOnMessage(ConsumerRecord<String, Bytes> consumerRecord) {
-        if (Boolean.TRUE.equals(reactorProcessorEnable)) {
-            // 使用Reactor模式；
-            // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
-            useReactorModelByLinkedBlockingQueue(consumerRecord);
-        } else {
-            // 不使用Reactor模式；
-            useNoReactorModel(consumerRecord);
-        }
+        // 使用Reactor模式；
+        // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19
+        useReactorModelByLinkedBlockingQueue(consumerRecord);
     }
 
     /**

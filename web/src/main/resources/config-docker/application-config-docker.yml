@@ -138,7 +138,6 @@ server:
 
 reactor:
   processor:
-    enable: ${reactor_processor_enable}
     thread:
       count: ${reactor_processor_thread_count}
   iothread:

@@ -47,12 +47,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
 
     @Override
-    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
-        doConsume(consumerRecord, enableReactorModelFlag);
+    public ServerResponse<String> consume(ConsumerRecord<String, Bytes> consumerRecord) throws Exception {
+        doConsume(consumerRecord);
         return null;
     }
 
-    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord, Boolean enableReactorModelFlag) throws Exception {
+    private void doConsume(ConsumerRecord<String, Bytes> consumerRecord) throws Exception {
         SegmentObject segmentObject = getSegmentObject(consumerRecord);
 
         HashSet<String> userHashSet = new HashSet<>();
@@ -90,13 +90,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
             HashMap<String, Integer> statisticsProcessorThreadQpsMap = statisticsProcessorThreadQps();
 
-            // 将组装好的segment插入到表中；2022-04-20 16:34:01
-            if (enableReactorModelFlag) {
-                // 使用reactor模型；2022-05-30 21:04:05
-                mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, skywalkingAgentHeartBeatMap);
-            } else {
-                disableReactorModel(statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList);
-            }
+            // 使用reactor模型；2022-05-30 21:04:05
+            mingshiServerUtil.doEnableReactorModel(statisticsProcessorThreadQpsMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, skywalkingAgentHeartBeatMap);
         } catch (Exception e) {
             log.error("清洗调用链信息时，出现了异常。", e);
         }
@@ -117,9 +112,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             if (!segmentDetaiDolList.isEmpty()) {
                 Boolean aBoolean = anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
                 long timeMillis = DateTimeUtil.getTimeMillis(now);
-                if(Boolean.TRUE.equals(aBoolean) && Const.NUM_FIVE < timeMillis){
+                if (Boolean.TRUE.equals(aBoolean) && Const.NUM_FIVE < timeMillis) {
                     log.info("# SegmentConsumeServiceImpl.doUserVisitedIsAbnormal() # 用户画像初始化成功，异常检测【{}条】耗时【{}】毫秒。", segmentDetaiDolList.size(), timeMillis);
-                }else if(Const.NUM_FIVE < timeMillis){
+                } else if (Const.NUM_FIVE < timeMillis) {
                     log.info("# SegmentConsumeServiceImpl.doUserVisitedIsAbnormal() # 用户画像初始化失败，将异常检测【{}条】发送到Kafka的生产者缓冲区中耗时【{}】毫秒。", segmentDetaiDolList.size(), timeMillis);
                 }
             }
@@ -165,37 +160,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             throw new RuntimeException();
         }
         return segmentObject;
-    }
-
-    /**
-     * <B>方法名称：disableReactorModel</B>
-     * <B>概要说明：不使用Reactor模型</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年08月19日 18:08:34
-     * @Param [statisticsProcessorThreadQpsMap, userHashSet, skywalkingAgentHeartBeatMap, segmentDetaiDolList, segmentDetaiUserNameIsNullDolList, msAlarmInformationDoList]
-     **/
-    private void disableReactorModel(HashMap<String, Integer> statisticsProcessorThreadQpsMap, HashSet<String> userHashSet, Map<String, String> skywalkingAgentHeartBeatMap, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, List<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList) {
-
-        // 将探针信息刷入MySQL数据库中；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentInformationToDb();
-
-        // 统计processor线程的QPS；2022-07-23 11:26:40
-        mingshiServerUtil.flushProcessorThreadQpsToRedis(statisticsProcessorThreadQpsMap);
-
-        mingshiServerUtil.flushUserNameToRedis(userHashSet);
-
-        // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
-        mingshiServerUtil.flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
-
-        // 将表名字插入到监管表中；2022-07-13 14:16:57
-        mingshiServerUtil.insertMonitorTables();
-
-        mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-
-        mingshiServerUtil.flushSegmentDetailUserNameIsNullToDb(segmentDetaiUserNameIsNullDolList);
-
     }
 
     /**
@@ -285,7 +249,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                             } else if (Const.DB_INSTANCE.equals(key)) {
                                 msSegmentDetailDo.setDbInstance(value);
                             } else if (Const.DB_USER_NAME.equals(key)) {
-                                setUserName(msSegmentDetailDo,value);
+                                setUserName(msSegmentDetailDo, value);
                             } else if (Const.DB_STATEMENT.equals(key)) {
                                 if (Const.OPERATION_TYPE_SQL.equals(isSql)) {
                                     if ((StringUtil.isNotBlank(logs) && !logs.equals(Const.IS_NULL)) || StringUtil.isBlank(value)) {
@@ -339,10 +303,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * <B>方法名称：setUserName</B>
      * <B>概要说明：设置用户名</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-28 17:33:46
      * @Param [msSegmentDetailDo, value]
-     * @return void
      **/
     private void setUserName(MsSegmentDetailDo msSegmentDetailDo, String value) {
         msSegmentDetailDo.setDbUserName(value);
@@ -350,8 +314,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         String parentEndpoint = msSegmentDetailDo.getParentEndpoint();
         String userName = msSegmentDetailDo.getUserName();
         // 如果是来自spring框架提供的定时任务，那么用户名是空的。此时把访问数据库的用户名（dbUserName）当做登录系统的用户名（userName）；2022-10-28 17:11:23
-        if((StringUtil.isBlank(userName) && StringUtil.isNotBlank(operationName) && StringUtil.isNotBlank(parentEndpoint)) &&
-            (operationName.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED) || parentEndpoint.contains(Const.SPRING_SCHEDULED) || parentEndpoint.startsWith(Const.SPRING_SCHEDULED))){
+        if ((StringUtil.isBlank(userName) && StringUtil.isNotBlank(operationName) && StringUtil.isNotBlank(parentEndpoint)) &&
+            (operationName.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED) || parentEndpoint.contains(Const.SPRING_SCHEDULED) || parentEndpoint.startsWith(Const.SPRING_SCHEDULED))) {
             msSegmentDetailDo.setUserName(value);
         }
     }
@@ -542,7 +506,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         HashMap<String, Integer> statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
         String key = Const.QPS_ZSET_EVERY_PROCESSOR_THREAD + Thread.currentThread().getName();
         String time = DateTimeUtil.dateToStrformat(new Date());
-        if(null == statisticsProcessorThreadQpsMap){
+        if (null == statisticsProcessorThreadQpsMap) {
             statisticsProcessorThreadQpsMap = new HashMap<>(Const.NUMBER_EIGHT);
         }
         Integer accumuCount = statisticsProcessorThreadQpsMap.get(key);

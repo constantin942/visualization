@@ -596,7 +596,7 @@ public class AnomalyDetectionBusiness {
             // 库表画像
             Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
             Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
-            if (null != strMap) {
+            if (null != strMap && !strMap.isEmpty()) {
                 MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
             }
             // 时间画像

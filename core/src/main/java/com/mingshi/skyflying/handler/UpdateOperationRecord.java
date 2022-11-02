@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.init;
+package com.mingshi.skyflying.handler;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.domain.OperationLog;

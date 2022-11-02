@@ -18,6 +18,7 @@ public class Const {
     public static final int NUM_THIRTEEN = 13;
     public static final int NUM_TWENTY_ONE = 21;
     public static final int NUM_TWENTY_FOUR = 24;
+    public static final String FROM_DMS = " [ from dms ]";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -44,6 +45,16 @@ public class Const {
     public static final String METHOD = "method";
     public static final String PARAMS = "params";
     public static final String ORDER_ID = "orderId";
+    public static final String UPDATE_DINGDING_CONFIG_DESC = "更新钉钉告警配置信息";
+    public static final String UPDATE_DINGDING_CONFIG = "updateDingConfig";
+    public static final String CHANGE_PASSWORD_DESC = "更改密码";
+    public static final String USER_CHANGE_PASSWORD = "changePassword";
+    public static final String UPDATE_HIGH_RISK_OPT_DESC = "禁启用数据库高危操作规则";
+    public static final String UPDATE_HIGH_RISK_OPT = "updateHighRiskOpt";
+    public static final String SET_AK_SK = "setAkSk";
+    public static final String SET_AK_SK_DESC = "更新ak和sk配置信息";
+    public static final String SET_REGION = "setRegion";
+    public static final String SET_REGION_DESC = "更新数据库实例所属区域信息";
     public static final String UPDATE_MONITOR_TABLE = "updateMonitorTable";
     public static final String UPDATE_MONITOR_TABLE_DESC = "updateMonitorTableDesc";
     public static final String UPDATE_SKYWALKING_AGENT = "updateSkywalkingAgent";

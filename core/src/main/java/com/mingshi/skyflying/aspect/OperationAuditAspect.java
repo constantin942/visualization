@@ -6,13 +6,9 @@ import com.mingshi.skyflying.common.domain.OperationLog;
 import com.mingshi.skyflying.common.domain.SysOperator;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.AspectUtil;
-import com.mingshi.skyflying.common.utils.DateUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.init.UpdateOperationRecordFactory;
+import com.mingshi.skyflying.common.utils.*;
+import com.mingshi.skyflying.handler.UpdateOperationRecordFactory;
 import com.mingshi.skyflying.service.OperateLogService;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -56,7 +52,7 @@ public class OperationAuditAspect {
     /**
      * 只对加了@AspectAnnotation注解的方法进行拦截；
      */
-    @Pointcut("@annotation(com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation)")
+    @Pointcut("@annotation(com.mingshi.skyflying.common.aspect.OperationAuditAspectAnnotation)")
     private void annotationPointCut() {
     }
 
@@ -91,7 +87,6 @@ public class OperationAuditAspect {
             // 获取用户名
             resObj = getUserName(map, request, instStart, orderId);
             if (null != resObj) {
-                // 先暂时注释掉，等以后前端启用用户名登录后，再启用；2022-09-07 16:30:47
                 return resObj;
             }
             userName = (String) map.get(Const.USER_NAME);

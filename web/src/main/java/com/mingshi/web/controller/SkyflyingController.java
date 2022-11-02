@@ -2,7 +2,7 @@ package com.mingshi.web.controller;
 
 import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
-import com.mingshi.skyflying.aspect.OperationAuditAspectAnnotation;
+import com.mingshi.skyflying.common.aspect.OperationAuditAspectAnnotation;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -63,6 +63,7 @@ public class SkyflyingController {
      * @Date 下午3:56 2021/6/8
      * @Param [oldPassword, newPassword, userName]
      **/
+    @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/changePassword")
     public ServerResponse<String> changePassword(@RequestParam(value = "oldPassword", required = true) String oldPassword,
                                                  @RequestParam(value = "newPassword", required = true) String newPassword,
@@ -95,6 +96,7 @@ public class SkyflyingController {
      * @Param [ak, sk]
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
+    @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/setAkSk")
     public ServerResponse<String> setAkSk(@RequestParam(value = "ak") String ak, @RequestParam(value = "sk") String sk) {
         return msConfigService.setAkSkIntoDb(ak, sk);
@@ -123,8 +125,9 @@ public class SkyflyingController {
      * @Param [ak, sk]
      * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
+    @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/setRegion")
-    public ServerResponse<String> setRegionIntoDb(@RequestParam(value = "region") String region) {
+    public ServerResponse<String> setRegion(@RequestParam(value = "region") String region) {
         return msConfigService.setRegionIntoDb(region);
     }
 
