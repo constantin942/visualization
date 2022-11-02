@@ -9,7 +9,6 @@ import com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
 import com.mingshi.skyflying.common.aspect.OperationAuditAspectAnnotation;
-import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,9 +65,8 @@ public class ConfigController {
 
     @GetMapping("getDemoMode")
     public ServerResponse<Boolean> getDemoMode() {
-        String s = portraitConfigMapper.selectOneByName(AnomalyConst.DEMO_MODE);
-        Boolean enable = "1".equals(s);
-        return ServerResponse.createBySuccess(enable);
+        Boolean isDemoMode = InitDemoMode.getIsDemoMode();
+        return ServerResponse.createBySuccess(isDemoMode);
     }
 
     @PutMapping("setDemoMode")
