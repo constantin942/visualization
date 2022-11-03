@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.common.constant;
 
+import javax.print.DocFlavor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,6 +20,9 @@ public class Const {
     public static final int NUM_TWENTY_ONE = 21;
     public static final int NUM_TWENTY_FOUR = 24;
     public static final String FROM_DMS = " [ from dms ]";
+    public static final String IS_DELETE = "isDelete";
+    public static final String ENABLE = "启用";
+    public static final String DISABLE = "禁用";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

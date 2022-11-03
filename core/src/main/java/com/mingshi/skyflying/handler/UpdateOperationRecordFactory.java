@@ -67,7 +67,7 @@ public class UpdateOperationRecordFactory {
 
     Map<String, Object> updateUserPortraitRuleMap = new ConcurrentHashMap<>();
     updateUserPortraitRuleMap.put(Const.HANDLER, new UudateUserPortraitRuleHandler());
-    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_PORTRAIT_CONFIG, updateUserPortraitRuleMap);
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_USER_PORTRAIT_RULE, updateUserPortraitRuleMap);
 
   }
 
