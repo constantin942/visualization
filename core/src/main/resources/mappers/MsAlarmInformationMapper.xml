@@ -182,7 +182,7 @@
   </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_alarm_information
-    ( user_name, alarm_content, global_trace_id, original_time, match_rule_id )
+    ( user_name, alarm_content, global_trace_id, original_time, match_rule_id, start_time, db_instance, ms_table_name )
     values
     <foreach collection="list" item="item" index="index" separator=",">
       (
@@ -190,7 +190,10 @@
       #{item.alarmContent,jdbcType=VARCHAR},
       #{item.globalTraceId,jdbcType=INTEGER},
       #{item.originalTime,jdbcType=TIMESTAMP},
-      #{item.matchRuleId,jdbcType=INTEGER}
+      #{item.matchRuleId,jdbcType=INTEGER},
+      #{item.startTime,jdbcType=TIMESTAMP},
+      #{item.dbInstance,jdbcType=VARCHAR},
+      #{item.msTableName,jdbcType=VARCHAR}
       )
     </foreach>
     ON DUPLICATE KEY UPDATE original_time=values(original_time)

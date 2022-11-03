@@ -67,8 +67,7 @@
     <select id="getAllUser" resultType="java.lang.String">
         select distinct(username)
         from user_portrait_by_table
-        where username like concat('%', #{username,jdbcType=VARCHAR}, '%')
-          and #{period,jdbcType=INTEGER}
+        where #{period,jdbcType=INTEGER}
             > TO_DAYS(NOW()) - TO_DAYS(`create_time`);
     </select>
     <select id="getLastVisitedDate" resultType="java.lang.String" parameterType="string">
