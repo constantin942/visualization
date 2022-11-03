@@ -456,22 +456,6 @@
         order by start_time desc limit 1
     </select>
 
-    <select id="selectUserUsualAndUnusualData"
-            resultType="com.mingshi.skyflying.common.domain.UserUsualAndUnusualVisitedData"
-            parameterType="java.util.Map">
-        SELECT user_name, visited_table as visited_data, SUM(visited_count) as visited_count
-        FROM `user_portrait_by_visited_table_everyday`
-        where user_name is not null
-          and user_name = #{userName}
-        GROUP BY visited_table
-
-        select username, table_name as visited_data, sum(count) as visited_count
-        from user_portrait_by_table
-        where username = #{userName,jdbcType=VARCHAR}
-        group by table_name
-        order by visited_count desc
-    </select>
-
     <select id="selectUserUsualAndUnusualDataByUserName" resultType="java.util.Map" parameterType="java.lang.String">
         SELECT ms_table_name as msTableName,
                peer,
