@@ -321,6 +321,7 @@ public class SkyflyingController {
      * @Date 2022年06月16日 17:06:55
      * @Param []
      **/
+    @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/updateUserPortraitRule")
     public ServerResponse<String> updateUserPortraitRule(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
         return userPortraitRulesService.updateUserPortraitRule(ruleId, isDelete);

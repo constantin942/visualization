@@ -54,7 +54,7 @@ public class ConfigController {
         return ServerResponse.createBySuccess(portraitConfig);
     }
 
-
+    @OperationAuditAspectAnnotation(isStart = true)
     @Transactional(rollbackFor = Exception.class)
     @PutMapping("updatePortraitConfig")
     public ServerResponse updatePortraitConfig(@Valid @RequestBody PortraitConfig portraitConfig) {

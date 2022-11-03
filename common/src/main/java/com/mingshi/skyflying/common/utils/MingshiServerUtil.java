@@ -428,10 +428,10 @@ public class MingshiServerUtil {
             // 更新表最后的访问时间
             tableLatestVisitedTime(peer, dbInstance, tableName, startTime, tableLatestVisitedTimeMap);
 
-            // 统计用户访问过的表的次数；
+            // 统计每个用户访问过的表的次数；
             userAccessBehaviorAllVisitedTables(peer, dbInstance, tableName, userName, userAccessBehaviorAllVisitedTablesMap);
 
-            // 统计表被用户访问的次数；
+            // 统计每个表被哪些用户访问过的次数；
             tableByHowManyUserVisited(peer, dbInstance, tableName, userName, serviceCode, tableByHowManyUserVisitedMap);
 
             // 统计每个表操作类型次数；
@@ -636,7 +636,7 @@ public class MingshiServerUtil {
 
     /**
      * <B>方法名称：tableByHowManyUserVisited</B>
-     * <B>概要说明：统计表被用户访问的次数</B>
+     * <B>概要说明：统计每个表被哪些用户访问过的次数</B>
      *
      * @return void
      * @Author zm
@@ -716,7 +716,7 @@ public class MingshiServerUtil {
 
     /**
      * <B>方法名称：userAccessBehaviorAllVisitedTables</B>
-     * <B>概要说明：统计用户访问过的表的次数</B>
+     * <B>概要说明：统计每个用户访问过的表的次数</B>
      *
      * @return void
      * @Author zm

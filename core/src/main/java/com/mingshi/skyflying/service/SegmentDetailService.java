@@ -24,8 +24,6 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<String> getCoarseCountsOfUser();
 
-  ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize);
-
   ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) throws ParseException;
 
   ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String applicationUserName);
@@ -50,7 +48,7 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
 // 根据时间，恢复恢复kafak的某个topic下某个消费组的offset；2022-06-30 16:49:40
 // bin/kafka-consumer-groups.sh --bootstrap-server 10.0.107.49:9092 --group skyflying-consumer-group-online --reset-offsets --topic skywalking-segments-online --to-datetime 2022-10-10T08:00:00.000 --execute
-// bin/kafka-consumer-groups.sh --bootstrap-server 10.0.107.49:9092 --group skyflying-consumer-group-online --reset-offsets --topic skywalking-segments-online --to-datetime 2022-10-11T11:00:00.000 --execute
+// bin/kafka-consumer-groups.sh --bootstrap-server 10.0.107.49:9092 --group skyflying-consumer-group-online --reset-offsets --topic skywalking-segments-online --to-datetime 2022-10-24T11:00:00.000 --execute
 // bin/kafka-consumer-groups.sh --bootstrap-server 10.0.107.49:9092 --group test-skyflying-consumer-group --reset-offsets --topic test-skywalking-segments --to-datetime 2022-07-29T08:00:00.000 --execute
 
 // topic的数据改为保存60天

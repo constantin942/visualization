@@ -61,6 +61,14 @@ public class UpdateOperationRecordFactory {
     updateHighRiskOptMap.put(Const.HANDLER, new UpdateHighRiskOptHandler());
     UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_HIGH_RISK_OPT, updateHighRiskOptMap);
 
+    Map<String, Object> updatePortraitConfigMap = new ConcurrentHashMap<>();
+    updatePortraitConfigMap.put(Const.HANDLER, new UudatePortraitConfigHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_PORTRAIT_CONFIG, updatePortraitConfigMap);
+
+    Map<String, Object> updateUserPortraitRuleMap = new ConcurrentHashMap<>();
+    updateUserPortraitRuleMap.put(Const.HANDLER, new UudateUserPortraitRuleHandler());
+    UPDATE_OPERATION_RECORD_MAP.put(Const.UPDATE_PORTRAIT_CONFIG, updateUserPortraitRuleMap);
+
   }
 
   public static String getValue(String key, String opreation) {

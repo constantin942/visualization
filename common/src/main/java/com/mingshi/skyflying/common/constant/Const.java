@@ -53,6 +53,10 @@ public class Const {
     public static final String UPDATE_HIGH_RISK_OPT = "updateHighRiskOpt";
     public static final String SET_AK_SK = "setAkSk";
     public static final String SET_AK_SK_DESC = "更新ak和sk配置信息";
+    public static final String UPDATE_PORTRAIT_CONFIG = "updatePortraitConfig";
+    public static final String UPDATE_PORTRAIT_CONFIG_DESC = "更新画像规则配置信息";
+    public static final String UPDATE_USER_PORTRAIT_RULE = "updateUserPortraitRule";
+    public static final String UPDATE_USER_PORTRAIT_RULE_DESC = "画像规则";
     public static final String SET_REGION = "setRegion";
     public static final String SET_REGION_DESC = "更新数据库实例所属区域信息";
     public static final String UPDATE_MONITOR_TABLE = "updateMonitorTable";
