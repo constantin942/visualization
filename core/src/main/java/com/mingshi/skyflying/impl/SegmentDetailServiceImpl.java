@@ -350,31 +350,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     @Override
-    public ServerResponse<UserCoarseInfo> getCoarseCountsOfOneUser(String applicationUserName, Integer pageNo, Integer pageSize) {
-        log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfUser # 获取用户的访问次数。");
-
-        UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
-        userCoarseInfo.setUserName(applicationUserName);
-        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-        if (StringUtil.isNotBlank(applicationUserName)) {
-            queryMap.put(Const.USER_NAME, applicationUserName);
-        }
-
-        Long count = msSegmentDetailDao.selectCountOfOneUser(queryMap);
-
-        String lastVisited = msSegmentDetailDao.selectLastVisitedTime(queryMap);
-        userCoarseInfo.setVisitedCount(count);
-        userCoarseInfo.setLastVisitedDate(lastVisited);
-
-        List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectUserUsualAndUnusualData(queryMap);
-        if (!list.isEmpty()) {
-            userCoarseInfo.setUsualVisitedData(list.get(0).getVisitedData());
-        }
-        log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfUser # 获取用户的访问次数。");
-        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, userCoarseInfo);
-    }
-
-    @Override
     public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
         List<Long> returnList = new ArrayList<>();
         log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");

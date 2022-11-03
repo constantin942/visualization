@@ -71,8 +71,6 @@ public interface MsSegmentDetailDao {
 
   String selectLastVisitedTimeByUserName(String userName);
 
-  List<UserUsualAndUnusualVisitedData> selectUserUsualAndUnusualData(Map<String, Object> queryMap);
-
   Map<String, String> selectUserUsualAndUnusualDataByUserName(String userName);
 
   Long selectCountsOfAllRecentSevenDays(Map<String, Object> map);
