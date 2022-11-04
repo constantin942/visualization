@@ -550,9 +550,7 @@ public class AnomalyDetectionBusiness {
             String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
             ObjectNode jsonObject = JsonUtil.createJsonObject();
             String[] split1 = tableName.split(Const.POUND_KEY);
-            String tableNameNew = split1[1] + "." + split1[2];
             jsonObject.put("tableName", tableName);
-//            jsonObject.put("tableName", tableNameNew);
             jsonObject.put("tableNameDesc", tableDesc);
             userCoarseInfo.setUsualVisitedData(jsonObject.toString());
             coarseInfoList.add(userCoarseInfo);
@@ -636,9 +634,14 @@ public class AnomalyDetectionBusiness {
         }
         userCoarseInfo.setVisitedCount(countFromRedis);
 
-        String[] split = tableName.split("#");
-        tableName = split[1] + "." + split[2];
-        userCoarseInfo.setUsualVisitedData(tableName);
+        // 获取表对应的中文描述信息；2022-07-21 16:55:47
+        String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
+        String[] split1 = tableName.split(Const.POUND_KEY);
+        jsonObject.put("tableName", tableName);
+        jsonObject.put("tableNameDesc", tableDesc);
+        userCoarseInfo.setUsualVisitedData(jsonObject.toString());
+
         coarseInfoList.add(userCoarseInfo);
     }
 
