@@ -551,7 +551,8 @@ public class AnomalyDetectionBusiness {
             ObjectNode jsonObject = JsonUtil.createJsonObject();
             String[] split1 = tableName.split(Const.POUND_KEY);
             String tableNameNew = split1[1] + "." + split1[2];
-            jsonObject.put("tableName", tableNameNew);
+            jsonObject.put("tableName", tableName);
+//            jsonObject.put("tableName", tableNameNew);
             jsonObject.put("tableNameDesc", tableDesc);
             userCoarseInfo.setUsualVisitedData(jsonObject.toString());
             coarseInfoList.add(userCoarseInfo);
