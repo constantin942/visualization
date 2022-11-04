@@ -28,7 +28,7 @@ public class AnomalyConst {
 
     public static final String TABLE_NAME = "table_name";
 
-    public static final String USER_NAME = "user_name";
+    public static final String USER_NAME = "username";
 
     public static final String COUNTS = "counts";
 

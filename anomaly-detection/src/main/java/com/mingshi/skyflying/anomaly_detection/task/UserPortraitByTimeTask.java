@@ -13,7 +13,6 @@ import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
-import com.mingshi.skyflying.common.exception.AiitException;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -26,11 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @Author: 唐郑翔
@@ -270,19 +265,11 @@ public class UserPortraitByTimeTask {
         String username = alarmInformationDo.getUserName();
         Date time = null;
         try {
-            time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(alarmInformationDo.getStartTime());
-        } catch (ParseException e) {
-            log.error("提取时间失败----{}", alarmInformationDo.getStartTime());
-            return;
+            time = alarmInformationDo.getOriginalTime();
+        } catch (Exception e) {
+            log.error("提取时间失败----{}", alarmInformationDo.getOriginalTime());
         }
-        Pattern pattern = Pattern.compile("\\d+-\\d+-\\d+\\s+(\\d+):");
-        Matcher m = pattern.matcher(alarmInformationDo.getStartTime());
-        if (!m.find()) {
-            log.error("提取时间异常{}", alarmInformationDo.getStartTime());
-            throw new AiitException("提取时间异常");
-
-        }
-        int hour = Integer.parseInt(m.group(1));
+        int hour = time.getHours();
         CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTime = coarseSegmentDetailOnTimeMapper.selectOneByNameAndTime(username, time);
         if (coarseSegmentDetailOnTime == null) {
             // 没有该用户当天粗粒度信息
