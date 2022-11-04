@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.impl;
 
-
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
@@ -720,8 +719,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     @Override
-    public List<UserCoarseInfo> getCoarseCountsOfUsers(String username) {
-        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username);
+    public ServerResponse<String> getCoarseCountsOfUsers(String username, Integer pageNo, Integer pageSize) {
+        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username, pageNo, pageSize);
     }
 
 

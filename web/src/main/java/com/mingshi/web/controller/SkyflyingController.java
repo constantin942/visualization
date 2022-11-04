@@ -11,7 +11,6 @@ import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -563,8 +562,11 @@ public class SkyflyingController {
     }
 
     @GetMapping(value = "/getCoarseCountsOfUsers")
-    public ServerResponse<List<UserCoarseInfo>> getCoarseCountsOfOneUser(@RequestParam(value = "username", defaultValue = "") String username) {
-        return ServerResponse.createBySuccess(segmentDetailService.getCoarseCountsOfUsers(username));
+    public ServerResponse<String> getCoarseCountsOfOneUser(
+        @RequestParam(value = "username", defaultValue = "") String username,
+        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        return segmentDetailService.getCoarseCountsOfUsers(username, pageNo, pageSize);
     }
 
     /**

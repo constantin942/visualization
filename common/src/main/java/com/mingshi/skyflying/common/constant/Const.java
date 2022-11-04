@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.common.constant;
 
-import javax.print.DocFlavor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,6 +22,8 @@ public class Const {
     public static final String IS_DELETE = "isDelete";
     public static final String ENABLE = "启用";
     public static final String DISABLE = "禁用";
+    public static final String PERIOD = "period";
+    public static final long NUMBER_THIRTY = 30;
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -72,6 +73,8 @@ public class Const {
     public static final String AGENT_NAME = "agentName";
     public static final String AGENT_SWITCH = "agentSwitch";
     public static final String AGENT_ON_OFF = "agentOnOff";
+    public static final String AGENT_ON = "agentOn";
+    public static final String AGENT_OFF = "agentOff";
     public static final String AGENT_CODE = "agentCode";
     public static final String AGENT_STATUS_OFF_DESC = "关闭";
     public static final String AGENT_STATUS_ON_DESC = "开启";
@@ -269,6 +272,11 @@ public class Const {
      * 有序集合：存放的是用户对访问过的表的次数；2022-07-20 14:27:34
      */
     public static final String ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES = "zset_user_access_behavior_all_visited_tables#user_name#";
+
+    /**
+     * 用户访问行为；2022-11-04 10:14:19
+     */
+    public static final String ZSET_USER_ACCESS_BEHAVIOR = "zset_user_access_behavior";
     /**
      * hash集合：存放的是每个表每天被访问的次数；2022-07-22 10:35:52
      */
@@ -297,6 +305,11 @@ public class Const {
      * 有序集合，统计一个表被哪些用户访问的次数；2022-07-20 15:39:57
      */
     public static final String ZSET_TABLE_BY_HOW_MANY_USER_VISITED = "zset_table_by_how_many_user_visited#";
+
+    /**
+     * 有序集合，统计所有用户的访问行为；2022-11-04 09:23:25
+     */
+    public static final String ZSET_TABLE_BY_USER_ACCESS_BEHAVIOR = "zset_table_by_user_access_behavior#";
     /**
      * 记录每一个数据库表最后被访问的时间；
      */
@@ -368,6 +381,8 @@ public class Const {
     public static final String SEGMENT_SPAN_SPLIT = "S";
 
     public static final String DOLLAR = "$";
+
+    public static final String AND = "&";
 
     /**
      * 判断skywalking Java探针发出的SQL语句的SQL类型；2022-05-28 12:56:57

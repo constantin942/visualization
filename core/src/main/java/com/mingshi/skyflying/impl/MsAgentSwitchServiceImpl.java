@@ -136,7 +136,7 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
    * @Date 2022年08月25日 13:08:01
    * @Param [serviceInstance, agentSwitch, requestId, sendResult, sendKafkaRequestParams]
    **/
-  private void insertMsAgentSwitchDo(String serviceInstance, String agentSwitch, String requestId, Boolean sendResult, String sendKafkaRequestParams, String operationType) {
+  private void insertMsAgentSwitchDo(String serviceInstance, String agentSwitch, String requestId, Boolean sendResult, String sendKafkaRequestParams,String operationType) {
     try {
       MsAgentSwitchDo msAgentSwitchDo = new MsAgentSwitchDo();
       if (StringUtil.isNotBlank(agentSwitch)) {
@@ -145,6 +145,9 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
       msAgentSwitchDo.setSendKafkaRequestParams(sendKafkaRequestParams);
       msAgentSwitchDo.setServiceInstance(serviceInstance);
       msAgentSwitchDo.setRequestId(requestId);
+      if(StringUtil.isNotBlank(agentSwitch)){
+          operationType = agentSwitch.equals("off") == true ? Const.AGENT_OFF : Const.AGENT_ON;
+      }
       msAgentSwitchDo.setOperationType(operationType);
       if (sendResult.equals(false)) {
         msAgentSwitchDo.setSendKafkaStatus(Const.FAILED);

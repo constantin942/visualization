@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.*;
@@ -13,18 +14,22 @@ import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAlarmInformationMapper;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.enums.RecordEnum;
 import com.mingshi.skyflying.common.exception.AiitException;
+import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.common.kafka.producer.records.MsConsumerRecords;
+import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -59,6 +64,8 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     MsSegmentDetailMapper segmentDetailMapper;
+    @Resource
+    MsSegmentDetailDao msSegmentDetailDao;
 
     @Resource
     MsAlarmInformationMapper alarmInformationMapper;
@@ -498,10 +505,190 @@ public class AnomalyDetectionBusiness {
         return resList;
     }
 
-    public List<UserCoarseInfo> getCoarseCountsOfUsers(String username) {
+    /**
+     * <B>方法名称：getCoarseCountsOfUsers</B>
+     * <B>概要说明：获取用户访问行为信息</B>
+     *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     * @Author zm
+     * @Date 2022-11-04 10:58:55
+     * @Param [username, pageNo, pageSize]
+     **/
+    public ServerResponse<String> getCoarseCountsOfUsers(String username, Integer pageNo, Integer pageSize) {
+        if (pageNo < 0) {
+            return ServerResponse.createByErrorMessage("页码参数pageNo不能小于0", "");
+        }
+
+        // 用户名不为空，则是获取指定的用户的访问信息，那么直接从数据库中获取；2022-11-04 10:52:37
+        if (StringUtil.isNotBlank(username)) {
+            return getCoarseCountsOfUsersFromDb(username, pageNo, pageSize);
+        }
+
+        // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
+        Set<ZSetOperations.TypedTuple<String>> typedTuples = redisPoolUtil.reverseRangeWithScores(Const.ZSET_USER_ACCESS_BEHAVIOR, (pageNo - 1) * pageSize.longValue(), pageSize.longValue() - 1);
+        if (null == typedTuples || typedTuples.isEmpty()) {
+            // 从Redis中获取不到数据，则从数据库中获取；
+            return getCoarseCountsOfUsersFromDb(username, pageNo, pageSize);
+        }
+        Instant now = Instant.now();
+        List<UserCoarseInfo> coarseInfoList = new LinkedList<>();
+        Iterator<ZSetOperations.TypedTuple<String>> iterator = typedTuples.iterator();
+        while (iterator.hasNext()) {
+            ZSetOperations.TypedTuple<String> key = iterator.next();
+            Double score = key.getScore();
+            String value = key.getValue();
+            String[] split = value.split(Const.AND);
+            String userName = split[0];
+            String latestAccessTime = split[1];
+            String tableName = split[2];
+
+            UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
+            userCoarseInfo.setUserName(userName);
+            userCoarseInfo.setLastVisitedDate(latestAccessTime);
+            userCoarseInfo.setVisitedCount(score.longValue());
+            // 获取表对应的中文描述信息；2022-07-21 16:55:47
+            String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+            ObjectNode jsonObject = JsonUtil.createJsonObject();
+            String[] split1 = tableName.split(Const.POUND_KEY);
+            String tableNameNew = split1[1] + "." + split1[2];
+            jsonObject.put("tableName", tableNameNew);
+            jsonObject.put("tableNameDesc", tableDesc);
+            userCoarseInfo.setUsualVisitedData(jsonObject.toString());
+            coarseInfoList.add(userCoarseInfo);
+
+        }
+        Long allUserCount = redisPoolUtil.sizeFromZset(Const.ZSET_USER_ACCESS_BEHAVIOR);
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
+        context.put("rows", coarseInfoList);
+        context.put("total", allUserCount);
+        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsers() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
+    }
+
+    /**
+     * <B>方法名称：getCoarseCountsOfUsersFromDb</B>
+     * <B>概要说明：从数据库中获取用户访问数据</B>
+     *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     * @Author zm
+     * @Date 2022-11-04 10:39:24
+     * @Param [username, pageNo, pageSize]
+     **/
+    private ServerResponse<String> getCoarseCountsOfUsersFromDb(String username, Integer pageNo, Integer pageSize) {
+        Instant now = Instant.now();
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         Integer period = portraitConfig.getRuleTablePeriod();
-        List<String> users = tableMapper.getAllUser(username, period);
+
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+        if (StringUtil.isNotBlank(username)) {
+            queryMap.put(Const.USER_NAME, username);
+        }
+        if (null == pageNo) {
+            pageNo = 1;
+        }
+        if (null == pageSize) {
+            pageSize = 10;
+        }
+        queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+        queryMap.put(Const.PAGE_SIZE, pageSize);
+        queryMap.put(Const.PERIOD, period);
+
+        List<UserCoarseInfo> coarseInfoList = new ArrayList<>();
+
+        List<String> users = tableMapper.getAllUser(queryMap);
+        for (String user : users) {
+            String tableName = null;
+            // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
+            Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, 0L, 0L);
+            if (null == set || set.isEmpty()) {
+                // 从数据库中获取用户名；
+                tableName = getTableNameFromDb(user);
+                if (StringUtil.isBlank(tableName)) {
+                    continue;
+                }
+            } else {
+                Object[] objects = set.toArray();
+                tableName = String.valueOf(objects[0]);
+            }
+            getUserCoarseInfo(coarseInfoList,user,tableName);
+        }
+
+        Integer allUserCount = tableMapper.getAllUserCount(queryMap);
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
+        context.put("rows", coarseInfoList);
+        context.put("total", allUserCount);
+        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsers() # 从数据库中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
+    }
+
+    private void getUserCoarseInfo(List<UserCoarseInfo> coarseInfoList, String user, String tableName) {
+        UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
+        userCoarseInfo.setUserName(user);
+        userCoarseInfo.setLastVisitedDate((String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user));
+        // 根据用户名获取用户对数据库总的访问次数；
+        Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + user);
+        Long countFromRedis = 0L;
+        if (null != obj) {
+            countFromRedis = Long.valueOf(String.valueOf(obj));
+        }
+        userCoarseInfo.setVisitedCount(countFromRedis);
+
+        String[] split = tableName.split("#");
+        tableName = split[1] + "." + split[2];
+        userCoarseInfo.setUsualVisitedData(tableName);
+        coarseInfoList.add(userCoarseInfo);
+    }
+
+    /**
+     * <B>方法名称：getTableNameFromDb</B>
+     * <B>概要说明：从数据库中获取用户名；</B>
+     *
+     * @return
+     * @Author zm
+     * @Date 2022年07月19日 15:07:00
+     * @Param
+     **/
+    private String getTableNameFromDb(String userName) {
+        Map<String, String> tableNameMap = msSegmentDetailDao.selectUserUsualAndUnusualDataByUserName(userName);
+        try {
+            if (null != tableNameMap) {
+                String msTableName = tableNameMap.get(Const.MS_TABLE_NAME);
+                String peer = tableNameMap.get(Const.PEER);
+                String dbInstance = tableNameMap.get(Const.DB_INSTANCE2);
+                return peer + Const.POUND_KEY + dbInstance + Const.POUND_KEY + msTableName;
+            }
+        } catch (Exception e) {
+            log.error("# SegmentDetailServiceImpl.getTableNameFromDb() # 从数据库中获取用户名时，出现了异常。", e);
+        }
+        return null;
+    }
+
+
+    public List<UserCoarseInfo> getCoarseCountsOfUsersOld(String username) {
+//        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+//        Integer period = portraitConfig.getRuleTablePeriod();
+//        List<String> users = tableMapper.getAllUser(username, period);
+//        List<UserCoarseInfo> coarseInfoList = new ArrayList<>(users.size() * 2);
+//        for (String user : users) {
+//            UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);
+//            if (userCoarseInfo != null) {
+//                userCoarseInfo.setLastVisitedDate(tableMapper.getLastVisitedDate(user));
+//                userCoarseInfo.setVisitedCount(tableMapper.getCounts(user));
+//                coarseInfoList.add(userCoarseInfo);
+//            }
+//        }
+//        return coarseInfoList;
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        Integer period = portraitConfig.getRuleTablePeriod();
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+        if (StringUtil.isNotBlank(username)) {
+            queryMap.put(Const.USER_NAME, username);
+        }
+        queryMap.put(Const.PERIOD, period);
+
+        List<String> users = tableMapper.getAllUser(queryMap);
         List<UserCoarseInfo> coarseInfoList = new ArrayList<>(users.size() * 2);
         for (String user : users) {
             UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);

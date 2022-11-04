@@ -8,6 +8,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTableDo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,14 +49,24 @@ public class UserPortraitByTableTask {
 
     @Resource
     private PortraitConfigMapper portraitConfigMapper;
+    @Resource
+    private MsSegmentDetailDao msSegmentDetailDao;
 
     @Resource
     RedisPoolUtil redisPoolUtil;
+
+    @Resource
+    UserPortraitByTableMapper tableMapper;
 
     /**
      * Redis分布式锁Key
      */
     public static final String REDIS_LOCK = "anomaly_detection:insInfo2PortraitOnTable";
+
+    /**
+     * 用户访问行为key
+     */
+    public static final String REDIS_LOCK_USER_ACCESS_BEHAVIOR = "anomaly_detection:userAccessBehavior";
 
     /**
      * 每日定时任务 : 全量表生成用户画像 -> 放入Redis
@@ -62,7 +75,9 @@ public class UserPortraitByTableTask {
     @Async
     public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
-        lock.lock();
+        // 应该使用tryLock，而不是使用lock。使用lock，每个客户端阻塞等待执行定时任务。tryLock锁是只有加锁成功的客户端才能执行定时任务，其他获取锁失败的客户端，则不用执行定时任务。2022-11-04 09:29:21
+//        lock.lock();
+        lock.tryLock();
         try {
             log.info("开始执行基于库表画像定时任务: 全量表生成用户画像 -> 放入Redis");
             //1. 全量表生成用户画像
@@ -76,6 +91,115 @@ public class UserPortraitByTableTask {
             log.info("基于库表画像定时任务完成");
         }
     }
+
+    /**
+     * <B>方法名称：createUserAccessBehavior</B>
+     * <B>概要说明：生成用户访问行为信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-04 09:35:44
+     * @Param []
+     * @return void
+     **/
+    //间隔30秒执行
+    @Scheduled(cron = "0/30 * * * * ? ")
+    @Async
+    public void createUserAccessBehavior() {
+        RLock lock = redissonClient.getLock(REDIS_LOCK_USER_ACCESS_BEHAVIOR);
+        lock.tryLock();
+        try {
+            log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 开始执行生成用户访问行为信息定时任务");
+            PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+            Integer period = portraitConfig.getRuleTablePeriod();
+
+            Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+            queryMap.put(Const.PERIOD, period);
+
+            Set<ZSetOperations.TypedTuple<String>> typedTupleSet = new HashSet<>();
+            List<String> users = tableMapper.getAllUser(queryMap);
+            for (String user : users) {
+                String lastVisitedDate = (String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user);
+                // 根据用户名获取用户对数据库总的访问次数；
+                Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + user);
+                Double countFromRedis = 0d;
+                if (null != obj) {
+                    countFromRedis = Double.valueOf(String.valueOf(obj));
+                }
+                String tableName = null;
+                String tableDesc = null;
+                // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
+                Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, 0L, 0L);
+                if (null == set || set.isEmpty()) {
+                    // 从数据库中获取用户名；
+                    tableName = getTableNameFromDb(user);
+                    if (StringUtil.isBlank(tableName)) {
+                        continue;
+                    }
+                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+                        System.out.println("");
+                    }
+                    // 获取表对应的中文描述信息；2022-07-21 16:55:47
+//                     tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+                } else {
+                    Object[] objects = set.toArray();
+                    tableName = String.valueOf(objects[0]);
+                    // 获取表对应的中文描述信息；2022-07-21 16:55:47
+//                     tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+//                    if (StringUtil.isNotBlank(tableDesc)) {
+//                        tableDesc = tableDesc.trim().replace("\t", "");
+//                    }
+                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+                        System.out.println("");
+                    }
+                }
+
+                if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+                    System.out.println("");
+                }
+                String value = user + Const.AND + lastVisitedDate + Const.AND + tableName;
+
+                double score = null == countFromRedis ? 0 : countFromRedis;
+                DefaultTypedTuple member = new DefaultTypedTuple(value, score);
+                typedTupleSet.add(member);
+            }
+            if(!typedTupleSet.isEmpty()){
+                redisPoolUtil.zAddBatch(Const.ZSET_USER_ACCESS_BEHAVIOR, typedTupleSet);
+                // 设置30秒的有效期；2022-11-04 10:26:18
+                redisPoolUtil.expire(Const.ZSET_USER_ACCESS_BEHAVIOR, Const.NUMBER_THIRTY);
+            }
+        } catch (Exception e) {
+            log.error("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务出现异常。",e);
+        } finally {
+            lock.unlock();
+            log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务完成");
+        }
+    }
+
+
+    /**
+     * <B>方法名称：getTableNameFromDb</B>
+     * <B>概要说明：从数据库中获取用户名；</B>
+     *
+     * @return
+     * @Author zm
+     * @Date 2022年07月19日 15:07:00
+     * @Param
+     **/
+    private String getTableNameFromDb(String userName) {
+        Map<String, String> tableNameMap = msSegmentDetailDao.selectUserUsualAndUnusualDataByUserName(userName);
+        try {
+            if (null != tableNameMap) {
+                String msTableName = tableNameMap.get(Const.MS_TABLE_NAME);
+                String peer = tableNameMap.get(Const.PEER);
+                String dbInstance = tableNameMap.get(Const.DB_INSTANCE2);
+                return peer + Const.POUND_KEY + dbInstance + Const.POUND_KEY + msTableName;
+            }
+        } catch (Exception e) {
+            log.error("# SegmentDetailServiceImpl.getTableNameFromDb() # 从数据库中获取用户名时，出现了异常。", e);
+        }
+        return null;
+    }
+
 
     /**
      * 放入Redis

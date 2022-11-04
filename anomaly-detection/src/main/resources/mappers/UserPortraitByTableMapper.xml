@@ -58,17 +58,29 @@
         select username, count, table_name
         from user_portrait_by_table
         where  #{username,jdbcType=VARCHAR} = username
-          and #{period,jdbcType=INTEGER}
-            > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+          and #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
         order by count desc limit 1;
 
     </select>
 
-    <select id="getAllUser" resultType="java.lang.String">
+    <select id="getAllUser" parameterType="java.util.Map" resultType="java.lang.String">
         select distinct(username)
         from user_portrait_by_table
-        where #{period,jdbcType=INTEGER}
-            > TO_DAYS(NOW()) - TO_DAYS(`create_time`);
+        where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        <if test="userName != null and  userName != null   ">
+            and username = #{userName}
+        </if>
+        <if test="pageNo != null and  pageSize != null   ">
+            LIMIT #{pageNo},#{pageSize}
+        </if>
+    </select>
+    <select id="getAllUserCount" resultType="java.lang.Integer">
+        select count(distinct(username))
+        from user_portrait_by_table
+        where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        <if test="userName != null and  userName != null   ">
+            and username = #{userName}
+        </if>
     </select>
     <select id="getLastVisitedDate" resultType="java.lang.String" parameterType="string">
         select start_time

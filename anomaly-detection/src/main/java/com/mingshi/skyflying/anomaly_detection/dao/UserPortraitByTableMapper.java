@@ -28,7 +28,9 @@ public interface UserPortraitByTableMapper {
 
     UserCoarseInfo selectCoarseCountsOfUser(@Param("username") String username, @Param("period") Integer period);
 
-    List<String> getAllUser(@Param("username") String userName, @Param("period") Integer ruleTablePeriod);
+    List<String> getAllUser(Map<String, Object> queryMap);
+
+    Integer getAllUserCount(Map<String, Object> queryMap);
 
     String getLastVisitedDate(String username);
 

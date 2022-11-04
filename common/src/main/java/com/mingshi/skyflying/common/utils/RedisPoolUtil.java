@@ -1581,7 +1581,7 @@ public class RedisPoolUtil {
                     //命令执行超时时间300毫秒
                     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
             }, fallbackMethod = "zAddFallback")
-    public Boolean zAdd(String key, String value, double scoure) {
+    public Boolean zAdd(String key, String value, Double scoure) {
         try {
             ZSetOperations<String, String> stringStringZsetOperations = stringRedisTemplate.opsForZSet();
             return stringStringZsetOperations.add(key, value, scoure);
@@ -1617,9 +1617,9 @@ public class RedisPoolUtil {
         }
     }
 
-    public double zAddBatchFallback(String key, Set<ZSetOperations.TypedTuple<String>> tuples, Throwable throwable) {
+    public Long zAddBatchFallback(String key, Set<ZSetOperations.TypedTuple<String>> tuples, Throwable throwable) {
         log.error("zAddBatchFallback 走降级策略啦。降级原因 = 【{}】【{}】【{}】。", throwable.getMessage(), throwable.getCause(), throwable.getStackTrace());
-        return -1;
+        return -1L;
     }
 
     /**
