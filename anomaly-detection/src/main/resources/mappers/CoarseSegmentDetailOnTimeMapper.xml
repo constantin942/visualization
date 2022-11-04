@@ -528,8 +528,7 @@
             sum(time_interval_count_22_23) as time_interval_count_22_23,
             sum(time_interval_count_23_24) as time_interval_count_23_24
         from coarse_segment_detail_on_time
-        where #{portraitByTimePeriod,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
-        and is_deleted = 0
+        where is_deleted = 0
         group by username
     </select>
 </mapper>
