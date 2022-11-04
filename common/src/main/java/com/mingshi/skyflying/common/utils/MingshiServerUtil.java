@@ -1104,8 +1104,6 @@ public class MingshiServerUtil {
                 log.info("#MingshiServerUtil.flushAbnormalToDB()# 将异常信息【{}条】批量插入到MySQL中耗时【{}】毫秒。", msAlarmInformationDoLinkedListist.size(), DateTimeUtil.getTimeMillis(now));
             } catch (Exception e) {
                 log.error("# MingshiServerUtil.flushAbnormalToDB() # 将异常信息批量插入到MySQL中出现了异常。", e);
-            } finally {
-                msAlarmInformationDoLinkedListist.clear();
             }
         }
     }

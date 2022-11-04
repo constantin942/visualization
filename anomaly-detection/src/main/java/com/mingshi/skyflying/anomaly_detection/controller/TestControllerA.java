@@ -52,11 +52,9 @@ public class TestControllerA {
         msSegmentDetailDo.setDbInstance("zhejiang_mobile");
         msSegmentDetailDo.setDbType("alter");
         msSegmentDetailDo.setMsTableName("sys_operator_role");
-        List<MsAlarmInformationDo> msAlarmInformationDoList = new ArrayList<>();
         List<MsSegmentDetailDo> list = new ArrayList<>();
         list.add(msSegmentDetailDo);
-        anomalyDetectionBusiness.userVisitedIsAbnormal(list);
-        System.out.println(msAlarmInformationDoList.get(0));
+        anomalyDetectionBusiness.doUserVisitedIsAbnormal(list);
     }
 
     @GetMapping("testInsertYesterdayInfo2Portrait")
