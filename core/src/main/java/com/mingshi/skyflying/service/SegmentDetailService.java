@@ -26,6 +26,8 @@ public interface SegmentDetailService extends ParentService<SegmentDetailDo, Lon
 
   ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) throws ParseException;
 
+  ServerResponse<List<Long>> getCountsOfEveryonRecentSevenDays(String userName, String startTime, String endTime);
+
   ServerResponse<Map<String, List<UserUsualAndUnusualVisitedData>>> getUserUsualAndUnusualData(String applicationUserName);
 
   ServerResponse<List<Long>> getCountsOfAllRecentSevenDays(String startTime, String endTime);

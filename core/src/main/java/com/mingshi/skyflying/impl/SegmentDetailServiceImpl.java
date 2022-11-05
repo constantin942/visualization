@@ -349,6 +349,37 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     @Override
+    public ServerResponse<List<Long>> getCountsOfEveryonRecentSevenDays(String userName, String startTime, String endTime) {
+        if(StringUtil.isBlank(userName)){
+            return ServerResponse.createByErrorMessage("用户名不能为空。","");
+        }
+
+        List<Long> returnList = new ArrayList<>();
+        log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfEveryonRecentSevenDays # 获取指定用户近七天的访问次数。");
+        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
+        map.put(Const.USER_NAME, userName);
+        List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
+        for (int i = 0; i < dateList.size() - 1; i++) {
+            String value = dateList.get(i);
+            Date date = DateTimeUtil.strToDate(value);
+            String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
+            Long count;
+            Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
+            if (null != hget) {
+                count = Long.valueOf(String.valueOf(hget));
+            } else {
+                map.put(Const.START_TIME, value);
+                map.put(Const.END_TIME, dateList.get(i + 1));
+                count = msSegmentDetailDao.selectEveryoneEeverydayVisitedTimes(map);
+            }
+            returnList.add(count);
+        }
+
+        log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, returnList);
+    }
+
+    @Override
     public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
         List<Long> returnList = new ArrayList<>();
         log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
@@ -569,9 +600,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             getLatestVisitedTimeByTableName(tableCoarseInfo, peer, dbName, msTableName);
 
             // 获取访问这个表次数最多的用户
-            getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, msTableName);
-
-            tableCoarseInfoList.add(tableCoarseInfo);
+            Boolean flag = getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, msTableName);
+            if(Boolean.TRUE.equals(flag)){
+                tableCoarseInfoList.add(tableCoarseInfo);
+            }
         }
         Integer count = msMonitorBusinessSystemTablesMapper.selectAllEnableCount(queryMap);
         Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
@@ -595,7 +627,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
      * @Date 2022年07月20日 16:07:15
      * @Param [tableCoarseInfo, peer, dbName, tableName]
      **/
-    private void getVisitedTimesMostUserName(TableCoarseInfo tableCoarseInfo, String peer, String dbName, String tableName) {
+    private Boolean getVisitedTimesMostUserName(TableCoarseInfo tableCoarseInfo, String peer, String dbName, String tableName) {
         String userName = null;
 
         String zsetVlue = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + tableName;
@@ -624,7 +656,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             tableCoarseInfo.setUsualVisitedUser(userName);
         } else {
             tableCoarseInfo.setUsualVisitedUser("从未有人访问过这张表");
+            return false;
         }
+        return true;
     }
 
     /**

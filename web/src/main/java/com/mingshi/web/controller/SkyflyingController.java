@@ -615,6 +615,23 @@ public class SkyflyingController {
         return segmentDetailService.getCountsOfUserUserRecentSevenDays(tableName, startTime, endTime, pageNo, pageSize);
     }
 
+    /**
+     * <B>方法名称：getCountsOfEveryonRecentSevenDays/B>
+     * <B>概要说明：获取每个用户每天对数据的访问次数</B>
+     *
+     * @return ServerResponse<SysOperator>
+     * @Author lhx
+     * @Date 2022年07月5日 14:30:19
+     * @Param
+     **/
+    @GetMapping(value = "/getCountsOfEveryonRecentSevenDays")
+    public ServerResponse<List<Long>> getCountsOfEveryonRecentSevenDays(@RequestParam(value = "userName") String userName, /* 用户名 */
+                                                                     @RequestParam(value = "startTime") String startTime, /* 开始时间 */
+                                                                     @RequestParam(value = "endTime") String endTime /* 结束时间 */
+                                                                     ){
+        return segmentDetailService.getCountsOfEveryonRecentSevenDays(userName, startTime, endTime);
+    }
+
 
     /**
      * <B>方法名称：getCountsOfAllRecentSevenDays/B>

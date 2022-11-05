@@ -407,6 +407,19 @@
             and ms_table_name = #{msTableName}
         </if>
     </select>
+    <select id="selectEveryoneEeverydayVisitedTimes" resultType="java.lang.Long" parameterType="java.util.Map">
+        select count(*) from ms_segment_detail
+        where user_name is not null
+        <if test="startTime != null and  startTime != null   ">
+            and start_time <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and  endTime != null   ">
+            and end_time <![CDATA[ < ]]> #{endTime}
+        </if>
+        <if test="userName != null and  userName != null   ">
+            and user_name = #{userName}
+        </if>
+    </select>
     <select id="selectCountsOfUserByPeerAndDbInstanceAndTableName" resultType="java.lang.Long"
             parameterType="java.util.Map">
         select count(*) from ms_segment_detail

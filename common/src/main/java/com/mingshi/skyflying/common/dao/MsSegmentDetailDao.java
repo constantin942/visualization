@@ -63,6 +63,8 @@ public interface MsSegmentDetailDao {
 
   Long selectCountsOfUserByPeerAndDbInstanceAndTableName(Map<String, Object> map);
 
+  Long selectEveryoneEeverydayVisitedTimes(Map<String, Object> map);
+
   Long selectCountOfOneUser(Map<String, Object> userName);
 
   Long selectCountOfOneUserByUserName(String userName);
