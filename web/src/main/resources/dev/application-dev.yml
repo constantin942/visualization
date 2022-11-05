@@ -15,9 +15,9 @@ spring:
     username: root
     password: Aiit@123
 #    url: jdbc:mysql://10.0.107.46:3306/zm_skywalking_test?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+#    url: jdbc:mysql://10.0.107.46:3306/test_mingshi_skyflying?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
   #    url: jdbc:mysql://10.0.107.46:3306/mingshi-skywalking-demonstration?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    # url: jdbc:mysql://10.0.107.46:3306/lanjing-online?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    url: jdbc:mysql://10.0.107.46:3306/lanjing-online?useUnicode=true&characterEncodingncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
     hikari:
       # 连接池中允许的最小连接数。缺省值：10
       minimum-idle: 10
@@ -48,7 +48,8 @@ spring:
     host: 10.0.107.46
     # Redis服务器连接端口
     #    port: 6379
-    port: 6380
+    port: 6381
+#    port: 6380
     jedis:
       #连接池中最大连接数，默认为 8。
       maxTotal: 10000
