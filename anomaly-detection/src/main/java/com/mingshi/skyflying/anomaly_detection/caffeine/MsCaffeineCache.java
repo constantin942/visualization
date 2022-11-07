@@ -37,15 +37,61 @@ public class MsCaffeineCache implements ApplicationRunner {
      * 基于库表用户画像本地缓存
      */
     private static Cache<String, String> userPortraitByTableLocalCache = null;
+    private static AtomicBoolean userPortraitByTableLocalCacheIsReady = new AtomicBoolean(Boolean.FALSE);
+
+    /**
+     * <B>方法名称：getUserPortraitByTableLocalCacheIsReady</B>
+     * <B>概要说明：判断缓存userPortraitByTableLocalCache是否已建立成功</B>
+     *
+     * @Author zm
+     * @Date 2022-11-07 14:59:11
+     * @Param []
+     * @return java.lang.Boolean
+     **/
+    public static Boolean getUserPortraitByTableLocalCacheIsReady(){
+        return userPortraitByTableLocalCacheIsReady.get();
+    }
 
     /**
      * 基于时间小时时段用户画像本地缓存
      */
     private static Cache<String, String> userPortraitByTimeLocalCache = null;
+    private static AtomicBoolean userPortraitByTimeLocalCacheIsReady = new AtomicBoolean(Boolean.FALSE);
+
+    /**
+     * <B>方法名称：getUserPortraitByTimeLocalCacheIsReady</B>
+     * <B>概要说明：判断缓存userPortraitByTimeLocalCacheIsReady是否已建立成功</B>
+     *
+     * @Author zm
+     * @Date 2022-11-07 14:59:11
+     * @Param []
+     * @return java.lang.Boolean
+     **/
+    public static Boolean getUserPortraitByTimeLocalCacheIsReady(){
+        return userPortraitByTimeLocalCacheIsReady.get();
+    }
+
     /**
      * 基于时间早中晚分区用户画像本地缓存
      */
     private static Cache<String, String> userPortraitByTimePartitionLocalCache = null;
+    private static AtomicBoolean userPortraitByTimePartitionLocalCacheIsReady = new AtomicBoolean(Boolean.FALSE);
+
+    /**
+     * <B>方法名称：getUserPortraitByTimePartitionLocalCacheIsReady</B>
+     * <B>概要说明：判断缓存userPortraitByTimePartitionLocalCache是否已建立成功</B>
+     *
+     * @Author zm
+     * @Date 2022-11-07 14:59:11
+     * @Param []
+     * @return java.lang.Boolean
+     **/
+    public static Boolean getUserPortraitByTimePartitionLocalCacheIsReady(){
+        return userPortraitByTimePartitionLocalCacheIsReady.get();
+    }
+
+
+
     /**
      * 用户首次访问时间本地缓存
      */
@@ -186,6 +232,7 @@ public class MsCaffeineCache implements ApplicationRunner {
                     .maximumSize(AnomalyConst.USER_PORTRAIT_TABLE_LOCAL_CACHE_SIZE)
                     .build();
             log.info("# MsCaffeineCache.createPortraitByTableLocalCache() # 项目启动，初始化userPortraitByTableLocalCache实例完毕。");
+            userPortraitByTableLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createPortraitByTableLocalCache() # 项目启动，初始化userPortraitByTableLocalCache实例时，出现了异常.", e);
         }
@@ -209,6 +256,7 @@ public class MsCaffeineCache implements ApplicationRunner {
                     .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE)
                     .build();
             log.info("# MsCaffeineCache.createPortraitByTimeLocalCache() # 项目启动，初始化userPortraitByTimeLocalCache实例完毕。");
+            userPortraitByTimeLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createPortraitByTimeLocalCache() # 项目启动，初始化userPortraitByTimeLocalCache实例时，出现了异常.", e);
         }
@@ -232,6 +280,7 @@ public class MsCaffeineCache implements ApplicationRunner {
                     .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE)
                     .build();
             log.info("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，初始化userPortraitByTimePartitionLocalCache实例完毕。");
+            userPortraitByTimePartitionLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，初始化userPortraitByTimePartitionLocalCache实例时，出现了异常.", e);
         }
