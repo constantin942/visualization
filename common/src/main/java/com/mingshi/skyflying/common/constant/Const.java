@@ -105,6 +105,7 @@ public class Const {
      */
     public static final Integer REDIS_SESSION_EXTIME = 60 * 60 * 3;
 
+    public static final String SCHEDULED_DELETE_TWO_DAYS_BEFORE_SEGMENT_DETAIL_DO = "redisson:key:scheduledDeleteTwoDaysBeforeSegmentDetailDo";
     public static final String SCHEDULED_GET_SEGMENT_DETAIL_DO = "redisson:key:scheduledGetSegmentDetailDo";
     public static final String SCHEDULED_UPDATE_USER_NAME_BY_TOKEN = "redisson:key:scheduledUpdateUserNameByToken";
     public static final String SCHEDULED_UPDATE_USER_NAME_BY_GLOBAL_TRACEID = "redisson:key:scheduledUpdateUserNameByGlobalTraceId";
