@@ -152,7 +152,7 @@ public class AiitKafkaProducer {
             public void onSuccess(SendResult<String, Object> stringObjectSendResult) {
                 //成功的处理
                 if (0 == PRINT_LOG_INTEVAL.incrementAndGet() % 500) {
-                    log.info("发送消息成功  *** 发送消息成功 *** 发送消息成功的异步回调，topic = 【{}】，msg = 【{}】", topic);
+                    log.info("发送消息成功  *** 发送消息成功 *** 发送消息成功的异步回调，topic = 【{}】", topic);
                 }
             }
         });
