@@ -368,7 +368,17 @@ public class MingshiServerUtil {
      * @Date 2022-10-14 17:29:32
      * @Param [everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap]
      **/
-    public void flushStatisticsToRedis(Map<String, Integer> everydayVisitedTimesMap, Map<String, Integer> userAccessBehaviorAllVisitedTimesMap, Map<String, String> userAccessBehaviorLatestVisitedTimeMap, Map<String, String> tableLatestVisitedTimeMap, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap, Map<String, Map<String, Double>> tableOperationTypeMap, Map<String, Map<String, Double>> userOperationTypeMap) {
+    public void flushStatisticsToRedis(Map<String, Integer> everydayVisitedTimesMap,
+                                       Map<String, Integer> userAccessBehaviorAllVisitedTimesMap,
+                                       Map<String, String> userAccessBehaviorLatestVisitedTimeMap,
+                                       Map<String, String> tableLatestVisitedTimeMap,
+                                       Map<String, Map<String, Long>> tableEverydayVisitedTimesMap,
+                                       Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap,
+                                       Map<String, Map<String, Double>> tableByHowManyUserVisitedMap,
+                                       Map<String, Map<String, Double>> tableOperationTypeMap,
+                                       Map<String, Map<String, Double>> userOperationTypeMap,
+                                       Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap
+                                       ) {
         // 将用户的最后访问时间更新到Redis中
         flushUserAccessBehaviorLatestVisitedTimeToRedis(userAccessBehaviorLatestVisitedTimeMap);
 
@@ -377,6 +387,9 @@ public class MingshiServerUtil {
 
         // 将表每天的访问次数发送到Redis中
         flushTableEverydayVisitedTimes(tableEverydayVisitedTimesMap);
+
+        // 将每个人每天的访问次数发送到Redis中
+        flushEveryoneEverydayVisitedTimes(everyoneEverydayVisitedTimesMap);
 
         // 将条最后的访问时间更新到Redis中；
         flushTableLatestVisitiedTime(tableLatestVisitedTimeMap);
@@ -406,7 +419,18 @@ public class MingshiServerUtil {
      * @Date 2022-10-14 17:27:55
      * @Param [msSegmentDetailDo, everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap]
      **/
-    public void doStatistics(MsSegmentDetailDo msSegmentDetailDo, Map<String, Integer> everydayVisitedTimesMap, Map<String, Integer> userAccessBehaviorAllVisitedTimesMap, Map<String, String> userAccessBehaviorLatestVisitedTimeMap, Map<String, String> tableLatestVisitedTimeMap, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap, Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap, Map<String, Map<String, Double>> tableByHowManyUserVisitedMap, Map<String, Map<String, Double>> tableOperationTypeMap, Map<String, Map<String, Double>> userOperationTypeMap) {
+    public void doStatistics(MsSegmentDetailDo msSegmentDetailDo,
+                             Map<String, Integer> everydayVisitedTimesMap,
+                             Map<String, Integer> userAccessBehaviorAllVisitedTimesMap,
+                             Map<String, String> userAccessBehaviorLatestVisitedTimeMap,
+                             Map<String, String> tableLatestVisitedTimeMap,
+                             Map<String, Map<String, Long>> tableEverydayVisitedTimesMap,
+                             Map<String, Map<String, Double>> userAccessBehaviorAllVisitedTablesMap,
+                             Map<String, Map<String, Double>> tableByHowManyUserVisitedMap,
+                             Map<String, Map<String, Double>> tableOperationTypeMap,
+                             Map<String, Map<String, Double>> userOperationTypeMap,
+                             Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+
         String userName = msSegmentDetailDo.getUserName();
         String startTime = msSegmentDetailDo.getStartTime();
         String tableName = msSegmentDetailDo.getMsTableName();
@@ -424,6 +448,9 @@ public class MingshiServerUtil {
 
             // 将表每天的访问次数在本地进行累加
             tableEverydayVisitedTimes(tableName, peer, dbInstance, startTime, tableEverydayVisitedTimesMap);
+
+            // 将每个人每天的访问次数在本地进行累加
+            everyoneEverydayVisitedTimes(userName, startTime, everyoneEverydayVisitedTimesMap);
 
             // 更新表最后的访问时间
             tableLatestVisitedTime(peer, dbInstance, tableName, startTime, tableLatestVisitedTimeMap);
@@ -820,6 +847,38 @@ public class MingshiServerUtil {
     }
 
     /**
+     * <B>方法名称：flushEveryoneEverydayVisitedTimes</B>
+     * <B>概要说明：将每个人每天的访问次数发送到Redis中</B>
+     *
+     * @Author zm
+     * @Date 2022-11-04 20:55:51
+     * @Param [tableEverydayVisitedTimesMap]
+     * @return void
+     **/
+    private void flushEveryoneEverydayVisitedTimes(Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+        try {
+            if (null == everyoneEverydayVisitedTimesMap || everyoneEverydayVisitedTimesMap.isEmpty()) {
+                return;
+            }
+            Iterator<String> iterator = everyoneEverydayVisitedTimesMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String userName = iterator.next();
+                Map<String, Long> timeTimesMap = everyoneEverydayVisitedTimesMap.get(userName);
+                if (null != timeTimesMap && !timeTimesMap.isEmpty()) {
+                    Iterator<String> iterator1 = timeTimesMap.keySet().iterator();
+                    while (iterator1.hasNext()) {
+                        String time = iterator1.next();
+                        Long count = timeTimesMap.get(time);
+                        redisPoolUtil.hsetIncrBy(userName, time, null == count ? 1L : count);
+                    }
+                }
+            }
+            everyoneEverydayVisitedTimesMap.clear();
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushEveryoneEverydayVisitedTimes() # 将每个人每天的访问次数发送到Redis中，出现了异常.", e);
+        }
+    }
+    /**
      * <B>方法名称：flushTableEverydayVisitedTimes</B>
      * <B>概要说明：将表每天的访问次数发送到Redis中</B>
      *
@@ -852,6 +911,24 @@ public class MingshiServerUtil {
         }
     }
 
+    /**
+     * <B>方法名称：everyoneEverydayVisitedTimes</B>
+     * <B>概要说明：统计每个人每天访问系统的次数</B>
+     *
+     * @Author zm
+     * @Date 2022-11-04 20:45:07
+     * @Param [userName, startTime, everyoneEverydayVisitedTimesMap]
+     * @return void
+     **/
+    private void everyoneEverydayVisitedTimes(String userName,String startTime, Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+        Date date = DateTimeUtil.strToDate(startTime);
+        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
+
+        // 对每一个人，统计每天的访问次数；2022-07-22 10:42:33
+        String key = Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName;
+        doEveryoneEverydayVisitedTimes(key, startTimeNew, everyoneEverydayVisitedTimesMap);
+    }
+
     private void tableEverydayVisitedTimes(String tableName, String peer, String dbInstance, String startTime, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
         // 累加用户对数据库表资源的访问次数；
         String zsetVlue = doGetTableName(peer, dbInstance, tableName);
@@ -870,6 +947,26 @@ public class MingshiServerUtil {
             // 对每一个表，统计每天的访问次数；2022-07-22 10:42:33
             String key = Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + zsetVlue;
             doTableEverydayVisitedTimes(key, startTimeNew, tableEverydayVisitedTimesMap);
+        }
+    }
+
+    private void doEveryoneEverydayVisitedTimes(String key, String startTime, Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+        // 对每一个人，统计每天的访问次数；2022-07-22 10:42:33
+        if (null == everyoneEverydayVisitedTimesMap) {
+            everyoneEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        }
+        Map<String, Long> timeTimesMap = everyoneEverydayVisitedTimesMap.get(key);
+        if (null == timeTimesMap) {
+            timeTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+            timeTimesMap.put(startTime, 1L);
+            everyoneEverydayVisitedTimesMap.put(key, timeTimesMap);
+        } else {
+            Long count = timeTimesMap.get(startTime);
+            if (null == count) {
+                timeTimesMap.put(startTime, 1L);
+            } else {
+                timeTimesMap.put(startTime, count + 1L);
+            }
         }
     }
 

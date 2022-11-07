@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <B>主类名称: ScheduledTask</B>
@@ -58,21 +55,22 @@ public class ExecitonScheduledTaskList {
      **/
     public void doScheduledGetSegmentDetailDo(String key) {
         Instant now = Instant.now();
-        log.info("开始执行 #scheduledGetDmsAuditLog.scheduledGetSegmentDetailDo()# 定时基于token更新用户名。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
+        log.info("开始执行 #scheduledGetDmsAuditLog.doScheduledGetSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
         try {
             // 先从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录；2022-10-19 10:39:17
-            List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
-            while (null != segmentDetaiDolList && !segmentDetaiDolList.isEmpty()) {
+            while (true) {
+                List<MsSegmentDetailDo> segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+                if(null == segmentDetaiDolList || segmentDetaiDolList.isEmpty()){
+                    break;
+                }
                 anomalyDetectionBusiness.userVisitedIsAbnormal(segmentDetaiDolList);
                 msSegmentDetailUsernameIsNullMapper.deleteByIds(segmentDetaiDolList);
-                mingshiServerUtil.flushSegmentDetailToDb(segmentDetaiDolList);
-                segmentDetaiDolList.clear();
-                segmentDetaiDolList = msSegmentDetailUsernameIsNullMapper.selectAllUserNameIsNotNull();
+                mingshiServerUtil.doEnableReactorModel(null, segmentDetaiDolList, null, null);
             }
         } catch (Exception e) {
-            log.error("# #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名时，出现了异常。#", e);
+            log.error("# #scheduledGetDmsAuditLog.doScheduledGetSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录时，出现了异常。#", e);
         }
-        log.info("执行完毕 #scheduledGetDmsAuditLog.scheduledUpdateUserNameByToken()# 定时基于token更新用户名。耗时【{}】毫秒。其分布式锁的 key = 【{}】.", DateTimeUtil.getTimeMillis(now), key);
+        log.info("执行完毕 #scheduledGetDmsAuditLog.doScheduledGetSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录。耗时【{}】毫秒。其分布式锁的 key = 【{}】.", DateTimeUtil.getTimeMillis(now), key);
     }
 
     /**

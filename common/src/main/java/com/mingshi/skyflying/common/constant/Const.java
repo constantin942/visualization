@@ -282,6 +282,10 @@ public class Const {
      */
     public static final String HASH_TABLE_EVERYDAY_VISITED_TIMES = "hash_table_everyday_visited_times#table_name#";
     /**
+     * hash集合：存放的是每个人每天访问系统的次数：2022-11-04 20:38:54
+     */
+    public static final String HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES = "hash_table_everyone_everyday_visited_times#user_name#";
+    /**
      * 有序集合：统计每个表操作类型次数；2022-07-22 15:47:48
      */
     public static final String ZSET_TABLE_OPERATION_TYPE = "zset_table_operation_type#table_name#";

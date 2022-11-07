@@ -78,6 +78,10 @@ public class IoThread extends Thread {
      * 统计每个用户的操作类型次数
      */
     private Map<String/* 用户名 */, Map<String/* 操作类型 */, Double/* 操作次数 */>> userOperationTypeMap = null;
+    /**
+     * 统计每个用户每天访问系统的次数；2022-11-04 20:48:19
+     */
+    private Map<String/* 用户名 */, Map<String/* 时间 */, Long/* 操作次数 */>> everyoneEverydayVisitedTimesMap = null;
 
     public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
@@ -100,6 +104,7 @@ public class IoThread extends Thread {
         this.tableByHowManyUserVisitedMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.tableOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.everyoneEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
     }
 
     /**
@@ -306,7 +311,17 @@ public class IoThread extends Thread {
                     }
 
                     // 对各个指标进行统计；2022-10-14 17:29:03
-                    mingshiServerUtil.doStatistics(msSegmentDetailDo, everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap);
+                    mingshiServerUtil.doStatistics(msSegmentDetailDo,
+                        everydayVisitedTimesMap,
+                        userAccessBehaviorAllVisitedTimesMap,
+                        userAccessBehaviorLatestVisitedTimeMap,
+                        tableLatestVisitedTimeMap,
+                        tableEverydayVisitedTimesMap,
+                        userAccessBehaviorAllVisitedTablesMap,
+                        tableByHowManyUserVisitedMap,
+                        tableOperationTypeMap,
+                        userOperationTypeMap,
+                        everyoneEverydayVisitedTimesMap);
 
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
@@ -372,7 +387,16 @@ public class IoThread extends Thread {
                 currentTime = Instant.now();
 
                 // 将数据统计信息发送到Redis中；2022-10-15 09:37:43
-                mingshiServerUtil.flushStatisticsToRedis(everydayVisitedTimesMap, userAccessBehaviorAllVisitedTimesMap, userAccessBehaviorLatestVisitedTimeMap, tableLatestVisitedTimeMap, tableEverydayVisitedTimesMap, userAccessBehaviorAllVisitedTablesMap, tableByHowManyUserVisitedMap, tableOperationTypeMap, userOperationTypeMap);
+                mingshiServerUtil.flushStatisticsToRedis(everydayVisitedTimesMap,
+                    userAccessBehaviorAllVisitedTimesMap,
+                    userAccessBehaviorLatestVisitedTimeMap,
+                    tableLatestVisitedTimeMap,
+                    tableEverydayVisitedTimesMap,
+                    userAccessBehaviorAllVisitedTablesMap,
+                    tableByHowManyUserVisitedMap,
+                    tableOperationTypeMap,
+                    userOperationTypeMap,
+                    everyoneEverydayVisitedTimesMap);
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
