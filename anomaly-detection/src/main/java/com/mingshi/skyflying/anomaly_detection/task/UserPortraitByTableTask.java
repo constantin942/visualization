@@ -126,7 +126,6 @@ public class UserPortraitByTableTask {
                     countFromRedis = Double.valueOf(String.valueOf(obj));
                 }
                 String tableName = null;
-                String tableDesc = null;
                 // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
                 Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, 0L, 0L);
                 if (null == set || set.isEmpty()) {
@@ -135,27 +134,11 @@ public class UserPortraitByTableTask {
                     if (StringUtil.isBlank(tableName)) {
                         continue;
                     }
-//                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-//                        System.out.println("");
-//                    }
-                    // 获取表对应的中文描述信息；2022-07-21 16:55:47
-//                     tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
                 } else {
                     Object[] objects = set.toArray();
                     tableName = String.valueOf(objects[0]);
-                    // 获取表对应的中文描述信息；2022-07-21 16:55:47
-//                     tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
-//                    if (StringUtil.isNotBlank(tableDesc)) {
-//                        tableDesc = tableDesc.trim().replace("\t", "");
-//                    }
-//                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-//                        System.out.println("");
-//                    }
                 }
 
-//                if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-//                    System.out.println("");
-//                }
                 String value = user + Const.AND + lastVisitedDate + Const.AND + tableName;
 
                 double score = null == countFromRedis ? 0 : countFromRedis;
