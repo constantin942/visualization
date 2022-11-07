@@ -45,6 +45,26 @@ public class ExecitonScheduledTaskList {
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
 
     /**
+     * <B>方法名称：doScheduledDeleteTwoDaysBeforeSegmentDetailDo</B>
+     * <B>概要说明：删除两天前用户的访问信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-07 14:18:04
+     * @Param [key]
+     * @return void
+     **/
+    public void doScheduledDeleteTwoDaysBeforeSegmentDetailDo(String key) {
+        Instant now = Instant.now();
+        log.info("开始执行 #scheduledGetDmsAuditLog.doScheduledDeleteTwoDaysBeforeSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中删除两天前的用户访问信息。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
+        try {
+            msSegmentDetailDao.deleteTwoDaysBefore();
+        } catch (Exception e) {
+            log.error("# #scheduledGetDmsAuditLog.doScheduledDeleteTwoDaysBeforeSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中删除两天前的用户访问信息时，出现了异常。#", e);
+        }
+        log.info("执行完毕 #scheduledGetDmsAuditLog.doScheduledDeleteTwoDaysBeforeSegmentDetailDo()# 定时从 ms_segment_detail_username_is_null 表中删除两天前的用户访问信息。耗时【{}】毫秒。其分布式锁的 key = 【{}】.", DateTimeUtil.getTimeMillis(now), key);
+    }
+
+    /**
      * <B>方法名称：scheduledGetSegmentDetailDo</B>
      * <B>概要说明：定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录</B>
      *

@@ -22,6 +22,28 @@ public class ScheduledTask {
     private ExecitonScheduledTaskList execitonScheduledTaskList;
 
     /**
+     * <B>方法名称：scheduledDeleteTwoDaysBeforeSegmentDetailDo</B>
+     * <B>概要说明：删除两天前的用户访问信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-07 14:17:27
+     * @Param
+     * @return
+     **/
+    /**
+     * 每隔30分钟执行一次：
+     */
+  @Scheduled(cron = "0 */20 * * * ?")
+//    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
+    /**
+     * 每隔2小时执行一次；
+     */
+    // @Scheduled(cron = "0 0 0/2 * * ?")
+    public void scheduledDeleteTwoDaysBeforeSegmentDetailDo() {
+        execitonScheduledTaskList.doScheduledDeleteTwoDaysBeforeSegmentDetailDo(Const.SCHEDULED_DELETE_TWO_DAYS_BEFORE_SEGMENT_DETAIL_DO);
+    }
+
+    /**
      * <B>方法名称：scheduledGetSegmentDetailDo</B>
      * <B>概要说明：定时从 ms_segment_detail_username_is_null 表中获取用户名不为空的记录</B>
      *
