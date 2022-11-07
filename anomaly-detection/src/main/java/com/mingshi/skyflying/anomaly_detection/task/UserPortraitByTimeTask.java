@@ -174,6 +174,7 @@ public class UserPortraitByTimeTask {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
         if (!userPortraitByTimeDoList.isEmpty()) {
+            userPortraitByTimeMapper.deleteAll();
             userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
         }
         return userPortraitByTimeDoList;

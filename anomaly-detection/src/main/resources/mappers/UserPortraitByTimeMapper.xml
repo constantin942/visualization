@@ -128,6 +128,9 @@
             is_delete      = #{isDelete,jdbcType=TINYINT}
         where id = #{id,jdbcType=INTEGER}
     </update>
+    <delete id="deleteAll">
+        delete from user_portrait_by_time
+    </delete>
     <insert id="insertBatch" parameterType="java.util.List">
         insert into user_portrait_by_time (username, morning_rate,
         afternoon_rate, night_rate)

@@ -191,7 +191,7 @@
       #{item.globalTraceId,jdbcType=INTEGER},
       #{item.originalTime,jdbcType=TIMESTAMP},
       #{item.matchRuleId,jdbcType=INTEGER},
-      #{item.startTime,jdbcType=TIMESTAMP},
+      #{item.startTime,jdbcType=VARCHAR},
       #{item.dbInstance,jdbcType=VARCHAR},
       #{item.msTableName,jdbcType=VARCHAR}
       )
