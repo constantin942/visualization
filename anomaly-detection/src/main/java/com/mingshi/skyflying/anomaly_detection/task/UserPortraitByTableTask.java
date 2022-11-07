@@ -135,9 +135,9 @@ public class UserPortraitByTableTask {
                     if (StringUtil.isBlank(tableName)) {
                         continue;
                     }
-                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-                        System.out.println("");
-                    }
+//                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+//                        System.out.println("");
+//                    }
                     // 获取表对应的中文描述信息；2022-07-21 16:55:47
 //                     tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
                 } else {
@@ -148,14 +148,14 @@ public class UserPortraitByTableTask {
 //                    if (StringUtil.isNotBlank(tableDesc)) {
 //                        tableDesc = tableDesc.trim().replace("\t", "");
 //                    }
-                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-                        System.out.println("");
-                    }
+//                    if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+//                        System.out.println("");
+//                    }
                 }
 
-                if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
-                    System.out.println("");
-                }
+//                if(tableName.equals("rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#rm-uf62wuyxmbzmk8d71.rwlb.rds.aliyuncs.com:3306#read_table")){
+//                    System.out.println("");
+//                }
                 String value = user + Const.AND + lastVisitedDate + Const.AND + tableName;
 
                 double score = null == countFromRedis ? 0 : countFromRedis;

@@ -790,11 +790,17 @@ public class AnomalyDetectionBusiness {
             if (null != strMap && !strMap.isEmpty()) {
                 MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
             }
-            // 时间画像
+            // 时间小时时段画像
             map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
             strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
             if (null != strMap) {
                 MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
+            }
+            // 时间早中晚分区时段画像
+            map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX);
+            strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
+            if (null != strMap) {
+                MsCaffeineCache.putAllIntoPortraitByTimePartitionLocalCache(strMap);
             }
         } catch (Exception e) {
             log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，出现了异常。", e);

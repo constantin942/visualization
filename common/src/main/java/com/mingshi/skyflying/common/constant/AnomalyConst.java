@@ -44,6 +44,8 @@ public class AnomalyConst {
 
     public static final Integer USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE = 10000;
 
+    public static final Integer USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE = 10000;
+
     public static final Integer USER_FIRST_VISIT_LOCAL_CACHE_SIZE = 3000;
 
     public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 5;
@@ -53,6 +55,8 @@ public class AnomalyConst {
     public static final Integer ALARM_INHIBIT_LOCAL_CACHE_SIZE = 1000;
 
     public static final String REDIS_TIME_PORTRAIT_PREFIX = "anomaly_detection:portraitByTime:";
+
+    public static final String REDIS_TIME_PARTITION_PORTRAIT_PREFIX = "anomaly_detection:portraitByTimePartition:";
 
     public static final String REDIS_TABLE_PORTRAIT_PREFIX = "anomaly_detection:portraitByTable:";
 

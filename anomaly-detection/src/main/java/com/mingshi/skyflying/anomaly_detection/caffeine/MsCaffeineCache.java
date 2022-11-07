@@ -12,8 +12,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -41,9 +39,13 @@ public class MsCaffeineCache implements ApplicationRunner {
     private static Cache<String, String> userPortraitByTableLocalCache = null;
 
     /**
-     * 基于时间用户画像本地缓存
+     * 基于时间小时时段用户画像本地缓存
      */
     private static Cache<String, String> userPortraitByTimeLocalCache = null;
+    /**
+     * 基于时间早中晚分区用户画像本地缓存
+     */
+    private static Cache<String, String> userPortraitByTimePartitionLocalCache = null;
     /**
      * 用户首次访问时间本地缓存
      */
@@ -132,7 +134,9 @@ public class MsCaffeineCache implements ApplicationRunner {
     private static void createAllCaffeine() {
         // 创建基于库表用户画像本地缓存；2022-10-17 09:27:16
         createPortraitByTableLocalCache();
-        // 创建基于时间用户画像本地缓存
+        // 创建基于时间早中晚分区用户画像本地缓存
+        createPortraitByTimePartitionLocalCache();
+        // 创建基于时间小时用户画像本地缓存
         createPortraitByTimeLocalCache();
         // 创建用户首次访问时间本地缓存
         createFirstVisitTimeLocalCache();
@@ -210,6 +214,29 @@ public class MsCaffeineCache implements ApplicationRunner {
         }
     }
 
+
+    /**
+     * <B>方法名称：createPortraitByTimeLocalCache</B>
+     * <B>概要说明：创建基于时间分区用户画像本地缓存</B>
+     *
+     * @return void
+     * @Author lyx
+     * @Date 2022-11-04 23:01:56
+     * @Param []
+     **/
+    private static void createPortraitByTimePartitionLocalCache() {
+        try {
+            log.info("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，开始初始化userPortraitByTimePartitionLocalCache实例。");
+            userPortraitByTimePartitionLocalCache = Caffeine.newBuilder()
+                    .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
+                    .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE)
+                    .build();
+            log.info("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，初始化userPortraitByTimePartitionLocalCache实例完毕。");
+        } catch (Exception e) {
+            log.error("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，初始化userPortraitByTimePartitionLocalCache实例时，出现了异常.", e);
+        }
+    }
+
     public static Instant getFromAlarmInhibitCache(String key) {
         return alarmInhibitCache.getIfPresent(key);
     }
@@ -239,6 +266,18 @@ public class MsCaffeineCache implements ApplicationRunner {
 
     public static void putAllIntoPortraitByTimeLocalCache(Map<String, String> map) {
         userPortraitByTimeLocalCache.putAll(map);
+    }
+
+    public static String getFromPortraitByTimePartitionLocalCache(String key) {
+        return userPortraitByTimePartitionLocalCache.getIfPresent(key);
+    }
+
+    public static void putIntoPortraitByTimePartitionLocalCache(String key, String value) {
+        userPortraitByTimePartitionLocalCache.put(key, value);
+    }
+
+    public static void putAllIntoPortraitByTimePartitionLocalCache(Map<String, String> map) {
+        userPortraitByTimePartitionLocalCache.putAll(map);
     }
 
     public static Cache<String, String> getUserPortraitByTimeLocalCache() {

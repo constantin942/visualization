@@ -74,7 +74,7 @@ public class UserPortraitByTimeTask {
             insertYesterdayInfo2Coarse();
             //2. 粗粒度表生成用户画像
             //3. 放入Redis
-            cachePortraitByTime();
+            updatePortrait();
         } catch (Exception e) {
             log.error("生成用户画像异常");
         } finally {
@@ -86,6 +86,25 @@ public class UserPortraitByTimeTask {
     /**
      * 放入Redis
      * key : PREFIX + username + 时段(早中晚)
+     * value : 对应时段的访问频率
+     */
+    public void cachePortraitByTime(List<UserPortraitByTimeDo> userPortraitByTimeDos) {
+        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
+        for (UserPortraitByTimeDo userPortraitByTimeDo : userPortraitByTimeDos) {
+            String username = userPortraitByTimeDo.getUsername();
+            String morningRate = String.valueOf(userPortraitByTimeDo.getMorningRate());
+            String afternoonRate = String.valueOf(userPortraitByTimeDo.getAfternoonRate());
+            String nightRate = String.valueOf(userPortraitByTimeDo.getNightRate());
+            map.put(buildKey(username, AnomalyConst.MORNING), morningRate);
+            map.put(buildKey(username, AnomalyConst.AFTERNOON), afternoonRate);
+            map.put(buildKey(username, AnomalyConst.NIGHT), nightRate);
+        }
+        redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX, map);
+    }
+
+    /**
+     * 放入Redis
+     * key : PREFIX + username + 小时时段
      * value : 对应时段的访问频率
      */
     public void cachePortraitByTime() {
@@ -167,6 +186,13 @@ public class UserPortraitByTimeTask {
         List<UserPortraitByTimeDo> userPortraitByTimeDos = new ArrayList<>();
         for (VisitCountOnTimeInterval visitCountOnTimeInterval : countOnTimeIntervalList) {
             double counts = 1.0 * visitCountOnTimeInterval.getCounts();
+            if (counts == 0) {
+                counts = Math.max(visitCountOnTimeInterval.getMorningCount(), visitCountOnTimeInterval.getAfternoonCount());
+                counts = Math.max(visitCountOnTimeInterval.getNightCount(), counts);
+            }
+            if (counts == 0) {
+                counts = Double.MAX_VALUE;
+            }
             userPortraitByTimeDos.add(UserPortraitByTimeDo.builder()
                     .username(visitCountOnTimeInterval.getUsername())
                     .morningRate(calAccuracy(visitCountOnTimeInterval.getMorningCount() / counts))
@@ -375,6 +401,12 @@ public class UserPortraitByTimeTask {
      * 更新用户画像
      */
     public void updatePortrait() {
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        //2. 粗粒度表生成用户画像
+        List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());
+        //3. 放入Redis
+        cachePortraitByTime(userPortraitByTimeDos);
+        //4. 小时时段放入Redis
         cachePortraitByTime();
     }
 
@@ -383,7 +415,7 @@ public class UserPortraitByTimeTask {
      */
     public Double getRateByInterVal(String username, String interval) {
         String key = buildKey(username, interval);
-        String rate = MsCaffeineCache.getFromPortraitByTimeLocalCache(key);
+        String rate = MsCaffeineCache.getFromPortraitByTimePartitionLocalCache(key);
         if(rate == null) {
             return null;
         }
