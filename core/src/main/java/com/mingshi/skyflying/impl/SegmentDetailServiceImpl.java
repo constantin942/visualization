@@ -181,18 +181,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 jsonObject.put(Const.DB_TYPE_TIMES, score);
                 list.add(jsonObject.toString());
             }
-        } else {
-            String[] operationTypeArray = new String[]{Const.OPERATION_TYPE_SELECT, Const.OPERATION_TYPE_UPDATE, Const.OPERATION_TYPE_DELETE, Const.OPERATION_TYPE_INSERT};
-            for (String ot : operationTypeArray) {
-                map.put(Const.DB_TYPE2, ot);
-                Long count = msSegmentDetailDao.selectCountsOfUser(map);
-                if (null != count && 0L < count) {
-                    ObjectNode jsonObject = JsonUtil.createJsonObject();
-                    jsonObject.put(Const.DB_TYPE2, ot);
-                    jsonObject.put(Const.DB_TYPE_TIMES, count);
-                    list.add(jsonObject.toString());
-                }
-            }
         }
         log.info("执行完毕 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
@@ -226,21 +214,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 jsonObject.put(Const.DB_TYPE_TIMES, score);
                 list.add(jsonObject.toString());
             }
-        } else {
-            String[] operationTypeArray = new String[]{"select", "update", "delete", "insert"};
-            map.put(Const.USER_NAME, userName);
-            for (String ot : operationTypeArray) {
-                map.put(Const.DB_TYPE2, ot);
-                Long count = msSegmentDetailDao.selectCountsOfUser(map);
-                if (null != count && 0L < count) {
-                    ObjectNode jsonObject = JsonUtil.createJsonObject();
-                    jsonObject.put(Const.DB_TYPE2, ot);
-                    jsonObject.put(Const.DB_TYPE_TIMES, count);
-                    list.add(jsonObject.toString());
-                }
-            }
         }
-
         return ServerResponse.createBySuccess(list);
     }
 
@@ -363,7 +337,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             String value = dateList.get(i);
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-            Long count;
+            Long count = 0L;
             Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
             if (null != hget) {
                 count = Long.valueOf(String.valueOf(hget));
@@ -411,12 +385,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             map.put(Const.END_TIME, dateList.get(i + 1));
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-            Long count;
+            Long count = 0L;
             Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYDAY_VISITED_TIMES + msTableName, dateToStrYyyyMmDd);
             if (null != hget) {
                 count = Long.valueOf(String.valueOf(hget));
-            } else {
-                count = msSegmentDetailDao.selectCountsOfUserByPeerAndDbInstanceAndTableName(map);
             }
             returnList.add(count);
         }
@@ -451,7 +423,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             map.put(Const.END_TIME, dateList.get(i + 1));
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-            Long count;
+            Long count = 0L;
             Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYyyyMmDd);
             if (null != hget) {
                 count = Long.valueOf(String.valueOf(hget));
@@ -496,12 +468,10 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
      **/
     private void getRecordCount(SystemOverview systemOverview) {
         // 获取ms_segment_detail表中记录的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
-        Long informationCount;
+        Long informationCount = 0L;
         Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
         if (null != hget) {
             informationCount = Long.parseLong(String.valueOf(hget));
-        } else {
-            informationCount = msSegmentDetailDao.selectinformationCount();
         }
         systemOverview.setVisitedInformation(informationCount);
     }
@@ -519,7 +489,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
         Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
         if (null == userCountFromRedis || 0 == userCountFromRedis) {
-            userCountFromRedis = msSegmentDetailDao.selectUserCount();
+            userCountFromRedis = 0L;
         }
         systemOverview.setUser(userCountFromRedis);
     }
@@ -632,12 +602,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
         String zsetVlue = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + tableName;
         Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, 0L, 0L);
-        if (null == set || set.isEmpty()) {
-            List<UserUsualAndUnusualVisitedData> list = msSegmentDetailDao.selectTableUsualAndUnusualData(tableName);
-            if (!list.isEmpty()) {
-                userName = list.get(0).getUserName();
-            }
-        } else {
+        if (null != set && !set.isEmpty()) {
             Iterator<String> iterator = set.iterator();
             while (iterator.hasNext()) {
                 userName = iterator.next();
@@ -655,7 +620,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             }
             tableCoarseInfo.setUsualVisitedUser(userName);
         } else {
-            tableCoarseInfo.setUsualVisitedUser("从未有人访问过这张表");
             return false;
         }
         return true;
