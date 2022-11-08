@@ -668,41 +668,6 @@ public class AnomalyDetectionBusiness {
     }
 
 
-    public List<UserCoarseInfo> getCoarseCountsOfUsersOld(String username) {
-//        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-//        Integer period = portraitConfig.getRuleTablePeriod();
-//        List<String> users = tableMapper.getAllUser(username, period);
-//        List<UserCoarseInfo> coarseInfoList = new ArrayList<>(users.size() * 2);
-//        for (String user : users) {
-//            UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);
-//            if (userCoarseInfo != null) {
-//                userCoarseInfo.setLastVisitedDate(tableMapper.getLastVisitedDate(user));
-//                userCoarseInfo.setVisitedCount(tableMapper.getCounts(user));
-//                coarseInfoList.add(userCoarseInfo);
-//            }
-//        }
-//        return coarseInfoList;
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        Integer period = portraitConfig.getRuleTablePeriod();
-        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
-        if (StringUtil.isNotBlank(username)) {
-            queryMap.put(Const.USER_NAME, username);
-        }
-        queryMap.put(Const.PERIOD, period);
-
-        List<String> users = tableMapper.getAllUser(queryMap);
-        List<UserCoarseInfo> coarseInfoList = new ArrayList<>(users.size() * 2);
-        for (String user : users) {
-            UserCoarseInfo userCoarseInfo = tableMapper.selectCoarseCountsOfUser(user, period);
-            if (userCoarseInfo != null) {
-                userCoarseInfo.setLastVisitedDate(tableMapper.getLastVisitedDate(user));
-                userCoarseInfo.setVisitedCount(tableMapper.getCounts(user));
-                coarseInfoList.add(userCoarseInfo);
-            }
-        }
-        return coarseInfoList;
-    }
-
     /**
      * 钉钉告警
      */
