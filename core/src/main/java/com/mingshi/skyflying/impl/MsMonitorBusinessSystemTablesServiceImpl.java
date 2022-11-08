@@ -142,6 +142,9 @@ public class MsMonitorBusinessSystemTablesServiceImpl implements MsMonitorBusine
         return ServerResponse.createByErrorMessage("表id不存在", "");
       }
 
+      if(StringUtil.isBlank(tableDesc)){
+          return ServerResponse.createByErrorMessage("参数tableDesc不能为空。", "");
+      }
       // 更新数据库中表的描述信息；
       msMonitorBusinessSystemTablesDo.setTableDesc(tableDesc);
       msMonitorBusinessSystemTablesMapper.updateByPrimaryKeySelective(msMonitorBusinessSystemTablesDo);

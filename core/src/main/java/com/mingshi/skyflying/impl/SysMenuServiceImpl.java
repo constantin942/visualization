@@ -8,6 +8,7 @@ import com.mingshi.skyflying.common.domain.SysOperatorRole;
 import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.dao.SysMenuDao;
 import com.mingshi.skyflying.dao.SysMenuRoleDao;
 import com.mingshi.skyflying.dao.SysOperatorDao;
@@ -41,6 +42,9 @@ public class SysMenuServiceImpl extends BaseParentServiceImpl<SysMenu, Long> imp
 
   @Override
   public ServerResponse<String> getSysMenu(String userName) {
+    if(StringUtil.isBlank(userName)){
+      return ServerResponse.createByErrorMessage("参数用户名userName不能为空。","");
+    }
     // 根据userName获取操作用户的id；
     SysOperator sysOperator = sysOperatorDao.selectByUserName(userName);
     if (null == sysOperator) {

@@ -50,7 +50,9 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
     }
     hashMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
     hashMap.put(Const.PAGE_SIZE, pageSize);
-    hashMap.put("serviceInstance", serviceInstance);
+    if(StringUtil.isNotBlank(serviceInstance)){
+      hashMap.put("serviceInstance", serviceInstance);
+    }
 
     List<MsAgentSwitchDo> list = msAgentSwitchMapper.selectByServiceInstance(hashMap);
 
@@ -95,7 +97,10 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   private ServerResponse<String> sendToKafkaAndSaveOperationRecord(String serviceInstance, String agentSwitch, String operationType) {
     String requestId = SnowflakeIdWorker.generateStringId();
     ObjectNode jsonNodes = JsonUtil.createJsonObject();
-    jsonNodes.put("serviceInstance", serviceInstance);
+    if(StringUtil.isNotBlank(serviceInstance)){
+        jsonNodes.put("serviceInstance", serviceInstance);
+    }
+
     if (StringUtil.isNotBlank(agentSwitch)) {
       jsonNodes.put("agentSwitch", agentSwitch);
     }

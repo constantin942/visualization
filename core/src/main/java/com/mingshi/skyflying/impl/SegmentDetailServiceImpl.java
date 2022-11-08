@@ -147,9 +147,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<String>> getCountsOfUser(String msTableName) {
         List<String> list = new LinkedList<>();
+        if(StringUtil.isBlank(msTableName)){
+            return ServerResponse.createByErrorMessage("参数表名字msTableName不能为空", Const.FAILED, list);
+        }
         log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
         Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-        if (msTableName.contains(Const.POUND_KEY)) {
+        if (StringUtil.isNotBlank(msTableName) && msTableName.contains(Const.POUND_KEY)) {
             try {
                 String[] split = msTableName.split(Const.POUND_KEY);
                 String peer = split[0];
@@ -198,6 +201,9 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
         List<String> list = new LinkedList<>();
+        if(StringUtil.isBlank(userName)){
+            return ServerResponse.createByErrorMessage("参数用户名userName不能为空。", Const.FAILED, list);
+        }
         String key = Const.ZSET_USER_OPERATION_TYPE + userName;
         Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
         // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
@@ -355,33 +361,12 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<Long>> getCountsOfUserUserRecentSevenDays(String msTableName, String startTime, String endTime, Integer pageNo, Integer pageSize) {
         List<Long> returnList = new ArrayList<>();
-        log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
-        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
-        try {
-            String[] split = msTableName.split("\\.");
-            String dbInstance = split[0];
-            String tableName = split[1];
-            map.put(Const.DB_INSTANCE2, dbInstance);
-            map.put(Const.MS_TABLE_NAME, tableName);
-        } catch (Exception e) {
-            log.error("# SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays() # 获取用户近七天的访问次数时，出现了异常。", e);
-            return ServerResponse.createByErrorMessage("参数非法", Const.FAILED, returnList);
-        }
 
-        if (null == pageNo) {
-            pageNo = 1;
-        }
-        if (null == pageSize) {
-            pageSize = 10;
-        }
-        map.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
-        map.put(Const.PAGE_SIZE, pageSize);
+        log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUserUserRecentSevenDays # 获取用户近七天的访问次数。");
 
         List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
         for (int i = 0; i < dateList.size() - 1; i++) {
             String value = dateList.get(i);
-            map.put(Const.START_TIME, value);
-            map.put(Const.END_TIME, dateList.get(i + 1));
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
             Long count = 0L;

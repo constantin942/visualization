@@ -33,19 +33,6 @@
     from sys_operator
     where user_name=#{userName,jdbcType=VARCHAR}
   </select>
-  <select id="selectAll" resultType="java.util.Map">
-    SELECT operator.id,
-           operator.user_name,
-           operator.phone,
-           role.role_name
-    FROM sys_operator AS operator,
-         sys_operator_role AS oprole,
-         sys_role AS role
-    WHERE operator.is_delete = 0
-      AND oprole.operator_id = operator.id
-      AND oprole.role_id = role.id
-    ORDER BY operator.id ASC
-  </select>
   <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id"
           parameterType="com.mingshi.skyflying.common.domain.SysOperator">
     insert into sys_operator

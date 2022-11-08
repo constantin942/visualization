@@ -35,7 +35,6 @@ public enum AiitExceptionCode {
   OLD_PASSWORD_IS_ERROR( "1016", "old password is error", "输入的旧密码不对"),
   INCORRECT_PASSWORD( "1017", "incorrect password", "密码错误"),
   PASSWORD_ERROR_MORE_THAN_FIVE_TIMES( "1018", "Password error more than 5 times, please try again in an hour", "密码错误次数超过5次，请一小时以后再试"),
-  USERNAME_IS_ALREADY_REGISTEDRED( "1019", "User name is already registered", "用户名已被注册"),
   USERNAME_ROLE_NOT_EXIST( "1020", "user rule not exist", "用户角色不存在"),
   USERNAME_ROLE_MENU_NOT_EXIST( "1021", "user rule menu not exist", "用户角色对应的菜单不存在"),
   USE_INSERT_FAILED( "1022", "user insert failed", "保存用户数据失败"),
