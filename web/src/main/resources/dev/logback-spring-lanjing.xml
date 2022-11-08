@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+    <!-- TODO 修改应用名、包名 -->
+    <property name="SERVICE_NAME" value="skywalking-mingshi-server" />
+    <property name="BASE_PACKAGE" value="com.mingshi@" />
+
+    <!--日志格式-->
+    <property name="LOG_PATTERN" value="%d %-5p %5r --- [${SERVICE_NAME}][R=%line] %-40c : %m%n"/>
+<!--    <property name="LOG_PATTERN" value="%d %-5p %5r -&#45;&#45; [%X{X-B3-TraceId:-},%X{X-B3-ParentSpanId:-},%X{X-B3-SpanId:-},${SERVICE_NAME}][R=%line] %-40c : %m%n"/>-->
+    <property name="MAXHISTORY" value="30" />
+    <property name="CHARSET" value="UTF-8" />
+    <property name="LOG_HOME" value="logs" />
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are by default assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <!-- <onMismatch>DENY</onMismatch> -->
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/info.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy
+            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_HOME}/info.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
+            <maxHistory>${MAXHISTORY}</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 按日期区分的滚动日志 -->
+    <appender name="error"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/error.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy
+            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_HOME}/error-%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <maxHistory>${MAXHISTORY}</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!--埋点日志 -->
+    <appender name="biz-info"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/biz-info.log</file>
+        <encoder charset="${CHARSET}"
+                 class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"servicename":"@project.artifactId@"}</customFields>
+            <includeMdcKeyName>X-B3-TraceId</includeMdcKeyName>
+            <includeMdcKeyName>X-B3-ParentSpanId</includeMdcKeyName>
+            <includeMdcKeyName>X-B3-SpanId</includeMdcKeyName>
+            <includeMdcKeyName>X-Span-Export</includeMdcKeyName>
+            <includeCallerData>true</includeCallerData>
+            <includeContext>true</includeContext>
+            <timeZone>UTC</timeZone>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>info</level>
+        </filter>
+        <rollingPolicy
+            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/biz-info-%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <maxHistory>${MAXHISTORY}</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!--配置埋点日志 -->
+    <logger name="${BASE_PACKAGE}" level="INFO">
+        <appender-ref ref="biz-info" />
+    </logger>
+
+    <!-- 配置业务系统日志，需要自行设置 -->
+    <logger name="${SERVICE_NAME}" level="INFO">
+        <appender-ref ref="biz-info" />
+    </logger>
+
+    <logger name="org.apache.http.wire" level="INFO" />
+    <logger name="ma.glasnost.orika" level="INFO" />
+
+    <!--log4jdbc -->
+    <!--优先级从高到低依次为：OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、ALL -->
+    <!-- 包含SQL语句实际的执行时间 -->
+    <!-- <logger name="jdbc.sqltiming" level="OFF" /> -->
+    <logger name="jdbc.sqltiming" level="OFF" />
+    <!-- <logger name="jdbc.sqltiming" level="info" /> -->
+
+    <!-- 仅仅记录 SQL 语句，会将占位符替换为实际的参数 -->
+    <!-- <logger name="jdbc.sqlonly" level="OFF" /> -->
+    <logger name="jdbc.sqlonly" level="info" />
+
+    <!-- 包含ResultSet的信息，输出篇幅较长 -->
+    <logger name="jdbc.resultset" level="OFF" />
+
+    <!-- 打印出执行SQL和结果集 -->
+    <logger name="jdbc.resultsettable" level="OFF" />
+
+    <!-- 除了ResultSet 之外的所有JDBC调用信息，篇幅较长 -->
+    <logger name="jdbc.audit" level="OFF" />
+
+    <!-- 输出了Connection 的 open、close 等信息 -->
+    <logger name="jdbc.connection" level="OFF" />
+
+    <root level="INFO">
+        <appender-ref ref="console" />
+        <appender-ref ref="error" />
+        <appender-ref ref="info" />
+    </root>
+</configuration>
