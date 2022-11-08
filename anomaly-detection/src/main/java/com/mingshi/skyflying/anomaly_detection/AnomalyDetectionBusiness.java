@@ -340,14 +340,14 @@ public class AnomalyDetectionBusiness {
 
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
             // 做健壮性的判断；2022-10-19 14:13:25
-            if (null == enableTableRule || (!enableTableRule.equals(Boolean.TRUE) && !enableTableRule.equals(Boolean.FALSE))) {
+            if (null == enableTableRule || (!Boolean.TRUE.equals(enableTableRule) && !Boolean.FALSE.equals(enableTableRule))) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTableRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
                 return;
             }
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
-            if (null == enableTimeRule || (!enableTimeRule.equals(Boolean.TRUE) && !enableTimeRule.equals(Boolean.FALSE))) {
+            if (null == enableTimeRule || (!Boolean.TRUE.equals(enableTimeRule) && !Boolean.FALSE.equals(enableTimeRule))) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTimeRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);

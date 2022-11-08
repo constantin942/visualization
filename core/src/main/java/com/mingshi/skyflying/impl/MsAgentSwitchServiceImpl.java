@@ -103,9 +103,9 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
     jsonNodes.put("requestId", requestId);
     Boolean sendResult = aiitKafkaProducer.sendWithSpecifyPartion(agentSwitchRequestTopic, jsonNodes);
     if (false == sendResult) {
-      if (operationType.equals(Const.AGENT_QUERY)) {
+      if (Const.AGENT_QUERY.equals(operationType)) {
         log.error("# MsAgentSwitchServiceImpl.updateAgentStatus() # 对探针【{}】进行查询【{}】，操作失败。", serviceInstance, operationType);
-      } else if (operationType.equals(Const.AGENT_ON_OFF)) {
+      } else if (Const.AGENT_ON_OFF.equals(operationType)) {
         log.error("# MsAgentSwitchServiceImpl.updateAgentStatus() # 对探针【{}】进行开关【{}】设置，操作失败。", serviceInstance, operationType);
       }
       return ServerResponse.createByErrorMessage("操作失败，请稍后重试。", "");

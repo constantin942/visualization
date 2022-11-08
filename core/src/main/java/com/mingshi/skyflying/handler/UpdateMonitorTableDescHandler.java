@@ -16,7 +16,7 @@ import jodd.util.StringUtil;
 public class UpdateMonitorTableDescHandler implements UpdateOperationRecord {
     @Override
     public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-        if (null != jsonNodes && methodName.equals(Const.UPDATE_MONITOR_TABLE_DESC) && null != jsonNodes.get(Const.TABLE_DESC)) {
+        if (null != jsonNodes && Const.UPDATE_MONITOR_TABLE_DESC.equals(methodName) && null != jsonNodes.get(Const.TABLE_DESC)) {
             StringBuilder stringBuilder = new StringBuilder();
             String value = UpdateOperationRecordFactory.getValue(methodName, Const.TABLE_DESC);
             stringBuilder.append(value);

@@ -357,7 +357,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         // 获取表名；2022-06-06 14:11:21
         try {
-            if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
+            if (!Const.SQL_TYPE_NONE.trim().equals(sqlType1) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
                 StringBuffer tableName = new StringBuffer();
                 List<String> tableNameList = SqlParserUtils.getAllTableNameBySql(msSql);
                 if(null != tableNameList && !tableNameList.isEmpty()){

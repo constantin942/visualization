@@ -16,7 +16,7 @@ import jodd.util.StringUtil;
 public class UpdateSkywalkingAgentHandler implements UpdateOperationRecord {
     @Override
     public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-        if (null != jsonNodes && methodName.equals(Const.UPDATE_SKYWALKING_AGENT) && null != jsonNodes.get(Const.AGENT_NAME)) {
+        if (null != jsonNodes && Const.UPDATE_SKYWALKING_AGENT.equals(methodName) && null != jsonNodes.get(Const.AGENT_NAME)) {
             StringBuilder stringBuilder = new StringBuilder();
             String value = UpdateOperationRecordFactory.getValue(methodName, Const.AGENT_NAME);
             stringBuilder.append(value);

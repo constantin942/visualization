@@ -16,7 +16,7 @@ import com.mingshi.skyflying.common.domain.OperationLog;
 public class DingdingAlarmConfigHandler implements UpdateOperationRecord {
   @Override
   public void execute(ObjectNode jsonNodes, String methodName, OperationLog operationLog) {
-    if (null != jsonNodes && methodName.equals(Const.UPDATE_DINGDING_CONFIG)) {
+    if (null != jsonNodes && Const.UPDATE_DINGDING_CONFIG.equals(methodName)) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(Const.UPDATE_DINGDING_CONFIG_DESC);
         operationLog.setOperationDesc(stringBuilder.toString());
