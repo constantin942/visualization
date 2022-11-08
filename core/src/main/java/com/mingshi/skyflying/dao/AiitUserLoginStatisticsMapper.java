@@ -10,7 +10,5 @@ public interface AiitUserLoginStatisticsMapper {
 
     int updateByPrimaryKeySelective(UserLoginStatistics userLoginStatistics);
 
-    int updatePasswordErrorCount(String userName);
-
     UserLoginStatistics selectPasswordErrorCount(String userName);
 }

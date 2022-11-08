@@ -63,49 +63,6 @@
     </foreach>
     ON DUPLICATE KEY UPDATE gmt_modified = VALUES(gmt_modified)
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
-    insert into ms_agent_information
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="isDelete != null">
-        is_delete,
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create,
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified,
-      </if>
-      <if test="agentCode != null">
-        agent_code,
-      </if>
-      <if test="agentName != null">
-        agent_name,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="isDelete != null">
-        #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="agentCode != null">
-        #{agentCode,jdbcType=VARCHAR},
-      </if>
-      <if test="agentName != null">
-        #{agentName,jdbcType=VARCHAR},
-      </if>
-    </trim>
-  </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentInformationDo">
     update ms_agent_information
     <set>

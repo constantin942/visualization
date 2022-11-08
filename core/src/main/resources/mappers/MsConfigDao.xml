@@ -18,12 +18,6 @@
     from ms_config
     where config_type = #{configType,jdbcType=VARCHAR}
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from ms_config
-    where id = #{id,jdbcType=INTEGER}
-  </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsConfigDo">
     insert into ms_config
     <trim prefix="(" suffix=")" suffixOverrides=",">

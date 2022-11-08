@@ -98,9 +98,4 @@
         </set>
         where id=#{id,jdbcType=INTEGER}
     </update>
-    <update id="updatePasswordErrorCount" parameterType="java.lang.String">
-        update user_login_statistics
-        set password_error_count=password_error_count + 1
-        where is_delete=0 and  user_name #{userName,jdbcType=VARCHAR}
-    </update>
 </mapper>

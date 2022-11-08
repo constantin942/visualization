@@ -8,11 +8,7 @@ import java.util.Map;
 
 public interface MsMonitorBusinessSystemTablesMapper {
 
-    int insertSelective(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo);
-
     MsMonitorBusinessSystemTablesDo selectByPrimaryKey(Integer id);
-
-    MsMonitorBusinessSystemTablesDo selectByTableName(String tableName);
 
     List<MsMonitorBusinessSystemTablesDo> selectAll();
 
@@ -30,13 +26,8 @@ public interface MsMonitorBusinessSystemTablesMapper {
 
     Integer selectAllEnableCount(Map<String, Object> queryMap);
 
-    List<MsMonitorBusinessSystemTablesDo> selectAllNotEnable();
-
     int updateByPrimaryKeySelective(MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo);
 
     void insertSelectiveBatch(LinkedList<MsMonitorBusinessSystemTablesDo> list);
 
-    Long selectAllDbName();
-
-    Long selectAllTables();
 }

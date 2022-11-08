@@ -27,12 +27,6 @@
     from ms_alarm_information
     where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from ms_alarm_information
-    where id = #{id,jdbcType=INTEGER}
-  </select>
   <select id="selectAllUserName" parameterType="java.lang.Integer" resultType="java.lang.String">
     select
       user_name
@@ -113,73 +107,6 @@
     </where>
     group by user_name) as t1
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
-    insert into ms_alarm_information
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="matchRuleId != null">
-        match_rule_id,
-      </if>
-      <if test="isDelete != null">
-        is_delete,
-      </if>
-      <if test="updateUserPortrait != null">
-        update_user_portrait,
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create,
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified,
-      </if>
-      <if test="originalTime != null">
-        original_time,
-      </if>
-      <if test="userName != null">
-        user_name,
-      </if>
-      <if test="alarmContent != null">
-        alarm_content,
-      </if>
-      <if test="globalTraceId != null">
-        global_trace_id,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="matchRuleId != null">
-        #{matchRuleId,jdbcType=INTEGER},
-      </if>
-      <if test="isDelete != null">
-        #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="updateUserPortrait != null">
-        #{updateUserPortrait,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="originalTime != null">
-        #{originalTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="userName != null">
-        #{userName,jdbcType=VARCHAR},
-      </if>
-      <if test="alarmContent != null">
-        #{alarmContent,jdbcType=VARCHAR},
-      </if>
-      <if test="globalTraceId != null">
-        #{globalTraceId,jdbcType=VARCHAR},
-      </if>
-    </trim>
-  </insert>
   <insert id="insertSelectiveBatch" parameterType="java.util.List">
     insert into ms_alarm_information
     ( user_name, alarm_content, global_trace_id, original_time, match_rule_id, start_time, db_instance, ms_table_name )
@@ -230,14 +157,5 @@
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateByUserNameAndOriginalTime" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
-    update ms_alarm_information
-    set is_delete = #{isDelete,jdbcType=TINYINT}
-    where user_name = #{userName,jdbcType=VARCHAR} and
-          original_time = #{originalTime,jdbcType=TIMESTAMP}
-          <if test="matchRuleId != null">
-            and match_rule_id = #{matchRuleId,jdbcType=INTEGER}
-          </if>
   </update>
 </mapper>

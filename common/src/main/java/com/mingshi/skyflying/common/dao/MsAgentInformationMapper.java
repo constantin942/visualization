@@ -8,8 +8,6 @@ import java.util.Map;
 
 public interface MsAgentInformationMapper {
 
-  int insertSelective(MsAgentInformationDo msAgentInformationDo);
-
   MsAgentInformationDo selectByPrimaryKey(Integer id);
 
   List<MsAgentInformationDo> selectAll();

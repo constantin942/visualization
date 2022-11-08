@@ -39,10 +39,5 @@ public class UserLoginLogStatisticsImpl extends BaseParentServiceImpl<UserLoginS
 		return aiitUserLoginStatisticsMapper.updateByPrimaryKeySelective(userLoginStatistics);
 	}
 
-	@Override
-	public int updatePasswordErrorCount(String userName) {
-		return aiitUserLoginStatisticsMapper.updatePasswordErrorCount(userName);
-	}
-
 }
 
