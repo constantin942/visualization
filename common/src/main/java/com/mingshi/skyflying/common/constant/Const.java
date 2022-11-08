@@ -24,6 +24,8 @@ public class Const {
     public static final String DISABLE = "禁用";
     public static final String PERIOD = "period";
     public static final long NUMBER_THIRTY = 30;
+    public static final int NUMBER_NINETEEN = 19;
+    public static final String COLON_EN = ":";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

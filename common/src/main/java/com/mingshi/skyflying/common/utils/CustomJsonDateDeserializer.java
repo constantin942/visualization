@@ -1,15 +1,16 @@
 package com.mingshi.skyflying.common.utils;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+import com.mingshi.skyflying.common.constant.Const;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationContext;
 import org.codehaus.jackson.map.JsonDeserializer;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /**
  * 解决@RequestBody接收json数据，Jackson 反序列化Date格式
  * @author scott
@@ -25,9 +26,9 @@ public class CustomJsonDateDeserializer extends JsonDeserializer<Date> {
 
 		if (StringUtils.hasText(text)) {
 			try {
-				if (text.indexOf(":") == -1 && text.length() == 10) {
+				if (text.indexOf(Const.COLON_EN) == -1 && text.length() == Const.NUMBER_TEN) {
 					return this.dateFormat.parse(text);
-				} else if (text.indexOf(":") > 0 && text.length() == 19) {
+				} else if (text.indexOf(Const.COLON_EN) > 0 && text.length() == Const.NUMBER_NINETEEN) {
 					return this.datetimeFormat.parse(text);
 				} else {
 					throw new IllegalArgumentException("Could not parse date, date format is error ");
