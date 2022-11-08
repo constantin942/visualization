@@ -37,7 +37,7 @@ public class MsCaffeine implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
     try {
-        log.info("# MsCaffeine.run() # 项目启动，开始初始化Caffeine实例。");
+      log.info("# MsCaffeine.run() # 项目启动，开始初始化Caffeine实例。");
       createAllCaffeine();
       log.info("# MsCaffeine.run() # 项目启动，初始化Caffeine实例完毕。");
       doRun();
