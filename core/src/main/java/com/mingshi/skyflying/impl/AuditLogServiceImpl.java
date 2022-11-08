@@ -359,7 +359,7 @@ public class AuditLogServiceImpl implements AuditLogService {
         try {
             if (!sqlType1.equals(Const.SQL_TYPE_NONE.trim()) && StringUtil.isNotBlank(sqlType1) && !Const.FAIL.equals(sqlExecAuditLog.getExecState())) {
                 StringBuffer tableName = new StringBuffer();
-                List<String> tableNameList = SqlParserUtils.getAllTableNameBySQL(msSql);
+                List<String> tableNameList = SqlParserUtils.getAllTableNameBySql(msSql);
                 if(null != tableNameList && !tableNameList.isEmpty()){
                     for (int i = 0; i < tableNameList.size(); i++) {
                         String str = tableNameList.get(i).replaceAll("`","");

@@ -45,12 +45,12 @@ public class DingUtils {
     /** param: message 要发送的信息
      ** return: void 无返回值
      ** 作用：把传入的message发送给钉钉机器人*/
-    public static void dingRequest(String message, String Webhook, String secret, List<String> mobiles) {
+    public static void dingRequest(String message, String webhook, String secret, List<String> mobiles) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         log.info("开始钉钉告警:{}", message);
         String url = null;
         try {
-            url = Webhook + encode(secret);
+            url = webhook + encode(secret);
         } catch (Exception e) {
             log.error("钉钉告警失败{}", e.getMessage());
         }

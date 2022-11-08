@@ -76,7 +76,6 @@ public class UserPortraitByTableTask {
     public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
         // 应该使用tryLock，而不是使用lock。使用lock，每个客户端阻塞等待执行定时任务。tryLock锁是只有加锁成功的客户端才能执行定时任务，其他获取锁失败的客户端，则不用执行定时任务。2022-11-04 09:29:21
-//        lock.lock();
         lock.tryLock();
         try {
             log.info("开始执行基于库表画像定时任务: 全量表生成用户画像 -> 放入Redis");

@@ -26,6 +26,7 @@ public class Const {
     public static final long NUMBER_THIRTY = 30;
     public static final int NUMBER_NINETEEN = 19;
     public static final String COLON_EN = ":";
+    public static final String PATTERN = "\\d+-\\d+-\\d+\\s+(\\d+):";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

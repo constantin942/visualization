@@ -146,7 +146,7 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
       msAgentSwitchDo.setServiceInstance(serviceInstance);
       msAgentSwitchDo.setRequestId(requestId);
       if(StringUtil.isNotBlank(agentSwitch)){
-          operationType = agentSwitch.equals("off") == true ? Const.AGENT_OFF : Const.AGENT_ON;
+          operationType = Const.OFF.equals(agentSwitch) == true ? Const.AGENT_OFF : Const.AGENT_ON;
       }
       msAgentSwitchDo.setOperationType(operationType);
       if (sendResult.equals(false)) {

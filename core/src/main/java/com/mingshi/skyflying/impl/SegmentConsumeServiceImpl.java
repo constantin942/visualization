@@ -124,25 +124,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
 
     /**
-     * 判断是否告警
-     * 旧的方法，已过时；2022-11-01 14:55:22
-     * author by zm；
-     */
-//    public void userVisitedIsAbnormal(Boolean enableTimeRule, Boolean enableTableRule, List<MsSegmentDetailDo> segmentDetaiDolList, List<MsAlarmInformationDo> msAlarmInformationDoList) {
-//        try {
-//            if (Boolean.TRUE.equals(enableTableRule)) {
-//                userVisitedTableIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-//            }
-//            if (Boolean.TRUE.equals(enableTimeRule)) {
-//                userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-//            }
-//            highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
-//        } catch (Exception e) {
-//            log.error("# AnomalyDetectionBusiness.userVisitedIsAbnormal() # 进行异常检测时，出现了异常。", e);
-//        }
-//    }
-
-    /**
      * <B>方法名称：getSegmentObject</B>
      * <B>概要说明：从ConsumerRecord实例中获取SegmentObject实例</B>
      *
@@ -898,6 +879,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                     break;
                 case CrossProcess:
                     ref.setType(RefType.CROSS_PROCESS);
+                    break;
+                default:
                     break;
             }
             ref.setParentSpanId(reference.getParentSpanId());

@@ -246,7 +246,7 @@ public class AnomalyDetectionBusiness {
      * 判断所属时段
      */
     private String getInterval(String timeStr) {
-        Pattern pattern = Pattern.compile("\\d+-\\d+-\\d+\\s+(\\d+):");
+        Pattern pattern = Pattern.compile(Const.PATTERN);
         Matcher m = pattern.matcher(timeStr);
         if (!m.find()) {
             return null;

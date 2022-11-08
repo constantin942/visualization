@@ -747,7 +747,6 @@ public class SkyflyingController {
 
     @GetMapping(value = "/getVisitRate")
     public ServerResponse<Map<String, Double>> getVisitRate(@RequestParam("username") String username) {
-//        return ServerResponse.createBySuccess(timeTask.getVisitRate(username));
         return ServerResponse.createBySuccess(timeTask.getVisitTimeByHour(username));
     }
 }

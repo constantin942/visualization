@@ -74,7 +74,7 @@ public class SqlParserUtils {
 
 
     /**
-     * <B>方法名称：getAllTableNameBySQL</B>
+     * <B>方法名称：getAllTableNameBySql</B>
      * <B>概要说明：通过阿里巴巴的druid解析表名</B>
      *
      * @Author zm
@@ -82,7 +82,7 @@ public class SqlParserUtils {
      * @Param [sql]
      * @return java.util.List<java.lang.String>
      **/
-    public static List<String> getAllTableNameBySQL(String sql) {
+    public static List<String> getAllTableNameBySql(String sql) {
         SQLStatementParser parser = new MySqlStatementParser(sql);
         // 使用Parser解析生成AST，这里SQLStatement就是AST
         SQLStatement sqlStatement = parser.parseStatement();
