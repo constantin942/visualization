@@ -13,10 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -31,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class MsKafkaConsumer extends Thread {
 
-    LinkedList<String> topicList;
+    List<String> topicList;
     private String consumerGroup;
     private String bootstrapServers;
     private AiitKafkaConsumerUtil aiitKafkaConsumerUtil;
@@ -43,7 +40,7 @@ public class MsKafkaConsumer extends Thread {
 
     KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 
-    public MsKafkaConsumer(String bootstrapServers, LinkedList<String> topicList, String consumerGroup, AiitKafkaConsumerUtil aiitKafkaConsumerUtil) {
+    public MsKafkaConsumer(String bootstrapServers, List<String> topicList, String consumerGroup, AiitKafkaConsumerUtil aiitKafkaConsumerUtil) {
         this.bootstrapServers = bootstrapServers;
         this.topicList = topicList;
         this.consumerGroup = consumerGroup;

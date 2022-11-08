@@ -221,7 +221,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
             log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，所有的IoThread线程都已退出，此时再同步提交offset。");
             aiitKafkaConsumer.commitSync();
             log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，所有的IoThread线程都已退出，此时再同步提交offset，用时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error("# MsKafkaSegmentsConsumer.doCommitSync() # 优雅关机，同步提交offset时，出现了异常。", e);
         }
     }

@@ -75,9 +75,13 @@ public class UserPortraitByTableTask {
     @Async
     public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
-        // 应该使用tryLock，而不是使用lock。使用lock，每个客户端阻塞等待执行定时任务。tryLock锁是只有加锁成功的客户端才能执行定时任务，其他获取锁失败的客户端，则不用执行定时任务。2022-11-04 09:29:21
-        lock.tryLock();
+        boolean tryLock = Boolean.FALSE;
         try {
+            // 应该使用tryLock，而不是使用lock。使用lock，每个客户端阻塞等待执行定时任务。tryLock锁是只有加锁成功的客户端才能执行定时任务，其他获取锁失败的客户端，则不用执行定时任务。2022-11-04 09:29:21
+            tryLock = lock.tryLock();
+            if (Boolean.FALSE.equals(tryLock)) {
+                return;
+            }
             log.info("开始执行基于库表画像定时任务: 全量表生成用户画像 -> 放入Redis");
             //1. 全量表生成用户画像
             insertYesterdayInfo2Portrait();
@@ -86,8 +90,12 @@ public class UserPortraitByTableTask {
         } catch (Exception e) {
             log.error("生成用户画像异常");
         } finally {
-            lock.unlock();
-            log.info("基于库表画像定时任务完成");
+            if (Boolean.TRUE.equals(tryLock)) {
+                lock.unlock();
+                log.info("基于库表画像定时任务完成");
+            } else {
+                log.info("开始执行基于库表画像定时任务: 全量表生成用户画像 -> 放入Redis，当前实例没有获取到分布式锁。");
+            }
         }
     }
 
@@ -95,18 +103,22 @@ public class UserPortraitByTableTask {
      * <B>方法名称：createUserAccessBehavior</B>
      * <B>概要说明：生成用户访问行为信息</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-04 09:35:44
      * @Param []
-     * @return void
      **/
     //间隔30秒执行
     @Scheduled(cron = "0/30 * * * * ? ")
     @Async
     public void createUserAccessBehavior() {
         RLock lock = redissonClient.getLock(REDIS_LOCK_USER_ACCESS_BEHAVIOR);
-        lock.tryLock();
+        boolean tryLock = Boolean.FALSE;
         try {
+            tryLock = lock.tryLock();
+            if (Boolean.FALSE.equals(tryLock)) {
+                return;
+            }
             log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 开始执行生成用户访问行为信息定时任务");
             PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
             Integer period = portraitConfig.getRuleTablePeriod();
@@ -144,16 +156,20 @@ public class UserPortraitByTableTask {
                 DefaultTypedTuple member = new DefaultTypedTuple(value, score);
                 typedTupleSet.add(member);
             }
-            if(!typedTupleSet.isEmpty()){
+            if (!typedTupleSet.isEmpty()) {
                 redisPoolUtil.zAddBatch(Const.ZSET_USER_ACCESS_BEHAVIOR, typedTupleSet);
                 // 设置30秒的有效期；2022-11-04 10:26:18
                 redisPoolUtil.expire(Const.ZSET_USER_ACCESS_BEHAVIOR, Const.NUMBER_THIRTY);
             }
         } catch (Exception e) {
-            log.error("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务出现异常。",e);
+            log.error("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务出现异常。", e);
         } finally {
-            lock.unlock();
-            log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务完成");
+            if (Boolean.TRUE.equals(tryLock)) {
+                lock.unlock();
+                log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务完成");
+            } else {
+                log.info("# UserPortraitByTableTask.createUserAccessBehavior() # 执行生成用户访问行为信息定时任务，当前实例没有获取到分布式锁。");
+            }
         }
     }
 
@@ -329,10 +345,10 @@ public class UserPortraitByTableTask {
             HashMap<String, Integer> innerMap = entry.getValue();
             for (Map.Entry<String, Integer> innerEntry : innerMap.entrySet()) {
                 list.add(UserPortraitByTableDo.builder()
-                        .username(username)
-                        .tableName(innerEntry.getKey())
-                        .count(innerEntry.getValue())
-                        .build());
+                    .username(username)
+                    .tableName(innerEntry.getKey())
+                    .count(innerEntry.getValue())
+                    .build());
             }
         }
         return list;
@@ -364,8 +380,8 @@ public class UserPortraitByTableTask {
         if (userPortraitByTable == null) {
             // 没有该用户当天粗粒度/画像信息
             userPortraitByTableMapper.insertOne(UserPortraitByTableDo.builder()
-                    .username(username).tableName(tableName).count(1).createTime(time)
-                    .build());
+                .username(username).tableName(tableName).count(1).createTime(time)
+                .build());
         } else {
             // 有该用户当天的粗粒度/画像信息
             userPortraitByTable.setCount(userPortraitByTable.getCount() + 1);
@@ -387,7 +403,7 @@ public class UserPortraitByTableTask {
     public Integer getCountByTable(String username, String tableName) {
         String key = buildKey(username, tableName);
         String counts = MsCaffeineCache.getFromPortraitByTableLocalCache(key);
-        if(StringUtil.isBlank(counts)) {
+        if (StringUtil.isBlank(counts)) {
             return null;
         }
         return Integer.valueOf(counts.trim());

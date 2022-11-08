@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,7 +58,7 @@ public class AiitKafkaConsumerRunner implements ApplicationRunner {
     }
 
     private void createMsKafkaConsumer() {
-        LinkedList<String> topicList = new LinkedList<>();
+        List<String> topicList = new LinkedList<>();
         topicList.add(agentSwitchResponseTopic);
         topicList.add(sendStateExceptionInfoTopic);
 

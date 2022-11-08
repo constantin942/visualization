@@ -23,8 +23,8 @@ public class AiitException extends RuntimeException {
     }
 
     public AiitException(AiitExceptionCode errorCode) {
-        super(errorCode.getCode().toString());
-        this.errorCode = errorCode.getCode().toString();
+        super(errorCode.getCode());
+        this.errorCode = errorCode.getCode();
         this.errorMsg = errorCode.getMsgCn();
     }
 

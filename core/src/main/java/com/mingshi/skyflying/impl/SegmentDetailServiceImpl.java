@@ -198,7 +198,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
         List<String> list = new LinkedList<>();
-        Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
         String key = Const.ZSET_USER_OPERATION_TYPE + userName;
         Long sizeFromZset = redisPoolUtil.sizeFromZset(key);
         // 从有序集合zset中获取对每个表操作类型统计；2022-07-22 10:01:52
@@ -227,7 +226,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         List<String> userNames = new LinkedList<>();
         //获取所有的用户名。先从Redis中获取，如果Redis中不存在，那么就从表ms_segment_detail中获取。2022-07-19 10:36:19
         Set<String> smembers = redisPoolUtil.smembers(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
-        if (null == smembers || 0 == smembers.size()) {
+        if (null == smembers || smembers.isEmpty()) {
             userNames = msSegmentDetailDao.selectAllUserName();
         } else {
             userNames.addAll(smembers);
@@ -609,7 +608,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             }
         }
         if (StringUtil.isNotBlank(userName)) {
-            if (userName.contains(Const.DOLLAR)) {
+            if (Const.DOLLAR.contains(userName)) {
                 String[] split = userName.split("\\" + Const.DOLLAR);
                 String serviceCodeName = AgentInformationSingleton.get(split[0]);
                 if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
