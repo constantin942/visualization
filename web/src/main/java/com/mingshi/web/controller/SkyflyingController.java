@@ -11,6 +11,7 @@ import com.mingshi.skyflying.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -54,6 +55,24 @@ public class SkyflyingController {
     private MsConfigService msConfigService;
     @Resource
     private AiitSysUsersService aiitSysUsersService;
+    @Resource
+    private UserLoginLogService userLoginLogService;
+
+    /**
+     * <B>方法名称：getLoginLog</B>
+     * <B>概要说明：获取用户登录日志</B>
+     *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<com.mingshi.skyflying.common.domain.SysOperator>
+     * @Author zm
+     * @Date 2022-11-08 16:16:34
+     * @Param []
+     **/
+    @GetMapping(value = "/getLoginLog")
+    public ServerResponse<String> getLoginLog(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                              @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        log.info("# UserController.getLoginLog() # 获取用户登录日志。");
+        return userLoginLogService.selectAll(pageNo, pageSize);
+    }
 
     /**
      * @return com.zhejiang.mobile.common.response.ServerResponse<java.lang.String>
@@ -76,10 +95,10 @@ public class SkyflyingController {
      * <B>方法名称：getAkSk</B>
      * <B>概要说明：获取ak、sk</B>
      *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      * @Author zm
      * @Date 2022-10-11 14:46:58
      * @Param []
-     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
     @GetMapping(value = "/getAkSk")
     public ServerResponse<String> getAkSk() {
@@ -90,10 +109,10 @@ public class SkyflyingController {
      * <B>方法名称：setAkSk</B>
      * <B>概要说明：设置ak、sk</B>
      *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      * @Author zm
      * @Date 2022-10-11 14:47:14
      * @Param [ak, sk]
-     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
     @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/setAkSk")
@@ -105,10 +124,10 @@ public class SkyflyingController {
      * <B>方法名称：getRegion</B>
      * <B>概要说明：获取region信息</B>
      *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      * @Author zm
      * @Date 2022-10-11 14:47:43
      * @Param []
-     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
     @GetMapping(value = "/getRegion")
     public ServerResponse<String> getRegion() {
@@ -119,10 +138,10 @@ public class SkyflyingController {
      * <B>方法名称：setAkSk</B>
      * <B>概要说明：设置ak、sk</B>
      *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      * @Author zm
      * @Date 2022-10-11 14:47:14
      * @Param [ak, sk]
-     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
      **/
     @OperationAuditAspectAnnotation(isStart = true)
     @PostMapping(value = "/setRegion")
@@ -557,15 +576,17 @@ public class SkyflyingController {
     public ServerResponse<String> getCoarseCountsOfTableName(
         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-        String tableName) {
-        return segmentDetailService.getCoarseCountsOfTableName(tableName, pageNo, pageSize);
+        String tableName,
+        String dbName
+        ) {
+        return segmentDetailService.getCoarseCountsOfTableName(dbName, tableName, pageNo, pageSize);
     }
 
     @GetMapping(value = "/getCoarseCountsOfUsers")
     public ServerResponse<String> getCoarseCountsOfOneUser(
         @RequestParam(value = "username", defaultValue = "") String username,
         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
         return segmentDetailService.getCoarseCountsOfUsers(username, pageNo, pageSize);
     }
 
@@ -626,9 +647,9 @@ public class SkyflyingController {
      **/
     @GetMapping(value = "/getCountsOfEveryonRecentSevenDays")
     public ServerResponse<List<Long>> getCountsOfEveryonRecentSevenDays(@RequestParam(value = "userName") String userName, /* 用户名 */
-                                                                     @RequestParam(value = "startTime") String startTime, /* 开始时间 */
-                                                                     @RequestParam(value = "endTime") String endTime /* 结束时间 */
-                                                                     ){
+                                                                        @RequestParam(value = "startTime") String startTime, /* 开始时间 */
+                                                                        @RequestParam(value = "endTime") String endTime /* 结束时间 */
+    ) {
         return segmentDetailService.getCountsOfEveryonRecentSevenDays(userName, startTime, endTime);
     }
 

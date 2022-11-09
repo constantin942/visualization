@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -97,9 +98,9 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
     String newTableName = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + str;
     if (StringUtil.isBlank(tableDesc)) {
       tableDesc = concurrentHashMapTableDesc.get(newTableName);
-      if (StringUtil.isBlank(tableDesc)) {
-        tableDesc = str;
-      }
+//      if (StringUtil.isBlank(tableDesc)) {
+////        tableDesc = str;
+//      }
     } else {
       String tableNameDesc = concurrentHashMapTableDesc.get(newTableName);
       if (StringUtil.isBlank(tableNameDesc)) {
@@ -109,6 +110,27 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
       }
     }
     return tableDesc;
+  }
+
+  /**
+   * <B>方法名称：getPeerDbnameTableNameByEveryTableDesc</B>
+   * <B>概要说明：根据中文描述信息查找对应的数据库地址、数据库名称、表名称</B>
+   *
+   * @Author zm
+   * @Date 2022-11-09 13:40:32
+   * @Param [tableDesc]
+   * @return java.lang.String
+   **/
+  public static String getPeerDbnameTableNameByEveryTableDesc(String tableDesc) {
+      Iterator<String> iterator = concurrentHashMapTableDesc.keySet().iterator();
+      while(iterator.hasNext()){
+          String key = iterator.next();
+          String desc = concurrentHashMapTableDesc.get(key);
+          if(desc.equals(tableDesc)){
+              return key;
+          }
+      }
+      return null;
   }
 
   /**

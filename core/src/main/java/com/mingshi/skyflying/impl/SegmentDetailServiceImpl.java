@@ -147,7 +147,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<String>> getCountsOfUser(String msTableName) {
         List<String> list = new LinkedList<>();
-        if(StringUtil.isBlank(msTableName)){
+        if (StringUtil.isBlank(msTableName)) {
             return ServerResponse.createByErrorMessage("参数表名字msTableName不能为空", Const.FAILED, list);
         }
         log.info("开始执行 # SegmentDetailServiceImpl.getCountsOfUser() # 获取表【{}】的操作类型次数。", msTableName);
@@ -201,7 +201,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<String>> getUserOperationTypeCount(String userName) {
         List<String> list = new LinkedList<>();
-        if(StringUtil.isBlank(userName)){
+        if (StringUtil.isBlank(userName)) {
             return ServerResponse.createByErrorMessage("参数用户名userName不能为空。", Const.FAILED, list);
         }
         String key = Const.ZSET_USER_OPERATION_TYPE + userName;
@@ -329,8 +329,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     @Override
     public ServerResponse<List<Long>> getCountsOfEveryonRecentSevenDays(String userName, String startTime, String endTime) {
-        if(StringUtil.isBlank(userName)){
-            return ServerResponse.createByErrorMessage("用户名不能为空。","");
+        if (StringUtil.isBlank(userName)) {
+            return ServerResponse.createByErrorMessage("用户名不能为空。", "");
         }
 
         List<Long> returnList = new ArrayList<>();
@@ -514,13 +514,24 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     }
 
     @Override
-    public ServerResponse<String> getCoarseCountsOfTableName(String tableName, Integer pageNo, Integer pageSize) {
+    public ServerResponse<String> getCoarseCountsOfTableName(String dataBaseName, String tableName, Integer pageNo, Integer pageSize) {
         Instant now = Instant.now();
         log.info("开始执行 # SegmentDetailServiceImpl.getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息。");
+
+        /**
+         * 支持根据数据库表的中文描述信息模糊查询；2022-11-09 13:57:23
+         */
+        String tableNameByTableDesc = getTableNameByTableDesc(tableName);
+        if(StringUtil.isNotBlank(tableNameByTableDesc)){
+            tableName = tableNameByTableDesc;
+        }
 
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         if (StringUtil.isNotBlank(tableName)) {
             queryMap.put(Const.TABLE_NAME, tableName);
+        }
+        if (StringUtil.isNotBlank(dataBaseName)) {
+            queryMap.put(Const.DATA_BASE_NAME, dataBaseName);
         }
         if (null == pageNo) {
             pageNo = 1;
@@ -555,7 +566,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
             // 获取访问这个表次数最多的用户
             Boolean flag = getVisitedTimesMostUserName(tableCoarseInfo, peer, dbName, msTableName);
-            if(Boolean.TRUE.equals(flag)){
+            if (Boolean.TRUE.equals(flag)) {
                 tableCoarseInfoList.add(tableCoarseInfo);
             }
         }
@@ -570,6 +581,30 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
         log.info("执行完毕 SegmentDetailServiceImpl # getCoarseCountsOfTableName # 获取对于数据库的粗粒度信息，用时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
         return bySuccess;
+    }
+
+    /**
+     * <B>方法名称：getTableNameByTableDesc</B>
+     * <B>概要说明：根据表的描述信息获取表的名称</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-09 13:49:26
+     * @Param [tableName]
+     **/
+    private String getTableNameByTableDesc(String tableDesc) {
+        String tableName = null;
+        try {
+            if(StringUtil.isNotBlank(tableDesc)){
+                String peerDbnameTableName = LoadAllEnableMonitorTablesFromDb.getPeerDbnameTableNameByEveryTableDesc(tableDesc);
+                if (StringUtil.isNotBlank(peerDbnameTableName)) {
+                    tableName = peerDbnameTableName.split("#")[2];
+                }
+            }
+        } catch (Exception e) {
+            log.error("# SegmentDetailServiceImpl.getTableNameByTableDesc() # 根据表的描述信息【{}】获取对应的表名时，出现了异常。", tableDesc, e);
+        }
+        return tableName;
     }
 
     /**
@@ -599,7 +634,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
                     userName = split[1] + "（" + serviceCodeName + "）";
                 }
-            }else{
+            } else {
                 userName = dbName + Const.DOLLAR + userName;
             }
             tableCoarseInfo.setUsualVisitedUser(userName);
