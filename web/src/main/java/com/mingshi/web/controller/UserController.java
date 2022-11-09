@@ -7,6 +7,7 @@ import com.mingshi.skyflying.common.exception.AiitExceptionCode;
 import com.mingshi.skyflying.common.response.ServerResponse;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import com.mingshi.skyflying.service.AiitSysUsersService;
 import com.mingshi.skyflying.service.UserLoginLogService;
@@ -53,6 +54,10 @@ public class UserController {
     @PostMapping(value = "/login")
     public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
         Instant instStart = Instant.now();
+        UserLoginLog userLoginLog = new UserLoginLog();
+        userLoginLog.setUserName(userName);
+        userLoginLog.setDescription(Const.LOGIN_DESC);
+        userLoginLog.setLoginIp(MingshiServerUtil.getIpAddress(request));
         ServerResponse<SysOperator> response = aiitSysUsersService.login(userName, password);
         if (AiitExceptionCode.SUCCESS.getCode().equals(response.getCode()) && !StringUtil.equals(null, String.valueOf(response.getData()))) {
             HttpSession oldSession = request.getSession(false);
@@ -64,11 +69,16 @@ public class UserController {
             log.info("用户=【{}】登录  sessionID={}", userName, sessionId);
             boolean flag = redisPoolUtil.set(sessionId, response.getData(), Const.REDIS_SESSION_EXTIME);
             log.info("用户 phone={} 登录成功，将用户的信息放入Redis中的结果={}", userName, flag);
+            userLoginLog.setSessionId(sessionId);
+            userLoginLog.setResult(Const.SUCCESS);
         } else {
             log.info("用户 phone={} 登录失败。", userName);
-            return response;
+            userLoginLog.setResult(Const.FAILED);
         }
-
+        Integer insertResult = userLoginLogService.insertSelective(userLoginLog);
+        if (!Const.NUMBER_ONE.equals(insertResult)) {
+            log.error("# UserController.login() # 将用户登录结果【{}】插入到数据库中失败。", JsonUtil.obj2String(userLoginLog));
+        }
         log.info("用户 phone={}登录结束，返回给前端的信息={}，接口执行时间={} 毫秒", userName, JsonUtil.obj2String(response), DateTimeUtil.getTimeMillis(instStart));
         return response;
     }
@@ -129,6 +139,7 @@ public class UserController {
         UserLoginLog aiitUserLoginLog = userLoginLogService.selectBySeesionId(sessionId);
         if (null != aiitUserLoginLog) {
             aiitUserLoginLog.setGmtModified(new Date());
+            aiitUserLoginLog.setDescription(Const.LOGIN_OUT_DESC);
             Integer updateResult = userLoginLogService.updateByPrimaryKeySelective(aiitUserLoginLog);
             if (1 != updateResult) {
                 log.error("用户退出登录，根据sessionId={} 在用户登录表中更新登录记录失败。", sessionId);

@@ -27,6 +27,14 @@ public class Const {
     public static final int NUMBER_NINETEEN = 19;
     public static final String COLON_EN = ":";
     public static final String PATTERN = "\\d+-\\d+-\\d+\\s+(\\d+):";
+    public static final String X_FORWARDED_FOR = "x-forwarded-for";
+    public static final String UNKNOWN = "unknown";
+    public static final String PROXY_CLIENT_IP = "Proxy-Client-IP";
+    public static final String WL_PROXY_CLIENT_IP = "WL-Proxy-Client-IP";
+    public static final String HTTP_CLIENT_IP = "HTTP_CLIENT_IP";
+    public static final String HTTP_X_FORWARDED_FOR = "HTTP_X_FORWARDED_FOR";
+    public static final String LOGIN_DESC = "登录";
+    public static final String LOGIN_OUT_DESC = "登出";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -221,6 +229,7 @@ public class Const {
     public static final String DB_USER_NAME2 = "dbUserName";
     public static final String DB_STATEMENT2 = "dbStatement";
     public static final String DB_TABLE_NAME = "dbTableName";
+    public static final String DATA_BASE_NAME = "dataBaseName";
     public static final String TABLE_NAME = "tableName";
     public static final String TABLE_NAME_DESC = "tableNameDesc";
     public static final String DB_NAME = "dbName";

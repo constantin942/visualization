@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,6 +68,35 @@ public class MingshiServerUtil {
             orderId = SnowflakeIdWorker.generateStringId();
         }
         return orderId;
+    }
+
+    /**
+     * <B>方法名称：getIpAddress</B>
+     * <B>概要说明：获取ip</B>
+     *
+     * @Author zm
+     * @Date 2022-11-08 16:01:55
+     * @Param [request]
+     * @return java.lang.String
+     **/
+    public static String getIpAddress(HttpServletRequest request) {
+        String ip = request.getHeader(Const.X_FORWARDED_FOR);
+        if (ip == null || ip.length() == 0 || Const.UNKNOWN.equalsIgnoreCase(ip)) {
+            ip = request.getHeader(Const.PROXY_CLIENT_IP);
+        }
+        if (ip == null || ip.length() == 0 || Const.UNKNOWN.equalsIgnoreCase(ip)) {
+            ip = request.getHeader(Const.WL_PROXY_CLIENT_IP);
+        }
+        if (ip == null || ip.length() == 0 || Const.UNKNOWN.equalsIgnoreCase(ip)) {
+            ip = request.getHeader(Const.HTTP_CLIENT_IP);
+        }
+        if (ip == null || ip.length() == 0 || Const.UNKNOWN.equalsIgnoreCase(ip)) {
+            ip = request.getHeader(Const.HTTP_X_FORWARDED_FOR);
+        }
+        if (ip == null || ip.length() == 0 || Const.UNKNOWN.equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 
     /**

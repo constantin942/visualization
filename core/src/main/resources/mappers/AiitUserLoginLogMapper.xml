@@ -26,6 +26,20 @@
     from user_login_log
     where session_id=#{sessionId,jdbcType=VARCHAR} order by id desc limit 1
   </select>
+  <select id="selectAllCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select
+    count(*)
+    from user_login_log
+  </select>
+  <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_login_log
+    order by id desc
+    <if test="pageNo != null and  pageSize != null   ">
+        LIMIT #{pageNo},#{pageSize}
+    </if>
+  </select>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginLog">
     insert into user_login_log
     <trim prefix="(" suffix=")" suffixOverrides=",">
