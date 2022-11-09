@@ -84,6 +84,9 @@ public class HighRiskOptServiceImpl {
         msAlarmInformationDo.setOriginalTime(DateTimeUtil.strToDate(segmentDetailDo.getStartTime()));
         msAlarmInformationDo.setGlobalTraceId(segmentDetailDo.getGlobalTraceId());
         msAlarmInformationDo.setMatchRuleId(AlarmEnum.HIGH_RISK_OPT.getCode());
+        msAlarmInformationDo.setMsTableName(segmentDetailDo.getMsTableName());
+        msAlarmInformationDo.setStartTime(segmentDetailDo.getStartTime());
+        msAlarmInformationDo.setDbInstance(segmentDetailDo.getDbInstance());
         return msAlarmInformationDo;
     }
 }

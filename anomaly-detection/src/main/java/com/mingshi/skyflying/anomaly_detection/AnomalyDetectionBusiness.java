@@ -3,8 +3,11 @@ package com.mingshi.skyflying.anomaly_detection;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
-import com.mingshi.skyflying.anomaly_detection.dao.*;
-import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig;
+import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmInformationMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
@@ -23,7 +26,10 @@ import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.common.kafka.producer.records.MsConsumerRecords;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.*;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.JsonUtil;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -33,6 +39,9 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -63,8 +72,6 @@ public class AnomalyDetectionBusiness {
     RedisPoolUtil redisPoolUtil;
 
     @Resource
-    MsSegmentDetailMapper segmentDetailMapper;
-    @Resource
     MsSegmentDetailDao msSegmentDetailDao;
 
     @Resource
@@ -88,7 +95,7 @@ public class AnomalyDetectionBusiness {
     UserPortraitByTableMapper tableMapper;
 
     @Resource
-    DingAlarmConfigMapper dingAlarmConfigMapper;
+    DingAlarmInformationMapper dingAlarmInformationMapper;
 
     @Resource
     AiitKafkaProducer aiitKafkaProducer;
@@ -609,7 +616,7 @@ public class AnomalyDetectionBusiness {
                 Object[] objects = set.toArray();
                 tableName = String.valueOf(objects[0]);
             }
-            getUserCoarseInfo(coarseInfoList,user,tableName);
+            getUserCoarseInfo(coarseInfoList, user, tableName);
         }
 
         Integer allUserCount = tableMapper.getAllUserCount(queryMap);
@@ -673,73 +680,53 @@ public class AnomalyDetectionBusiness {
      */
     public void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
-            HashSet<String> set = new HashSet<>();
+            HashMap<String, Integer> map = new HashMap<>();
             for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
-                set.add(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName());
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String strDate = dateFormat.format(msAlarmInformation.getOriginalTime());
+                map.computeIfAbsent(msAlarmInformation.getMatchRuleId() +
+                        Const.POUND_KEY + msAlarmInformation.getUserName() +
+                        Const.POUND_KEY + strDate, k -> 1);
+                map.computeIfPresent(msAlarmInformation.getMatchRuleId() +
+                        Const.POUND_KEY + msAlarmInformation.getUserName() +
+                        Const.POUND_KEY + strDate, (k, v) -> v + 1);
             }
-            DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
-            for (String str : set) {
-                dingAlarmHelper(str, dingAlarmConfig);
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                dingAlarmHelper(entry.getKey(), entry.getValue());
             }
         } catch (Exception e) {
-            log.error("# AnomalyDetectionBusiness.dingAlarm() # 钉钉告警出现异常。", e);
+            log.error("# AnomalyDetectionBusiness.dingAlarm() # 钉钉告警信息转换出现异常。", e);
         }
     }
 
     /**
      * 告警单条消息
      */
-    private void dingAlarmHelper(String key, DingAlarmConfig dingAlarmConfig) {
-        Integer gap = dingAlarmConfig.getGap();
-        if (Boolean.FALSE.equals(isAlarmed(key, gap))) {
-            String message = buildDingAlarmInfo(key);
+    private void dingAlarmHelper(String key, Integer count) {
+        try {
+            log.info("开始钉钉告警信息存储");
+            MsCaffeineCache.setDingInfoInsertedDone(false);
+            String[] strings = key.split(Const.POUND_KEY);
+            Date date = null;
             try {
-                List<String> mobiles = null;
-                if (!StringUtil.isEmpty(dingAlarmConfig.getMobiles())) {
-                    mobiles = Arrays.stream(dingAlarmConfig.getMobiles().split(Const.POUND_KEY)).collect(Collectors.toList());
-                }
-                DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret(), mobiles);
-                log.info("钉钉告警成功");
-            } catch (Exception e) {
-                log.error("钉钉告警发生异常:{}", e.getMessage());
+                date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(strings[2]);
+            } catch (ParseException e) {
+                log.error("提取时间失败----{}", strings[2]);
+                return;
             }
+            //插入钉钉信息表
+            dingAlarmInformationMapper.insert(DingAlarmInformation.builder()
+                    .username(strings[1])
+                    .createTime(date)
+                    .triggerTimes(count)
+                    .ruleId(Integer.valueOf(strings[0]))
+                    .isDelete(Const.IS_DELETE_ZERO)
+                    .build());
+            MsCaffeineCache.setDingInfoInsertedDone(true);
+            log.info("钉钉告警信息存储成功");
+        } catch (Exception e) {
+            log.error("钉钉告警存储发生异常:{}", e.getMessage());
         }
-    }
-
-    /**
-     * 构建钉钉告警内容
-     */
-    private String buildDingAlarmInfo(String redisKey) {
-        String[] strings = redisKey.split(Const.POUND_KEY);
-        StringBuilder sb = new StringBuilder();
-        sb.append("用户").append(strings[1]);
-        Integer code = Integer.valueOf(strings[0]);
-        if (code.equals(AlarmEnum.TIME_ALARM.getCode())) {
-            sb.append("以往在该时段不经常访问");
-            return sb.toString();
-        }
-        if (code.equals(AlarmEnum.TABLE_ALARM.getCode())) {
-            sb.append("访问了不经常使用的表");
-            return sb.toString();
-        }
-        sb.append("进行了高危操作");
-        return sb.toString();
-    }
-
-    /**
-     * 判断是否在告警间隔内
-     */
-    private boolean isAlarmed(String key, Integer gap) {
-        Instant date = MsCaffeineCache.getFromAlarmInhibitCache(key);
-        if (date == null) {
-            MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
-            return false;
-        }
-        if (DateTimeUtil.getTimeSeconds(date) >= (long) AnomalyConst.SECONDS * gap) {
-            MsCaffeineCache.putIntoAlarmInhibitCache(key, Instant.now());
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -751,9 +738,9 @@ public class AnomalyDetectionBusiness {
             Map<Object, Object> map = redisPoolUtil.hmget(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX);
             Map<String, String> strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
             if (null != strMap && !strMap.isEmpty()) {
-                if(MsCaffeineCache.getUserPortraitByTableLocalCacheIsReady()){
+                if (MsCaffeineCache.getUserPortraitByTableLocalCacheIsReady()) {
                     MsCaffeineCache.putAllIntoPortraitByTableLocalCache(strMap);
-                }else{
+                } else {
                     log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，由于本地缓存userPortraitByTableLocalCache还没创建好，所以无法把Redis中的画像同步到本地。");
                 }
             }
@@ -761,9 +748,9 @@ public class AnomalyDetectionBusiness {
             map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX);
             strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
             if (null != strMap) {
-                if(MsCaffeineCache.getUserPortraitByTimeLocalCacheIsReady()){
+                if (MsCaffeineCache.getUserPortraitByTimeLocalCacheIsReady()) {
                     MsCaffeineCache.putAllIntoPortraitByTimeLocalCache(strMap);
-                }else{
+                } else {
                     log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，由于本地缓存userPortraitByTimeLocalCache还没创建好，所以无法把Redis中的画像同步到本地。");
                 }
             }
@@ -771,9 +758,9 @@ public class AnomalyDetectionBusiness {
             map = redisPoolUtil.hmget(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX);
             strMap = map.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), e -> String.valueOf(e.getValue())));
             if (null != strMap) {
-                if(MsCaffeineCache.getUserPortraitByTimePartitionLocalCacheIsReady()){
+                if (MsCaffeineCache.getUserPortraitByTimePartitionLocalCacheIsReady()) {
                     MsCaffeineCache.putAllIntoPortraitByTimePartitionLocalCache(strMap);
-                }else{
+                } else {
                     log.error("# AnomalyDetectionBusiness.getPortraitFromRedis() # 从Redis中获取画像信息时，由于本地缓存userPortraitByTimePartitionLocalCache还没创建好，所以无法把Redis中的画像同步到本地。");
                 }
             }

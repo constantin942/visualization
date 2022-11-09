@@ -12,7 +12,7 @@ public interface CoarseSegmentDetailOnTimeMapper {
 
     List<VisitCountOnTimeInterval> selectInfoInPeriod(Integer portraitByTimePeriod);
 
-    List<CoarseSegmentDetailOnTimeDo> selectPeriodInfo(Integer portraitByTimePeriod);
+    List<CoarseSegmentDetailOnTimeDo> selectPeriodInfo();
 
     CoarseSegmentDetailOnTimeDo selectOneByUsername(String username);
 

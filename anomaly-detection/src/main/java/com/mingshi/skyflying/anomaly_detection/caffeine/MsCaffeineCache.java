@@ -109,6 +109,10 @@ public class MsCaffeineCache implements ApplicationRunner {
      * 用户画像相关信息初始化完毕标识；
      */
     private static volatile AtomicBoolean userPortraitInitDone = new AtomicBoolean(Boolean.FALSE);
+    /**
+     * 钉钉通知信息插入完毕标识；
+     */
+    private static volatile AtomicBoolean dingInfoInsertedDone = new AtomicBoolean(Boolean.TRUE);
 
     /**
      * <B>方法名称：getUserPortraitInitDone</B>
@@ -134,6 +138,32 @@ public class MsCaffeineCache implements ApplicationRunner {
      **/
     public static void setUserPortraitInitDone(Boolean flag) {
         userPortraitInitDone.set(flag);
+    }
+
+    /**
+     * <B>方法名称：getDingInfoInsertedDone</B>
+     * <B>概要说明：获取钉钉信息插入完毕标识</B>
+     *
+     * @return java.lang.Boolean
+     * @Author lyx
+     * @Date 2022-11-09 12:25:28
+     * @Param []
+     **/
+    public static Boolean getDingInfoInsertedDone() {
+        return dingInfoInsertedDone.get();
+    }
+
+    /**
+     * <B>方法名称：setDingInfoInsertedDone</B>
+     * <B>概要说明：设置钉钉信息插入是否完毕的标识</B>
+     *
+     * @Author lyx
+     * @Date 2022-11-09 12:30:02
+     * @Param [flag]
+     * @return void
+     **/
+    public static void setDingInfoInsertedDone(Boolean flag) {
+        dingInfoInsertedDone.set(flag);
     }
 
     @Override

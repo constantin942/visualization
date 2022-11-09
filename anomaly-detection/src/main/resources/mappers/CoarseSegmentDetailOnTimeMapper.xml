@@ -499,7 +499,7 @@
         where username = #{username,jdbcType=VARCHAR}
           and 1 > to_days(#{time,jdbcType=DATE}) - TO_DAYS(`create_time`) limit 1
     </select>
-    <select id="selectPeriodInfo" parameterType="integer" resultMap="CountOnHourIntervalMap">
+    <select id="selectPeriodInfo" resultMap="CountOnHourIntervalMap">
         select
             username,
             sum(counts) as counts,

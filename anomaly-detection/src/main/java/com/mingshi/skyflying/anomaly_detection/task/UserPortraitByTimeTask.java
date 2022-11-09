@@ -109,8 +109,7 @@ public class UserPortraitByTimeTask {
      * value : 对应时段的访问频率
      */
     public void cachePortraitByTime() {
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        List<CoarseSegmentDetailOnTimeDo> coarseSegmentDetailOnTimeDos = coarseSegmentDetailOnTimeMapper.selectPeriodInfo(portraitConfig.getRuleTimePeriod());
+        List<CoarseSegmentDetailOnTimeDo> coarseSegmentDetailOnTimeDos = coarseSegmentDetailOnTimeMapper.selectPeriodInfo();
         Map<String, Object> map = new HashMap<>(Const.NUMBER_THIRTY_TWO);
         for (CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTimeDo : coarseSegmentDetailOnTimeDos) {
             String username = coarseSegmentDetailOnTimeDo.getUsername();

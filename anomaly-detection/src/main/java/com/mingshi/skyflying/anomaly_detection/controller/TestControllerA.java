@@ -3,7 +3,6 @@ package com.mingshi.skyflying.anomaly_detection.controller;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
-import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,7 +46,7 @@ public class TestControllerA {
     public void testAlarm(@RequestParam(value = "name") String name) {
         MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
         msSegmentDetailDo.setUserName(name);
-        msSegmentDetailDo.setStartTime("2022-09-06 09:04:04");
+        msSegmentDetailDo.setStartTime("2022-11-06 12:28:22");
         msSegmentDetailDo.setGlobalTraceId("94d2c1159fd44d06b81f4bcc1a35ee2f.43.16577678448421029");
         msSegmentDetailDo.setDbInstance("zhejiang_mobile");
         msSegmentDetailDo.setDbType("alter");
