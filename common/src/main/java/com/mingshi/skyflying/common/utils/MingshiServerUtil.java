@@ -461,7 +461,11 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Double>> userOperationTypeMap,
                              Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
 
+        String userFrom = msSegmentDetailDo.getUserFrom();
         String userName = msSegmentDetailDo.getUserName();
+        if(StringUtil.isNotBlank(userFrom) && StringUtil.isNotBlank(userName)){
+            userName = userName + Const.AND + userFrom;
+        }
         String startTime = msSegmentDetailDo.getStartTime();
         String tableName = msSegmentDetailDo.getMsTableName();
         String dbInstance = msSegmentDetailDo.getDbInstance();
@@ -729,7 +733,7 @@ public class MingshiServerUtil {
         Map<String, Double> userNameVisitedTimeMap = tableByHowManyUserVisitedMap.get(tableName);
         if (null == userNameVisitedTimeMap) {
             userNameVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
-            userNameVisitedTimeMap.put(userName, 1d);
+            userNameVisitedTimeMap.put(userName1, 1d);
             tableByHowManyUserVisitedMap.put(tableName, userNameVisitedTimeMap);
         } else {
             Double count = userNameVisitedTimeMap.get(userName1);
