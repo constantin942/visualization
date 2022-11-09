@@ -34,16 +34,6 @@ public class SegmentDo {
 
     private String ip;
 
-    /**
-     * 基于访问时间维度的用户画像；
-     */
-    private Integer userPortraitFlagByVisitedTime;
-
-    /**
-     * 基于访问过的表维度的用户画像；
-     */
-    private Integer userPortraitFlagByVisitedTable;
-
     private String serviceCode;
 
     private String serviceInstanceName;
@@ -60,4 +50,9 @@ public class SegmentDo {
      * 进入 parentService 的那个请求；
      */
     private String parentEndpoint;
+
+    /**
+     * 用户来源；2022-11-09 14:45:26
+     */
+    private String userFrom;
 }

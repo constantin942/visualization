@@ -94,7 +94,7 @@
     <if test="tableName != null and  tableName != null   ">
       and table_name like '%' #{tableName} '%'
     </if>
-    <if test="dbName != null and  dbName != null   ">
+    <if test="dataBaseName != null and  dataBaseName != null   ">
       and db_name like '%' #{dataBaseName} '%'
     </if>
     <if test="pageNo != null and  pageSize != null   ">

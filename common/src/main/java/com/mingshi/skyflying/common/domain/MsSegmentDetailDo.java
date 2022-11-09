@@ -142,6 +142,10 @@ public class MsSegmentDetailDo implements Cloneable {
      * 进入 parentService 的那个请求；
      */
     private String parentEndpoint;
+    /**
+     * 当前用户来自哪里；
+     */
+    private String userFrom;
 
     @Override
     public Object clone() throws CloneNotSupportedException {

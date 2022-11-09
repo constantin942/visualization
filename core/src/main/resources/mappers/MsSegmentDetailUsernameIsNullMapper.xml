@@ -31,13 +31,14 @@
         <result column="parent_service" jdbcType="VARCHAR" property="parentService"/>
         <result column="parent_service_instance" jdbcType="VARCHAR" property="parentServiceInstance"/>
         <result column="parent_endpoint" jdbcType="VARCHAR" property="parentEndpoint"/>
+        <result column="user_from" jdbcType="VARCHAR" property="userFrom"/>
     </resultMap>
     <sql id="Base_Column_List">
         id
         , user_login_ip, user_name, service_code, start_time, db_type, db_user_name, operation_name, token,
     global_trace_id, parent_segment_id, operation_type, ms_table_name, db_instance, gmt_create,
     gmt_modified, is_delete, span_id, component, peer, endpoint_name, service_instance_name,
-    end_time, parent_span_id, current_segment_id, db_statement,parent_service,parent_service_instance,parent_endpoint
+    end_time, parent_span_id, current_segment_id, db_statement,parent_service,parent_service_instance,parent_endpoint,userFrom
     </sql>
     <select id="selectAllTokenUserNameIsNull" resultType="java.lang.String">
         select token
@@ -53,7 +54,7 @@
         order by id asc limit 50
     </select>
     <select id="selectAllNoUserNameBeforeSixHours" parameterType="java.lang.String"  resultType="java.util.Map">
-        select operation_name AS operationName, db_user_name as dbUserName
+        select operation_name AS operationName, db_user_name as dbUserName, user_from as userFrom
         from ms_segment_detail_username_is_null
         where user_name is null and gmt_modified  &lt; #{gmtModified,jdbcType=DATE} and db_user_name is not null
         group by operation_name, db_user_name
@@ -81,13 +82,14 @@
 
     <insert id="insertSelectiveBatch" parameterType="java.util.List">
         insert into ms_segment_detail_username_is_null
-        (user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+        (user_from, user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
         span_id, component, service_code, peer, endpoint_name,
         start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
         db_user_name, db_statement, ms_table_name, operation_type,parent_service,parent_service_instance,parent_endpoint)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
+            #{item.userFrom,jdbcType=VARCHAR},
             #{item.userLoginIp,jdbcType=VARCHAR},
             #{item.userName,jdbcType=VARCHAR},
             #{item.token,jdbcType=VARCHAR},
@@ -139,6 +141,9 @@
             set user_name = #{item.dbUserName,jdbcType=VARCHAR}
             where db_user_name = #{item.dbUserName,jdbcType=VARCHAR}
             and operation_name = #{item.operationName,jdbcType=VARCHAR}
+            <if test="userFrom != null and  userFrom != null   ">
+                and user_from = #{userFrom}
+            </if>
         </foreach>
     </update>
 </mapper>

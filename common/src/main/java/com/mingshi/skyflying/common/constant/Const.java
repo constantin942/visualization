@@ -35,6 +35,9 @@ public class Const {
     public static final String HTTP_X_FORWARDED_FOR = "HTTP_X_FORWARDED_FOR";
     public static final String LOGIN_DESC = "登录";
     public static final String LOGIN_OUT_DESC = "登出";
+    public static final String USER_FROM_SCHEDULE_TASK = "scheduleTask";
+    public static final String USER_FROM_ZHE_LI_BAN = "zheLiBan";
+    public static final String USER_FROM = "userFrom";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

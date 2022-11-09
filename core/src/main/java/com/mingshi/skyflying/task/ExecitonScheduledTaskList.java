@@ -257,6 +257,10 @@ public class ExecitonScheduledTaskList {
             // 获取六小时之前没有用户名的记录；2022-10-31 10:06:13
             List<Map<String, String>> list = msSegmentDetailUsernameIsNullMapper.selectAllNoUserNameBeforeSixHours(queryTime);
             if(null != list && !list.isEmpty()){
+                for (int i = 0; i < list.size(); i++) {
+                    Map<String, String> map = list.get(i);
+                    map.put(Const.USER_FROM,Const.USER_FROM_SCHEDULE_TASK);
+                }
                 msSegmentDetailUsernameIsNullMapper.updateNoUserName(list);
             }
 

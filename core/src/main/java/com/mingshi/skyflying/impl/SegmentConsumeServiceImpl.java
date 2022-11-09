@@ -203,6 +203,12 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
                 // 给MsSegmentDetailDo实例赋值
                 MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
+                // 设置用户来源；2022-11-09 14:49:37
+                String userFrom = segment.getUserFrom();
+                if(StringUtil.isNotBlank(userFrom)){
+                    msSegmentDetailDo.setUserFrom(userFrom);
+                }
+
                 String logs = String.valueOf(map.get(Const.LOGS));
                 Boolean isError = false;
 
@@ -298,6 +304,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if ((StringUtil.isBlank(userName) && StringUtil.isNotBlank(operationName) && StringUtil.isNotBlank(parentEndpoint)) &&
             (operationName.contains(Const.SPRING_SCHEDULED) || operationName.startsWith(Const.SPRING_SCHEDULED) || parentEndpoint.contains(Const.SPRING_SCHEDULED) || parentEndpoint.startsWith(Const.SPRING_SCHEDULED))) {
             msSegmentDetailDo.setUserName(value);
+            msSegmentDetailDo.setUserFrom(Const.USER_FROM_SCHEDULE_TASK);
         }
     }
 
@@ -360,7 +367,10 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
         if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
             MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-
+            String userFrom = segment.getUserFrom();
+            if(StringUtil.isNotBlank(userFrom)){
+                msSegmentDetailDo.setUserFrom(userFrom);
+            }
             msSegmentDetailDo.setParentService(segment.getParentService());
             msSegmentDetailDo.setParentEndpoint(segment.getParentEndpoint());
             msSegmentDetailDo.setParentServiceInstance(segment.getParentServiceInstance());
@@ -712,6 +722,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                         String username = StringUtil.isBlank(String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME))) == true ? String.valueOf(((LinkedHashMap) data).get(Const.USERNAME)) : String.valueOf(((LinkedHashMap) data).get(Const.NICKNAME));
                         if (StringUtil.isNotBlank(username) && StringUtil.isBlank(segmentDo.getUserName())) {
                             segmentDo.setUserName(username);
+                            segmentDo.setUserFrom(Const.USER_FROM_ZHE_LI_BAN);
                             setUserNameTokenGlobalTraceIdToLocalMemory(segmentDo);
                         }
                     }
