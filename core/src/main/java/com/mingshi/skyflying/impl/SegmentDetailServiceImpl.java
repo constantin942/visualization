@@ -552,6 +552,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             String msTableName = msMonitorBusinessSystemTablesDo.getTableName();
             String peer = msMonitorBusinessSystemTablesDo.getDbAddress();
             String dbName = msMonitorBusinessSystemTablesDo.getDbName();
+            tableCoarseInfo.setDbName(dbName);
 
             // 获取表对应的中文描述信息；2022-07-21 16:55:47
             String getTableName = mingshiServerUtil.doGetTableName(peer, dbName, msTableName);

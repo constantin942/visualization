@@ -5,6 +5,8 @@ import lombok.Data;
 public class TableCoarseInfo {
     private String tableName;
 
+    private String dbName;
+
     private String tableNameDesc;
 
     private String lastVisitedDate;
