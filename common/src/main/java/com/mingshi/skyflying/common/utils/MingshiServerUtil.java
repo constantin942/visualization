@@ -1413,13 +1413,23 @@ public class MingshiServerUtil {
                     String[] splits = tables.split(Const.POUND_KEY);
                     if (Const.NUMBER_THREE == splits.length) {
                         MsMonitorBusinessSystemTablesDo msMonitorBusinessSystemTablesDo = new MsMonitorBusinessSystemTablesDo();
-                        msMonitorBusinessSystemTablesDo.setDbAddress(splits[0]);
-                        msMonitorBusinessSystemTablesDo.setDbName(splits[1]);
-                        msMonitorBusinessSystemTablesDo.setTableName(splits[2]);
-                        list.add(msMonitorBusinessSystemTablesDo);
+                        String peer = splits[0];
+                        msMonitorBusinessSystemTablesDo.setDbAddress(peer);
+                        String dbName = splits[1];
+                        msMonitorBusinessSystemTablesDo.setDbName(dbName);
+                        String tableName = splits[2];
+                        msMonitorBusinessSystemTablesDo.setTableName(tableName);
+
+                        String zsetVlue = peer + Const.POUND_KEY + dbName + Const.POUND_KEY + tableName;
+                        Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_TABLE_BY_HOW_MANY_USER_VISITED + zsetVlue, 0L, 0L);
+                        if (null != set && !set.isEmpty()) {
+                            // 当Redis中有这个表时，才插入到数据库中。否则会造成数据分布页面数据不准确。2022-11-10 09:03:12
+                            list.add(msMonitorBusinessSystemTablesDo);
+                        }
                     }
                 }
                 if (!list.isEmpty()) {
+
                     msMonitorBusinessSystemTablesMapper.insertSelectiveBatch(list);
                 }
                 isChangedMap.clear();
@@ -1522,9 +1532,6 @@ public class MingshiServerUtil {
         // 将探针名称发送到Redis中，用于心跳检测；2022-06-27 13:42:13
         flushSkywalkingAgentNameToRedis(skywalkingAgentHeartBeatMap);
 
-        // 将业务系统中不存在的表批量插入到数据库中
-        insertMonitorTables();
-
         // 耗时较多，因为是直接批量插入到数据库中；2022-10-21 09:47:32
         // 将带有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailToDb(segmentDetailDoList);
@@ -1532,5 +1539,8 @@ public class MingshiServerUtil {
         // 耗时较多，因为是直接批量插入到数据库中；2022-10-21 09:47:32
         // 将没有用户名的链路信息持久化到MySQL数据库中；
         flushSegmentDetailUserNameIsNullToDb(segmentDetailUserNameIsNullDoList);
+
+        // 将业务系统中不存在的表批量插入到数据库中
+        insertMonitorTables();
     }
 }
