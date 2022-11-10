@@ -55,8 +55,7 @@ public class DingAlarmTask {
      * @Date 2022-11-09 10:35:44
      * @Param []
      **/
-    @Scheduled(cron = "0 */1 * * * ?")
-//    @Scheduled(cron = "0 */5 * * * ?")
+    @Scheduled(cron = "0 */5 * * * ?")
     @Async
     public void sendDingAlarm() {
         RLock lock = redissonClient.getLock(REDIS_LOCK_SEND_DING_ALARM);

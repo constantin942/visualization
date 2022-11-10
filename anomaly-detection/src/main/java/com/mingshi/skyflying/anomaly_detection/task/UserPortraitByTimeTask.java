@@ -14,7 +14,6 @@ import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -296,7 +295,7 @@ public class UserPortraitByTimeTask {
         } catch (Exception e) {
             log.error("提取时间失败----{}", alarmInformationDo.getOriginalTime());
         }
-        int hour = time.getHours();
+        int hour = getHourOfDay(time);
         CoarseSegmentDetailOnTimeDo coarseSegmentDetailOnTime = coarseSegmentDetailOnTimeMapper.selectOneByNameAndTime(username, time);
         if (coarseSegmentDetailOnTime == null) {
             // 没有该用户当天粗粒度信息
@@ -306,13 +305,18 @@ public class UserPortraitByTimeTask {
             coarseSegmentDetailOnTimeMapper.insertSelective(coarseSegmentDetailOnTimeDo);
         } else {
             // 有该用户当天粗粒度信息
-            int hours = time.getHours();
             log.info("开始插入基于时间的粗粒度表---插入前 {}", coarseSegmentDetailOnTime.getCounts());
-            updateCoarseSegmentOnTime(coarseSegmentDetailOnTime, hours);
+            updateCoarseSegmentOnTime(coarseSegmentDetailOnTime, hour);
             coarseSegmentDetailOnTimeMapper.updateByPrimaryKeySelective(coarseSegmentDetailOnTime);
             log.info("完成插入基于时间的粗粒度表---插入后 {}", coarseSegmentDetailOnTime.getCounts());
         }
 
+    }
+
+    public int getHourOfDay(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar.get(Calendar.HOUR_OF_DAY);
     }
 
     /**

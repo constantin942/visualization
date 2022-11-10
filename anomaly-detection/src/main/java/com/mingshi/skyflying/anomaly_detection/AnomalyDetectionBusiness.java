@@ -259,11 +259,14 @@ public class AnomalyDetectionBusiness {
             return null;
         }
         int time = Integer.parseInt(m.group(1));
-        if (time >= Const.NUM_FIVE && time < Const.NUM_THIRTEEN) {
+        boolean morning = (time >= Const.NUM_FIVE && time < Const.NUM_THIRTEEN);
+        boolean afternoon = (time >= Const.NUM_THIRTEEN && time < Const.NUM_TWENTY_ONE);
+        boolean night = (time >= Const.NUM_TWENTY_ONE && time < Const.NUM_TWENTY_FOUR) || (time >= Const.NUMBER_ZERO && time < Const.NUM_FIVE);
+        if (morning) {
             return AnomalyConst.MORNING;
-        } else if (time >= Const.NUM_THIRTEEN && time < Const.NUM_TWENTY_ONE) {
+        } else if (afternoon) {
             return AnomalyConst.AFTERNOON;
-        } else if ((time >= Const.NUM_TWENTY_ONE && time < Const.NUM_TWENTY_FOUR) || (time >= Const.NUMBER_ZERO && time < Const.NUM_FIVE)) {
+        } else if (night) {
             return AnomalyConst.NIGHT;
         } else {
             log.error("提取时间出错, 原数据{}, 提取后{}", timeStr, time);
@@ -347,14 +350,16 @@ public class AnomalyDetectionBusiness {
 
             Boolean enableTableRule = MsCaffeineCache.getEnableTableRule();
             // 做健壮性的判断；2022-10-19 14:13:25
-            if (null == enableTableRule || (!Boolean.TRUE.equals(enableTableRule) && !Boolean.FALSE.equals(enableTableRule))) {
+            boolean noTableRule = (null == enableTableRule || (!Boolean.TRUE.equals(enableTableRule) && !Boolean.FALSE.equals(enableTableRule)));
+            if (noTableRule) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTableRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
                 return;
             }
             Boolean enableTimeRule = MsCaffeineCache.getEnableTimeRule();
-            if (null == enableTimeRule || (!Boolean.TRUE.equals(enableTimeRule) && !Boolean.FALSE.equals(enableTimeRule))) {
+            boolean noTimeRule = (null == enableTimeRule || (!Boolean.TRUE.equals(enableTimeRule) && !Boolean.FALSE.equals(enableTimeRule)));
+            if (noTimeRule) {
                 log.error("# AnomalyDetectionBusiness.doUserVisitedIsAbnormal() # 要进行异常检测了，从本地缓存中没有获取到规则 enableTimeRule 标识。将用户画像置为初始化失败，那么将待检测的消息发送到Kafka中。");
                 MsCaffeineCache.setUserPortraitInitDone(Boolean.FALSE);
                 userPortraitInitNotDone(segmentDetaiDolList);
@@ -680,7 +685,7 @@ public class AnomalyDetectionBusiness {
      */
     public void dingAlarm(List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
-            HashMap<String, Integer> map = new HashMap<>();
+            HashMap<String, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
             for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String strDate = dateFormat.format(msAlarmInformation.getOriginalTime());

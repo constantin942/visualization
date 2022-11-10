@@ -49,8 +49,7 @@ public class UserPortraitTask {
      * @Date 2022-10-17 11:26:13
      * @Param []
      **/
-//    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "0 */5 * * * ?")
     @Async
     public void fetchUserPortrait() {
         try {

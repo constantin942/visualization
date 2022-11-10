@@ -108,7 +108,6 @@ public class UserPortraitByTableTask {
      * @Date 2022-11-04 09:35:44
      * @Param []
      **/
-    //间隔30秒执行
     @Scheduled(cron = "0/30 * * * * ? ")
     @Async
     public void createUserAccessBehavior() {
