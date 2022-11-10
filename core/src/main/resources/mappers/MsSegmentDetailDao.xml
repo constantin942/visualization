@@ -32,6 +32,7 @@
         <result column="parent_service" jdbcType="VARCHAR" property="parentService"/>
         <result column="parent_service_instance" jdbcType="VARCHAR" property="parentServiceInstance"/>
         <result column="parent_endpoint" jdbcType="VARCHAR" property="parentEndpoint"/>
+        <result column="user_from" jdbcType="VARCHAR" property="userFrom"/>
 
     </resultMap>
     <sql id="Base_Column_List">
@@ -39,7 +40,7 @@
         , user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
     gmt_create, gmt_modified, is_delete, span_id, component, service_code, peer, endpoint_name,
     start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,operation_type,
-    ms_table_name,db_user_name,parent_service,parent_service_instance,parent_endpoint
+    ms_table_name,db_user_name,parent_service,parent_service_instance,parent_endpoint,user_from
     </sql>
     <sql id="Blob_Column_List">
         db_statement
@@ -331,13 +332,14 @@
 
     <insert id="insertSelectiveBatch" parameterType="java.util.List">
         insert into ms_segment_detail
-        (user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
+        (user_from,user_login_ip, user_name,token, global_trace_id, parent_segment_id, operation_name, current_segment_id,
         span_id, component, service_code, peer, endpoint_name,
         start_time, service_instance_name, end_time, parent_span_id, db_type, db_instance,
         db_user_name, db_statement, ms_table_name, operation_type,parent_service,parent_service_instance,parent_endpoint)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
+            #{item.userFrom,jdbcType=VARCHAR},
             #{item.userLoginIp,jdbcType=VARCHAR},
             #{item.userName,jdbcType=VARCHAR},
             #{item.token,jdbcType=VARCHAR},

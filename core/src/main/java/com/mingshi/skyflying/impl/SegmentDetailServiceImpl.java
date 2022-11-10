@@ -636,7 +636,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                     userName = split[1] + "（" + serviceCodeName + "）";
                 }
             } else {
-                userName = dbName + Const.DOLLAR + userName;
+//                userName = dbName + Const.DOLLAR + userName;
             }
             tableCoarseInfo.setUsualVisitedUser(userName);
         } else {

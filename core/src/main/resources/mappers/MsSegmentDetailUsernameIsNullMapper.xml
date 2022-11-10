@@ -138,12 +138,9 @@
     <update id="updateNoUserName" parameterType="java.util.List">
         <foreach collection="list" item="item" index="index" open="" close="" separator=";">
             update ms_segment_detail_username_is_null
-            set user_name = #{item.dbUserName,jdbcType=VARCHAR}
+            set user_name = #{item.dbUserName,jdbcType=VARCHAR},user_from = #{item.userFrom,jdbcType=VARCHAR}
             where db_user_name = #{item.dbUserName,jdbcType=VARCHAR}
             and operation_name = #{item.operationName,jdbcType=VARCHAR}
-            <if test="item.userFrom != null and  item.userFrom != null   ">
-                and user_from = #{item.userFrom}
-            </if>
         </foreach>
     </update>
 </mapper>
