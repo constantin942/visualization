@@ -19,6 +19,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -123,7 +125,9 @@ public class DingAlarmTask {
         if (!StringUtil.isEmpty(sb.toString())) {
             sb.append("\n\r");
         }
-        sb.append(dingAlarmInformation.getCreateTime());
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String strDate = dateFormat.format(dingAlarmInformation.getCreateTime());
+        sb.append(strDate);
         sb.append(" :\n\r\t用户").append(dingAlarmInformation.getUsername());
         Integer code = dingAlarmInformation.getRuleId();
         if (code.equals(AlarmEnum.TIME_ALARM.getCode())) {
