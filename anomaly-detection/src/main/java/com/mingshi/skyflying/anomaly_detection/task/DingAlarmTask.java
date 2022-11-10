@@ -11,6 +11,8 @@ import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.utils.DingUtils;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -34,6 +36,11 @@ import java.util.stream.Collectors;
 @EnableScheduling
 public class DingAlarmTask {
 
+    public static final String REDIS_LOCK_SEND_DING_ALARM = "anomaly_detection:sendDingAlarm";
+
+    @Resource
+    RedissonClient redissonClient;
+
     @Resource
     DingAlarmInformationMapper dingAlarmInformationMapper;
 
@@ -51,13 +58,40 @@ public class DingAlarmTask {
     @Scheduled(cron = "0 */1 * * * ?")
 //    @Scheduled(cron = "0 */5 * * * ?")
     @Async
-    public void sendDingAlarm() throws InterruptedException {
+    public void sendDingAlarm() {
+        RLock lock = redissonClient.getLock(REDIS_LOCK_SEND_DING_ALARM);
+        boolean tryLock = Boolean.FALSE;
+        try {
+            // 应该使用tryLock，而不是使用lock。使用lock，每个客户端阻塞等待执行定时任务。tryLock锁是只有加锁成功的客户端才能执行定时任务，其他获取锁失败的客户端，则不用执行定时任务。2022-11-04 09:29:21
+            tryLock = lock.tryLock();
+            if (Boolean.FALSE.equals(tryLock)) {
+                return;
+            }
+            log.info("# DingAlarmTask.sendDingAlarm() #开始执行间歇发送钉钉告警信息定时任务.");
+            doSendDingAlarm();
+        } catch (Exception e) {
+            log.error("# DingAlarmTask.sendDingAlarm() # 间歇发送钉钉告警信息异常");
+        } finally {
+            if (Boolean.TRUE.equals(tryLock)) {
+                lock.unlock();
+                log.info("# DingAlarmTask.sendDingAlarm() # 间歇发送钉钉告警信息定时任务完成");
+            } else {
+                log.info("# DingAlarmTask.sendDingAlarm() # 执行间歇发送钉钉告警信息定时任务，当前实例没有获取到分布式锁。");
+            }
+        }
+    }
+
+    private void doSendDingAlarm() throws InterruptedException {
         int index = 0;
         while (!MsCaffeineCache.getDingInfoInsertedDone() && index < Const.NUM_FIVE) {
             Thread.sleep(6000);
             index++;
         }
         DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
+        if(null == dingAlarmConfig){
+            log.error("# DingAlarmTask.doSendDingAlarm() # 执行定时任务--间歇发送钉钉告警信息，在数据库中没有找到钉钉的配置信息。");
+            return;
+        }
         Integer gap = dingAlarmConfig.getGap();
         List<DingAlarmInformation> dingAlarmInformationList = dingAlarmInformationMapper.selectPeriodInfo(AnomalyConst.SECONDS * gap);
         if (dingAlarmInformationList.isEmpty()) {return;}
@@ -71,14 +105,14 @@ public class DingAlarmTask {
                 mobiles = Arrays.stream(dingAlarmConfig.getMobiles().split(Const.POUND_KEY)).collect(Collectors.toList());
             }
             DingUtils.dingRequest(message, dingAlarmConfig.getWebhook(), dingAlarmConfig.getSecret(), mobiles);
-            log.info("钉钉告警成功");
+            log.info("# DingAlarmTask.doSendDingAlarm() # 钉钉告警成功");
             for (DingAlarmInformation dingAlarmInformation : dingAlarmInformationList) {
                 dingAlarmInformation.setIsDelete(Const.IS_DELETE_ONE);
                 dingAlarmInformationMapper.updateByPrimaryKeySelective(dingAlarmInformation);
             }
-            log.info("钉钉告警逻辑信息删除成功");
+            log.info("# DingAlarmTask.doSendDingAlarm() # 钉钉告警逻辑信息删除成功");
         } catch (Exception e) {
-            log.error("钉钉告警发生异常:{}", e.getMessage());
+            log.error("# DingAlarmTask.doSendDingAlarm() # 钉钉告警发生异常:{}", e.getMessage());
         }
     }
 
