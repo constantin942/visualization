@@ -118,12 +118,11 @@
       #{item.globalTraceId,jdbcType=INTEGER},
       #{item.originalTime,jdbcType=TIMESTAMP},
       #{item.matchRuleId,jdbcType=INTEGER},
-      #{item.startTime,jdbcType=VARCHAR},
+      #{item.startTime,jdbcType=TIMESTAMP},
       #{item.dbInstance,jdbcType=VARCHAR},
       #{item.msTableName,jdbcType=VARCHAR}
       )
     </foreach>
-    ON DUPLICATE KEY UPDATE original_time=values(original_time)
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
     update ms_alarm_information
@@ -154,6 +153,15 @@
       </if>
       <if test="globalTraceId != null">
         global_trace_id = #{globalTraceId,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null">
+        start_time = #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="dbInstance != null">
+        db_instance = #{dbInstance,jdbcType=VARCHAR},
+      </if>
+      <if test="msTableName != null">
+        ms_table_name = #{msTableName,jdbcType=VARCHAR}
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
