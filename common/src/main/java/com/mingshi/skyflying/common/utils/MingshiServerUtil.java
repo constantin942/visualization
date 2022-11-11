@@ -1481,7 +1481,7 @@ public class MingshiServerUtil {
         String name = Thread.currentThread().getName();
         String key = DateTimeUtil.dateToStrformat(new Date()) + "-" + name;
         List<ProcessorThread> processorThreadList = InitProcessorByLinkedBlockingQueue.getProcessorHandlerByLinkedBlockingQueueList();
-        if (!processorThreadList.isEmpty()) {
+        if (null != processorThreadList && !processorThreadList.isEmpty()) {
             for (int i = 0; i < processorThreadList.size(); i++) {
                 ProcessorThread processorThread = processorThreadList.get(i);
                 Integer queueSize = processorThread.getQueueSize();
@@ -1492,7 +1492,7 @@ public class MingshiServerUtil {
         }
 
         List<IoThread> ioThreadList = IoThreadLinkedBlockingQueue.getLinkedBlockingQueueList();
-        if (!ioThreadList.isEmpty()) {
+        if (null != ioThreadList && !ioThreadList.isEmpty()) {
             for (int i = 0; i < ioThreadList.size(); i++) {
                 IoThread ioThread = ioThreadList.get(i);
                 Integer size = ioThread.getQueueSize();
