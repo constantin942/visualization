@@ -25,10 +25,10 @@
   </delete>
   <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
     insert into ding_alarm_information (id, username, create_time, 
-      gmt_create, trigger_times, rule_id, 
+      trigger_times, rule_id,
       is_delete)
     values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{gmtCreate,jdbcType=TIMESTAMP}, #{triggerTimes,jdbcType=INTEGER}, #{ruleId,jdbcType=INTEGER}, 
+      #{triggerTimes,jdbcType=INTEGER}, #{ruleId,jdbcType=INTEGER},
       #{isDelete,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
