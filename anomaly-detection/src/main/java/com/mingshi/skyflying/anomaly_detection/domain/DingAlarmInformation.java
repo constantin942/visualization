@@ -14,6 +14,8 @@ public class DingAlarmInformation {
 
     private Date createTime;
 
+    private Date gmtCreate;
+
     private Integer triggerTimes;
 
     private Integer ruleId;

@@ -5,12 +5,13 @@
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="username" jdbcType="VARCHAR" property="username" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="trigger_times" jdbcType="INTEGER" property="triggerTimes" />
     <result column="rule_id" jdbcType="INTEGER" property="ruleId" />
     <result column="is_delete" jdbcType="INTEGER" property="isDelete" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, username, create_time, trigger_times, rule_id, is_delete
+    id, username, create_time, gmt_create, trigger_times, rule_id, is_delete
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -24,11 +25,11 @@
   </delete>
   <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
     insert into ding_alarm_information (id, username, create_time, 
-      trigger_times, rule_id, is_delete
-      )
+      gmt_create, trigger_times, rule_id, 
+      is_delete)
     values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{triggerTimes,jdbcType=INTEGER}, #{ruleId,jdbcType=INTEGER}, #{isDelete,jdbcType=INTEGER}
-      )
+      #{gmtCreate,jdbcType=TIMESTAMP}, #{triggerTimes,jdbcType=INTEGER}, #{ruleId,jdbcType=INTEGER}, 
+      #{isDelete,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
     insert into ding_alarm_information
@@ -41,6 +42,9 @@
       </if>
       <if test="createTime != null">
         create_time,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
       </if>
       <if test="triggerTimes != null">
         trigger_times,
@@ -62,6 +66,9 @@
       <if test="createTime != null">
         #{createTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
       <if test="triggerTimes != null">
         #{triggerTimes,jdbcType=INTEGER},
       </if>
@@ -82,6 +89,9 @@
       <if test="createTime != null">
         create_time = #{createTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
       <if test="triggerTimes != null">
         trigger_times = #{triggerTimes,jdbcType=INTEGER},
       </if>
@@ -94,10 +104,11 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
+    <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
     update ding_alarm_information
     set username = #{username,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
       trigger_times = #{triggerTimes,jdbcType=INTEGER},
       rule_id = #{ruleId,jdbcType=INTEGER},
       is_delete = #{isDelete,jdbcType=INTEGER}
@@ -108,7 +119,7 @@
     select
     <include refid="Base_Column_List" />
     from ding_alarm_information
-    where #{dingAlarmPeriod,jdbcType=INTEGER} &lt; TO_SECONDS(NOW()) - TO_SECONDS(`create_time`)
+    where #{dingAlarmPeriod,jdbcType=INTEGER} &lt; TO_SECONDS(NOW()) - TO_SECONDS(`gmt_create`)
     and is_delete = 0
     order by username
   </select>
