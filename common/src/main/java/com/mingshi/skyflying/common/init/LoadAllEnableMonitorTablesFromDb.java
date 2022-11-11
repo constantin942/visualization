@@ -126,7 +126,7 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
       while(iterator.hasNext()){
           String key = iterator.next();
           String desc = concurrentHashMapTableDesc.get(key);
-          if(desc.equals(tableDesc)){
+          if(desc.equals(tableDesc) || desc.contains(tableDesc) || tableDesc.contains(desc)){
               return key;
           }
       }
