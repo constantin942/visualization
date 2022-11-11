@@ -638,7 +638,13 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             } else {
 //                userName = dbName + Const.DOLLAR + userName;
             }
-            tableCoarseInfo.setUsualVisitedUser(userName);
+            if(userName.contains(Const.AND)){
+                String[] split = userName.split(Const.AND);
+                tableCoarseInfo.setUsualVisitedUser(split[0]);
+                tableCoarseInfo.setUserFrom(split[1]);
+            }else{
+                tableCoarseInfo.setUsualVisitedUser(userName);
+            }
         } else {
             return false;
         }

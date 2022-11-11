@@ -9,6 +9,8 @@ public class TableCoarseInfo {
 
     private String tableNameDesc;
 
+    private String userFrom;
+
     private String lastVisitedDate;
 
     private Long visitedCount;
