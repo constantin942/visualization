@@ -36,6 +36,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -291,6 +292,17 @@ public class AnomalyDetectionBusiness {
             throw new AiitException("更新用户画像失败");
         } finally {
             lock.unlock();
+        }
+    }
+
+    /**
+     * 更新用户画像
+     */
+    @Async
+    public void updatePortraitOnConfig(PortraitConfig portraitConfigOld, PortraitConfig portraitConfig) {
+        if (!portraitConfigOld.getRuleTimePeriod().equals(portraitConfig.getRuleTimePeriod()) ||
+            !portraitConfigOld.getRuleTablePeriod().equals(portraitConfig.getRuleTablePeriod())) {
+            updatePortrait();
         }
     }
 

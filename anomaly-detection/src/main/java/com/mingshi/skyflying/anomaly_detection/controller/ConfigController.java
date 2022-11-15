@@ -1,5 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
+import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
 import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper;
@@ -43,6 +44,9 @@ public class ConfigController {
     @Resource
     DingAlarmConfigMapper dingAlarmConfigMapper;
 
+    @Resource
+    AnomalyDetectionBusiness anomalyDetectionBusiness;
+
     @GetMapping("getConfigDic")
     public ServerResponse<ArrayList<String>> getAllConfigDic(@RequestParam String typeName) {
         return ServerResponse.createBySuccess(portraitConfigMapper.selectByName(typeName));
@@ -58,6 +62,8 @@ public class ConfigController {
     @Transactional(rollbackFor = Exception.class)
     @PutMapping("updatePortraitConfig")
     public ServerResponse updatePortraitConfig(@Valid @RequestBody PortraitConfig portraitConfig) {
+        PortraitConfig portraitConfigOld = portraitConfigMapper.selectOne();
+        anomalyDetectionBusiness.updatePortraitOnConfig(portraitConfigOld, portraitConfig);
         portraitConfigMapper.deleteOld();
         portraitConfigMapper.insertSelective(portraitConfig);
         return ServerResponse.createBySuccess();
