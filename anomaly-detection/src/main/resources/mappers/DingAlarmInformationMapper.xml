@@ -24,12 +24,13 @@
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
-    insert into ding_alarm_information (id, username, create_time, 
-      trigger_times, rule_id,
-      is_delete)
-    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{triggerTimes,jdbcType=INTEGER}, #{ruleId,jdbcType=INTEGER},
-      #{isDelete,jdbcType=INTEGER})
+    insert into ding_alarm_information ( username, create_time, trigger_times, rule_id)
+    values (
+            #{username,jdbcType=VARCHAR},
+            #{createTime,jdbcType=TIMESTAMP},
+            #{triggerTimes,jdbcType=INTEGER},
+            #{ruleId,jdbcType=INTEGER}
+            )
   </insert>
   <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation">
     insert into ding_alarm_information

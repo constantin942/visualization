@@ -737,7 +737,6 @@ public class AnomalyDetectionBusiness {
                     .createTime(date)
                     .triggerTimes(count)
                     .ruleId(Integer.valueOf(strings[0]))
-                    .isDelete(Const.IS_DELETE_ZERO)
                     .build());
             MsCaffeineCache.setDingInfoInsertedDone(true);
             log.info("钉钉告警信息存储成功");

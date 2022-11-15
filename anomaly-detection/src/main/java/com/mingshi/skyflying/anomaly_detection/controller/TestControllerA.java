@@ -1,6 +1,8 @@
 package com.mingshi.skyflying.anomaly_detection.controller;
 
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmInformationMapper;
+import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +39,9 @@ public class TestControllerA {
     @Resource
     RedisPoolUtil redisPoolUtil;
 
+    @Resource
+    DingAlarmInformationMapper dingAlarmInformationMapper;
+
     @GetMapping("period")
     public void testPeriod() {
         anomalyDetectionBusiness.inPeriod("admin", 15);
@@ -46,7 +52,7 @@ public class TestControllerA {
     public void testAlarm(@RequestParam(value = "name") String name) {
         MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
         msSegmentDetailDo.setUserName(name);
-        msSegmentDetailDo.setStartTime("2022-11-06 12:28:22");
+        msSegmentDetailDo.setStartTime("2022-11-14 12:28:22");
         msSegmentDetailDo.setGlobalTraceId("94d2c1159fd44d06b81f4bcc1a35ee2f.43.16577678448421029");
         msSegmentDetailDo.setDbInstance("zhejiang_mobile");
         msSegmentDetailDo.setDbType("alter");
@@ -54,6 +60,16 @@ public class TestControllerA {
         List<MsSegmentDetailDo> list = new ArrayList<>();
         list.add(msSegmentDetailDo);
         anomalyDetectionBusiness.doUserVisitedIsAbnormal(list);
+    }
+
+    @GetMapping("ding")
+    public void testDing() {
+        dingAlarmInformationMapper.insert(DingAlarmInformation.builder()
+                .username("ding_yuxli_1")
+                .createTime(new Date())
+                .triggerTimes(2)
+                .ruleId(1)
+                .build());
     }
 
     @GetMapping("testInsertYesterdayInfo2Portrait")
