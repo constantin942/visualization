@@ -41,7 +41,7 @@ public class UserLoginLogServiceImpl extends BaseParentServiceImpl<UserLoginLog,
     @Override
     public ServerResponse<String> selectAll(Integer pageNo, Integer pageSize) {
         ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
-        Map<String, Integer> queryMap = new HashMap<>();
+        Map<String, Integer> queryMap = new HashMap<>(Const.INITAL_SIZE);
         if (null == pageNo) {
             pageNo = 1;
         }
