@@ -116,11 +116,7 @@ public class MsKafkaConsumer extends Thread {
                         continue;
                     }
                     Integer recordTypeInt = recordType.asInt();
-                    if (recordTypeInt.equals(RecordEnum.SEND_RECORDS_STATE.getCode())) {
-                        // 处理探针已发送消息记录信息；2022-10-24 15:28:47
-                        // 不再存储探针已发送消息记录信息，这里代码注释；2022-11-15 10:34:10
-//                        aiitKafkaConsumerUtil.handleSendRecordsState(jsonNodes);
-                    } else if (recordTypeInt.equals(RecordEnum.AGENT_SWITCH.getCode())){
+                    if (recordTypeInt.equals(RecordEnum.AGENT_SWITCH.getCode())){
                         // 处理探针开关信息；2022-10-24 10:48:18
                         JsonNode body = jsonNodes.get("body");
                         if(null == body){
