@@ -150,6 +150,46 @@ public class AiitKafkaConsumerUtil {
         }
     }
 
+    public void updateMsAgentSwitchStatusOld(ObjectNode jsonNodes) {
+        String value = jsonNodes.toString();
+        try {
+            String requestId = null;
+            if (null == jsonNodes.get(Const.REQUEST_ID)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatusOld() # 从Kafka中获取探针返回的信息【{}】时，没有获取到请求id（request_id）参数。", value);
+                return;
+            }
+            if (null == jsonNodes.get(Const.AGENT_OPERATION_TYPE)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatusOld() # 从Kafka中获取探针返回的信息【{}】时，没有获取到请求类型（{}）参数。", value, Const.AGENT_OPERATION_TYPE);
+                return;
+            }
+            requestId = jsonNodes.get(Const.REQUEST_ID).asText();
+            String responseStatus = null;
+            if (null == jsonNodes.get(Const.RESPONSE_STATUS)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatusOld() # 从Kafka中获取探针返回的信息【{}】时，没有获取到探针操作状态（status）参数。", value);
+                return;
+            }
+            responseStatus = jsonNodes.get(Const.RESPONSE_STATUS).asText();
+
+            MsAgentSwitchDo msAgentSwitchDo = new MsAgentSwitchDo();
+            msAgentSwitchDo.setRequestId(requestId);
+            msAgentSwitchDo.setReceiveKafkaResponseParams(value);
+            msAgentSwitchDo.setReceiveKafkaStatus(responseStatus);
+
+            String operationType = jsonNodes.get(Const.AGENT_OPERATION_TYPE).asText();
+            if (Const.AGENT_QUERY.equals(operationType) && null != jsonNodes.get(Const.AGENT_STATUS)) {
+                String agentStatus = jsonNodes.get(Const.AGENT_STATUS).asText();
+                msAgentSwitchDo.setAgentSwitchStatus(Const.TRUE.equals(agentStatus) ? Const.AGENT_STATUS_ON : Const.AGENT_STATUS_OFF);
+            }
+
+            Integer result = msAgentSwitchMapper.updateByRequestId(msAgentSwitchDo);
+            if (!Const.NUMBER_ONE.equals(result)) {
+                log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatusOld() # 更新探针【{}】的状态失败。", value);
+            }
+        } catch (Exception e) {
+            log.error("# MsKafkaAgentSwitchConsumer.updateMsAgentSwitchStatusOld() # 更新探针【{}】的状态时，出现了异常。", value, e);
+        }
+    }
+
     public void doOnMessage(ConsumerRecord<String, Bytes> consumerRecord) {
         // 使用Reactor模式；
         // 使用LinkedBlockingQueue两把锁队列；2022-07-22 20:57:19

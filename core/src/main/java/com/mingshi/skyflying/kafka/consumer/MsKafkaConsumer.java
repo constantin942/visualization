@@ -72,7 +72,7 @@ public class MsKafkaConsumer extends Thread {
         // broker接收不到一个consumer的心跳, 持续该时间, 就认为故障了，会将其踢出消费组，对应的Partition也会被重新分配给其他consumer，默认是10秒
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30 * 1000);
         // 一次poll最大拉取消息的条数，如果消费者处理速度很快，可以设置大点，如果处理速度一般，可以设置小点
-        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10);
+        properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1000);
         // 如果两次poll操作间隔超过了这个时间，broker就会认为这个consumer处理能力太弱，会将其踢出消费组，将分区分配给别的consumer消费
         properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300 * 1000);
         // 把消息的key从字节数组反序列化为字符串
@@ -110,12 +110,16 @@ public class MsKafkaConsumer extends Thread {
                     ObjectNode jsonNodes = JsonUtil.string2Obj(recordStr, ObjectNode.class);
                     JsonNode recordType = jsonNodes.get("recordType");
                     if(null == recordType){
+                        // 老的探针是没有recordType字段的，所以这里直接处理探针的状态；2022-11-15 11:00:50
+                        // 处理探针开关信息；2022-10-24 10:48:18
+                        aiitKafkaConsumerUtil.updateMsAgentSwitchStatusOld(jsonNodes);
                         continue;
                     }
                     Integer recordTypeInt = recordType.asInt();
                     if (recordTypeInt.equals(RecordEnum.SEND_RECORDS_STATE.getCode())) {
                         // 处理探针已发送消息记录信息；2022-10-24 15:28:47
-                        aiitKafkaConsumerUtil.handleSendRecordsState(jsonNodes);
+                        // 不再存储探针已发送消息记录信息，这里代码注释；2022-11-15 10:34:10
+//                        aiitKafkaConsumerUtil.handleSendRecordsState(jsonNodes);
                     } else if (recordTypeInt.equals(RecordEnum.AGENT_SWITCH.getCode())){
                         // 处理探针开关信息；2022-10-24 10:48:18
                         JsonNode body = jsonNodes.get("body");
