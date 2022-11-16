@@ -41,10 +41,8 @@ spring:
     # Redis服务器连接密码
     password: Aiit@123
     # Redis服务器地址
-    #    host: 10.0.102.64
     host: 10.0.107.46
     # Redis服务器连接端口
-    #    port: 6379
     port: 6381
     jedis:
       #连接池中最大连接数，默认为 8。
@@ -81,7 +79,8 @@ spring:
   #      nodes: 10.0.107.11:26380,10.0.107.12:26381,10.0.107.13:26382
 
   kafka:
-    bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
+    bootstrap-servers: 114.55.211.161:9092
+#    bootstrap-servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
       # 由于某种原因，异常检测没有执行成功，那么就把这些消息发送到这个topic中；
     anomaly-detection-consume-failed-topic: anomaly-detection-consume-failed-topic
       # 告警信息发送到这个topic中；
@@ -121,7 +120,6 @@ spring:
       send-state-exception-info-topic: send-state-exception-info-topic
       send-state-exception-info-agent-group: send-state-exception-info-agent-group
       group: skyflying-consumer-group-online
-      agent-switch-response-group: agent-switch-response-group
         # 异常检测用的消费者组
       anomaly-detection-consume-failed-and-alarm-group: anomaly-detection-consume-failed-and-alarm-group
 mybatis-plus:
