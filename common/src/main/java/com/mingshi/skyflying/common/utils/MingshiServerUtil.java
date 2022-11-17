@@ -461,11 +461,11 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Double>> userOperationTypeMap,
                              Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
 
-        String userFrom = msSegmentDetailDo.getUserFrom();
+//        String userFrom = msSegmentDetailDo.getUserFrom();
         String userName = msSegmentDetailDo.getUserName();
-        if(StringUtil.isNotBlank(userFrom) && StringUtil.isNotBlank(userName)){
-            userName = userName + Const.AND + userFrom;
-        }
+//        if(StringUtil.isNotBlank(userFrom) && StringUtil.isNotBlank(userName)){
+//            userName = userName + Const.AND + userFrom;
+//        }
         String startTime = msSegmentDetailDo.getStartTime();
         String tableName = msSegmentDetailDo.getMsTableName();
         String dbInstance = msSegmentDetailDo.getDbInstance();
