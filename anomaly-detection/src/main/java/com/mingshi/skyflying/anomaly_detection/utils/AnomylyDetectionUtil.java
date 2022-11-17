@@ -115,10 +115,10 @@ public class AnomylyDetectionUtil {
             if (null != set && !set.isEmpty()) {
                 Object[] objects = set.toArray();
                 userVisitedTimesMostTable = objects[0];
-            }
-            if(null != userVisitedTimesMostTable){
-                MsCaffeineCache.setUserAccessTaskBehaviorCache(key, userVisitedTimesMostTable);
-                return String.valueOf(userVisitedTimesMostTable);
+                if(null != userVisitedTimesMostTable){
+                    MsCaffeineCache.setUserAccessTaskBehaviorCache(key, userVisitedTimesMostTable);
+                    return String.valueOf(userVisitedTimesMostTable);
+                }
             }
         }else{
             return String.valueOf(userVisitedTimesMostTable);
