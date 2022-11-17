@@ -42,13 +42,19 @@ public class AnomalyConst {
 
     public static final Integer USER_PORTRAIT_TABLE_LOCAL_CACHE_SIZE = 100 * 10000;
 
+    public static final Integer PORTRAIT_CONFIG_SELECT_ONE = 1;
+
+    public static final Integer USER_ACCESS_TASK_BEHAVIOR_CACHE = 100 * 1000;
+
     public static final Integer USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE = 10000;
 
     public static final Integer USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE = 10000;
 
     public static final Integer USER_FIRST_VISIT_LOCAL_CACHE_SIZE = 3000;
 
-    public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 5;
+    public static final Integer LOCAL_REDIS_CACHE_EXPIRE = 60;
+
+    public static final Integer USER_ACCESS_TASK_BEHAVIOR_CACHE_EXPIRE = 60;
 
     public static final Integer USER_PORTRAIT_LOCAL_CACHE_EXPIRE = 12;
 

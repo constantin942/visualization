@@ -74,6 +74,7 @@
             LIMIT #{pageNo},#{pageSize}
         </if>
     </select>
+
     <select id="getAllUserCount" resultType="java.lang.Integer">
         select count(distinct(username))
         from user_portrait_by_table

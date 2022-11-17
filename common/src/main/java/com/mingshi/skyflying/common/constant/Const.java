@@ -40,6 +40,7 @@ public class Const {
     public static final String USER_FROM = "userFrom";
     public static final String UTF8 = "UTF-8";
     public static final String HMAC_SHA_256 = "HmacSHA256";
+    public static final String PORTRAIT_CONFIG_SELECT_ONE = "portraitConfigSelectOne";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);

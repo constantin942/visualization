@@ -3,6 +3,7 @@ package com.mingshi.skyflying.anomaly_detection.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitTask;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
@@ -33,6 +34,10 @@ public class MsCaffeineCache implements ApplicationRunner {
 
     @Resource
     UserPortraitTask userPortraitTask;
+
+    @Resource
+    PortraitConfigMapper portraitConfigMapper;
+
     /**
      * 基于库表用户画像本地缓存
      */
@@ -40,15 +45,58 @@ public class MsCaffeineCache implements ApplicationRunner {
     private static AtomicBoolean userPortraitByTableLocalCacheIsReady = new AtomicBoolean(Boolean.FALSE);
 
     /**
+     * 存放用户最近访问时间、访问次数最多的表、访问系统总次数的缓存；
+     */
+    private static Cache<String, Object> userAccessTaskBehaviorCache = null;
+
+    public static void setUserAccessTaskBehaviorCache(String key, Object value) {
+        if(null != userAccessTaskBehaviorCache){
+            userAccessTaskBehaviorCache.put(key, value);
+        }
+    }
+
+    public static Object getUserAccessTaskBehaviorCache(String key){
+        if(null != userAccessTaskBehaviorCache){
+            return userAccessTaskBehaviorCache.getIfPresent(key);
+        }
+        return null;
+    }
+
+    /**
+     * 存储用户画像配置信息；2022-11-17 13:37:07
+     */
+    private static Cache<String, PortraitConfig> portraitConfigSelectOne = null;
+
+    public static PortraitConfig getPortraitConfigSelectOne(String key) {
+        if(null == portraitConfigSelectOne){
+            return null;
+        }
+        return portraitConfigSelectOne.getIfPresent(key);
+    }
+
+    /**
+     * 将画像配置信息存到本地缓存；2022-11-17 13:51:37
+     *
+     * @param key
+     * @param value
+     */
+    public static void setPortraitConfigSelectOne(String key, PortraitConfig value) {
+        if(null == portraitConfigSelectOne){
+            return;
+        }
+        portraitConfigSelectOne.put(key, value);
+    }
+
+    /**
      * <B>方法名称：getUserPortraitByTableLocalCacheIsReady</B>
      * <B>概要说明：判断缓存userPortraitByTableLocalCache是否已建立成功</B>
      *
+     * @return java.lang.Boolean
      * @Author zm
      * @Date 2022-11-07 14:59:11
      * @Param []
-     * @return java.lang.Boolean
      **/
-    public static Boolean getUserPortraitByTableLocalCacheIsReady(){
+    public static Boolean getUserPortraitByTableLocalCacheIsReady() {
         return userPortraitByTableLocalCacheIsReady.get();
     }
 
@@ -62,12 +110,12 @@ public class MsCaffeineCache implements ApplicationRunner {
      * <B>方法名称：getUserPortraitByTimeLocalCacheIsReady</B>
      * <B>概要说明：判断缓存userPortraitByTimeLocalCacheIsReady是否已建立成功</B>
      *
+     * @return java.lang.Boolean
      * @Author zm
      * @Date 2022-11-07 14:59:11
      * @Param []
-     * @return java.lang.Boolean
      **/
-    public static Boolean getUserPortraitByTimeLocalCacheIsReady(){
+    public static Boolean getUserPortraitByTimeLocalCacheIsReady() {
         return userPortraitByTimeLocalCacheIsReady.get();
     }
 
@@ -81,16 +129,14 @@ public class MsCaffeineCache implements ApplicationRunner {
      * <B>方法名称：getUserPortraitByTimePartitionLocalCacheIsReady</B>
      * <B>概要说明：判断缓存userPortraitByTimePartitionLocalCache是否已建立成功</B>
      *
+     * @return java.lang.Boolean
      * @Author zm
      * @Date 2022-11-07 14:59:11
      * @Param []
-     * @return java.lang.Boolean
      **/
-    public static Boolean getUserPortraitByTimePartitionLocalCacheIsReady(){
+    public static Boolean getUserPortraitByTimePartitionLocalCacheIsReady() {
         return userPortraitByTimePartitionLocalCacheIsReady.get();
     }
-
-
 
     /**
      * 用户首次访问时间本地缓存
@@ -131,10 +177,10 @@ public class MsCaffeineCache implements ApplicationRunner {
      * <B>方法名称：setUserPortraitInitDone</B>
      * <B>概要说明：设置用户画像信息初始化是否完毕的标识</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-10-19 14:10:02
      * @Param [flag]
-     * @return void
      **/
     public static void setUserPortraitInitDone(Boolean flag) {
         userPortraitInitDone.set(flag);
@@ -157,10 +203,10 @@ public class MsCaffeineCache implements ApplicationRunner {
      * <B>方法名称：setDingInfoInsertedDone</B>
      * <B>概要说明：设置钉钉信息插入是否完毕的标识</B>
      *
+     * @return void
      * @Author lyx
      * @Date 2022-11-09 12:30:02
      * @Param [flag]
-     * @return void
      **/
     public static void setDingInfoInsertedDone(Boolean flag) {
         dingInfoInsertedDone.set(flag);
@@ -218,14 +264,18 @@ public class MsCaffeineCache implements ApplicationRunner {
         createFirstVisitTimeLocalCache();
         // 创建告警抑制本地缓存
         createAlarmInhibitLocalCache();
+        // 创建告警抑制本地缓存
+        createPortraitConfigSelectOne();
+        // 创建存储用户访问行为的缓存
+        createUserAccessTaskBehaviorCache();
     }
 
     private static void createAlarmInhibitLocalCache() {
         try {
             log.info("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，开始初始化alarmInhibitCache实例。");
             alarmInhibitCache = Caffeine.newBuilder()
-                    .maximumSize(AnomalyConst.ALARM_INHIBIT_LOCAL_CACHE_SIZE)
-                    .build();
+                .maximumSize(AnomalyConst.ALARM_INHIBIT_LOCAL_CACHE_SIZE)
+                .build();
             log.info("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，初始化alarmInhibitCache实例完毕。");
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createAlarmInhibitLocalCache() # 项目启动，初始化alarmInhibitCache实例时，出现了异常.", e);
@@ -236,8 +286,8 @@ public class MsCaffeineCache implements ApplicationRunner {
         try {
             log.info("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，开始初始化userFirstVisitLocalCache实例。");
             userFirstVisitLocalCache = Caffeine.newBuilder()
-                    .maximumSize(AnomalyConst.USER_FIRST_VISIT_LOCAL_CACHE_SIZE)
-                    .build();
+                .maximumSize(AnomalyConst.USER_FIRST_VISIT_LOCAL_CACHE_SIZE)
+                .build();
             log.info("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，初始化userFirstVisitLocalCache实例完毕。");
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createFirstVisitTimeLocalCache() # 项目启动，初始化userFirstVisitLocalCache实例时，出现了异常.", e);
@@ -258,13 +308,57 @@ public class MsCaffeineCache implements ApplicationRunner {
         try {
             log.info("# MsCaffeineCache.createPortraitByTableLocalCache() # 项目启动，开始初始化userPortraitByTableLocalCache实例。");
             userPortraitByTableLocalCache = Caffeine.newBuilder()
-                    .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
-                    .maximumSize(AnomalyConst.USER_PORTRAIT_TABLE_LOCAL_CACHE_SIZE)
-                    .build();
+                .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
+                .maximumSize(AnomalyConst.USER_PORTRAIT_TABLE_LOCAL_CACHE_SIZE)
+                .build();
             log.info("# MsCaffeineCache.createPortraitByTableLocalCache() # 项目启动，初始化userPortraitByTableLocalCache实例完毕。");
             userPortraitByTableLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
             log.error("# MsCaffeineCache.createPortraitByTableLocalCache() # 项目启动，初始化userPortraitByTableLocalCache实例时，出现了异常.", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：createPortraitConfigSelectOne</B>
+     * <B>概要说明：创建用户画像配置的缓存</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-17 13:41:42
+     * @Param []
+     **/
+    private static void createPortraitConfigSelectOne() {
+        try {
+            log.info("# MsCaffeineCache.createPortraitConfigSelectOne() # 项目启动，开始初始化portraitConfigSelectOne实例。");
+            portraitConfigSelectOne = Caffeine.newBuilder()
+                .expireAfterWrite(AnomalyConst.LOCAL_REDIS_CACHE_EXPIRE, TimeUnit.MINUTES)
+                .maximumSize(AnomalyConst.PORTRAIT_CONFIG_SELECT_ONE)
+                .build();
+            log.info("# MsCaffeineCache.createPortraitConfigSelectOne() # 项目启动，初始化portraitConfigSelectOne实例完毕。");
+        } catch (Exception e) {
+            log.error("# MsCaffeineCache.createPortraitConfigSelectOne() # 项目启动，初始化portraitConfigSelectOne实例时，出现了异常.", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：createUserAccessTaskBehaviorCache</B>
+     * <B>概要说明：创建存储用户访问行为的缓存</B>
+     *
+     * @Author zm
+     * @Date 2022-11-17 14:14:31
+     * @Param []
+     * @return void
+     **/
+    private static void createUserAccessTaskBehaviorCache() {
+        try {
+            log.info("# MsCaffeineCache.createUserAccessTaskBehaviorCache() # 项目启动，开始初始化userAccessTaskBehaviorCache实例。");
+            userAccessTaskBehaviorCache = Caffeine.newBuilder()
+                .expireAfterWrite(AnomalyConst.USER_ACCESS_TASK_BEHAVIOR_CACHE_EXPIRE, TimeUnit.SECONDS)
+                .maximumSize(AnomalyConst.USER_ACCESS_TASK_BEHAVIOR_CACHE)
+                .build();
+            log.info("# MsCaffeineCache.createUserAccessTaskBehaviorCache() # 项目启动，初始化userAccessTaskBehaviorCache实例完毕。");
+        } catch (Exception e) {
+            log.error("# MsCaffeineCache.createUserAccessTaskBehaviorCache() # 项目启动，初始化userAccessTaskBehaviorCache实例时，出现了异常.", e);
         }
     }
 
@@ -282,9 +376,9 @@ public class MsCaffeineCache implements ApplicationRunner {
         try {
             log.info("# MsCaffeineCache.createPortraitByTimeLocalCache() # 项目启动，开始初始化userPortraitByTimeLocalCache实例。");
             userPortraitByTimeLocalCache = Caffeine.newBuilder()
-                    .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
-                    .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE)
-                    .build();
+                .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
+                .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_LOCAL_CACHE_SIZE)
+                .build();
             log.info("# MsCaffeineCache.createPortraitByTimeLocalCache() # 项目启动，初始化userPortraitByTimeLocalCache实例完毕。");
             userPortraitByTimeLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
@@ -306,9 +400,9 @@ public class MsCaffeineCache implements ApplicationRunner {
         try {
             log.info("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，开始初始化userPortraitByTimePartitionLocalCache实例。");
             userPortraitByTimePartitionLocalCache = Caffeine.newBuilder()
-                    .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
-                    .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE)
-                    .build();
+                .expireAfterAccess(AnomalyConst.USER_PORTRAIT_LOCAL_CACHE_EXPIRE, TimeUnit.HOURS)
+                .maximumSize(AnomalyConst.USER_PORTRAIT_TIME_PARTITION_LOCAL_CACHE_SIZE)
+                .build();
             log.info("# MsCaffeineCache.createPortraitByTimePartitionLocalCache() # 项目启动，初始化userPortraitByTimePartitionLocalCache实例完毕。");
             userPortraitByTimePartitionLocalCacheIsReady.set(Boolean.TRUE);
         } catch (Exception e) {
@@ -319,6 +413,7 @@ public class MsCaffeineCache implements ApplicationRunner {
     public static Instant getFromAlarmInhibitCache(String key) {
         return alarmInhibitCache.getIfPresent(key);
     }
+
     public static void putIntoAlarmInhibitCache(String key, Instant date) {
         alarmInhibitCache.put(key, date);
     }

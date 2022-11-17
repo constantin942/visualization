@@ -1,6 +1,7 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmInformationMapper;
@@ -13,6 +14,7 @@ import com.mingshi.skyflying.anomaly_detection.service.UserPortraitRulesService;
 import com.mingshi.skyflying.anomaly_detection.service.impl.HighRiskOptServiceImpl;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTableTask;
 import com.mingshi.skyflying.anomaly_detection.task.UserPortraitByTimeTask;
+import com.mingshi.skyflying.anomaly_detection.utils.AnomylyDetectionUtil;
 import com.mingshi.skyflying.common.bo.AnomalyDetectionInfoBo;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
@@ -101,6 +103,9 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     AiitKafkaProducer aiitKafkaProducer;
+
+    @Resource
+    AnomylyDetectionUtil anomylyDetectionUtil;
 
     @Lazy
     @Resource
@@ -591,8 +596,11 @@ public class AnomalyDetectionBusiness {
 
     public ServerResponse<String> getCoarseCountsOfUsersNew(String userName, Integer pageNo, Integer pageSize) {
         Instant now = Instant.now();
-        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
-        Integer period = portraitConfig.getRuleTablePeriod();
+        Integer period = anomylyDetectionUtil.getPeriod();
+        if(period.equals(-Const.NUMBER_ONE)){
+            return ServerResponse.createByErrorMessage("没有获取到用户画像配置信息。","");
+        }
+
 
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         // 用户名不为空，则是获取指定的用户的访问信息，那么直接从数据库中获取；2022-11-04 10:52:37
@@ -612,28 +620,14 @@ public class AnomalyDetectionBusiness {
 
         List<String> users = tableMapper.getAllUser(queryMap);
         for (String user : users) {
-            String lastVisitedDate = (String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user);
-            // 根据用户名获取用户对数据库总的访问次数；
-            Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + user);
-            Double countFromRedis = 0d;
-            if (null != obj) {
-                countFromRedis = Double.valueOf(String.valueOf(obj));
-            }
-            String tableName = null;
-            // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
-            Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, 0L, 0L);
-            if (null == set || set.isEmpty()) {
-                // 从数据库中获取用户名；
-                tableName = getTableNameFromDb(user);
-                if (StringUtil.isBlank(tableName)) {
-                    continue;
-                }
-            } else {
-                Object[] objects = set.toArray();
-                tableName = String.valueOf(objects[0]);
-            }
+            // 获取用户最近的访问时间
+            String lastVisitedDate = anomylyDetectionUtil.getLastVisitedDate(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user);
 
-            Double score = null == countFromRedis ? 0 : countFromRedis;
+            // 获取用户对系统总的访问次数；
+            Double score = anomylyDetectionUtil.getUserAllVisitedTimes(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + user);
+
+            // 获取指定用户访问次数最多的表；2022-11-17 14:43:07
+            String tableName = anomylyDetectionUtil.getUserVisitedTimesMostTable(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user);
 
             UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
             userCoarseInfo.setUserName(user);
@@ -642,8 +636,8 @@ public class AnomalyDetectionBusiness {
             // 获取表对应的中文描述信息；2022-07-21 16:55:47
             String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
             ObjectNode jsonObject = JsonUtil.createJsonObject();
-            jsonObject.put("tableName", tableName);
-            jsonObject.put("tableNameDesc", tableDesc);
+            jsonObject.put(Const.TABLE_NAME, tableName);
+            jsonObject.put(Const.TABLE_NAME_DESC, tableDesc);
             userCoarseInfo.setUsualVisitedData(jsonObject.toString());
             coarseInfoList.add(userCoarseInfo);
         }
@@ -656,6 +650,8 @@ public class AnomalyDetectionBusiness {
 
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
     }
+
+
 
     /**
      * <B>方法名称：getCoarseCountsOfUsersFromDb</B>
