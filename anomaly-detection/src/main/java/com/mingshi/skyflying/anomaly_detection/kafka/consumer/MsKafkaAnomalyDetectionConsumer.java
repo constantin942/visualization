@@ -51,7 +51,7 @@ public class MsKafkaAnomalyDetectionConsumer extends Thread {
     /**
      * 初始化完成的标志；2022-07-28 17:12:32
      */
-    private volatile AtomicBoolean isInitDone = new AtomicBoolean(false);
+    private AtomicBoolean isInitDone = new AtomicBoolean(false);
 
     private KafkaConsumer<String, Bytes> aiitKafkaConsumer = null;
 

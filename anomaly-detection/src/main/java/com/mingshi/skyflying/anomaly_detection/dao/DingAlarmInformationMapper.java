@@ -7,15 +7,15 @@ import java.util.List;
 public interface DingAlarmInformationMapper {
     int deleteByPrimaryKey(Integer id);
 
-    int insert(DingAlarmInformation record);
+    int insert(DingAlarmInformation dingAlarmInformation);
 
-    int insertSelective(DingAlarmInformation record);
+    int insertSelective(DingAlarmInformation dingAlarmInformation);
 
     DingAlarmInformation selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKeySelective(DingAlarmInformation record);
+    int updateByPrimaryKeySelective(DingAlarmInformation dingAlarmInformation);
 
-    int updateByPrimaryKey(DingAlarmInformation record);
+    int updateByPrimaryKey(DingAlarmInformation dingAlarmInformation);
 
     List<DingAlarmInformation> selectPeriodInfo(Integer dingAlarmPeriod);
 }

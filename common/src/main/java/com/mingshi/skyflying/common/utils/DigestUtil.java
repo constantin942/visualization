@@ -13,17 +13,10 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 
-
-/**
- * @author 49090 2017年12月26日上午11:46:35
- * 本内容仅限于北大信研院安全工程与云计算实验室内部传阅，禁止外泄以及用于其他的商业目的
- * @类描述：
- */
 @Slf4j
 public class DigestUtil {
 
   public static final String SHA1 = "SHA-1";
-  public static final int DEFAULT_BUFFER_LENGTH = 8 * 1024;
   public static final int DEFAULT_BYTES_SIZE = 8;
   public static final int DEFAULT_DIGEST_TIMES = 1024;
 
@@ -48,183 +41,6 @@ public class DigestUtil {
     } else {
       return null;
     }
-  }
-
-  /**
-   * 获取16位MD5码
-   *
-   * @param md5Str
-   * @return
-   */
-  public static String md516(String md5Str) {
-    String md5 = md5(md5Str);
-    return StringUtils.substring(md5, 8, 24);
-  }
-
-  /**
-   * 32位Md5码
-   *
-   * @param md5Str
-   * @return
-   */
-  public static String md5(String md5Str) {
-    if (StringUtils.isBlank(md5Str)) {
-      return null;
-    }
-    return DigestUtils.md5Hex(md5Str);
-  }
-
-  public static String getSha1Code(MultipartFile fileObj) throws IOException {
-    if (null == fileObj) {
-      return StringUtils.EMPTY;
-    }
-    InputStream ins = null;
-    try {
-      ins = fileObj.getInputStream();
-      return DigestUtils.sha1Hex(ins);
-    } catch (Exception e) {
-      return StringUtils.EMPTY;
-    } finally {
-      if (null != ins) {
-        ins.close();
-      }
-    }
-  }
-
-  public static String getMd5(String pathname) throws IOException {
-    if (StringUtils.isBlank(pathname)) {
-      return StringUtils.EMPTY;
-    }
-    InputStream ins = null;
-    try {
-      ins = new FileInputStream(pathname);
-      return DigestUtils.md5Hex(ins);
-    } catch (Exception e) {
-      return StringUtils.EMPTY;
-    } finally {
-      if (null != ins) {
-        ins.close();
-      }
-    }
-  }
-
-  public static String getSha1Code(String pathname) throws IOException {
-    if (StringUtils.isBlank(pathname)) {
-      return StringUtils.EMPTY;
-    }
-    InputStream ins = null;
-    try {
-      ins = new FileInputStream(pathname);
-      return getSha1Code(ins);
-    } catch (Exception e) {
-      return StringUtils.EMPTY;
-    } finally {
-      if (null != ins) {
-        ins.close();
-      }
-    }
-  }
-
-  public static String getMd5(File file) throws IOException {
-    if (null == file) {
-      return StringUtils.EMPTY;
-    }
-    InputStream ins = null;
-    try {
-      ins = new FileInputStream(file);
-      return getMd5(ins);
-    } catch (Exception e) {
-      return StringUtils.EMPTY;
-    } finally {
-      if (null != ins) {
-        ins.close();
-      }
-    }
-  }
-
-  public static String getSha1Code(File file) throws IOException {
-    if (null == file) {
-      return StringUtils.EMPTY;
-    }
-    InputStream ins = null;
-    try {
-      ins = new FileInputStream(file);
-      return getSha1Code(ins);
-    } catch (Exception e) {
-      return StringUtils.EMPTY;
-    } finally {
-      if (null != ins) {
-        ins.close();
-      }
-    }
-  }
-
-  public static String getSha1Code(byte[] byteArray) throws IOException {
-    if (null == byteArray || byteArray.length < 1) {
-      return StringUtils.EMPTY;
-    }
-    return DigestUtils.sha1Hex(byteArray);
-  }
-
-  /**
-   * get Sha1 Code with inputStream
-   *
-   * @param iStream
-   * @return
-   * @throws IOException
-   */
-  public static String getSha1Code(InputStream iStream) throws IOException {
-    if (null == iStream) {
-      return StringUtils.EMPTY;
-    }
-    return DigestUtils.sha1Hex(iStream);
-  }
-
-  /**
-   * Generate Sha1 Code with inputStream
-   *
-   * @param iStream
-   * @return
-   * @throws IOException
-   */
-  public static String getMd5(InputStream iStream) throws IOException {
-    if (null == iStream) {
-      return StringUtils.EMPTY;
-    }
-    return DigestUtils.md5Hex(iStream);
-  }
-
-  /**
-   * 对字符串进行给定算法散列(无盐值)
-   *
-   * @param bytes
-   * @param algorithm
-   * @return
-   */
-  public static byte[] digestString(byte[] bytes, String algorithm) {
-    return digest(bytes, algorithm, null, 1);
-  }
-
-  /**
-   * 对字符串进行给定算法散列(包含盐值)
-   *
-   * @param bytes
-   * @param algorithm
-   * @return
-   */
-  public static byte[] digestString(byte[] bytes, byte[] salt, String algorithm) {
-    return digest(bytes, algorithm, salt, 1);
-  }
-
-  /**
-   * 对字符串进行给定次数和指定算法的散列(包含盐值)
-   *
-   * @param bytes
-   * @param algorithm
-   * @return
-   */
-  public static byte[] digestString(byte[] bytes, byte[] salt, int counts, String algorithm) {
-    return digest(bytes, algorithm, salt, counts);
   }
 
   /**
@@ -260,24 +76,6 @@ public class DigestUtil {
       log.error("general security exception occurs, detail exception is ", e);
       return null;
     }
-  }
-
-  /**
-   * decode String to bytes[]
-   *
-   * @param src
-   * @return
-   */
-  public static byte[] decodeHex(String src) {
-    if (StringUtils.isBlank(src)) {
-      return null;
-    }
-    try {
-      return Hex.decodeHex(src.toCharArray());
-    } catch (DecoderException e) {
-      log.error("decode hex src failed, src vlaue is " + src, e);
-    }
-    return null;
   }
 
   public static String encodeHex(byte[] data) {

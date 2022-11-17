@@ -2,6 +2,7 @@ package com.mingshi.skyflying.common.utils;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mingshi.skyflying.common.constant.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,6 +22,8 @@ import java.util.List;
 @Slf4j
 @Component
 public class DingUtils {
+    private DingUtils(){}
+
     /**
      ** 生成时间戳和验证信息
      */
@@ -30,15 +33,15 @@ public class DingUtils {
         //把时间戳和密钥拼接成字符串，中间加入一个换行符
         String stringToSign = timestamp + "\n" + secret;
         //声明一个Mac对象，用来操作字符串
-        Mac mac = Mac.getInstance("HmacSHA256");
+        Mac mac = Mac.getInstance(Const.HMAC_SHA_256);
         //初始化，设置Mac对象操作的字符串是UTF-8类型，加密方式是SHA256
-        mac.init(new SecretKeySpec(secret.getBytes("UTF-8"), "HmacSHA256"));
+        mac.init(new SecretKeySpec(secret.getBytes(Const.UTF8), Const.HMAC_SHA_256));
         //把字符串转化成字节形式
-        byte[] signData = mac.doFinal(stringToSign.getBytes("UTF-8"));
+        byte[] signData = mac.doFinal(stringToSign.getBytes(Const.UTF8));
         //新建一个Base64编码对象
         Base64.Encoder encoder = Base64.getEncoder();
         //把上面的字符串进行Base64加密后再进行URL编码
-        String sign = URLEncoder.encode(new String(encoder.encodeToString(signData)), "UTF-8");
+        String sign = URLEncoder.encode(encoder.encodeToString(signData), Const.UTF8);
         return "&timestamp=" + timestamp + "&sign=" + sign;
     }
 

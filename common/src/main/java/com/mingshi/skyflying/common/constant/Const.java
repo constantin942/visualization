@@ -38,6 +38,8 @@ public class Const {
     public static final String USER_FROM_SCHEDULE_TASK = "scheduleTask";
     public static final String USER_FROM_ZHE_LI_BAN = "zheLiBan";
     public static final String USER_FROM = "userFrom";
+    public static final String UTF8 = "UTF-8";
+    public static final String HMAC_SHA_256 = "HmacSHA256";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -93,7 +95,7 @@ public class Const {
     public static final String AGENT_STATUS_OFF_DESC = "关闭";
     public static final String AGENT_STATUS_ON_DESC = "开启";
     public static final String HANDLER = "handler";
-    public static final String RULE_ID = "roleId";
+    public static final String RULE_ID = "ruleId";
     public static final String METHOD_TYPE = "methodType";
     public static final String CLASS_METHOD = "class.method";
     public static final String RQS_TIME = "rqsTime";

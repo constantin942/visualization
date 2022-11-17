@@ -31,8 +31,8 @@ public class IoThreadLinkedBlockingQueue {
     /**
      * 单例的个数不能大于1，否则就不是单例了；2021-06-23 10:49:00
      */
-    private static volatile AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
-    private static volatile AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
+    private static AtomicInteger SINGLE_CASE_COUNT = new AtomicInteger(Const.NUMBER_ZERO);
+    private static AtomicInteger INDEX = new AtomicInteger(Const.NUMBER_ZERO);
 
     /**
      * <B>方法名称：decrementIoThreadGraceShutdown</B>

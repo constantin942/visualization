@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AgentInformationSingleton {
   private volatile CopyOnWriteMap<String, String> copyOnWriteMap = null;
 
-  private static volatile AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+  private static AtomicBoolean atomicBoolean = new AtomicBoolean(false);
 
   public static AtomicBoolean getAtomicBoolean(){
     return atomicBoolean;

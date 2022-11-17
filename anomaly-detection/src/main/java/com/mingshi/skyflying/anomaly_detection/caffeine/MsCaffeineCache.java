@@ -108,11 +108,11 @@ public class MsCaffeineCache implements ApplicationRunner {
     /**
      * 用户画像相关信息初始化完毕标识；
      */
-    private static volatile AtomicBoolean userPortraitInitDone = new AtomicBoolean(Boolean.FALSE);
+    private static AtomicBoolean userPortraitInitDone = new AtomicBoolean(Boolean.FALSE);
     /**
      * 钉钉通知信息插入完毕标识；
      */
-    private static volatile AtomicBoolean dingInfoInsertedDone = new AtomicBoolean(Boolean.TRUE);
+    private static AtomicBoolean dingInfoInsertedDone = new AtomicBoolean(Boolean.TRUE);
 
     /**
      * <B>方法名称：getUserPortraitInitDone</B>

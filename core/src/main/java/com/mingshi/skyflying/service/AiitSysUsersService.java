@@ -19,6 +19,6 @@ public interface AiitSysUsersService extends ParentService<SysOperator, Long> {
 
   ServerResponse<String> changePassword(String userName, String oldPassword, String newPassword);
 
-  ServerResponse<SysOperator> login(String userName, String password);
+  ServerResponse<String> login(String userName, String password);
 
 }

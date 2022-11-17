@@ -52,13 +52,13 @@ public class UserController {
      * @Param [request, userName, password]
      **/
     @PostMapping(value = "/login")
-    public ServerResponse<SysOperator> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
+    public ServerResponse<String> login(HttpServletRequest request, @RequestParam(value = "userName", required = true) String userName, @RequestParam(value = "password", required = true) String password) {
         Instant instStart = Instant.now();
         UserLoginLog userLoginLog = new UserLoginLog();
         userLoginLog.setUserName(userName);
         userLoginLog.setDescription(Const.LOGIN_DESC);
         userLoginLog.setLoginIp(MingshiServerUtil.getIpAddress(request));
-        ServerResponse<SysOperator> response = aiitSysUsersService.login(userName, password);
+        ServerResponse<String> response = aiitSysUsersService.login(userName, password);
         if (AiitExceptionCode.SUCCESS.getCode().equals(response.getCode()) && !StringUtil.equals(null, String.valueOf(response.getData()))) {
             HttpSession oldSession = request.getSession(false);
             if (oldSession != null) {

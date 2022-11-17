@@ -107,12 +107,12 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
 
   @Override
-  public ServerResponse<SysOperator> login(String userName, String password) {
+  public ServerResponse<String> login(String userName, String password) {
     if (StringUtil.isBlank(userName)) {
-      return new ServerResponse<>(AiitExceptionCode.USERNAME_IS_EMPTY);
+      return new ServerResponse<String>(AiitExceptionCode.USERNAME_IS_EMPTY);
     }
     if (StringUtil.isBlank(password)) {
-      return new ServerResponse<>(AiitExceptionCode.PASSWORD_IS_EMPTY);
+      return new ServerResponse<String>(AiitExceptionCode.PASSWORD_IS_EMPTY);
     }
     SysOperator aiitUsers = sysOperatorDao.selectByUserName(userName);
     if (null == aiitUsers) {
@@ -121,7 +121,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
 
 
     /**判断密码是否有效，以及错误次数是否超限*/
-    ServerResponse<SysOperator> serverResponse1 = passwordIsValid(aiitUsers, password);
+    ServerResponse<String> serverResponse1 = passwordIsValid(aiitUsers, password);
     if (!StringUtil.equals(serverResponse1.getCode(), AiitExceptionCode.SUCCESS.getCode())) {
       return serverResponse1;
     }
@@ -140,7 +140,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
    * @Date 13:48 2020/2/17
    * @Param [aiitUsers, password]
    **/
-  private ServerResponse<SysOperator> passwordIsValid(SysOperator sysOperator, String password) {
+  private ServerResponse<String> passwordIsValid(SysOperator sysOperator, String password) {
     String userName = sysOperator.getUserName();
     UserLoginStatistics userLoginStatistics = userLoginStatisticsService.selectPasswordErrorCount(userName);
     /**判断密码是否正确*/
@@ -148,7 +148,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     if (StringUtils.equals(passwordCurrent, sysOperator.getPassword())) {
 
       /**用户输入的密码错误次数超过5次且距离最近一次的密码错误时间小于1小时，那么不可以在登录了*/
-      ServerResponse<SysOperator> serverResponse = isExpired(userLoginStatistics);
+      ServerResponse<String> serverResponse = isExpired(userLoginStatistics);
       if (!StringUtil.equals(AiitExceptionCode.SUCCESS.getCode(), serverResponse.getCode())) {
         return serverResponse;
       }
@@ -180,7 +180,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
       }
     } else {
       /**用户输入的密码错误次数超过5次且距离最近一次的密码错误时间小于1小时，那么不可以在登录了*/
-      ServerResponse<SysOperator> serverResponse = isExpired(userLoginStatistics);
+      ServerResponse<String> serverResponse = isExpired(userLoginStatistics);
       if (!StringUtil.equals(AiitExceptionCode.SUCCESS.getCode(), serverResponse.getCode())) {
         return serverResponse;
       }
@@ -196,14 +196,14 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     }
 
     map.put("passwordErrorCount", passwordErrorCount);
-    ServerResponse serverResponse = new ServerResponse<SysOperator>(AiitExceptionCode.INCORRECT_PASSWORD);
+    ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.INCORRECT_PASSWORD);
     serverResponse.setData(JsonUtil.obj2String(map));
     return serverResponse;
   }
 
-  private ServerResponse isExpired(UserLoginStatistics userLoginStatistics) {
+  private ServerResponse<String> isExpired(UserLoginStatistics userLoginStatistics) {
     if (null == userLoginStatistics) {
-      return new ServerResponse<>(AiitExceptionCode.SUCCESS);
+      return new ServerResponse<String>(AiitExceptionCode.SUCCESS);
     }
     Map<String, Object> map = new HashMap<>(Const.INITAL_SIZE);
     String userName = userLoginStatistics.getUserName();
@@ -211,7 +211,7 @@ public class SysUsersServiceImpl extends BaseParentServiceImpl<SysOperator, Long
     Long hours = DateUtil.getNumberOfHoursBetween(errorTime, new Date());
     if (Const.NUM_FIVE <= userLoginStatistics.getPasswordErrorCount() && hours < Const.NUM_ONE) {
       log.error("用户={} 登录错误次数={} 已经超过5次，直接返回。", userName, userLoginStatistics.getPasswordErrorCount());
-      ServerResponse serverResponse = new ServerResponse<SysOperator>(AiitExceptionCode.PASSWORD_ERROR_MORE_THAN_FIVE_TIMES);
+      ServerResponse<String> serverResponse = new ServerResponse<>(AiitExceptionCode.PASSWORD_ERROR_MORE_THAN_FIVE_TIMES);
       map.put("passwordErrorCount", userLoginStatistics.getPasswordErrorCount());
       serverResponse.setData(JsonUtil.obj2String(map));
       return serverResponse;
