@@ -68,7 +68,7 @@
         from user_portrait_by_table
         where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
         <if test="userName != null and  userName != null   ">
-            and username = #{userName}
+            and username like concat('%',#{userName},'%')
         </if>
         <if test="pageNo != null and  pageSize != null   ">
             LIMIT #{pageNo},#{pageSize}
@@ -80,7 +80,7 @@
         from user_portrait_by_table
         where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
         <if test="userName != null and  userName != null   ">
-            and username = #{userName}
+            and username like concat('%',#{userName},'%')
         </if>
     </select>
     <select id="getLastVisitedDate" resultType="java.lang.String" parameterType="string">
