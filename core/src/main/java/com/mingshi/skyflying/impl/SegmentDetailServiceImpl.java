@@ -338,21 +338,33 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         Map<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
         map.put(Const.USER_NAME, userName);
         List<String> dateList = DateTimeUtil.getDateList(startTime, endTime);
+        List<Object> stringArrayList = new LinkedList<>();
         for (int i = 0; i < dateList.size() - 1; i++) {
             String value = dateList.get(i);
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-            Long count = 0L;
-            Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
-            if (null != hget) {
-                count = Long.valueOf(String.valueOf(hget));
-            } else {
-                map.put(Const.START_TIME, value);
-                map.put(Const.END_TIME, dateList.get(i + 1));
-                count = msSegmentDetailDao.selectEveryoneEeverydayVisitedTimes(map);
-            }
-            returnList.add(count);
+            stringArrayList.add(dateToStrYyyyMmDd);
+//            Long count;
+//            Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
+//            if (null != hget) {
+//                count = Long.valueOf(String.valueOf(hget));
+//                returnList.add(count);
+//            }
         }
+        List<Object> hmget = redisPoolUtil.hmget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, stringArrayList);
+        if(null != hmget && !hmget.isEmpty()){
+            for (int i = 0; i < hmget.size(); i++) {
+                Object value = hmget.get(i);
+                if(null != value){
+                    returnList.add(Long.valueOf(String.valueOf(value)));
+                }else{
+                    returnList.add(0L);
+                }
+            }
+        }else{
+            System.out.println("");
+        }
+
 
         log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, returnList);
@@ -407,7 +419,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             map.put(Const.END_TIME, dateList.get(i + 1));
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
-            Long count = 0L;
+            Long count;
             Object hget = redisPoolUtil.hget(Const.HASH_EVERYDAY_MS_SEGMENT_DETAIL_HOW_MANY_RECORDS, dateToStrYyyyMmDd);
             if (null != hget) {
                 count = Long.valueOf(String.valueOf(hget));
@@ -635,8 +647,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 if (StringUtil.isNotBlank(serviceCodeName) && !serviceCodeName.equals(Const.DOLLAR)) {
                     userName = split[1] + "（" + serviceCodeName + "）";
                 }
-            } else {
-//                userName = dbName + Const.DOLLAR + userName;
             }
             if(userName.contains(Const.AND)){
                 String[] split = userName.split(Const.AND);
@@ -744,7 +754,8 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     @Override
     public ServerResponse<String> getCoarseCountsOfUsers(String username, Integer pageNo, Integer pageSize) {
-        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username, pageNo, pageSize);
+        return anomalyDetectionBusiness.getCoarseCountsOfUsersNew(username, pageNo, pageSize);
+//        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username, pageNo, pageSize);
     }
 
 

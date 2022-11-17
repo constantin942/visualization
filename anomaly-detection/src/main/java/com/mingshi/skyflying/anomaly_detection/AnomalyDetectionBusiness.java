@@ -35,6 +35,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -584,6 +585,74 @@ public class AnomalyDetectionBusiness {
         context.put("rows", coarseInfoList);
         context.put("total", allUserCount);
         log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsers() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
+    }
+
+    public ServerResponse<String> getCoarseCountsOfUsersNew(String userName, Integer pageNo, Integer pageSize) {
+        Instant now = Instant.now();
+        PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
+        Integer period = portraitConfig.getRuleTablePeriod();
+
+        Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+        // 用户名不为空，则是获取指定的用户的访问信息，那么直接从数据库中获取；2022-11-04 10:52:37
+        if (StringUtil.isNotBlank(userName)) {
+            queryMap.put(Const.USER_NAME, userName);
+        }
+        if (null == pageNo || pageNo < 0) {
+            pageNo = 1;
+        }
+        if (null == pageSize) {
+            pageSize = 10;
+        }
+        queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+        queryMap.put(Const.PAGE_SIZE, pageSize);
+        queryMap.put(Const.PERIOD, period);
+        List<UserCoarseInfo> coarseInfoList = new LinkedList<>();
+
+        List<String> users = tableMapper.getAllUser(queryMap);
+        for (String user : users) {
+            String lastVisitedDate = (String) redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user);
+            // 根据用户名获取用户对数据库总的访问次数；
+            Object obj = redisPoolUtil.get(Const.STRING_USER_ACCESS_BEHAVIOR_ALL_VISITED_TIMES + user);
+            Double countFromRedis = 0d;
+            if (null != obj) {
+                countFromRedis = Double.valueOf(String.valueOf(obj));
+            }
+            String tableName = null;
+            // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
+            Set<String> set = redisPoolUtil.reverseRange(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, 0L, 0L);
+            if (null == set || set.isEmpty()) {
+                // 从数据库中获取用户名；
+                tableName = getTableNameFromDb(user);
+                if (StringUtil.isBlank(tableName)) {
+                    continue;
+                }
+            } else {
+                Object[] objects = set.toArray();
+                tableName = String.valueOf(objects[0]);
+            }
+
+            Double score = null == countFromRedis ? 0 : countFromRedis;
+
+            UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
+            userCoarseInfo.setUserName(user);
+            userCoarseInfo.setLastVisitedDate(lastVisitedDate);
+            userCoarseInfo.setVisitedCount(score.longValue());
+            // 获取表对应的中文描述信息；2022-07-21 16:55:47
+            String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+            ObjectNode jsonObject = JsonUtil.createJsonObject();
+            jsonObject.put("tableName", tableName);
+            jsonObject.put("tableNameDesc", tableDesc);
+            userCoarseInfo.setUsualVisitedData(jsonObject.toString());
+            coarseInfoList.add(userCoarseInfo);
+        }
+
+        Integer allUserCount = tableMapper.getAllUserCount(queryMap);
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
+        context.put("rows", coarseInfoList);
+        context.put("total", allUserCount);
+        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsersNew() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
 
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
     }
