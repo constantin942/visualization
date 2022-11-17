@@ -28,7 +28,7 @@ import java.util.Map;
 public class TestControllerA {
 
     @Resource
-    UserPortraitByTimeTask timeTask;
+    UserPortraitByTimeTask userPortraitByTimeTask;
 
     @Resource
     AnomalyDetectionBusiness anomalyDetectionBusiness;
@@ -83,7 +83,7 @@ public class TestControllerA {
     }
     @GetMapping("cachePortraitByTime")
     public void cachePortraitByTime() {
-        timeTask.createUserPortraitTask();
+        userPortraitByTimeTask.createUserPortraitTask();
     }
 
 
@@ -95,7 +95,18 @@ public class TestControllerA {
     @GetMapping("createPortrait")
     public void createPortrait() {
         tableTask.createUserPortraitTask();
-        timeTask.createUserPortraitTask();
+        userPortraitByTimeTask.createUserPortraitTask();
+    }
+
+    @GetMapping("createEverydayPortrait")
+    public void createEverydayPortrait() {
+        tableTask.insertAllInfo2Portrait();
+        //2. 放入Redis
+        tableTask.cachePortraitByTable();
+
+        userPortraitByTimeTask.insertAllInfo2Coarse();
+        //3. 放入Redis
+        userPortraitByTimeTask.updatePortrait();
     }
 
     @GetMapping("fuzGet")

@@ -249,6 +249,30 @@ public class UserPortraitByTableTask {
     }
 
     /**
+     * <B>方法名称：insertAllInfo2Portrait</B>
+     * <B>概要说明：当redis中所有的数据都丢了之后，重放kafka中的数据，重新生成每天的画像信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-16 21:29:23
+     * @Param []
+     * @return void
+     **/
+    public void insertAllInfo2Portrait() {
+        List<String> allStartTimeList = segmentDetailMapper.getAllStartTime();
+        if(null != allStartTimeList && !allStartTimeList.isEmpty()){
+            for (int i = 0; i < allStartTimeList.size(); i++) {
+                String startTime = allStartTimeList.get(i);
+                List<MsSegmentDetailDo> infoForCoarseDetailByStartTime = segmentDetailMapper.getInfoForCoarseDetailByStartTime(startTime);
+                infoForCoarseDetailByStartTime = splitTable(infoForCoarseDetailByStartTime);
+                List<UserPortraitByTableDo> list = getUserPortraitByTable(infoForCoarseDetailByStartTime);
+                if (!list.isEmpty()) {
+                    userPortraitByTableMapper.insertBatch(list);
+                }
+            }
+        }
+    }
+
+    /**
      * 拆分全量信息表中的表名
      */
     public List<MsSegmentDetailDo> splitTable(List<MsSegmentDetailDo> segmentDetails) {

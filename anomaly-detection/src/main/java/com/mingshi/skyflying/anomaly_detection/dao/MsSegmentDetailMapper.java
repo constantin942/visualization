@@ -10,6 +10,10 @@ public interface MsSegmentDetailMapper {
 
     List<MsSegmentDetailDo> getInfoForCoarseDetail();
 
+    List<MsSegmentDetailDo> getInfoForCoarseDetailByStartTime(String startTime);
+
+    List<String> getAllStartTime();
+
     MsSegmentDetailDo selectByGlobalTraceId(String traceId);
 
     Date selectTimeGap(String username);

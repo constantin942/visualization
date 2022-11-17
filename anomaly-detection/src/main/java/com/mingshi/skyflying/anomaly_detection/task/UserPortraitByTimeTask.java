@@ -5,10 +5,7 @@ import com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapp
 import com.mingshi.skyflying.anomaly_detection.dao.MsSegmentDetailMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.PortraitConfigMapper;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTimeMapper;
-import com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo;
-import com.mingshi.skyflying.anomaly_detection.domain.PortraitConfig;
-import com.mingshi.skyflying.anomaly_detection.domain.UserPortraitByTimeDo;
-import com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval;
+import com.mingshi.skyflying.anomaly_detection.domain.*;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAlarmInformationDo;
@@ -163,6 +160,20 @@ public class UserPortraitByTimeTask {
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
         if (!list.isEmpty()) {
             coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
+        }
+    }
+
+    public void insertAllInfo2Coarse() {
+        List<String> allStartTimeList = segmentDetailMapper.getAllStartTime();
+        if(null != allStartTimeList && !allStartTimeList.isEmpty()){
+            for (int i = 0; i < allStartTimeList.size(); i++) {
+                String startTime = allStartTimeList.get(i);
+                List<MsSegmentDetailDo> infoForCoarseDetailByStartTime = segmentDetailMapper.getInfoForCoarseDetailByStartTime(startTime);
+                List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(infoForCoarseDetailByStartTime);
+                if (!list.isEmpty()) {
+                    coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
+                }
+            }
         }
     }
 
