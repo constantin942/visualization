@@ -101,7 +101,7 @@ public class MsKafkaConsumer extends Thread {
         while (true) {
             try {
                 // poll(duration): 长轮询, 即duration时段内没拿到消息就一直重复尝试拿, 知道时间到或者拿到消息才返回结果
-                ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(1000));
+                ConsumerRecords<String, Bytes> records = aiitKafkaConsumer.poll(Duration.ofMillis(100));
                 int count = records.count();
 
                 for (ConsumerRecord<String, Bytes> consumerRecord : records) {
