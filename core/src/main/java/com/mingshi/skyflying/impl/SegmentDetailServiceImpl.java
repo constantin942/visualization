@@ -344,6 +344,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
             stringArrayList.add(dateToStrYyyyMmDd);
+            // 将对每个用户访问Redis，改成批量访问Redis；2022-11-17 11:06:21
 //            Long count;
 //            Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
 //            if (null != hget) {
@@ -361,10 +362,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                     returnList.add(0L);
                 }
             }
-        }else{
-            System.out.println("");
         }
-
 
         log.info("执行完毕 SegmentDetailServiceImpl # getCountsOfUserUserRecentSevenDays # 获取用户的近七天访问次数。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, returnList);
