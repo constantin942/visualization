@@ -1,6 +1,3 @@
-# 生成数据库设计文档存放的路径
-doc_dir_path: /Users/apple/skywalking-mingshi-server
-
 spring:
   servlet:
     multipart:

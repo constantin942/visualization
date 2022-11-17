@@ -359,7 +359,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                 if(null != value){
                     returnList.add(Long.valueOf(String.valueOf(value)));
                 }else{
-                    returnList.add(0L);
+                    returnList.add(Const.NUMBER_ZERO.longValue());
                 }
             }
         }
