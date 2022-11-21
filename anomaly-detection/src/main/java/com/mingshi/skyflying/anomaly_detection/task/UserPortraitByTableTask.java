@@ -88,7 +88,7 @@ public class UserPortraitByTableTask {
             //2. 放入Redis
             cachePortraitByTable();
         } catch (Exception e) {
-            log.error("生成用户画像异常");
+            log.error("生成用户画像异常 # 异常信息:{}", e.getMessage());
         } finally {
             if (Boolean.TRUE.equals(tryLock)) {
                 lock.unlock();

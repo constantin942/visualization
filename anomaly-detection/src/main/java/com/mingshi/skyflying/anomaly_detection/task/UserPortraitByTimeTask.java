@@ -64,8 +64,12 @@ public class UserPortraitByTimeTask {
     @Async
     public void createUserPortraitTask() {
         RLock lock = redissonClient.getLock(REDIS_LOCK);
-        lock.lock();
+        boolean tryLock = Boolean.FALSE;
         try {
+            tryLock = lock.tryLock();
+            if (Boolean.FALSE.equals(tryLock)) {
+                return;
+            }
             log.info("开始执行基于时间的用户画像定时任务: 全量表生成粗粒度表 -> 粗粒度表生成用户画像 -> 放入Redis");
             //1. 全量表生成粗粒度表
             insertYesterdayInfo2Coarse();
@@ -73,10 +77,14 @@ public class UserPortraitByTimeTask {
             //3. 放入Redis
             updatePortrait();
         } catch (Exception e) {
-            log.error("生成用户画像异常");
+            log.error("生成用户画像异常 # 异常信息:{}", e.getMessage());
         } finally {
-            lock.unlock();
-            log.info("基于时间的用户画像定时任务完成");
+            if (Boolean.TRUE.equals(tryLock)) {
+                lock.unlock();
+                log.info("基于时间的用户画像定时任务完成");
+            } else {
+                log.info("开始执行基于时间画像定时任务: 全量表生成用户画像 -> 放入Redis，当前实例没有获取到分布式锁。");
+            }
         }
     }
 
