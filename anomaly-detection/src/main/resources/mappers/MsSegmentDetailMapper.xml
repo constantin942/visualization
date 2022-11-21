@@ -44,30 +44,30 @@
     </sql>
     <select id="getInfoForCoarseDetail" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
-        from ms_segment_detail
+        from ms_segment_detail mss
         where 1
             > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
           and user_name is not null
           and start_time is not null
           and ms_table_name is not null
           and db_instance is not null
-          and ms_segment_detail.global_trace_id not in (
-            select global_trace_id from ms_alarm_information where update_user_portrait
-            != 0
-            );
+          and NOT EXISTS(select null
+                            from ms_alarm_information msa
+                            where mss.global_trace_id = msa.global_trace_id
+                                and update_user_portrait != 0);
     </select>
     <select id="getInfoForCoarseDetailByStartTime" parameterType="java.lang.String" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
-        from ms_segment_detail
+        from ms_segment_detail mss
         where date_format(start_time,'%Y-%m-%d') = #{startTime}
           and user_name is not null
           and start_time is not null
           and ms_table_name is not null
           and db_instance is not null
-          and ms_segment_detail.global_trace_id not in (
-            select global_trace_id from ms_alarm_information where update_user_portrait
-            != 0
-            );
+          and NOT EXISTS(select null
+                            from ms_alarm_information msa
+                            where mss.global_trace_id = msa.global_trace_id
+                                and update_user_portrait != 0);
     </select>
     <select id="selectByGlobalTraceId" parameterType="string"
             resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">

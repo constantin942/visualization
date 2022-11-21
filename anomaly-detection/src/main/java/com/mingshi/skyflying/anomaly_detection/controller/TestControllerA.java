@@ -95,7 +95,7 @@ public class TestControllerA {
     @GetMapping("createPortrait")
     public void createPortrait() {
         tableTask.createUserPortraitTask();
-        userPortraitByTimeTask.createUserPortraitTask();
+//        userPortraitByTimeTask.createUserPortraitTask();
     }
 
     @GetMapping("createEverydayPortrait")
