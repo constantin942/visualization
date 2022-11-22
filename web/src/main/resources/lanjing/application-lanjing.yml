@@ -111,6 +111,7 @@ spring:
         # 每次重试间隔500毫秒；
         retry.backoff.ms: 500
     consumer:
+      servers: 10.0.107.49:9092,10.0.107.50:9092,10.0.107.51:9092
       topic: skywalking-segments-online
       agent-switch-request-topic: agent-switch-request-topic
       agent-switch-response-topic: agent-switch-response-topic

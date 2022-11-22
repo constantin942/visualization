@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Slf4j
 public class AiitKafkaConsumerRunner implements ApplicationRunner {
-    @Value("${spring.kafka.bootstrap-servers}")
+    @Value("${spring.kafka.consumer.servers}")
     private String bootstrapServers;
     @Value("${spring.kafka.consumer.topic}")
     private String segmentConsumerTopic;

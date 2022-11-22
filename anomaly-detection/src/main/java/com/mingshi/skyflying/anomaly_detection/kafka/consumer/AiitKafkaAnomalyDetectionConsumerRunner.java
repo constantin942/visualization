@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 @Slf4j
 public class AiitKafkaAnomalyDetectionConsumerRunner implements ApplicationRunner {
-    @Value("${spring.kafka.bootstrap-servers}")
+    @Value("${spring.kafka.consumer.servers}")
     private String bootstrapServers;
     @Value("${spring.kafka.anomaly-detection-alarm-topic}")
     private String anomalyDetectionAlarmTopic;

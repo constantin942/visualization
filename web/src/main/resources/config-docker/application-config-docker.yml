@@ -108,6 +108,7 @@ spring:
         # 每次重试间隔500毫秒；
         retry.backoff.ms: 500
     consumer:
+      servers: ${kafka_consumer_servers}
       topic: ${kafka_consumer_topic}
       group: ${kafka_consumer_group}
       agent-switch-request-topic: ${agent_switch_request_topic}
