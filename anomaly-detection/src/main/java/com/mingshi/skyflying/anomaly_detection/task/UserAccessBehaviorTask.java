@@ -5,6 +5,8 @@ import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitByTableMapper;
 import com.mingshi.skyflying.anomaly_detection.utils.AnomylyDetectionUtil;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.dao.RealTimeStatisticsUserPortraitByTableMapper;
+import com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable;
 import com.mingshi.skyflying.common.domain.UserCoarseInfo;
 import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.common.response.ServerResponse;
@@ -42,6 +44,9 @@ public class UserAccessBehaviorTask {
     UserPortraitByTableMapper userPortraitByTableMapper;
 
     @Resource
+    RealTimeStatisticsUserPortraitByTableMapper realTimeStatisticsUserPortraitByTableMapper;
+
+    @Resource
     AnomylyDetectionUtil anomylyDetectionUtil;
 
     /**
@@ -68,6 +73,7 @@ public class UserAccessBehaviorTask {
             Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
             queryMap.put(Const.PERIOD, period);
 
+            List<RealTimeStatisticsUserPortraitByTable> coarseInfoList = new LinkedList<>();
             // 从数据库中获取所有的用户名；
             List<String> users = userPortraitByTableMapper.getAllUser(queryMap);
             for (String user : users) {
@@ -91,6 +97,23 @@ public class UserAccessBehaviorTask {
                     tableName = String.valueOf(objects[0]);
                     MsCaffeineCache.setUserAccessTaskBehaviorCache(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, tableName);
                 }
+
+                RealTimeStatisticsUserPortraitByTable userCoarseInfo = new RealTimeStatisticsUserPortraitByTable();
+                userCoarseInfo.setUserName(user);
+                userCoarseInfo.setLastVisitedDate(lastVisitedDate);
+                userCoarseInfo.setVisitedCount(null == obj ? 0 : Integer.valueOf(String.valueOf(obj)));
+                // 获取表对应的中文描述信息；2022-07-21 16:55:47
+                String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
+                ObjectNode jsonObject = JsonUtil.createJsonObject();
+                jsonObject.put(Const.TABLE_NAME, tableName);
+                jsonObject.put(Const.TABLE_NAME_DESC, tableDesc);
+                userCoarseInfo.setUsualVisitedData(jsonObject.toString());
+                userCoarseInfo.setCreateTime(new Date());
+                userCoarseInfo.setUpdateTime(new Date());
+                coarseInfoList.add(userCoarseInfo);
+            }
+            if(null != coarseInfoList && 0 < coarseInfoList.size()){
+                realTimeStatisticsUserPortraitByTableMapper.insertSelectiveBatch(coarseInfoList);
             }
         } catch (Exception e) {
             log.error("# UserAccessBehaviorTask.scheduledUserAccessBehaviorTask() # 定时从Redis中获取用户的配置信息时，出现了异常。", e);

@@ -20,6 +20,7 @@ import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAlarmInformationMapper;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
+import com.mingshi.skyflying.common.dao.RealTimeStatisticsUserPortraitByTableMapper;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.enums.RecordEnum;
@@ -97,6 +98,9 @@ public class AnomalyDetectionBusiness {
 
     @Resource
     UserPortraitByTableMapper tableMapper;
+
+    @Resource
+    RealTimeStatisticsUserPortraitByTableMapper realTimeStatisticsUserPortraitByTableMapper;
 
     @Resource
     DingAlarmInformationMapper dingAlarmInformationMapper;
@@ -615,10 +619,36 @@ public class AnomalyDetectionBusiness {
         }
         queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
         queryMap.put(Const.PAGE_SIZE, pageSize);
-        queryMap.put(Const.PERIOD, period);
         List<UserCoarseInfo> coarseInfoList = new LinkedList<>();
+        Integer allUserCount =null;
+        // 从实时表里获取定时任务统计好的数据；2022-11-22 17:46:24
+        coarseInfoList = realTimeStatisticsUserPortraitByTableMapper.selectAll(queryMap);
+        allUserCount = realTimeStatisticsUserPortraitByTableMapper.selectAllCount(queryMap);
+        if(null == coarseInfoList || coarseInfoList.isEmpty()){
+            // 如果实时表里没有获取到数据，那么就使用老的方式获取数据；2022-11-22 17:46:55
+            getCoarseInfoListByOldWay(queryMap, coarseInfoList);
+            allUserCount = tableMapper.getAllUserCount(queryMap);
+        }
 
-        List<String> users = tableMapper.getAllUser(queryMap);
+        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
+        context.put("rows", coarseInfoList);
+        context.put("total", allUserCount);
+        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsersNew() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
+    }
+
+    /**
+     * <B>方法名称：getCoarseInfoListByOldWay</B>
+     * <B>概要说明：兜底方案：使用老的方式获取用户访问行为，缺点是按照访问次数排序会出错</B>
+     *
+     * @Author zm
+     * @Date 2022-11-22 17:47:47
+     * @Param [queryMap, coarseInfoList]
+     * @return void
+     **/
+    private void getCoarseInfoListByOldWay(Map<String, Object> queryMap, List<UserCoarseInfo> coarseInfoList) {
+        List<String> users = tableMapper.getAllUserByOrder(queryMap);
         for (String user : users) {
             // 获取用户最近的访问时间
             String lastVisitedDate = anomylyDetectionUtil.getLastVisitedDate(Const.STRING_USER_ACCESS_BEHAVIOR_LATEST_VISITED_TIME + user);
@@ -641,16 +671,7 @@ public class AnomalyDetectionBusiness {
             userCoarseInfo.setUsualVisitedData(jsonObject.toString());
             coarseInfoList.add(userCoarseInfo);
         }
-
-        Integer allUserCount = tableMapper.getAllUserCount(queryMap);
-        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
-        context.put("rows", coarseInfoList);
-        context.put("total", allUserCount);
-        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsersNew() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-
-        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
     }
-
 
 
     /**

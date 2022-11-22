@@ -75,6 +75,20 @@
         </if>
     </select>
 
+    <select id="getAllUserByOrder" parameterType="java.util.Map" resultType="java.lang.String">
+        select distinct(username)
+        from user_portrait_by_table
+        where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        <if test="userName != null and  userName != null   ">
+            and username like concat('%',#{userName},'%')
+        </if>
+        group by username
+        order by sum(count) desc
+        <if test="pageNo != null and  pageSize != null   ">
+            LIMIT #{pageNo},#{pageSize}
+        </if>
+    </select>
+
     <select id="getAllUserCount" resultType="java.lang.Integer">
         select count(distinct(username))
         from user_portrait_by_table

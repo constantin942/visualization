@@ -30,6 +30,8 @@ public interface UserPortraitByTableMapper {
 
     List<String> getAllUser(Map<String, Object> queryMap);
 
+    List<String> getAllUserByOrder(Map<String, Object> queryMap);
+
     Integer getAllUserCount(Map<String, Object> queryMap);
 
     String getLastVisitedDate(String username);

@@ -5,6 +5,12 @@ import lombok.Data;
 @Data
 public class UserCoarseInfo {
 
+    private Integer id;
+
+    private String gmtCreate;
+
+    private String gmtModified;
+
     private String userName;
 
     private String lastVisitedDate;
