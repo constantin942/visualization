@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsAgentSwitchDo;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.SnowflakeIdWorker;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -144,6 +146,8 @@ public class MsAgentSwitchServiceImpl implements MsAgentSwitchService {
   private void insertMsAgentSwitchDo(String serviceInstance, String agentSwitch, String requestId, Boolean sendResult, String sendKafkaRequestParams,String operationType) {
     try {
       MsAgentSwitchDo msAgentSwitchDo = new MsAgentSwitchDo();
+      msAgentSwitchDo.setGmtCreate(DateTimeUtil.date2Str(new Date()));
+      msAgentSwitchDo.setGmtModified(DateTimeUtil.date2Str(new Date()));
       if (StringUtil.isNotBlank(agentSwitch)) {
         msAgentSwitchDo.setAgentSwitchStatus(agentSwitch);
       }

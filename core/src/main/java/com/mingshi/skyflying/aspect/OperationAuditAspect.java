@@ -203,6 +203,8 @@ public class OperationAuditAspect {
             operationLog.setRequestUrl(url);
             operationLog.setRequestParams(params);
             operationLog.setOrderId(orderId);
+            operationLog.setGmtCreate(DateTimeUtil.date2Str(new Date()));
+            operationLog.setGmtModified(DateTimeUtil.date2Str(new Date()));
             Integer insertResult = operateLogService.insertSelective(operationLog);
             if (1 != insertResult) {
                 log.error("将用户 = {} 的操作记录 = {} 保存到表中失败。", userName, JsonUtil.obj2String(operationLog));

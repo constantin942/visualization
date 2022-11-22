@@ -58,6 +58,8 @@ public class UserController {
         userLoginLog.setUserName(userName);
         userLoginLog.setDescription(Const.LOGIN_DESC);
         userLoginLog.setLoginIp(MingshiServerUtil.getIpAddress(request));
+        userLoginLog.setGmtCreate(new Date());
+        userLoginLog.setGmtModified(new Date());
         ServerResponse<String> response = aiitSysUsersService.login(userName, password);
         if (AiitExceptionCode.SUCCESS.getCode().equals(response.getCode()) && !StringUtil.equals(null, String.valueOf(response.getData()))) {
             HttpSession oldSession = request.getSession(false);
