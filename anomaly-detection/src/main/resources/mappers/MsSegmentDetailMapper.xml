@@ -43,7 +43,7 @@
         ,user_name, db_instance, ms_table_name, start_time
     </sql>
     <select id="getInfoForCoarseDetail" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
-        select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
+        select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time, global_trace_id
         from ms_segment_detail mss
         where 1
             > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
@@ -53,8 +53,7 @@
           and db_instance is not null
           and NOT EXISTS(select null
                             from ms_alarm_information msa
-                            where mss.global_trace_id = msa.global_trace_id
-                                and update_user_portrait != 0);
+                            where mss.global_trace_id = msa.global_trace_id);
     </select>
     <select id="getInfoForCoarseDetailByStartTime" parameterType="java.lang.String" resultType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
