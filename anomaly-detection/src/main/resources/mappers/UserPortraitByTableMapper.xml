@@ -67,6 +67,7 @@
         select distinct(username)
         from user_portrait_by_table
         where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+          and username != 'null'
         <if test="userName != null and  userName != null   ">
             and username like concat('%',#{userName},'%')
         </if>
@@ -93,6 +94,7 @@
         select count(distinct(username))
         from user_portrait_by_table
         where #{period,jdbcType=INTEGER} > TO_DAYS(NOW()) - TO_DAYS(`create_time`)
+        and username != 'null'
         <if test="userName != null and  userName != null   ">
             and username like concat('%',#{userName},'%')
         </if>
