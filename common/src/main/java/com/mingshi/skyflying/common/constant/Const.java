@@ -36,11 +36,15 @@ public class Const {
     public static final String LOGIN_DESC = "登录";
     public static final String LOGIN_OUT_DESC = "登出";
     public static final String USER_FROM_SCHEDULE_TASK = "scheduleTask";
-    public static final String USER_FROM_ZHE_LI_BAN = "zheLiBan";
+    public static final String USER_FROM_ZHE_LI_BAN = "浙里办单点登录";
     public static final String USER_FROM = "userFrom";
     public static final String UTF8 = "UTF-8";
     public static final String HMAC_SHA_256 = "HmacSHA256";
     public static final String PORTRAIT_CONFIG_SELECT_ONE = "portraitConfigSelectOne";
+    public static final String RULE_ID_DESC = "规则id为";
+    public static final String DE = "的";
+    public static final String USER_FROM_PATH = "userFromPath";
+    public static final String USER_FROM_DESC = "userFromDesc";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
@@ -102,12 +106,17 @@ public class Const {
     public static final String RQS_TIME = "rqsTime";
     public static final CharSequence CHANGE_PASSWORD = "changePassword";
     public static final String LOGIN = "login";
+    public static final String UPDATE_USER_FROM = "updateUserFrom";
+    public static final String UPDATE_USER_FROM_DESC = "用户来源配置信息";
+    public static final String ADD_USER_FROM = "addUserFrom";
+    public static final String ADD_USER_FROM_DESC = "新增用户来源配置信息";
     public static final String OLD_PASSWORD = "oldPassword";
     public static final String NEW_PASSWORD = "newPassword";
     public static final CharSequence GET_SYS_MENU = "getSysMenu";
     public static final CharSequence SYS_ROLES = "sysroles";
     public static final Integer NUM_FIVE = 5;
     public static final Long NUM_ONE = 1L;
+    public static final Long NUM_THREE_HUNDRED = 300L;
     public static final int INITAL_SIZE = 4;
     public static final String TABLE_NAME2 = "table_name";
     public static final String TABLE_COMMENT = "table_comment";
@@ -330,15 +339,21 @@ public class Const {
     public static final String ZSET_TABLE_BY_HOW_MANY_USER_VISITED = "zset_table_by_how_many_user_visited#";
 
     /**
+     * 每个用户每天来源的访问次数；2022-11-23 16:18:07
+     */
+    public static final String ZSET_TABLE_BY_EVERYONE_EVERYDAYUSER_FROM_VISITED_TIMES = "zset_table_by_everyone_everyday_user_from_visited_times#user_name#";
+
+    /**
      * 有序集合，统计所有用户的访问行为；2022-11-04 09:23:25
      */
     public static final String ZSET_TABLE_BY_USER_ACCESS_BEHAVIOR = "zset_table_by_user_access_behavior#";
+
     /**
      * 记录每一个数据库表最后被访问的时间；
      */
     public static final String STRING_TABLE_LATEST_VISITED_TIME = "string_table_latest_visited_time#";
 
-    public static final String LOGIN_FISH_EASIER = "login/fish/easier";
+    public static final String LOGIN_FISH_EASIER = "/login/fish/easier";
     public static final String ES_INDEX_SEGMENT_DETAIL = "segment_detail";
 
     public static final Integer IS_DELETE_ZERO = 0;

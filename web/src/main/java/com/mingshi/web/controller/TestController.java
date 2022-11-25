@@ -21,8 +21,6 @@ import javax.annotation.Resource;
 @Slf4j
 @RequestMapping("/api/test")
 public class TestController {
-  @Autowired
-  DriverManagerDataSource driverManagerDataSource;
   @Resource
   private AiitKafkaProducer aiitKafkaProducer;
 

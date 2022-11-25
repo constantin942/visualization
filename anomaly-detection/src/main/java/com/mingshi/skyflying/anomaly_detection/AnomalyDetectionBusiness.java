@@ -29,10 +29,7 @@ import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
 import com.mingshi.skyflying.common.kafka.producer.AiitKafkaProducer;
 import com.mingshi.skyflying.common.kafka.producer.records.MsConsumerRecords;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
+import com.mingshi.skyflying.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -113,7 +110,7 @@ public class AnomalyDetectionBusiness {
 
     @Lazy
     @Resource
-    AnomalyDetectionBusiness anomalyDetectionBusiness;
+    MingshiServerUtil mingshiServerUtil;
     /**
      * Redis分布式锁Key
      */
@@ -539,72 +536,12 @@ public class AnomalyDetectionBusiness {
         return resList;
     }
 
-    /**
-     * <B>方法名称：getCoarseCountsOfUsers</B>
-     * <B>概要说明：获取用户访问行为信息</B>
-     *
-     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
-     * @Author zm
-     * @Date 2022-11-04 10:58:55
-     * @Param [username, pageNo, pageSize]
-     **/
-    public ServerResponse<String> getCoarseCountsOfUsers(String username, Integer pageNo, Integer pageSize) {
-        if (pageNo < 0) {
-            return ServerResponse.createByErrorMessage("页码参数pageNo不能小于0", "");
-        }
-
-        // 用户名不为空，则是获取指定的用户的访问信息，那么直接从数据库中获取；2022-11-04 10:52:37
-        if (StringUtil.isNotBlank(username)) {
-            return getCoarseCountsOfUsersFromDb(username, pageNo, pageSize);
-        }
-
-        // 从有序集合zset中获取指定用户访问次数最多的表；2022-07-20 14:29:13
-        Set<ZSetOperations.TypedTuple<String>> typedTuples = redisPoolUtil.reverseRangeWithScores(Const.ZSET_USER_ACCESS_BEHAVIOR, (pageNo - 1) * pageSize.longValue(), pageSize.longValue() - 1);
-        if (null == typedTuples || typedTuples.isEmpty()) {
-            // 从Redis中获取不到数据，则从数据库中获取；
-            return getCoarseCountsOfUsersFromDb(username, pageNo, pageSize);
-        }
-        Instant now = Instant.now();
-        List<UserCoarseInfo> coarseInfoList = new LinkedList<>();
-        Iterator<ZSetOperations.TypedTuple<String>> iterator = typedTuples.iterator();
-        while (iterator.hasNext()) {
-            ZSetOperations.TypedTuple<String> key = iterator.next();
-            Double score = key.getScore();
-            String value = key.getValue();
-            String[] split = value.split(Const.AND);
-            String userName = split[0];
-            String latestAccessTime = split[1];
-            String tableName = split[2];
-
-            UserCoarseInfo userCoarseInfo = new UserCoarseInfo();
-            userCoarseInfo.setUserName(userName);
-            userCoarseInfo.setLastVisitedDate(latestAccessTime);
-            userCoarseInfo.setVisitedCount(score.longValue());
-            // 获取表对应的中文描述信息；2022-07-21 16:55:47
-            String tableDesc = LoadAllEnableMonitorTablesFromDb.getTableDesc(tableName);
-            ObjectNode jsonObject = JsonUtil.createJsonObject();
-            jsonObject.put("tableName", tableName);
-            jsonObject.put("tableNameDesc", tableDesc);
-            userCoarseInfo.setUsualVisitedData(jsonObject.toString());
-            coarseInfoList.add(userCoarseInfo);
-
-        }
-        Long allUserCount = redisPoolUtil.sizeFromZset(Const.ZSET_USER_ACCESS_BEHAVIOR);
-        Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
-        context.put("rows", coarseInfoList);
-        context.put("total", allUserCount);
-        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsers() # 从Redis中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
-
-        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
-    }
-
     public ServerResponse<String> getCoarseCountsOfUsersNew(String userName, Integer pageNo, Integer pageSize) {
         Instant now = Instant.now();
         Integer period = anomylyDetectionUtil.getPeriod();
         if(period.equals(-Const.NUMBER_ONE)){
             return ServerResponse.createByErrorMessage("没有获取到用户画像配置信息。","");
         }
-
 
         Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
         // 用户名不为空，则是获取指定的用户的访问信息，那么直接从数据库中获取；2022-11-04 10:52:37
@@ -669,6 +606,8 @@ public class AnomalyDetectionBusiness {
             jsonObject.put(Const.TABLE_NAME, tableName);
             jsonObject.put(Const.TABLE_NAME_DESC, tableDesc);
             userCoarseInfo.setUsualVisitedData(jsonObject.toString());
+            userCoarseInfo.setUserName(mingshiServerUtil.setUserFrom(user));
+
             coarseInfoList.add(userCoarseInfo);
         }
     }
@@ -726,7 +665,7 @@ public class AnomalyDetectionBusiness {
         Map<String, Object> context = new HashMap<>(Const.NUMBER_EIGHT);
         context.put("rows", coarseInfoList);
         context.put("total", allUserCount);
-        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsers() # 从数据库中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
+        log.info("执行完毕 AnomalyDetectionBusiness.getCoarseCountsOfUsersFromDb() # 从数据库中获取用户的调用链信息，耗时【{}】毫秒。", DateTimeUtil.getTimeMillis(now));
 
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, JsonUtil.obj2String(context));
     }

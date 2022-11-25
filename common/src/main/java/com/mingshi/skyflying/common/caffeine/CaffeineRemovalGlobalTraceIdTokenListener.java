@@ -1,11 +1,11 @@
-package com.mingshi.skyflying.caffeine;
+package com.mingshi.skyflying.common.caffeine;
 
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <B>主类名称: CaffeineRemovalTokenUserNameListener</B>
+ * <B>主类名称: CaffeineRemovalGlobalTraceIdTokenListener</B>
  * <B>概要说明：使用Caffeine实例时，移除元素的监听者类</B>
  * @Author zm
  * Date 2022/8/1 10:32
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * @Version 1.0
  **/
 @Slf4j
-public class CaffeineRemovalTokenUserNameListener implements RemovalListener<String,String>{
+public class CaffeineRemovalGlobalTraceIdTokenListener implements RemovalListener<String,String>{
   @Override
   public void onRemoval(@org.checkerframework.checker.nullness.qual.Nullable String key, @org.checkerframework.checker.nullness.qual.Nullable String value, RemovalCause removalCause) {
     if(!removalCause.equals(RemovalCause.REPLACED)){

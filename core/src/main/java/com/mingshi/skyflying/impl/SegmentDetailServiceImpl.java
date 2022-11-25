@@ -646,13 +646,16 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
                     userName = split[1] + "（" + serviceCodeName + "）";
                 }
             }
-            if(userName.contains(Const.AND)){
-                String[] split = userName.split(Const.AND);
-                tableCoarseInfo.setUsualVisitedUser(split[0]);
-                tableCoarseInfo.setUserFrom(split[1]);
-            }else{
-                tableCoarseInfo.setUsualVisitedUser(userName);
+            tableCoarseInfo.setUsualVisitedUser(userName);
+
+            // 获取用户来源；2022-11-25 14:38:33
+            String userFrom = null;
+            try {
+                userFrom = mingshiServerUtil.setUserFrom(userName.split("\\" +Const.DOLLAR)[1]);
+            } catch (Exception e) {
+                // igore
             }
+            tableCoarseInfo.setUserFrom(userFrom);
         } else {
             return false;
         }
@@ -753,7 +756,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<String> getCoarseCountsOfUsers(String username, Integer pageNo, Integer pageSize) {
         return anomalyDetectionBusiness.getCoarseCountsOfUsersNew(username, pageNo, pageSize);
-//        return anomalyDetectionBusiness.getCoarseCountsOfUsers(username, pageNo, pageSize);
     }
 
 

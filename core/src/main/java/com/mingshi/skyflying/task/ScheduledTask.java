@@ -1,11 +1,21 @@
 package com.mingshi.skyflying.task;
 
+import com.mingshi.skyflying.common.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
+import com.mingshi.skyflying.common.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.RedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.xml.transform.Templates;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <B>主类名称: ScheduledTask</B>
@@ -20,6 +30,12 @@ import javax.annotation.Resource;
 public class ScheduledTask {
     @Resource
     private ExecitonScheduledTaskList execitonScheduledTaskList;
+    @Resource
+    private MingshiServerUtil mingshiServerUtil;
+    @Resource
+    private MsCaffeine msCaffeine;
+    @Resource
+    private RedisPoolUtil redisPoolUtil;
 
     /**
      * <B>方法名称：scheduledDeleteTwoDaysBeforeSegmentDetailDo</B>
@@ -33,7 +49,7 @@ public class ScheduledTask {
     /**
      * 每隔30分钟执行一次：
      */
-  @Scheduled(cron = "0 */20 * * * ?")
+    @Scheduled(cron = "0 */20 * * * ?")
 //    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     /**
      * 每隔2小时执行一次；
@@ -55,7 +71,7 @@ public class ScheduledTask {
     /**
      * 每隔30分钟执行一次：
      */
-  @Scheduled(cron = "0 */20 * * * ?")
+    @Scheduled(cron = "0 */20 * * * ?")
 //    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     /**
      * 每隔2小时执行一次；
@@ -75,7 +91,7 @@ public class ScheduledTask {
      * @Param []
      **/
     // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */15 * * * ?")
+    @Scheduled(cron = "0 */15 * * * ?")
 //    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     // 每隔2小时执行一次；
     // @Scheduled(cron = "0 0 0/2 * * ?")
@@ -93,7 +109,7 @@ public class ScheduledTask {
      * @Param []
      **/
     // 每隔30分钟执行一次：
-  @Scheduled(cron = "0 */12 * * * ?")
+    @Scheduled(cron = "0 */12 * * * ?")
 //    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
 
     // 每隔2小时执行一次；
@@ -137,5 +153,54 @@ public class ScheduledTask {
 //    @Scheduled(cron = "0/10 * * * * ? ") //间隔60秒执行
     public void scheduledHandleNoUserName() {
         execitonScheduledTaskList.doScheduledHandleNoUserName(Const.SCHEDULED_HANDLE_NO_USER_NAME);
+    }
+
+    /**
+     * <B>方法名称：scheduledHandleNoUserName</B>
+     * <B>概要说明：每间隔5分钟更新下本地内存中的用户来源信息</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-23 17:28:15
+     * @Param []
+     **/
+    @Scheduled(cron = "0/300 * * * * ? ") //间隔300秒执行
+    public void scheduledHandleUserFrom() {
+        mingshiServerUtil.setUserFromByDb(msCaffeine.getUserFromCache());
+    }
+
+    /**
+     * <B>方法名称：scheduledHandleGetUserFromVisitedTimesFromRedis</B>
+     * <B>概要说明：从Redis中获取每个用户来源的访问次数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-25 09:57:59
+     * @Param []
+     **/
+    @Scheduled(cron = "0/30 * * * * ? ") //间隔300秒执行
+    @Async
+    public void scheduledHandleGetUserFromVisitedTimesFromRedis() {
+        // 从Redis缓存中获取所有的用户；
+        Set<String> userNames = redisPoolUtil.smembers(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
+        if (null != userNames && !userNames.isEmpty()) {
+            for (String userName : userNames) {
+                String key = Const.ZSET_TABLE_BY_EVERYONE_EVERYDAYUSER_FROM_VISITED_TIMES + userName;
+                Long aLong = redisPoolUtil.sizeFromZset(key);
+                // 从Redis中获取每个用户来源的访问次数；2022-11-25 09:57:55
+                Set<ZSetOperations.TypedTuple<String>> typedTuples = redisPoolUtil.reverseRangeWithScores(key, 0L, aLong);
+                if (null != typedTuples && !typedTuples.isEmpty()) {
+                    // 当Redis中有这个表时，才插入到数据库中。否则会造成数据分布页面数据不准确。2022-11-10 09:03:12
+                    for (ZSetOperations.TypedTuple<String> typedTuple : typedTuples) {
+                        Double score = typedTuple.getScore();
+                        String value = typedTuple.getValue();
+                        String[] split = value.split(Const.POUND_KEY);
+                        String time = split[0];
+                        String userFromName = split[1];
+                        msCaffeine.setUserFromVisitedTimesMap(userName, userFromName, time, score.intValue());
+                    }
+                }
+            }
+        }
     }
 }

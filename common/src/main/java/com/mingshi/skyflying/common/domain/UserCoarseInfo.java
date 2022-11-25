@@ -18,4 +18,8 @@ public class UserCoarseInfo {
     private Long visitedCount;
 
     private String usualVisitedData;
+
+    private String userFrom;
+
+
 }

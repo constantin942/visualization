@@ -82,6 +82,10 @@ public class IoThread extends Thread {
      * 统计每个用户每天访问系统的次数；2022-11-04 20:48:19
      */
     private Map<String/* 用户名 */, Map<String/* 时间 */, Long/* 操作次数 */>> everyoneEverydayVisitedTimesMap = null;
+    /**
+     * 统计每个用户每天来源的访问次数；2022-11-23 16:10:40
+     */
+    private Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap = null;
 
     public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
@@ -105,6 +109,7 @@ public class IoThread extends Thread {
         this.tableOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userOperationTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.everyoneEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.everyUserEverydayFromVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
     }
 
     /**
@@ -321,7 +326,8 @@ public class IoThread extends Thread {
                         tableByHowManyUserVisitedMap,
                         tableOperationTypeMap,
                         userOperationTypeMap,
-                        everyoneEverydayVisitedTimesMap);
+                        everyoneEverydayVisitedTimesMap,
+                        everyUserEverydayFromVisitedTimesMap);
 
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
@@ -396,7 +402,8 @@ public class IoThread extends Thread {
                     tableByHowManyUserVisitedMap,
                     tableOperationTypeMap,
                     userOperationTypeMap,
-                    everyoneEverydayVisitedTimesMap);
+                    everyoneEverydayVisitedTimesMap,
+                    everyUserEverydayFromVisitedTimesMap);
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);

@@ -57,6 +57,53 @@ public class SkyflyingController {
     private AiitSysUsersService aiitSysUsersService;
     @Resource
     private UserLoginLogService userLoginLogService;
+    @Resource
+    private UserFromService userFromService;
+
+    /**
+     * <B>方法名称：getUserFrom</B>
+     * <B>概要说明：获取用户来源配置信息</B>
+     *
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     * @Author zm
+     * @Date 2022-11-25 15:07:34
+     * @Param [pageNo, pageSize]
+     **/
+    @GetMapping(value = "/getUserFrom")
+    public ServerResponse<String> getUserFrom(@RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+                                              @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        return userFromService.selectAll(pageNo, pageSize);
+    }
+
+    /**
+     * <B>方法名称：updateUserFrom</B>
+     * <B>概要说明：禁启用用户来源配置信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-25 15:24:55
+     * @Param [ruleId, isDelete]
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     **/
+    @OperationAuditAspectAnnotation(isStart = true)
+    @PostMapping(value = "/updateUserFrom")
+    public ServerResponse<String> updateUserFrom(@RequestParam(value = "ruleId") Integer ruleId, @RequestParam(value = "isDelete") Integer isDelete) {
+        return userFromService.updateUserFrom(ruleId, isDelete);
+    }
+
+    /**
+     * <B>方法名称：addUserFrom</B>
+     * <B>概要说明：新增用户来源配置信息</B>
+     *
+     * @Author zm
+     * @Date 2022-11-25 15:29:52
+     * @Param [userFromPath, userFromDesc]
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     **/
+    @OperationAuditAspectAnnotation(isStart = true)
+    @PostMapping(value = "/addUserFrom")
+    public ServerResponse<String> addUserFrom(@RequestParam(value = "userFromPath") String userFromPath, @RequestParam(value = "userFromDesc") String userFromDesc) {
+        return userFromService.addUserFrom(userFromPath, userFromDesc);
+    }
 
     /**
      * <B>方法名称：getLoginLog</B>
@@ -578,7 +625,7 @@ public class SkyflyingController {
         @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
         String tableName,
         String dbName
-        ) {
+    ) {
         return segmentDetailService.getCoarseCountsOfTableName(dbName, tableName, pageNo, pageSize);
     }
 

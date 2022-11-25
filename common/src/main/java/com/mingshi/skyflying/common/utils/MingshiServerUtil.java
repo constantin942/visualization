@@ -3,6 +3,7 @@ package com.mingshi.skyflying.common.utils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
+import com.mingshi.skyflying.common.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.*;
 import com.mingshi.skyflying.common.domain.*;
@@ -19,6 +20,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +28,11 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.github.benmanes.caffeine.cache.Cache;
+
 
 /**
  * <B>主类名称: mingshiServerUtil</B>
@@ -59,6 +65,10 @@ public class MingshiServerUtil {
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private MsConfigDao msConfigDao;
+    @Resource
+    private MsUserFromMapper msUserFromMapper;
+    @Resource
+    private MsCaffeine msCaffeine;
 
     /**
      * 产生字符串类型的订单号
@@ -71,13 +81,89 @@ public class MingshiServerUtil {
     }
 
     /**
+     * <B>方法名称：setUserFrom</B>
+     * <B>概要说明：从本地缓存中获取用户来源</B>
+     *
+     * @Author zm
+     * @Date 2022-11-25 14:21:09
+     * @Param [userName]
+     * @return void
+     **/
+    public String setUserFrom(String userName) {
+        String userFrom = null;
+        try {
+            Map<String/* 用户名 */, Map<String/* 用户访问时间 年月日 */, Map<String/* 用户来源*/, Integer/* 访问次数 */>>> userFromVisitedTimesMap = msCaffeine.getUserFromVisitedTimesMap();
+            if(null != userFromVisitedTimesMap && !userFromVisitedTimesMap.isEmpty()){
+                Map<String, Map<String, Integer>> stringMapMap = userFromVisitedTimesMap.get(userName);
+                if(null != stringMapMap && !stringMapMap.isEmpty()){
+                    Set<String> keySet = stringMapMap.keySet();
+                    if(null != keySet && !keySet.isEmpty()){
+                        userFrom = JsonUtil.obj2String(keySet);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# UserAccessBehaviorTask.setUserFrom() # 从本地缓存中获取用户来源时，出现了异常。", e);
+        }
+        return userFrom;
+    }
+
+    /**
+     * <B>方法名称：setUserFromByDb</B>
+     * <B>概要说明：从数据库中加载用户来源；</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-23 16:57:42
+     * @Param []
+     **/
+    public void setUserFromByDb(Cache userFromCache) {
+        try {
+            List<MsUserFrom> msUserFromList = msUserFromMapper.selectAll(new HashMap<>());
+            if (null != msUserFromList && !msUserFromList.isEmpty()) {
+                setUserFromCache(msUserFromList, userFromCache);
+                // 获取缓存中的key；2022-11-24 17:10:28
+                msCaffeine.setUserFromMap();
+            } else {
+                log.error("# MsCaffeine.setUserFromByDb() # 项目启动，从数据库中加载用户来源信息到本地内存Caffeine中。在数据库中没有获取到用户来源名称和路径。");
+            }
+        } catch (Exception e) {
+            log.error("# MsCaffeine.setUserFromByDb() # 项目启动，从数据库中加载用户来源信息到本地内存Caffeine中时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：setUserFromCache</B>
+     * <B>概要说明：将从数据库中获取到的数据放入到本地缓存</B>
+     *
+     * @Author zm
+     * @Date 2022-11-24 17:12:38
+     * @Param [msUserFromList, userFromCache]
+     * @return void
+     **/
+    private void setUserFromCache(List<MsUserFrom> msUserFromList, Cache userFromCache) {
+        for (int i = 0; i < msUserFromList.size(); i++) {
+            MsUserFrom msUserFrom = msUserFromList.get(i);
+            String fromName = msUserFrom.getFromName();
+            String fromPath = msUserFrom.getFromPath();
+            if (StringUtil.isNotBlank(fromName) && StringUtil.isNotBlank(fromPath)) {
+                userFromCache.put(fromPath, fromName);
+            } else if (StringUtil.isBlank(fromName)) {
+                log.error("# MsCaffeine.setUserFromByDb() # 项目启动，从数据库中加载用户来源信息到本地内存Caffeine中。用户来源名称为空，不能放入到本地内存中。用户来源路径 = 【{}】。", fromPath);
+            } else if (StringUtil.isBlank(fromPath)) {
+                log.error("# MsCaffeine.setUserFromByDb() # 项目启动，从数据库中加载用户来源信息到本地内存Caffeine中。用户来源路径为空，不能放入到本地内存中。用户来源名称 = 【{}】。", fromName);
+            }
+        }
+    }
+
+    /**
      * <B>方法名称：getIpAddress</B>
      * <B>概要说明：获取ip</B>
      *
+     * @return java.lang.String
      * @Author zm
      * @Date 2022-11-08 16:01:55
      * @Param [request]
-     * @return java.lang.String
      **/
     public static String getIpAddress(HttpServletRequest request) {
         String ip = request.getHeader(Const.X_FORWARDED_FOR);
@@ -407,8 +493,9 @@ public class MingshiServerUtil {
                                        Map<String, Map<String, Double>> tableByHowManyUserVisitedMap,
                                        Map<String, Map<String, Double>> tableOperationTypeMap,
                                        Map<String, Map<String, Double>> userOperationTypeMap,
-                                       Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap
-                                       ) {
+                                       Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
+                                       Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap
+    ) {
         // 将用户的最后访问时间更新到Redis中
         flushUserAccessBehaviorLatestVisitedTimeToRedis(userAccessBehaviorLatestVisitedTimeMap);
 
@@ -420,6 +507,9 @@ public class MingshiServerUtil {
 
         // 将每个人每天的访问次数发送到Redis中
         flushEveryoneEverydayVisitedTimes(everyoneEverydayVisitedTimesMap);
+
+        // 将每个人每天的来源次数发送到Redis中
+        flushEveryoneEverydayFromVisitedTimes(everyUserEverydayFromVisitedTimesMap);
 
         // 将条最后的访问时间更新到Redis中；
         flushTableLatestVisitiedTime(tableLatestVisitedTimeMap);
@@ -459,13 +549,16 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Double>> tableByHowManyUserVisitedMap,
                              Map<String, Map<String, Double>> tableOperationTypeMap,
                              Map<String, Map<String, Double>> userOperationTypeMap,
-                             Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+                             Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
+                             Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap
+    ) {
 
 //        String userFrom = msSegmentDetailDo.getUserFrom();
         String userName = msSegmentDetailDo.getUserName();
 //        if(StringUtil.isNotBlank(userFrom) && StringUtil.isNotBlank(userName)){
 //            userName = userName + Const.AND + userFrom;
 //        }
+        String userFrom = msSegmentDetailDo.getUserFrom();
         String startTime = msSegmentDetailDo.getStartTime();
         String tableName = msSegmentDetailDo.getMsTableName();
         String dbInstance = msSegmentDetailDo.getDbInstance();
@@ -485,6 +578,9 @@ public class MingshiServerUtil {
 
             // 将每个人每天的访问次数在本地进行累加
             everyoneEverydayVisitedTimes(userName, startTime, everyoneEverydayVisitedTimesMap);
+
+            // 将每个人每天来源的访问次数在本地进行累加
+            everyUserEverydayFromVisitedTimes(userName, startTime, userFrom, everyUserEverydayFromVisitedTimesMap);
 
             // 更新表最后的访问时间
             tableLatestVisitedTime(peer, dbInstance, tableName, startTime, tableLatestVisitedTimeMap);
@@ -884,10 +980,10 @@ public class MingshiServerUtil {
      * <B>方法名称：flushEveryoneEverydayVisitedTimes</B>
      * <B>概要说明：将每个人每天的访问次数发送到Redis中</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-04 20:55:51
      * @Param [tableEverydayVisitedTimesMap]
-     * @return void
      **/
     private void flushEveryoneEverydayVisitedTimes(Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
         try {
@@ -912,6 +1008,40 @@ public class MingshiServerUtil {
             log.error("# MingshiServerUtil.flushEveryoneEverydayVisitedTimes() # 将每个人每天的访问次数发送到Redis中，出现了异常.", e);
         }
     }
+
+    /**
+     * <B>方法名称：flushEveryoneEverydayFromVisitedTimes</B>
+     * <B>概要说明：对每个用户每天来源进行统计累加</B>
+     *
+     * @Author zm
+     * @Date 2022-11-25 09:23:50
+     * @Param [everyoneEverydayVisitedTimesMap]
+     * @return void
+     **/
+    private void flushEveryoneEverydayFromVisitedTimes(Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap) {
+        try {
+            if (null == everyUserEverydayFromVisitedTimesMap || everyUserEverydayFromVisitedTimesMap.isEmpty()) {
+                return;
+            }
+            Iterator<String> iterator = everyUserEverydayFromVisitedTimesMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String userName = iterator.next();
+                Map<String, Long> timeTimesMap = everyUserEverydayFromVisitedTimesMap.get(userName);
+                if (null != timeTimesMap && !timeTimesMap.isEmpty()) {
+                    Iterator<String> iterator1 = timeTimesMap.keySet().iterator();
+                    while (iterator1.hasNext()) {
+                        String time = iterator1.next();
+                        Long count = timeTimesMap.get(time);
+                        redisPoolUtil.zSetIncrementScore(userName, time, null == count ? 1L : count);
+                    }
+                }
+            }
+            everyUserEverydayFromVisitedTimesMap.clear();
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushEveryoneEverydayVisitedTimes() # 将每个人每天的访问次数发送到Redis中，出现了异常.", e);
+        }
+    }
+
     /**
      * <B>方法名称：flushTableEverydayVisitedTimes</B>
      * <B>概要说明：将表每天的访问次数发送到Redis中</B>
@@ -949,18 +1079,39 @@ public class MingshiServerUtil {
      * <B>方法名称：everyoneEverydayVisitedTimes</B>
      * <B>概要说明：统计每个人每天访问系统的次数</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-04 20:45:07
      * @Param [userName, startTime, everyoneEverydayVisitedTimesMap]
-     * @return void
      **/
-    private void everyoneEverydayVisitedTimes(String userName,String startTime, Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+    private void everyoneEverydayVisitedTimes(String userName, String startTime, Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
         Date date = DateTimeUtil.strToDate(startTime);
         String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
 
         // 对每一个人，统计每天的访问次数；2022-07-22 10:42:33
         String key = Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName;
         doEveryoneEverydayVisitedTimes(key, startTimeNew, everyoneEverydayVisitedTimesMap);
+    }
+
+    /**
+     * <B>方法名称：everyoneFromVisitedTimes</B>
+     * <B>概要说明：对每个用户每天来源的访问次数累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-23 16:13:24
+     * @Param [userName, userFrom, everyoneFromVisitedTimesMap]
+     **/
+    private void everyUserEverydayFromVisitedTimes(String userName, String startTime, String userFrom, Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap) {
+        if (StringUtil.isBlank(userFrom)) {
+            return;
+        }
+        // 对每一个人，统计每天的访问次数；2022-07-22 10:42:33
+        Date date = DateTimeUtil.strToDate(startTime);
+        String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
+        String key = startTimeNew + Const.POUND_KEY + userFrom;
+         String table = Const.ZSET_TABLE_BY_EVERYONE_EVERYDAYUSER_FROM_VISITED_TIMES + userName;
+        doEveryUserEverydayFromVisitedTimes(table, key, everyUserEverydayFromVisitedTimesMap);
     }
 
     private void tableEverydayVisitedTimes(String tableName, String peer, String dbInstance, String startTime, Map<String, Map<String, Long>> tableEverydayVisitedTimesMap) {
@@ -1000,6 +1151,35 @@ public class MingshiServerUtil {
                 timeTimesMap.put(startTime, 1L);
             } else {
                 timeTimesMap.put(startTime, count + 1L);
+            }
+        }
+    }
+
+    /**
+     * <B>方法名称：doEveryUserEverydayFromVisitedTimes</B>
+     * <B>概要说明：对每个用户每天的访问次数进行累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-23 16:22:26
+     * @Param [key, startTime, userFrom, everyoneEverydayVisitedTimesMap]
+     **/
+    private void doEveryUserEverydayFromVisitedTimes(String table, String key, Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap) {
+        // 对每一个人，统计每天的访问次数；2022-07-22 10:42:33
+        if (null == everyoneEverydayVisitedTimesMap) {
+            everyoneEverydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        }
+        Map<String, Long> timeTimesMap = everyoneEverydayVisitedTimesMap.get(table);
+        if (null == timeTimesMap) {
+            timeTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+            timeTimesMap.put(key, 1L);
+            everyoneEverydayVisitedTimesMap.put(table, timeTimesMap);
+        } else {
+            Long count = timeTimesMap.get(key);
+            if (null == count) {
+                timeTimesMap.put(key, 1L);
+            } else {
+                timeTimesMap.put(key, count + 1L);
             }
         }
     }

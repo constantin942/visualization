@@ -1,9 +1,10 @@
 package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.caffeine.MsCaffeine;
+import com.mingshi.skyflying.common.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
@@ -20,6 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +43,8 @@ import java.util.*;
 @PropertySource("classpath:application-${spring.profiles.active}.yml")
 public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 
+    @Resource
+    private MsCaffeine msCaffeine;
     @Resource
     private MingshiServerUtil mingshiServerUtil;
     @Resource
@@ -177,6 +181,71 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     }
 
     /**
+     * <B>方法名称：getUserFrom</B>
+     * <B>概要说明：从Kafka的消息中获取用户来源</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-11-23 17:38:19
+     * @Param [operationName, msSegmentDetailDo]
+     **/
+    private void getUserFrom(String operationName, MsSegmentDetailDo msSegmentDetailDo) {
+        try {
+            String str1 = "http://10.0.0.69:8181/login/web";
+            String str2 = "https://hy2api.tian-wang.com/login/web";
+            String str3 = "http://hy2api.tian-wang.com/login/web";
+            String str4 = "http://hy4api.tian-wang.com/login/web";
+            String str5 = "POST:/login/web";
+            String str6 = "https://hy2api.tian-wang.com/login/app/merchantman";
+            String str7 = "http://10.0.0.69:8181/login/fish/easier";
+
+            if (null != operationName) {
+//            if (null != operationName && (operationName.contains(str1) ||
+//                operationName.contains(str2) ||
+//                operationName.contains(str3) ||
+//                operationName.contains(str4) ||
+//                operationName.contains(str5) ||
+//                operationName.contains(str6) ||
+//                operationName.contains(str7)
+//            )) {
+                String userFromCacheByUserFromPath = doGetUserFromByPath(operationName);
+                msSegmentDetailDo.setUserFrom(userFromCacheByUserFromPath);
+            }
+        } catch (Exception e) {
+            log.error("# SegmentConsumeServiceImpl.getUserFrom() # 从Kafka的消息中获取用户来源时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doGetUserFromByPath</B>
+     * <B>概要说明：根据url地址获取用户来源</B>
+     *
+     * @return java.lang.String
+     * @Author zm
+     * @Date 2022-11-24 17:17:04
+     * @Param [userFromPath]
+     **/
+    private String doGetUserFromByPath(String userFromPath) {
+        Instant now = Instant.now();
+        String userFromName = null;
+        Set<@NonNull String> keySet = msCaffeine.getUserFromMap().keySet();
+        if (null != keySet && !keySet.isEmpty()) {
+            for (int i = 0; i < keySet.size(); i++) {
+                Iterator<@NonNull String> iterator = keySet.iterator();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    if (userFromPath.contains(key)) {
+                        userFromName = msCaffeine.getUserFromCacheByUserFromPath(key);
+                        log.info("# SegmentConsumeServiceImpl.doGetUserFromByPath() # 根据用户访问路径，获取用户对应的来源，用时【{}】毫秒。", userFromPath, DateTimeUtil.getTimeMillis(now));
+                        return userFromName;
+                    }
+                }
+            }
+        }
+        return userFromName;
+    }
+
+    /**
      * <B>方法名称：getSegmentDetaiDolList</B>
      * <B>概要说明：组装msSegmentDetailDo实例信息，并放入到list集合中，然后方便下一步的批量处理</B>
      *
@@ -200,14 +269,13 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
             }
             for (int i = 1; i < list.size(); i++) {
                 LinkedHashMap map = list.get(i);
-
                 // 给MsSegmentDetailDo实例赋值
                 MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
+
+                String operationName = segment.getOperationName();
+
                 // 设置用户来源；2022-11-09 14:49:37
-                String userFrom = segment.getUserFrom();
-                if(StringUtil.isNotBlank(userFrom)){
-                    msSegmentDetailDo.setUserFrom(userFrom);
-                }
+                getUserFrom(operationName, msSegmentDetailDo);
 
                 String logs = String.valueOf(map.get(Const.LOGS));
                 Boolean isError = false;
@@ -367,10 +435,9 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
     private void putSegmentDetailDoIntoList(SegmentDo segment, LinkedList<MsSegmentDetailDo> segmentDetaiDolList, LinkedList<MsSegmentDetailDo> segmentDetaiUserNameIsNullDolList, SegmentObject segmentObject) {
         if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
             MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
-            String userFrom = segment.getUserFrom();
-            if(StringUtil.isNotBlank(userFrom)){
-                msSegmentDetailDo.setUserFrom(userFrom);
-            }
+            // 设置用户来源；2022-11-09 14:49:37
+            getUserFrom(segment.getOperationName(), msSegmentDetailDo);
+
             msSegmentDetailDo.setParentService(segment.getParentService());
             msSegmentDetailDo.setParentEndpoint(segment.getParentEndpoint());
             msSegmentDetailDo.setParentServiceInstance(segment.getParentServiceInstance());

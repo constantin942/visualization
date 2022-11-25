@@ -1,4 +1,4 @@
-package com.mingshi.skyflying.caffeine;
+package com.mingshi.skyflying.common.caffeine;
 
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.RemovalListener;

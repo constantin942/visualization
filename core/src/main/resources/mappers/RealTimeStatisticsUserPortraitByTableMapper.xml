@@ -10,15 +10,14 @@
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
         <result column="is_deleted" jdbcType="INTEGER" property="isDeleted"/>
         <result column="last_visited_date" jdbcType="VARCHAR" property="lastVisitedDate"/>
+        <result column="user_from" jdbcType="VARCHAR" property="userFrom"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id
-        , user_name, usual_visited_data, visited_count, create_time, update_time, is_deleted,
-    last_visited_date
+        id, user_name, usual_visited_data, visited_count, create_time, update_time, is_deleted, last_visited_date, user_from
     </sql>
     <insert id="insertSelectiveBatch" parameterType="java.util.List">
         insert into real_time_statistics_user_portrait_by_table
-        (user_name, usual_visited_data, visited_count, create_time, update_time, last_visited_date)
+        (user_name, usual_visited_data, visited_count, create_time, update_time, last_visited_date, user_from)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
@@ -27,13 +26,15 @@
             #{item.visitedCount,jdbcType=VARCHAR},
             #{item.createTime,jdbcType=VARCHAR},
             #{item.updateTime,jdbcType=VARCHAR},
-            #{item.lastVisitedDate,jdbcType=INTEGER}
+            #{item.lastVisitedDate,jdbcType=INTEGER},
+            #{item.userFrom,jdbcType=INTEGER}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
         update_time = VALUES(update_time),
         visited_count = VALUES(visited_count),
-        last_visited_date = VALUES(last_visited_date)
+        last_visited_date = VALUES(last_visited_date),
+        user_from = VALUES(user_from)
     </insert>
     <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
         select
@@ -93,6 +94,9 @@
             <if test="lastVisitedDate != null">
                 last_visited_date,
             </if>
+            <if test="userFrom != null">
+                user_from,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -118,6 +122,9 @@
             </if>
             <if test="lastVisitedDate != null">
                 #{lastVisitedDate,jdbcType=VARCHAR},
+            </if>
+            <if test="userFrom != null">
+                #{userFrom,jdbcType=VARCHAR},
             </if>
         </trim>
     </insert>
@@ -145,6 +152,9 @@
             </if>
             <if test="lastVisitedDate != null">
                 last_visited_date = #{lastVisitedDate,jdbcType=VARCHAR},
+            </if>
+            <if test="userFrom != null">
+                user_from = #{userFrom,jdbcType=VARCHAR},
             </if>
         </set>
         where id = #{id,jdbcType=INTEGER}

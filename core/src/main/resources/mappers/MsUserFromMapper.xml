@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mingshi.skyflying.common.dao.MsUserFromMapper">
+  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsUserFrom">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
+    <result column="from_path" jdbcType="VARCHAR" property="fromPath" />
+    <result column="from_name" jdbcType="VARCHAR" property="fromName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, is_delete, gmt_create, gmt_modified, from_path, from_name
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from ms_user_from
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByUserFromPath" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from ms_user_from
+    where from_path = #{userFromPath,jdbcType=VARCHAR}
+  </select>
+    <select id="selectAll" resultType="com.mingshi.skyflying.common.domain.MsUserFrom">
+        select
+        <include refid="Base_Column_List" />
+        from ms_user_from
+        where is_delete = 0
+        order by id desc
+        <if test="pageNo != null and  pageSize != null   ">
+            LIMIT #{pageNo},#{pageSize}
+        </if>
+    </select>
+    <select id="selectAllCount" resultType="java.lang.Integer">
+        select
+        count(*)
+        from ms_user_from
+        where is_delete = 0
+    </select>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsUserFrom">
+    insert into ms_user_from
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified,
+      </if>
+      <if test="fromPath != null">
+        from_path,
+      </if>
+      <if test="fromName != null">
+        from_name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fromPath != null">
+        #{fromPath,jdbcType=VARCHAR},
+      </if>
+      <if test="fromName != null">
+        #{fromName,jdbcType=VARCHAR},
+      </if>
+    </trim>
+    ON DUPLICATE KEY UPDATE
+    gmt_modified = VALUES(gmt_modified)
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsUserFrom">
+    update ms_user_from
+    <set>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModified != null">
+        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fromPath != null">
+        from_path = #{fromPath,jdbcType=VARCHAR},
+      </if>
+      <if test="fromName != null">
+        from_name = #{fromName,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

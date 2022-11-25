@@ -1,7 +1,7 @@
 package com.mingshi.skyflying.task;
 
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
-import com.mingshi.skyflying.caffeine.MsCaffeine;
+import com.mingshi.skyflying.common.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;

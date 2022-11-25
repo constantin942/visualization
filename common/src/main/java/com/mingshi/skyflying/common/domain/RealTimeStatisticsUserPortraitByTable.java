@@ -21,4 +21,6 @@ public class RealTimeStatisticsUserPortraitByTable {
     private Integer isDeleted;
 
     private String lastVisitedDate;
+
+    private String userFrom;
 }
