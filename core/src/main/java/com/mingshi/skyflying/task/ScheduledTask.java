@@ -178,7 +178,7 @@ public class ScheduledTask {
      * @Date 2022-11-25 09:57:59
      * @Param []
      **/
-    @Scheduled(cron = "0/30 * * * * ? ") //间隔300秒执行
+    @Scheduled(cron = "0/60 * * * * ? ") //间隔60秒执行
     @Async
     public void scheduledHandleGetUserFromVisitedTimesFromRedis() {
         // 从Redis缓存中获取所有的用户；
