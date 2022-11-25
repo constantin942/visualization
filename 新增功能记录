@@ -1,0 +1,23 @@
+2022-11-25 16:37:45 by zm
+    1. 新增统计用户来源次数，也就是每天调用了多少次登录接口。
+       这些用户来源信息配置在数据库表ms_user_from中。同时可以在前端进行新增、禁启用。在审计日志里增加了新增、禁启用的审计日志。
+       获取用户来源的做法是这样的：
+           a. 可视化后端在启动时，会从数据库中加载用户来源配置信息到本地内存中，详情见代码：
+              创建本地缓存：MsCaffeine#run() # createAllCaffeine() # createUserFromCacheCaffeine()；
+              往本地缓存里初始化数据库中的用户来源信息：MsCaffeine#run()#doRun()。
+           b. 在获取到每条用户访问详情后，会有一个字段operationName来标识当前用户访问的url地址。根据这个url地址从本地缓存中识别出用户来源。详情见代码：
+              SegmentConsumeServiceImpl # getUserFrom() # doGetUserFromByPath()。
+           c. 如果在前端增加了用户来源配置信息，需要同步到本地缓存。这里的具体实现方式是：启动了一个定时任务，每间隔5分钟就从数据库表ms_user_from中把用户来源配置信息加载到本地内存中。
+              也就是说，用户在前端禁启用或者新增了用户来源配置信息后，最多5分钟生效。
+              在前端中，有一个功能叫做禁启用用户来源配置信息。禁用的意思是：不再统计累加用户在这个来源的次数，但历史统计次数会一直存在。
+       用户来源信息如何供其他接口使用？
+           a. 用户访问行为接口和数据分布接口会获取用户来源统计信息；
+           b. 为了使得上面的两个接口快速的获取到用户来源统计信息，设置了一个定时任务，没间隔60秒就去Redis分布式缓存中获取用户的来源统计信息，并放入到本地缓存中。详情见代码：
+              ScheduledTask # scheduledHandleGetUserFromVisitedTimesFromRedis()。
+           c. 用户访问行为接口获取用户来源统计信息是这样做的：
+              c1. 从数据库中表real_time_statistics_user_portrait_by_table中获取用户访问行为信息；
+              c2. 为了使得接口快速将数据返回给前端，这里定时从Redis中获取用户访问次数、常用数据、最后访问时间信息，从本地缓存中获取用户的来源信息，
+                  然后存入到表real_time_statistics_user_portrait_by_table；详情见代码：
+                  UserAccessBehaviorTask # scheduledUserAccessBehaviorTask()；
+           d. 数据分布接口从本地缓存中获取用户来源统计信息，详情见代码：
+              SegmentDetailServiceImpl # getCoarseCountsOfTableName() # getVisitedTimesMostUserName()
