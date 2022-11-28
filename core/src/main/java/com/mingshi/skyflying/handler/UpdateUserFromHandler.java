@@ -22,7 +22,7 @@ public class UpdateUserFromHandler implements UpdateOperationRecord {
         JsonNode isDelete = jsonNodes.get(Const.IS_DELETE);
         StringBuilder stringBuilder = new StringBuilder();
         if(null != ruleId && null != isDelete){
-            stringBuilder.append(isDelete.asText().equals(0)  == true ? Const.ENABLE : Const.DISABLE);
+            stringBuilder.append(Const.NUMBER_ZERO == isDelete.asInt()  == true ? Const.ENABLE : Const.DISABLE);
             stringBuilder.append(Const.RULE_ID_DESC + ruleId.asText() + Const.DE);
         }
         stringBuilder.append(Const.UPDATE_USER_FROM_DESC);

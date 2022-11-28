@@ -28,7 +28,6 @@
         select
         <include refid="Base_Column_List" />
         from ms_user_from
-        where is_delete = 0
         order by id desc
         <if test="pageNo != null and  pageSize != null   ">
             LIMIT #{pageNo},#{pageSize}
@@ -38,7 +37,6 @@
         select
         count(*)
         from ms_user_from
-        where is_delete = 0
     </select>
     <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsUserFrom">
     insert into ms_user_from
