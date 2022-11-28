@@ -66,6 +66,9 @@ public class LoadAllEnableMonitorTablesFromDb implements ApplicationRunner {
    * @Param [key]
    **/
   public static String getTableDesc(String key) {
+      if(StringUtil.isBlank(key)){
+          return null;
+      }
     if (key.contains(Const.POUND_KEY)) {
       String[] split = key.split(Const.POUND_KEY);
       String peer = split[0];

@@ -42,11 +42,17 @@ public class MsCaffeine implements ApplicationRunner {
     private static volatile Cache<String/* token */, String/* userName */> tokenUserNameCache = null;
     private static volatile Cache<String/* globalTraceId */, String/* userName */> globalTraceIdUserNameCache = null;
     private static volatile Cache<String/* globalTraceId */, String/* token */> globalTraceIdTokenCache = null;
-    // 从数据库中加载用户来源信息到本地内存中；2022-11-25 16:42:58
+    /**
+     * 从数据库中加载用户来源信息到本地内存中；2022-11-25 16:42:58
+     */
     private static volatile Cache<String/* user from path */, String/* from 中文 */> userFromCacheByDb = null;
-    // 把从数据库中加载好的用户来源信息转成Map，方便从用户访问详情链路信息中识别用户来源；2022-11-25 16:44:07
+    /**
+     * 把从数据库中加载好的用户来源信息转成Map，方便从用户访问详情链路信息中识别用户来源；2022-11-25 16:44:07
+     */
     private static volatile ConcurrentMap<@NonNull String, @NonNull String> userFromMap;
-    // 从Redis中获取每一个用户的来源统计信息，供前端用户访问行为和数据访问统计接口使用；2022-11-25 16:44:59
+    /**
+     * 从Redis中获取每一个用户的来源统计信息，供前端用户访问行为和数据访问统计接口使用；2022-11-25 16:44:59
+     */
     private static volatile Map<String/* 用户名 */, Map<String/* 用户来源*/, Map<String/* 用户访问时间 年月日 */, Integer/* 访问次数 */>>> userFromVisitedTimesMap = new ConcurrentHashMap<>();
 
     /**
@@ -61,15 +67,15 @@ public class MsCaffeine implements ApplicationRunner {
     public void setUserFromVisitedTimesMap(String userName, String userFrom, String time, Integer times) {
         Map<String/* 用户来源*/, Map<String/* 用户访问时间 年月日 */, Integer/* 访问次数 */>> fromTimeTimesMap = userFromVisitedTimesMap.get(userName);
         if (null == fromTimeTimesMap) {
-            fromTimeTimesMap = new ConcurrentHashMap<>();
+            fromTimeTimesMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
             userFromVisitedTimesMap.put(userName, fromTimeTimesMap);
-            Map<String/* 用户来源*/, Integer/* 访问次数 */> map = new ConcurrentHashMap<>();
+            Map<String/* 用户来源*/, Integer/* 访问次数 */> map = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
             map.put(time, times);
             fromTimeTimesMap.put(userFrom, map);
         } else {
             Map<String, Integer> stringIntegerMap = fromTimeTimesMap.get(userFrom);
             if (null == stringIntegerMap) {
-                stringIntegerMap = new ConcurrentHashMap<>();
+                stringIntegerMap = new ConcurrentHashMap<>(Const.NUMBER_EIGHT);
                 fromTimeTimesMap.put(userFrom, stringIntegerMap);
             }
             stringIntegerMap.put(time, times);

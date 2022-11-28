@@ -119,7 +119,7 @@ public class MingshiServerUtil {
      **/
     public void setUserFromByDb(Cache userFromCache) {
         try {
-            List<MsUserFrom> msUserFromList = msUserFromMapper.selectAll(new HashMap<>());
+            List<MsUserFrom> msUserFromList = msUserFromMapper.selectAll(new HashMap<>(Const.INITAL_SIZE));
             if (null != msUserFromList && !msUserFromList.isEmpty()) {
                 setUserFromCache(msUserFromList, userFromCache);
                 // 获取缓存中的key；2022-11-24 17:10:28
@@ -553,11 +553,7 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap
     ) {
 
-//        String userFrom = msSegmentDetailDo.getUserFrom();
         String userName = msSegmentDetailDo.getUserName();
-//        if(StringUtil.isNotBlank(userFrom) && StringUtil.isNotBlank(userName)){
-//            userName = userName + Const.AND + userFrom;
-//        }
         String userFrom = msSegmentDetailDo.getUserFrom();
         String startTime = msSegmentDetailDo.getStartTime();
         String tableName = msSegmentDetailDo.getMsTableName();

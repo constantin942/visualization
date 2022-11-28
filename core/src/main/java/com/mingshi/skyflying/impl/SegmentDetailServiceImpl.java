@@ -344,13 +344,6 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
             Date date = DateTimeUtil.strToDate(value);
             String dateToStrYyyyMmDd = DateTimeUtil.dateToStrYyyyMmDd(date);
             stringArrayList.add(dateToStrYyyyMmDd);
-            // 将对每个用户访问Redis，改成批量访问Redis；2022-11-17 11:06:21
-//            Long count;
-//            Object hget = redisPoolUtil.hget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, dateToStrYyyyMmDd);
-//            if (null != hget) {
-//                count = Long.valueOf(String.valueOf(hget));
-//                returnList.add(count);
-//            }
         }
         List<Object> hmget = redisPoolUtil.hmget(Const.HASH_TABLE_EVERYONE_EVERYDAY_VISITED_TIMES + userName, stringArrayList);
         if(null != hmget && !hmget.isEmpty()){
