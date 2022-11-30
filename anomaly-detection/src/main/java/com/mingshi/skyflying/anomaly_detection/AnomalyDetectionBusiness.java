@@ -732,14 +732,10 @@ public class AnomalyDetectionBusiness {
         try {
             HashMap<String, Integer> map = new HashMap<>(Const.NUMBER_EIGHT);
             for (MsAlarmInformationDo msAlarmInformation : msAlarmInformationDoList) {
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                DateFormat dateFormat = new SimpleDateFormat(DateTimeUtil.DATE_TIME_SHORT);
                 String strDate = dateFormat.format(msAlarmInformation.getOriginalTime());
-                map.computeIfAbsent(msAlarmInformation.getMatchRuleId() +
-                        Const.POUND_KEY + msAlarmInformation.getUserName() +
-                        Const.POUND_KEY + strDate, k -> 1);
-                map.computeIfPresent(msAlarmInformation.getMatchRuleId() +
-                        Const.POUND_KEY + msAlarmInformation.getUserName() +
-                        Const.POUND_KEY + strDate, (k, v) -> v + 1);
+                map.computeIfAbsent(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName() + Const.POUND_KEY + strDate, k -> 1);
+                map.computeIfPresent(msAlarmInformation.getMatchRuleId() + Const.POUND_KEY + msAlarmInformation.getUserName() + Const.POUND_KEY + strDate, (k, v) -> v + 1);
             }
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
                 dingAlarmHelper(entry.getKey(), entry.getValue());
@@ -759,7 +755,7 @@ public class AnomalyDetectionBusiness {
             String[] strings = key.split(Const.POUND_KEY);
             Date date = null;
             try {
-                date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(strings[2]);
+                date = new SimpleDateFormat(DateTimeUtil.DATE_TIME_SHORT).parse(strings[2]);
             } catch (ParseException e) {
                 log.error("提取时间失败----{}", strings[2]);
                 return;

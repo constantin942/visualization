@@ -8,6 +8,7 @@ import com.mingshi.skyflying.anomaly_detection.domain.DingAlarmInformation;
 import com.mingshi.skyflying.common.constant.AnomalyConst;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.DingUtils;
 import com.mingshi.skyflying.common.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -82,20 +83,32 @@ public class DingAlarmTask {
         }
     }
 
+    /**
+     * <B>方法名称：doSendDingAlarm</B>
+     * <B>概要说明：执行间歇发送钉钉告警信息定时任务</B>
+     *
+     * @return void
+     * @Author tzx
+     * @Date 2022-11-30 14:32:34
+     * @Param []
+     **/
     private void doSendDingAlarm() throws InterruptedException {
         int index = 0;
         while (!MsCaffeineCache.getDingInfoInsertedDone() && index < Const.NUM_FIVE) {
             Thread.sleep(6000);
             index++;
         }
+        // todo：这种通过 selectOne获取配置信息的方式很不好，如果这个表里有多个配置怎么获取？应该给这个表里的这条数据起个名字，根据名字来获取配置信息，而不应该强依赖数据库的id。2022-11-30 14:32:19
         DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
-        if(null == dingAlarmConfig){
+        if (null == dingAlarmConfig) {
             log.error("# DingAlarmTask.doSendDingAlarm() # 执行定时任务--间歇发送钉钉告警信息，在数据库中没有找到钉钉的配置信息。");
             return;
         }
         Integer gap = dingAlarmConfig.getGap();
         List<DingAlarmInformation> dingAlarmInformationList = dingAlarmInformationMapper.selectPeriodInfo(AnomalyConst.SECONDS * gap);
-        if (dingAlarmInformationList.isEmpty()) {return;}
+        if (dingAlarmInformationList.isEmpty()) {
+            return;
+        }
         try {
             String message = "";
             for (DingAlarmInformation dingAlarmInformation : dingAlarmInformationList) {
@@ -125,7 +138,7 @@ public class DingAlarmTask {
         if (!StringUtil.isEmpty(sb.toString())) {
             sb.append("\n\r");
         }
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat(DateTimeUtil.DATE_TIME_SHORT);
         String strDate = dateFormat.format(dingAlarmInformation.getCreateTime());
         sb.append(strDate);
         sb.append(" :\n\r\t用户").append(dingAlarmInformation.getUsername());
@@ -142,6 +155,8 @@ public class DingAlarmTask {
             sb.append("次");
             return sb.toString();
         }
+
+        // todo：这里应该判断code是否是高危操作，而不是默认是高危操作。如果哪天额外增加了几天规则，上面两条规则都不满足，正好匹配了新增加的规则，那这里告警时，就阴错阳差的进行了高危操作的告警。2022-11-30 14:37:23
         sb.append("进行了高危操作");
         sb.append(dingAlarmInformation.getTriggerTimes());
         sb.append("次");
