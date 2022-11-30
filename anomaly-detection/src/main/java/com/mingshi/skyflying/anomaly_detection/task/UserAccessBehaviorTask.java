@@ -98,7 +98,10 @@ public class UserAccessBehaviorTask {
                     tableName = String.valueOf(objects[0]);
                     MsCaffeineCache.setUserAccessTaskBehaviorCache(Const.ZSET_USER_ACCESS_BEHAVIOR_ALL_VISITED_TABLES + user, tableName);
                 }
-
+                // 表名或用户名或最近访问时间为空，数据不插入到数据库中；2022-11-29 11:06:43
+                if(StringUtil.isBlank(tableName) || StringUtil.isBlank(user) || StringUtil.isBlank(lastVisitedDate)){
+                    continue;
+                }
                 RealTimeStatisticsUserPortraitByTable realTimeStatisticsUserPortraitByTable = new RealTimeStatisticsUserPortraitByTable();
                 realTimeStatisticsUserPortraitByTable.setUserName(user);
                 realTimeStatisticsUserPortraitByTable.setLastVisitedDate(lastVisitedDate);
