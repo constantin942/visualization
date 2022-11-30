@@ -404,7 +404,6 @@ public class AnomalyDetectionBusiness {
                 userVisitedTimeIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList, portraitConfig, isDemoMode);
             }
 
-            // 宇翔，你看看加在这个地方，是否合适？
             highRiskOptService.visitIsAbnormal(segmentDetaiDolList, msAlarmInformationDoList);
 
             // 将异常告警信息发送到Kafka中；2022-10-19 10:07:34
@@ -425,9 +424,14 @@ public class AnomalyDetectionBusiness {
      **/
     private void sendMsAlarmInformationDoToKafka(List<MsAlarmInformationDo> msAlarmInformationDoList) {
         try {
-            if (msAlarmInformationDoList.size() != 0) {
+            if (null != msAlarmInformationDoList && !msAlarmInformationDoList.isEmpty()) {
                 // 将告警检测发送到Kafka中
                 MsConsumerRecords msConsumerRecords = new MsConsumerRecords(RecordEnum.ANOMALY_ALARM.getCode(), msAlarmInformationDoList);
+                /**
+                 * 这里在把消息发送到Kafka中的时候，对每一条消息都指定了key。这样做的意义在于：把这一类消息都发送到指定的partition中，由其中一个消费者去消费。
+                 * 为什么只能由一个消费者去消费？因为告警抑制需要在同一个消费者中完成。
+                 * 2022-11-30 10:10:45
+                 */
                 aiitKafkaProducer.sendWithKey(anomalyDetectionAlarmTopic, Const.ANOMALY_DETECTION_ALARM_KEY, JsonUtil.obj2String(msConsumerRecords));
             }
         } catch (Exception e) {
@@ -475,6 +479,8 @@ public class AnomalyDetectionBusiness {
      * 从数据库查询开关存入Redis
      */
     private boolean cacheRuleEnable(String suffix) {
+        // todo：应该根据user_portrait_rules表中的rule_name字段去获取对应的规则，而不应该根据表的id字段去获取。这样会对表的id造成强依赖，如果哪一天不小心改变了表的id字段，那么就很可能取不到数据。
+        // todo：正常做法是：将规则与表中的rule_name字段进行绑定，根据rule_name去表里查询数据。2022-11-30 09:42:22
         UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TIME_ID);
         UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TABLE_ID);
         if (null != timeRule) {
@@ -483,18 +489,20 @@ public class AnomalyDetectionBusiness {
         if (null != tableRule) {
             portraitRulesService.cacheRule(tableRule.getId(), tableRule.getIsDelete());
         }
-        if (suffix.equals(AnomalyConst.TIME_SUF)) {
+        if (AnomalyConst.TIME_SUF.equals(suffix)) {
             if (timeRule != null && timeRule.getIsDelete() != null) {
                 return timeRule.getIsDelete() != 1;
             } else {
+                // todo：输出的错误日志应该尽可能详细些，这样有利于根据错误日志排查错误。2022-11-30 09:44:36
                 log.error("从数据库获取规则失败");
                 return false;
             }
         }
-        if (suffix.equals(AnomalyConst.TABLE_SUF)) {
+        if (AnomalyConst.TABLE_SUF.equals(suffix)) {
             if (tableRule != null && tableRule.getIsDelete() != null) {
                 return tableRule.getIsDelete() != 1;
             } else {
+                // todo：输出的错误日志应该尽可能详细些，这样有利于根据错误日志排查错误。2022-11-30 09:44:36
                 log.error("从数据库获取规则失败");
                 return false;
             }
