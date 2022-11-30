@@ -75,10 +75,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
         <version>1.5.3.RELEASE</version>
         <configuration>
           <mainClass>com.mingshi.web.SkywalkingMingshiServerApplication</mainClass>

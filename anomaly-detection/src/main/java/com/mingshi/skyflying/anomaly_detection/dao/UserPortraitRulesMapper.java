@@ -11,6 +11,8 @@ public interface UserPortraitRulesMapper {
 
     UserPortraitRulesDo selectByPrimaryKey(Integer id);
 
+    UserPortraitRulesDo selectByRuleName(String ruleName);
+
     int updateByPrimaryKeySelective(UserPortraitRulesDo msg);
 
     List<UserPortraitRulesDo> selectAllRules(Map<String, Object> queryMap);

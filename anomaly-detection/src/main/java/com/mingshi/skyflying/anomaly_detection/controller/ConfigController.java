@@ -86,7 +86,6 @@ public class ConfigController {
         return ServerResponse.createBySuccess(highRiskOptMapper.selectAll());
     }
 
-    // todo：这里禁启用某一条高危操作规则时，需要前端把所有的高危规则都传递过来？如果是这样的话，这个设计相当糟糕。正常做法是：禁启用哪一条规则，只需要把哪一条规则的id和禁启用标识传递过来即可。
     @OperationAuditAspectAnnotation(isStart = true)
     @PutMapping("updateHighRiskOpt")
     public ServerResponse updateHighRiskOpt(@RequestBody List<HighRiskOpt> highRiskOpts) {
@@ -106,7 +105,9 @@ public class ConfigController {
     @OperationAuditAspectAnnotation(isStart = true)
     @PutMapping("updateDingConfig")
     public ServerResponse updateDingConfig(@RequestBody DingAlarmConfig dingAlarmConfig) {
-        dingAlarmConfigMapper.updateByPrimaryKeySelective(dingAlarmConfig);
+        if ( 1 != dingAlarmConfigMapper.updateByPrimaryKeySelective(dingAlarmConfig)) {
+            dingAlarmConfigMapper.insertSelective(dingAlarmConfig);
+        }
         return ServerResponse.createBySuccess();
     }
 }

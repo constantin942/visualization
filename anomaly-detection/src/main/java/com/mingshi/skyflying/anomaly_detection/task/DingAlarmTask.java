@@ -98,7 +98,6 @@ public class DingAlarmTask {
             Thread.sleep(6000);
             index++;
         }
-        // todo：这种通过 selectOne获取配置信息的方式很不好，如果这个表里有多个配置怎么获取？应该给这个表里的这条数据起个名字，根据名字来获取配置信息，而不应该强依赖数据库的id。2022-11-30 14:32:19
         DingAlarmConfig dingAlarmConfig = dingAlarmConfigMapper.selectOne();
         if (null == dingAlarmConfig) {
             log.error("# DingAlarmTask.doSendDingAlarm() # 执行定时任务--间歇发送钉钉告警信息，在数据库中没有找到钉钉的配置信息。");
@@ -147,19 +146,15 @@ public class DingAlarmTask {
             sb.append("以往在该时段不经常访问,一共访问了");
             sb.append(dingAlarmInformation.getTriggerTimes());
             sb.append("次");
-            return sb.toString();
-        }
-        if (code.equals(AlarmEnum.TABLE_ALARM.getCode())) {
+        } else if (code.equals(AlarmEnum.TABLE_ALARM.getCode())) {
             sb.append("访问了不经常使用的表");
             sb.append(dingAlarmInformation.getTriggerTimes());
             sb.append("次");
-            return sb.toString();
+        } else if (code.equals(AlarmEnum.HIGH_RISK_OPT.getCode())) {
+            sb.append("进行了高危操作");
+            sb.append(dingAlarmInformation.getTriggerTimes());
+            sb.append("次");
         }
-
-        // todo：这里应该判断code是否是高危操作，而不是默认是高危操作。如果哪天额外增加了几天规则，上面两条规则都不满足，正好匹配了新增加的规则，那这里告警时，就阴错阳差的进行了高危操作的告警。2022-11-30 14:37:23
-        sb.append("进行了高危操作");
-        sb.append(dingAlarmInformation.getTriggerTimes());
-        sb.append("次");
         return sb.toString();
     }
 }

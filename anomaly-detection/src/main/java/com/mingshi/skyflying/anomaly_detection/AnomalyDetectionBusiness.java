@@ -1,7 +1,6 @@
 package com.mingshi.skyflying.anomaly_detection;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.mingshi.skyflying.anomaly_detection.caffeine.MsCaffeineCache;
 import com.mingshi.skyflying.anomaly_detection.config.InitDemoMode;
 import com.mingshi.skyflying.anomaly_detection.dao.DingAlarmInformationMapper;
@@ -35,8 +34,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -479,10 +476,8 @@ public class AnomalyDetectionBusiness {
      * 从数据库查询开关存入Redis
      */
     private boolean cacheRuleEnable(String suffix) {
-        // todo：应该根据user_portrait_rules表中的rule_name字段去获取对应的规则，而不应该根据表的id字段去获取。这样会对表的id造成强依赖，如果哪一天不小心改变了表的id字段，那么就很可能取不到数据。
-        // todo：正常做法是：将规则与表中的rule_name字段进行绑定，根据rule_name去表里查询数据。2022-11-30 09:42:22
-        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TIME_ID);
-        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByPrimaryKey(AnomalyConst.TABLE_ID);
+        UserPortraitRulesDo timeRule = userPortraitRulesMapper.selectByRuleName(AnomalyConst.RULE_TIME_NAME);
+        UserPortraitRulesDo tableRule = userPortraitRulesMapper.selectByRuleName(AnomalyConst.RULE_TABLE_NAME);
         if (null != timeRule) {
             portraitRulesService.cacheRule(timeRule.getId(), timeRule.getIsDelete());
         }
@@ -493,8 +488,7 @@ public class AnomalyDetectionBusiness {
             if (timeRule != null && timeRule.getIsDelete() != null) {
                 return timeRule.getIsDelete() != 1;
             } else {
-                // todo：输出的错误日志应该尽可能详细些，这样有利于根据错误日志排查错误。2022-11-30 09:44:36
-                log.error("从数据库获取规则失败");
+                log.error("从数据库获取基于时间的规则失败");
                 return false;
             }
         }
@@ -502,8 +496,7 @@ public class AnomalyDetectionBusiness {
             if (tableRule != null && tableRule.getIsDelete() != null) {
                 return tableRule.getIsDelete() != 1;
             } else {
-                // todo：输出的错误日志应该尽可能详细些，这样有利于根据错误日志排查错误。2022-11-30 09:44:36
-                log.error("从数据库获取规则失败");
+                log.error("从数据库获取基于库表的规则失败");
                 return false;
             }
         }

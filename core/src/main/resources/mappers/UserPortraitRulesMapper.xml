@@ -19,6 +19,12 @@
     from user_portrait_rules
     where id = #{id,jdbcType=INTEGER}
   </select>
+  <select id="selectByRuleName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_portrait_rules
+    where rule_name = #{ruleName,jdbcType=VARCHAR}
+  </select>
   <select id="selectAllRules" parameterType="java.util.Map" resultMap="BaseResultMap">
     select <include refid="Base_Column_List" />
     from user_portrait_rules

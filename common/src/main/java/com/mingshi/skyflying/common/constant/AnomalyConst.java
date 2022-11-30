@@ -18,9 +18,9 @@ public class AnomalyConst {
 
     public static final String DEMO_MODE = "demo_mode";
 
-    public static final Integer TABLE_ID = 2;
+    public static final String RULE_TABLE_NAME = "user_visited_table";
 
-    public static final Integer TIME_ID = 1;
+    public static final String RULE_TIME_NAME = "user_visited_time";
 
     public static final String TIME_SUF = "time";
 

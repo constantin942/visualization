@@ -10,6 +10,7 @@ import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.enums.AlarmEnum;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @Date: create in 2022/9/28
  */
 @Service
+@Slf4j
 public class HighRiskOptServiceImpl {
     @Resource
     HighRiskOptMapper highRiskOptMapper;
@@ -57,8 +59,9 @@ public class HighRiskOptServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public Void updateHighRiskOpt(List<HighRiskOpt> highRiskOpts) {
         for (HighRiskOpt highRiskOpt : highRiskOpts) {
-            // todo：这里要加更新数据库是否成功的标识，如果更新数据库失败，最起码要打印错误日志；2022-11-30 10:43:49
-            highRiskOptMapper.updateByPrimaryKeySelective(highRiskOpt);
+            if (highRiskOptMapper.updateByPrimaryKeySelective(highRiskOpt) != 1) {
+                log.error("规则#{}#更新时插入数据库失败" ,highRiskOpt.getDescription());
+            }
         }
         cacheHighRiskOpt(highRiskOpts);
         return null;
