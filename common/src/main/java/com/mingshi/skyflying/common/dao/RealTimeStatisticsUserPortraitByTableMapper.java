@@ -18,4 +18,6 @@ public interface RealTimeStatisticsUserPortraitByTableMapper {
     List<UserCoarseInfo> selectAll(Map<String, Object> queryMap);
 
     Integer selectAllCount(Map<String, Object> queryMap);
+
+    int updateByUserNamAndUsualVisitedData(RealTimeStatisticsUserPortraitByTable realTimeStatisticsUserPortraitByTable);
 }

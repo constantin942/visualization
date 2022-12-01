@@ -59,8 +59,8 @@ public class UserAccessBehaviorTask {
      * @Date 2022-11-17 14:28:56
      * @Param []
      **/
-    //间隔5秒执行
-    @Scheduled(cron = "0/5 * * * * ? ")
+    //间隔60秒执行
+    @Scheduled(cron = "0/60 * * * * ? ")
     @Async
     public void scheduledUserAccessBehaviorTask() {
         Instant now = Instant.now();
@@ -116,6 +116,8 @@ public class UserAccessBehaviorTask {
                 realTimeStatisticsUserPortraitByTable.setUpdateTime(new Date());
                 // 设置用户来源；2022-11-25 14:18:00
                 realTimeStatisticsUserPortraitByTable.setUserFrom(mingshiServerUtil.setUserFrom(user));
+//                realTimeStatisticsUserPortraitByTableMapper.updateByUserNamAndUsualVisitedData(realTimeStatisticsUserPortraitByTable);
+
                 coarseInfoList.add(realTimeStatisticsUserPortraitByTable);
             }
             if (null != coarseInfoList && 0 < coarseInfoList.size()) {

@@ -48,12 +48,12 @@ public class IoThread extends Thread {
     private Map<String, Integer> everydayVisitedTimesMap = null;
     /**
      * 用户总的访问次数；2022-10-14 13:59:31
-      */
+     */
     private Map<String, Integer> userAccessBehaviorAllVisitedTimesMap = null;
     /**
      * 用户最后的访问时间；2022-10-14 14:05:16
-      */
-    private  Map<String, String> userAccessBehaviorLatestVisitedTimeMap = null;
+     */
+    private Map<String, String> userAccessBehaviorLatestVisitedTimeMap = null;
     /**
      * 表最后的访问时间；2022-10-14 14:05:16
      */

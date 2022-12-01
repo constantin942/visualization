@@ -159,4 +159,28 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
+    <update id="updateByUserNamAndUsualVisitedData" parameterType="com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
+        update real_time_statistics_user_portrait_by_table
+        <set>
+            <if test="visitedCount != null">
+                visited_count = #{visitedCount,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=INTEGER},
+            </if>
+            <if test="lastVisitedDate != null">
+                last_visited_date = #{lastVisitedDate,jdbcType=VARCHAR},
+            </if>
+            <if test="userFrom != null">
+                user_from = #{userFrom,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where user_name = #{userName,jdbcType=VARCHAR} and usual_visited_data = #{usualVisitedData,jdbcType=VARCHAR}
+    </update>
 </mapper>
