@@ -189,7 +189,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022-11-23 17:38:19
      * @Param [operationName, msSegmentDetailDo]
      **/
-    private void getUserFrom(String operationName, MsSegmentDetailDo msSegmentDetailDo) {
+    private void getUserFrom(String operationName, MsSegmentDetailDo msSegmentDetailDo, String parentEndpoint) {
         try {
             String str1 = "http://10.0.0.69:8181/login/web";
             String str2 = "https://hy2api.tian-wang.com/login/web";
@@ -209,6 +209,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 //                operationName.contains(str7)
 //            )) {
                 String userFromCacheByUserFromPath = doGetUserFromByPath(operationName);
+                String userFromCacheByUserFromPath = doGetUserFromByPath(operationName, parentEndpoint);
                 msSegmentDetailDo.setUserFrom(userFromCacheByUserFromPath);
             }
         } catch (Exception e) {
@@ -225,7 +226,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
      * @Date 2022-11-24 17:17:04
      * @Param [userFromPath]
      **/
-    private String doGetUserFromByPath(String userFromPath) {
+    private String doGetUserFromByPath(String userFromPath, String parentEndpoint) {
         Instant now = Instant.now();
         String userFromName = null;
         Set<@NonNull String> keySet = msCaffeine.getUserFromMap().keySet();
@@ -234,7 +235,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 Iterator<@NonNull String> iterator = keySet.iterator();
                 while (iterator.hasNext()) {
                     String key = iterator.next();
-                    if (userFromPath.contains(key)) {
+                    if (userFromPath.contains(key) || (StringUtil.isNotBlank(parentEndpoint)  && parentEndpoint.contains(key))) {
                         userFromName = msCaffeine.getUserFromCacheByUserFromPath(key);
                         log.info("# SegmentConsumeServiceImpl.doGetUserFromByPath() # 根据用户访问路径，获取用户对应的来源，用时【{}】毫秒。", userFromPath, DateTimeUtil.getTimeMillis(now));
                         return userFromName;
@@ -273,9 +274,8 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                 MsSegmentDetailDo msSegmentDetailDo = getMsSegmentDetailDo(map, segment, list.get(0));
 
                 String operationName = segment.getOperationName();
-
                 // 设置用户来源；2022-11-09 14:49:37
-                getUserFrom(operationName, msSegmentDetailDo);
+                getUserFrom(operationName, msSegmentDetailDo, segment.getParentEndpoint());
 
                 String logs = String.valueOf(map.get(Const.LOGS));
                 Boolean isError = false;
@@ -436,7 +436,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
         if (StringUtil.isNotBlank(segment.getUserName()) && (StringUtil.isNotBlank(segment.getToken()) || StringUtil.isNotBlank(segment.getGlobalTraceId()))) {
             MsSegmentDetailDo msSegmentDetailDo = new MsSegmentDetailDo();
             // 设置用户来源；2022-11-09 14:49:37
-            getUserFrom(segment.getOperationName(), msSegmentDetailDo);
+            getUserFrom(segment.getOperationName(), msSegmentDetailDo, segment.getParentEndpoint());
 
             msSegmentDetailDo.setParentService(segment.getParentService());
             msSegmentDetailDo.setParentEndpoint(segment.getParentEndpoint());

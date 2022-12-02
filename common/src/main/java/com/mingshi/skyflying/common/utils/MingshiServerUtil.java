@@ -20,7 +20,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -69,6 +67,99 @@ public class MingshiServerUtil {
     private MsUserFromMapper msUserFromMapper;
     @Resource
     private MsCaffeine msCaffeine;
+
+    public void getZheLingYu(String userName) {
+        if (userName.contains("浙JH062S") ||
+            userName.contains("浙岭渔13068") ||
+            userName.contains("浙岭渔21995") ||
+            userName.contains("浙岭渔23418") ||
+            userName.contains("浙岭渔23553") ||
+            userName.contains("浙岭渔23571") ||
+            userName.contains("浙岭渔23616") ||
+            userName.contains("浙岭渔23639") ||
+            userName.contains("浙岭渔23655") ||
+            userName.contains("浙岭渔28895") ||
+            userName.contains("浙岭渔29817") ||
+            userName.contains("浙岭渔29966") ||
+            userName.contains("浙岭渔29992") ||
+            userName.contains("浙岭渔74089") ||
+            userName.contains("浙岭渔95007")
+        ) {
+            System.out.println("出现未统计的渔船信息了。");
+        }
+    }
+
+    /**
+     * <B>方法名称：getUserCount</B>
+     * <B>概要说明：获取用户人数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年07月21日 10:07:49
+     * @Param []
+     **/
+    public Long getUserCount() {
+        // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
+        Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
+        if (null == userCountFromRedis || 0 == userCountFromRedis) {
+            userCountFromRedis = 0L;
+        }
+        return userCountFromRedis;
+    }
+
+    /**
+     * <B>方法名称：getTableCount</B>
+     * <B>概要说明：获取数据库表的个数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年07月21日 09:07:32
+     * @Param []
+     **/
+    public Integer getTableCount() {
+        // 从缓存里获取数据库表的个数；2022-07-21 09:47:32
+        Integer tableCount = msMonitorBusinessSystemTablesMapper.selectAllEnableTableCount();
+        if (null == tableCount) {
+            tableCount = 0;
+        }
+        return tableCount;
+    }
+
+    /**
+     * <B>方法名称：getDbCount</B>
+     * <B>概要说明：获取数据库的个数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022年07月21日 09:07:16
+     * @Param []
+     **/
+    public Integer getDbCount() {
+        Integer dbInstanceCount = msMonitorBusinessSystemTablesMapper.selectAllEnableDbCount();
+        if (null == dbInstanceCount) {
+            dbInstanceCount = 0;
+        }
+        return dbInstanceCount;
+    }
+
+    /**
+     * <B>方法名称：getRecordCount</B>
+     * <B>概要说明：获取ms_segment_detail表中记录的数量</B>
+     *
+     * @return Long
+     * @Author zm
+     * @Date 2022年07月21日 10:07:49
+     * @Param []
+     **/
+    public Long getRecordCount() {
+        // 获取ms_segment_detail表中记录的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
+        Long informationCount = 0L;
+        Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
+        if (null != hget) {
+            informationCount = Long.parseLong(String.valueOf(hget));
+        }
+        return informationCount;
+    }
 
     /**
      * 产生字符串类型的订单号
@@ -561,22 +652,29 @@ public class MingshiServerUtil {
         String dbType = msSegmentDetailDo.getDbType();
         String peer = msSegmentDetailDo.getPeer();
         String serviceCode = msSegmentDetailDo.getServiceCode();
-        if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
 
-            // 对用户总的访问次数进行本地累加
-            userAccessBehaviorAllVisitedTimes(userName, userAccessBehaviorAllVisitedTimesMap);
+//        mingshiServerUtil.getZheLingYu(userName);
+        if(StringUtil.isNotBlank(userName)){
+            // 将每个人每天来源的访问次数在本地进行累加
+            everyUserEverydayFromVisitedTimes(userName, startTime, userFrom, everyUserEverydayFromVisitedTimesMap);
 
-            // 更新用户的最后访问时间
-            userAccessBehaviorLatestVisitedTime(userName, startTime, userAccessBehaviorLatestVisitedTimeMap);
+            // 统计每个用户操作类型次数；
+            userOperationType(dbType, userName, userOperationTypeMap);
 
-            // 将表每天的访问次数在本地进行累加
-            tableEverydayVisitedTimes(tableName, peer, dbInstance, startTime, tableEverydayVisitedTimesMap);
+            // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
+            statisticVisitedCountByEveryday(msSegmentDetailDo, everydayVisitedTimesMap);
 
             // 将每个人每天的访问次数在本地进行累加
             everyoneEverydayVisitedTimes(userName, startTime, everyoneEverydayVisitedTimesMap);
 
-            // 将每个人每天来源的访问次数在本地进行累加
-            everyUserEverydayFromVisitedTimes(userName, startTime, userFrom, everyUserEverydayFromVisitedTimesMap);
+            // 更新用户的最后访问时间
+            userAccessBehaviorLatestVisitedTime(userName, startTime, userAccessBehaviorLatestVisitedTimeMap);
+        }
+
+        if (StringUtil.isNotBlank(userName) && StringUtil.isNotBlank(peer) && StringUtil.isNotBlank(dbInstance) && StringUtil.isNotBlank(tableName)) {
+
+            // 将表每天的访问次数在本地进行累加
+            tableEverydayVisitedTimes(tableName, peer, dbInstance, startTime, tableEverydayVisitedTimesMap);
 
             // 更新表最后的访问时间
             tableLatestVisitedTime(peer, dbInstance, tableName, startTime, tableLatestVisitedTimeMap);
@@ -590,14 +688,9 @@ public class MingshiServerUtil {
             // 统计每个表操作类型次数；
             tableOperationType(dbType, peer, dbInstance, tableName, tableOperationTypeMap);
 
-            // 统计每个用户操作类型次数；
-            userOperationType(dbType, userName, userOperationTypeMap);
-
             // 实时将用户访问行为信息发送到redis中
             setTableEnableStatus(peer, dbInstance, tableName);
 
-            // 根据年月日，统计每天的访问次数；2022-07-20 14:11:55
-            statisticVisitedCountByEveryday(msSegmentDetailDo, everydayVisitedTimesMap);
         }
     }
 
