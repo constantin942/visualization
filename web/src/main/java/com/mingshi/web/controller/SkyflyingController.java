@@ -59,7 +59,22 @@ public class SkyflyingController {
     private UserLoginLogService userLoginLogService;
     @Resource
     private UserFromService userFromService;
+    @Resource
+    private ReportService reportService;
 
+    /**
+     * <B>方法名称：generateReport</B>
+     * <B>概要说明：生成报告</B>
+     *
+     * @Author zm
+     * @Date 2022-12-01 11:12:36
+     * @Param []
+     * @return com.mingshi.skyflying.common.response.ServerResponse<java.lang.String>
+     **/
+    @GetMapping(value = "/generateReport")
+    public ServerResponse<String> generateReport() {
+        return reportService.generateReport();
+    }
     /**
      * <B>方法名称：getUserFrom</B>
      * <B>概要说明：获取用户来源配置信息</B>

@@ -430,90 +430,23 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
         SystemOverview systemOverview = new SystemOverview();
 
         // 获取ms_segment_detail表中记录的数量。
-        getRecordCount(systemOverview);
+        Long informationCount = mingshiServerUtil.getRecordCount();
+        systemOverview.setVisitedInformation(informationCount);
+
         // 获取数据库个数；
-        getDbCount(systemOverview);
+        Integer dbInstanceCount = mingshiServerUtil.getDbCount();
+        systemOverview.setDbInstance(Long.valueOf(dbInstanceCount));
 
         // 获取数据库表个数；
-        getTableCount(systemOverview);
+        Integer tableCount = mingshiServerUtil.getTableCount();
+        systemOverview.setTable(Long.valueOf(tableCount));
 
         // 获取用户人数；
-        getUserCount(systemOverview);
+        Long userCountFromRedis = mingshiServerUtil.getUserCount();
+        systemOverview.setUser(userCountFromRedis);
 
         log.info("执行完毕 # SegmentDetailServiceImpl. getOverviewOfSystem # 获取用户概览数据");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, systemOverview);
-    }
-
-    /**
-     * <B>方法名称：getRecordCount</B>
-     * <B>概要说明：获取ms_segment_detail表中记录的数量</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年07月21日 10:07:49
-     * @Param [systemOverview]
-     **/
-    private void getRecordCount(SystemOverview systemOverview) {
-        // 获取ms_segment_detail表中记录的数量。先从Redis中获取，如果Redis中获取不到，再从MySQL中获取；2022-07-19 09:08:55
-        Long informationCount = 0L;
-        Object hget = redisPoolUtil.get(Const.STRING_DATA_STATISTICS_HOW_MANY_MS_SEGMENT_DETAIL_RECORDS);
-        if (null != hget) {
-            informationCount = Long.parseLong(String.valueOf(hget));
-        }
-        systemOverview.setVisitedInformation(informationCount);
-    }
-
-    /**
-     * <B>方法名称：getUserCount</B>
-     * <B>概要说明：获取用户人数</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年07月21日 10:07:49
-     * @Param [systemOverview]
-     **/
-    private void getUserCount(SystemOverview systemOverview) {
-        // 获取用户人数。先从表Redis中获取，如果获取不到，再从ms_segment_detail表中获取。2022-07-19 09:09:48
-        Long userCountFromRedis = redisPoolUtil.setSize(Const.SET_DATA_STATISTICS_HOW_MANY_USERS);
-        if (null == userCountFromRedis || 0 == userCountFromRedis) {
-            userCountFromRedis = 0L;
-        }
-        systemOverview.setUser(userCountFromRedis);
-    }
-
-    /**
-     * <B>方法名称：getTableCount</B>
-     * <B>概要说明：获取数据库表的个数</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年07月21日 09:07:32
-     * @Param [set, systemOverview]
-     **/
-    private void getTableCount(SystemOverview systemOverview) {
-        // 从缓存里获取数据库表的个数；2022-07-21 09:47:32
-        Integer tableCount = msMonitorBusinessSystemTablesMapper.selectAllEnableTableCount();
-        if (null == tableCount) {
-            tableCount = 0;
-        }
-        systemOverview.setTable(Long.valueOf(tableCount));
-    }
-
-    /**
-     * <B>方法名称：getDbCount</B>
-     * <B>概要说明：获取数据库的个数</B>
-     *
-     * @return void
-     * @Author zm
-     * @Date 2022年07月21日 09:07:16
-     * @Param [set, systemOverview]
-     **/
-    private void getDbCount(SystemOverview systemOverview) {
-        Integer dbInstanceCount = msMonitorBusinessSystemTablesMapper.selectAllEnableDbCount();
-        if (null == dbInstanceCount) {
-            dbInstanceCount = 0;
-        }
-        systemOverview.setDbInstance(Long.valueOf(dbInstanceCount));
     }
 
     @Override
