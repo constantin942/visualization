@@ -208,7 +208,6 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
 //                operationName.contains(str6) ||
 //                operationName.contains(str7)
 //            )) {
-                String userFromCacheByUserFromPath = doGetUserFromByPath(operationName);
                 String userFromCacheByUserFromPath = doGetUserFromByPath(operationName, parentEndpoint);
                 msSegmentDetailDo.setUserFrom(userFromCacheByUserFromPath);
             }
