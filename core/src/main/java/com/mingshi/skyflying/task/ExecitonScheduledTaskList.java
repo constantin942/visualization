@@ -5,8 +5,10 @@ import com.mingshi.skyflying.common.caffeine.MsCaffeine;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper;
+import com.mingshi.skyflying.common.dao.MsSystemOperationRecordMapper;
 import com.mingshi.skyflying.common.domain.MsScheduledTaskDo;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
+import com.mingshi.skyflying.common.domain.MsSystemOperationRecord;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -43,6 +45,31 @@ public class ExecitonScheduledTaskList {
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private AnomalyDetectionBusiness anomalyDetectionBusiness;
+    @Resource
+    private MsSystemOperationRecordMapper msSystemOperationRecordMapper;
+
+    /**
+     * <B>方法名称：doScheduledUpdateAgentServerHeartBeat</B>
+     * <B>概要说明：更新可视化服务端的存活时间到数据库表中，用于生成报告时，获取可视化系统的存活时间</B>
+     *
+     * @Author zm
+     * @Date 2022-12-05 15:30:10
+     * @Param [key]
+     * @return void
+     **/
+    public void doScheduledUpdateAgentServerHeartBeat(String key) {
+        Instant now = Instant.now();
+        log.info("开始执行 #scheduledGetDmsAuditLog.doScheduledUpdateAgentServerHeartBeat()# 定时更新可视化服务端的存活时间到数据库表中，用于生成报告时，获取可视化系统的存活时间信息。其分布式锁的 key = 【{}】.当前线程 = 【{}】", key, Thread.currentThread().getName());
+        try {
+            MsSystemOperationRecord msSystemOperationRecord = new MsSystemOperationRecord();
+            msSystemOperationRecord.setSystemName(Const.REPORT_AGENT_SERVER_NAME);
+            msSystemOperationRecord.setGmtModified(new Date());
+            msSystemOperationRecordMapper.updateByPrimaryKeySelective(msSystemOperationRecord);
+        } catch (Exception e) {
+            log.error("# #scheduledGetDmsAuditLog.doScheduledUpdateAgentServerHeartBeat()# 定时更新可视化服务端的存活时间到数据库表中，用于生成报告时，获取可视化系统的存活时间信息时，出现了异常。#", e);
+        }
+        log.info("执行完毕 #scheduledGetDmsAuditLog.doScheduledUpdateAgentServerHeartBeat()# 定时更新可视化服务端的存活时间到数据库表中，用于生成报告时，获取可视化系统的存活时间信息。耗时【{}】毫秒。其分布式锁的 key = 【{}】.", DateTimeUtil.getTimeMillis(now), key);
+    }
 
     /**
      * <B>方法名称：doScheduledDeleteTwoDaysBeforeSegmentDetailDo</B>

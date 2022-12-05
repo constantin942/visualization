@@ -137,6 +137,21 @@ public class ScheduledTask {
     }
 
     /**
+     * <B>方法名称：scheduledUpdateAgentServerHeartBeat</B>
+     * <B>概要说明：更新可视化服务端的存活时间到数据库表中，用于生成报告时，获取可视化系统的存活时间</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-05 15:39:42
+     * @Param []
+     * 每隔60分钟执行一次：
+     **/
+    @Scheduled(cron = "0 */60 * * * ?")
+    public void scheduledUpdateAgentServerHeartBeat() {
+        execitonScheduledTaskList.doScheduledUpdateAgentServerHeartBeat(Const.REPORT_AGENT_SERVER_NAME_KEY);
+    }
+
+    /**
      * <B>方法名称：doScheduledHandleNoUserName</B>
      * <B>概要说明：将六个小时之前收到的没有登录系统用户名的信息，把数据库用户名当做登录系统的用户名。
      * 这些没有登录系统的用户名，主要分为三类：

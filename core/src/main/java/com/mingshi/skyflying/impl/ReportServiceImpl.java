@@ -3,11 +3,14 @@ package com.mingshi.skyflying.impl;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
+import com.mingshi.skyflying.common.dao.MsSystemOperationRecordMapper;
 import com.mingshi.skyflying.common.dao.MsUserFromMapper;
 import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
 import com.mingshi.skyflying.common.domain.MsReport;
+import com.mingshi.skyflying.common.domain.MsSystemOperationRecord;
 import com.mingshi.skyflying.common.domain.MsUserFrom;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import com.mingshi.skyflying.common.utils.StringUtil;
@@ -18,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,10 +44,12 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
     private MingshiServerUtil mingshiServerUtil;
     @Resource
     private MsAgentInformationMapper msAgentInformationMapper;
+    @Resource
+    private MsSystemOperationRecordMapper msSystemOperationRecordMapper;
 
     @Override
     public ServerResponse<String> generateReport() {
-
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
         /**
          * 1. 可视化系统运行记录
          * 1）可视化系统运行时长
@@ -53,6 +60,14 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
          * 6）受监管的用户数量：总量与新增
          */
         // 可视化系统运行时长
+        getReportAgentServerName(jsonObject);
+
+        /**
+         * 具体实现步骤：
+         * 1）在数据库中建立一个数据库表：system_operation_record，专门用于存放可视化系统和各个业务系统的运行记录信息，其中有一个字段是系统开始运行时间，一个字段是系统在运行期间心跳更新时间；
+         * 2）当可视化系统或者业务系统启动时，先检查下当前系统信息在数据库表system_operation_record中是否存在，如果不存在，则插入，如果存在，则更新。可以在插入时，更新心跳信息；
+         * 3）
+         */
 
         // 采集数据访问行为数
         Long informationCount = mingshiServerUtil.getRecordCount();
@@ -101,11 +116,43 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
          * 1）告警次数：告警分布和遗留问题记录；
          * 2）相关数据库表清单和次数；
          */
-        return null;
+        ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
+        bySuccess.setData(jsonObject.toString());
+        return bySuccess;
+    }
+
+    /**
+     * <B>方法名称：getReportAgentServerName</B>
+     * <B>概要说明：获取可视化系统运行时长</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-05 15:12:48
+     * @Param [jsonObject]
+     **/
+    private void getReportAgentServerName(ObjectNode jsonObject) {
+        try {
+            ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
+            MsSystemOperationRecord msSystemOperationRecord = msSystemOperationRecordMapper.selectBySystemName(Const.REPORT_AGENT_SERVER_NAME);
+            if (null != msSystemOperationRecord && null != msSystemOperationRecord.getGmtCreate() && null != msSystemOperationRecord.getGmtModified()) {
+                Date gmtCreate = msSystemOperationRecord.getGmtCreate();
+                Date gmtModified = msSystemOperationRecord.getGmtModified();
+                Instant gmtCreateInstant = gmtCreate.toInstant();
+                Instant gmtModifiedInstant = gmtModified.toInstant();
+
+                long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
+                reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_SERVER_NAME_DESC);
+                reportAgentServerNameJson.put(Const.OPERATION_TIME, toHours);
+                jsonObject.set(Const.REPORT_AGENT_SERVER_NAME, reportAgentServerNameJson);
+            }
+        } catch (Exception e) {
+            log.error("# ReportServiceImpl.getReportAgentServerName() # 获取可视化系统运行时长时，出现了异常。", e);
+        }
     }
 
     @Override
     public ServerResponse<String> getLatestReport() {
+
         return null;
     }
 }

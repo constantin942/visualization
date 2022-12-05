@@ -45,6 +45,23 @@ public class Const {
     public static final String DE = "的";
     public static final String USER_FROM_PATH = "userFromPath";
     public static final String USER_FROM_DESC = "userFromDesc";
+    /**
+     * 可视化服务端名称，获取报告时会用到；
+     */
+    public static final String REPORT_AGENT_SERVER_NAME = "report_agent_server_name";
+    /**
+     * 定时任务更新可视化服务端存活时长用的分布式锁；
+     */
+    public static final String REPORT_AGENT_SERVER_NAME_KEY = "redisson:key:reportAgentServerName";
+    public static final String REPORT_AGENT_SERVER_NAME_DESC = "可视化系统运行时长";
+    /**
+     * 报告中每一项的说明
+     */
+    public static final String REPORT_DESC = "desc";
+    /**
+     * 可视化系统运行时间
+     */
+    public static final String OPERATION_TIME = "operationTime";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
