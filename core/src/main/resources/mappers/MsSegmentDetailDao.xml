@@ -312,13 +312,19 @@
         order by start_time desc limit 1
     </select>
 
-    <select id="selectAlarmData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
+    <select id="selectAlarmDistributionData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
         SELECT COUNT(*) as alarm_info, match_rule_id
         FROM ms_alarm_information
         where match_rule_id is not NULL
           and update_user_portrait = 0
           and is_delete = 0
         GROUP BY match_rule_id
+    </select>
+
+    <select id="selectAlarmHandledData" resultType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+        SELECT *
+        FROM ms_alarm_information
+        where is_delete = 1;
     </select>
 
     <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.common.domain.UserAlarmData">

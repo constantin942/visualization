@@ -1,25 +1,17 @@
 package com.mingshi.skyflying.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
 import com.mingshi.skyflying.common.dao.MsSystemOperationRecordMapper;
-import com.mingshi.skyflying.common.dao.MsUserFromMapper;
-import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
-import com.mingshi.skyflying.common.domain.MsReport;
-import com.mingshi.skyflying.common.domain.MsSystemOperationRecord;
-import com.mingshi.skyflying.common.domain.MsUserFrom;
+import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.MingshiServerUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.service.ReportService;
-import com.mingshi.skyflying.service.UserFromService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import scala.App;
 
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -27,7 +19,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <B>类名称：ReportServiceImpl</B>
@@ -47,6 +38,9 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
     private MsAgentInformationMapper msAgentInformationMapper;
     @Resource
     private MsSystemOperationRecordMapper msSystemOperationRecordMapper;
+
+    @Resource
+    private SegmentDetailServiceImpl segmentDetailService;
 
     @Override
     public ServerResponse<String> generateReport() {
@@ -158,6 +152,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         getRegulatedDatabaseTablesSize(jsonObject);
 
         // 产生告警次数：告警分布与告警处置的记录
+        getAlarmRelatedData(jsonObject);
 
         // 5）受监管的应用清单：总量与新增
         getRegulatedApplicationList(jsonObject);
@@ -166,6 +161,29 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         getRegulatedUserSize(jsonObject);
 
         returnAllJsonObject.set(Const.REPORT_AGENT_SERVER_OPERATION_RECORD_NAME, jsonObject);
+    }
+
+    /**
+     * <B>方法名称：getAlarmRelatedInfo</B>
+     * <B>概要说明：</B>
+     *
+     * @return void
+     * @Author lyx
+     * @Date 2022-12-06 13:41:37
+     * @Param [jsonObject]
+     **/
+    private void getAlarmRelatedData(ObjectNode jsonObject) {
+        try {
+            List<AlarmData> alarmDistributionData = segmentDetailService.getAlarmDistributionData();
+            List<MsAlarmInformationDo> alarmHandledData = segmentDetailService.getAlarmHandledData();
+            ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
+            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_ALARM_RELATED_DATA_DESC);
+            reportAgentServerNameJson.put(Const.REPORT_ALARM_DISTRIBUTION_DATA, JSON.toJSONString(alarmDistributionData));
+            reportAgentServerNameJson.put(Const.REPORT_ALARM_HANDLED_DATA, JSON.toJSONString(alarmHandledData));
+            jsonObject.set(Const.REPORT_ALARM_RELATED_DATA_NAME, reportAgentServerNameJson);
+        } catch (Exception e) {
+            log.error("# ReportServiceImpl.getAlarmRelatedData() # 获取告警分布与告警处置的记录时，出现了异常。", e);
+        }
     }
 
     /**
@@ -275,7 +293,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                 Instant gmtCreateInstant = gmtCreate.toInstant();
                 Instant gmtModifiedInstant = gmtModified.toInstant();
 
-                long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
+                    long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
                 reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_SERVER_NAME_DESC);
                 reportAgentServerNameJson.put(Const.OPERATION_TIME, toHours);
                 jsonObject.set(Const.REPORT_AGENT_SERVER_NAME, reportAgentServerNameJson);

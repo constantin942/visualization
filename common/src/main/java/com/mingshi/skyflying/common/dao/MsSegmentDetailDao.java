@@ -39,7 +39,9 @@ public interface MsSegmentDetailDao {
 
   String selectTableLastVisitedTime(String tableName);
 
-  List<AlarmData> selectAlarmData();
+  List<AlarmData> selectAlarmDistributionData();
+
+  List<MsAlarmInformationDo> selectAlarmHandledData();
 
   List<UserAlarmData> selectUserAlarmData();
 

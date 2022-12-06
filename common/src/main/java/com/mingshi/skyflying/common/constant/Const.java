@@ -68,6 +68,11 @@ public class Const {
     public static final String REPORT_REGULATED_APPLICATION_LIST = "reportRegulatedApplicationList";
     public static final String REPORT_REGULATED_APPLICATION_LIST_DESC = "受监管的应用清单";
 
+    public static final String REPORT_ALARM_DISTRIBUTION_DATA = "reportAlarmDistributionData";
+    public static final String REPORT_ALARM_HANDLED_DATA = "reportAlarmHandledData";
+    public static final String REPORT_ALARM_RELATED_DATA_NAME = "reportAlarmRelatedDataName";
+    public static final String REPORT_ALARM_RELATED_DATA_DESC = "告警相关数据";
+
     public static final String REPORT_REGULATED_USER_SIZE_NAME = "reportRegulatedUserSizeName";
     public static final String REPORT_REGULATED_USER_SIZE = "reportRegulatedUserSizeList";
     public static final String REPORT_REGULATED_USER_SIZE_DESC = "受监管的用户数量";

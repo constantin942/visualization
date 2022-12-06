@@ -2,21 +2,17 @@ package com.mingshi.skyflying.impl;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.anomaly_detection.AnomalyDetectionBusiness;
+import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.common.agent.AgentInformationSingleton;
 import com.mingshi.skyflying.common.constant.Const;
-import com.mingshi.skyflying.common.domain.*;
-import com.mingshi.skyflying.common.response.ServerResponse;
-import com.mingshi.skyflying.common.utils.DateTimeUtil;
-import com.mingshi.skyflying.common.utils.JsonUtil;
-import com.mingshi.skyflying.common.utils.RedisPoolUtil;
-import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.common.dao.MsMonitorBusinessSystemTablesMapper;
 import com.mingshi.skyflying.common.dao.MsSegmentDetailDao;
-import com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper;
+import com.mingshi.skyflying.common.domain.*;
 import com.mingshi.skyflying.common.init.LoadAllEnableMonitorTablesFromDb;
+import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.*;
 import com.mingshi.skyflying.service.SegmentDetailService;
-import com.mingshi.skyflying.common.utils.MingshiServerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -642,19 +638,42 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
     @Override
     public ServerResponse<List<AlarmData>> getAlarmData() {
-        log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData # 获取告警信息。");
-        List<AlarmData> list = msSegmentDetailDao.selectAlarmData();
-        for (AlarmData alarmData : list) {
-            UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(alarmData.getMatchRuleId());
+        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, getAlarmDistributionData());
+    }
+
+    /**
+     * <B>方法名称：getAlarmDistributionData</B>
+     * <B>概要说明：根据数据库得到告警分布信息</B>
+     *
+     * @return List<AlarmData>
+     * @Author lyx
+     * @Date 2022年12月06日 14:53:35
+     * @Param [void]
+     **/
+    public List<AlarmData> getAlarmDistributionData() {
+        log.info("开始执行 # SegmentDetailServiceImpl.getAlarmData() # 获取告警分布信息。");
+        List<AlarmData> alarmDataList = msSegmentDetailDao.selectAlarmDistributionData();
+        Map<Integer, String> ruleId2Name = new HashMap<>(Const.NUMBER_EIGHT);
+        int ruleId = Const.NUMBER_ZERO;
+        while (ruleId++ < Const.NUM_FIVE) {
+            UserPortraitRulesDo userPortraitRulesDo = userPortraitRulesMapper.selectByPrimaryKey(ruleId);
             if (null != userPortraitRulesDo && StringUtil.isNotBlank(userPortraitRulesDo.getRuleDesc())) {
-                alarmData.setAlarmName(userPortraitRulesDo.getRuleDesc());
+                ruleId2Name.put(ruleId, userPortraitRulesDo.getRuleDesc());
             } else {
-                alarmData.setAlarmName("高危操作");
+                ruleId2Name.put(ruleId, "高危操作");
+                break;
             }
         }
-        log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取告警信息。");
-        return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
+        alarmDataList.forEach(e -> e.setAlarmName(ruleId2Name.get(e.getMatchRuleId())));
+        log.info("执行完毕 SegmentDetailServiceImpl.getAlarmData() # 获取告警分布信息。");
+        return alarmDataList;
+    }
 
+    public List<MsAlarmInformationDo> getAlarmHandledData() {
+        log.info("开始执行 # SegmentDetailServiceImpl.getAlarmHandledData() # 获取告警处置信息。");
+        List<MsAlarmInformationDo> msAlarmInformationDoList = msSegmentDetailDao.selectAlarmHandledData();
+        log.info("执行完毕 SegmentDetailServiceImpl.getAlarmHandledData() # 获取告警处置信息。");
+        return msAlarmInformationDoList;
     }
 
     @Override
