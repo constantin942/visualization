@@ -54,6 +54,26 @@ public class Const {
      */
     public static final String REPORT_AGENT_SERVER_NAME_KEY = "redisson:key:reportAgentServerName";
     public static final String REPORT_AGENT_SERVER_NAME_DESC = "可视化系统运行时长";
+
+    public static final String REPORT_DATA_ACCESS_BEHAVIOR_NAME = "reportDataAccessBehaviorName";
+    public static final String REPORT_DATA_ACCESS_BEHAVIOR = "reportDataAccessBehavior";
+    public static final String REPORT_DATA_ACCESS_BEHAVIOR_DESC = "数据访问行为数量";
+
+    public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE_NAME = "reportRegulatedDatabaseTablesSizeName";
+    public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE = "reportRegulatedDatabaseTablesSize";
+    public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE_DESC = "数据访问行为数量";
+
+
+    public static final String REPORT_REGULATED_APPLICATION_LIST_NAME = "reportRegulatedApplicationListName";
+    public static final String REPORT_REGULATED_APPLICATION_LIST = "reportRegulatedApplicationList";
+    public static final String REPORT_REGULATED_APPLICATION_LIST_DESC = "受监管的应用清单";
+
+    public static final String REPORT_REGULATED_USER_SIZE_NAME = "reportRegulatedUserSizeName";
+    public static final String REPORT_REGULATED_USER_SIZE = "reportRegulatedUserSizeList";
+    public static final String REPORT_REGULATED_USER_SIZE_DESC = "受监管的用户数量";
+
+    public static final String REPORT_AGENT_SERVER_OPERATION_RECORD_NAME = "reportAgentServerOperationRecordName";
+    public static final String REPORT_AGENT_SERVER_OPERATION_RECORD_DESC = "可视化系统运行记录";
     /**
      * 报告中每一项的说明
      */
