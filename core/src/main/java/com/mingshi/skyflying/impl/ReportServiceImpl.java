@@ -1,6 +1,5 @@
 package com.mingshi.skyflying.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
@@ -178,8 +177,8 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
             List<MsAlarmInformationDo> alarmHandledData = segmentDetailService.getAlarmHandledData();
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
             reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_ALARM_RELATED_DATA_DESC);
-            reportAgentServerNameJson.put(Const.REPORT_ALARM_DISTRIBUTION_DATA, JSON.toJSONString(alarmDistributionData));
-            reportAgentServerNameJson.put(Const.REPORT_ALARM_HANDLED_DATA, JSON.toJSONString(alarmHandledData));
+            reportAgentServerNameJson.put(Const.REPORT_ALARM_DISTRIBUTION_DATA, JsonUtil.obj2String(alarmDistributionData));
+            reportAgentServerNameJson.put(Const.REPORT_ALARM_HANDLED_DATA, JsonUtil.obj2String(alarmHandledData));
             jsonObject.set(Const.REPORT_ALARM_RELATED_DATA_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getAlarmRelatedData() # 获取告警分布与告警处置的记录时，出现了异常。", e);
