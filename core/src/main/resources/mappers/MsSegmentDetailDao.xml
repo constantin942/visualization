@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.common.dao.MsSegmentDetailDao">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+<mapper namespace="com.aiit.skyflying.common.dao.MsSegmentDetailDao">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.MsSegmentDetailDo">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
         <result column="global_trace_id" jdbcType="VARCHAR" property="globalTraceId"/>
@@ -221,7 +221,7 @@
         -- and (db_type != 'url' or db_type is null)
         -- order by id desc;
     </select>
-    <select id="selectAllInstanceAndTableName" resultType="com.mingshi.skyflying.common.domain.InstanceTable">
+    <select id="selectAllInstanceAndTableName" resultType="com.aiit.skyflying.common.domain.InstanceTable">
         SELECT DISTINCT db_instance, ms_table_name
         FROM `ms_segment_detail`
         where db_instance is not null
@@ -312,7 +312,7 @@
         order by start_time desc limit 1
     </select>
 
-    <select id="selectAlarmDistributionData" resultType="com.mingshi.skyflying.common.domain.AlarmData">
+    <select id="selectAlarmDistributionData" resultType="com.aiit.skyflying.common.domain.AlarmData">
         SELECT COUNT(*) as alarm_info, match_rule_id
         FROM ms_alarm_information
         where match_rule_id is not NULL
@@ -321,13 +321,13 @@
         GROUP BY match_rule_id
     </select>
 
-    <select id="selectAlarmHandledData" resultType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+    <select id="selectAlarmHandledData" resultType="com.aiit.skyflying.common.domain.MsAlarmInformationDo">
         SELECT *
         FROM ms_alarm_information
         where is_delete = 1;
     </select>
 
-    <select id="selectUserAlarmData" resultType="com.mingshi.skyflying.common.domain.UserAlarmData">
+    <select id="selectUserAlarmData" resultType="com.aiit.skyflying.common.domain.UserAlarmData">
         SELECT count(*) as alarm_count, user_name
         from ms_alarm_information
         where update_user_portrait = 0

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.DingAlarmConfigMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+<mapper namespace="com.aiit.skyflying.anomaly_detection.dao.DingAlarmConfigMapper">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="webhook" jdbcType="VARCHAR" property="webhook"/>
         <result column="secret" jdbcType="VARCHAR" property="secret"/>
@@ -18,7 +18,7 @@
         from ding_alarm_config
         where id = #{id,jdbcType=INTEGER}
     </select>
-    <select id="selectOne" resultType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+    <select id="selectOne" resultType="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         select
         <include refid="Base_Column_List"/>
         from ding_alarm_config
@@ -36,7 +36,7 @@
         from ding_alarm_config
         where id = #{id,jdbcType=INTEGER}
     </delete>
-    <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+    <insert id="insert" parameterType="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         insert into ding_alarm_config (id, webhook, secret,
                                        gap, create_time, update_time,
                                        is_deleted)
@@ -44,7 +44,7 @@
                 #{gap,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP},
                 #{isDeleted,jdbcType=INTEGER})
     </insert>
-    <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+    <insert id="insertSelective" parameterType="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         insert into ding_alarm_config
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -94,7 +94,7 @@
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective"
-            parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+            parameterType="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         update ding_alarm_config
         <set>
             <if test="webhook != null">
@@ -112,7 +112,7 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.DingAlarmConfig">
+    <update id="updateByPrimaryKey" parameterType="com.aiit.skyflying.anomaly_detection.domain.DingAlarmConfig">
         update ding_alarm_config
         set webhook    = #{webhook,jdbcType=VARCHAR},
             secret     = #{secret,jdbcType=VARCHAR},

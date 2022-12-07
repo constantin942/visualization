@@ -15,7 +15,7 @@
             <property name="forceBigDecimals" value="false" />
         </javaTypeResolver>
         <!-- 生成实体类的包名和位置 -->
-        <javaModelGenerator targetPackage="com.mingshi.skyflying.domain" targetProject="/Users/apple/skywalking-mingshi-server/core/src/main/java/">
+        <javaModelGenerator targetPackage="com.aiit.skyflying.domain" targetProject="/Users/apple/skywalking-mingshi-server/core/src/main/java/">
             <property name="enableSubPackages" value="true" />
         </javaModelGenerator>
         <!-- 生成的映射文件（具体SQL）包名和位置 -->
@@ -23,7 +23,7 @@
             <property name="enableSubPackages" value="true" />
         </sqlMapGenerator>
         <!-- 生成DAO（SQL对应的方法）的包名和位置 -->
-        <javaClientGenerator type="XMLMAPPER" targetPackage="com.mingshi.skyflying.dao" targetProject="/Users/apple/skywalking-mingshi-server/core/src/main/java">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.aiit.skyflying.dao" targetProject="/Users/apple/skywalking-mingshi-server/core/src/main/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
         <!-- 要生成那些表(更改tableName和domainObjectName就可以) -->

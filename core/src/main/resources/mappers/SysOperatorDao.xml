@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.SysOperatorDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.SysOperator">
+<mapper namespace="com.aiit.skyflying.dao.SysOperatorDao">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.SysOperator">
     <id column="id" jdbcType="BIGINT" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -34,7 +34,7 @@
     where user_name=#{userName,jdbcType=VARCHAR}
   </select>
   <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id"
-          parameterType="com.mingshi.skyflying.common.domain.SysOperator">
+          parameterType="com.aiit.skyflying.common.domain.SysOperator">
     insert into sys_operator
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -119,7 +119,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.SysOperator">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.SysOperator">
     update sys_operator
     <set>
       <if test="isDelete != null">

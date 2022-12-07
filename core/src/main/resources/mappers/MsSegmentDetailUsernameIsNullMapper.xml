@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+<mapper namespace="com.aiit.skyflying.common.dao.MsSegmentDetailUsernameIsNullMapper">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.MsSegmentDetailDo">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
         <result column="service_code" jdbcType="VARCHAR" property="serviceCode"/>
@@ -70,7 +70,7 @@
                                   GROUP BY global_trace_id)
           AND user_name IS NOT NULL
     </select>
-    <delete id="deleteByIds" parameterType="com.mingshi.skyflying.common.domain.MsSegmentDetailDo">
+    <delete id="deleteByIds" parameterType="com.aiit.skyflying.common.domain.MsSegmentDetailDo">
         delete
         from ms_segment_detail_username_is_null
         where id in

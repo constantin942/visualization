@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.UserPortraitRulesMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserPortraitRulesDo">
+<mapper namespace="com.aiit.skyflying.anomaly_detection.dao.UserPortraitRulesMapper">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.UserPortraitRulesDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -44,7 +44,7 @@
     from user_portrait_rules
     order by id desc
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserPortraitRulesDo">
+  <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.UserPortraitRulesDo">
     insert into user_portrait_rules
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -93,7 +93,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.UserPortraitRulesDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.UserPortraitRulesDo">
     update user_portrait_rules
     <set>
       <if test="isDelete != null">

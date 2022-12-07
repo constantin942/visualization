@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.AiitUserLoginStatisticsMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+<mapper namespace="com.aiit.skyflying.dao.AiitUserLoginStatisticsMapper">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.UserLoginStatistics">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="is_delete" jdbcType="INTEGER" property="isDelete"/>
         <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -25,7 +25,7 @@
         from user_login_statistics
         where is_delete=0 AND user_name=#{userName}
     </select>
-    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+    <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.UserLoginStatistics">
         insert into user_login_statistics
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -74,7 +74,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginStatistics">
+    <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.UserLoginStatistics">
         update user_login_statistics
         <set>
             <if test="isDelete != null">

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.MsAgentSwitchMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+<mapper namespace="com.aiit.skyflying.dao.MsAgentSwitchMapper">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.MsAgentSwitchDo">
     <id column="id" jdbcType="INTEGER" property="id"/>
     <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
@@ -56,7 +56,7 @@
     from ms_agent_switch
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+  <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.MsAgentSwitchDo">
     insert into ms_agent_switch
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -141,7 +141,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAgentSwitchDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.MsAgentSwitchDo">
     update ms_agent_switch
     <set>
       <if test="isDelete != null">

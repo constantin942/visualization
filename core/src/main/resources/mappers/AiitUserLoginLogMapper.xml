@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.UserLoginLogMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.UserLoginLog">
+<mapper namespace="com.aiit.skyflying.dao.UserLoginLogMapper">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.UserLoginLog">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="user_name" jdbcType="VARCHAR" property="userName" />
@@ -40,7 +40,7 @@
         LIMIT #{pageNo},#{pageSize}
     </if>
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginLog">
+  <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.UserLoginLog">
     insert into user_login_log
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -95,7 +95,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.UserLoginLog">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.UserLoginLog">
     update user_login_log
     <set>
       <if test="gmtCreate != null">

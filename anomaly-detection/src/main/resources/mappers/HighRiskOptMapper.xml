@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.HighRiskOptMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
+<mapper namespace="com.aiit.skyflying.anomaly_detection.dao.HighRiskOptMapper">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="keyword" jdbcType="VARCHAR" property="keyword" />
     <result column="description" jdbcType="VARCHAR" property="description" />
@@ -13,27 +13,27 @@
     id, keyword, description, enable, alarm_info, is_deleted
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from high_risk_opt
     where id = #{id,jdbcType=INTEGER}
   </select>
-    <select id="selectAll" resultType="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
+    <select id="selectAll" resultType="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
       select * from high_risk_opt
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from high_risk_opt
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
-    insert into high_risk_opt (id, keyword, description, 
+  <insert id="insert" parameterType="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
+    insert into high_risk_opt (id, keyword, description,
       enable, alarm_info, is_deleted
       )
-    values (#{id,jdbcType=INTEGER}, #{keyword,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, 
+    values (#{id,jdbcType=INTEGER}, #{keyword,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
       #{enable,jdbcType=INTEGER}, #{alarmInfo,jdbcType=VARCHAR}, #{isDeleted,jdbcType=INTEGER}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
+  <insert id="insertSelective" parameterType="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
     insert into high_risk_opt
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -76,7 +76,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
     update high_risk_opt
     <set>
       <if test="keyword != null">
@@ -97,7 +97,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.mingshi.skyflying.anomaly_detection.domain.HighRiskOpt">
+  <update id="updateByPrimaryKey" parameterType="com.aiit.skyflying.anomaly_detection.domain.HighRiskOpt">
     update high_risk_opt
     set keyword = #{keyword,jdbcType=VARCHAR},
       description = #{description,jdbcType=VARCHAR},

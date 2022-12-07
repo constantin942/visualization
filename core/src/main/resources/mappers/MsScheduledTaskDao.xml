@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.MsScheduledTaskDao">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsScheduledTaskDo">
+<mapper namespace="com.aiit.skyflying.dao.MsScheduledTaskDao">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.MsScheduledTaskDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -35,7 +35,7 @@
           record_count is not null
     order by id desc limit 1
   </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsScheduledTaskDo">
+  <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.MsScheduledTaskDo">
     insert into ms_scheduled_task
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -102,7 +102,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsScheduledTaskDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.MsScheduledTaskDo">
     update ms_scheduled_task
     <set>
       <if test="isDelete != null">

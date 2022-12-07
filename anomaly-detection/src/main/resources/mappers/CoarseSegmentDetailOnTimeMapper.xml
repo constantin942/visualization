@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
-    <resultMap id="CountOnTimeIntervalMap" type="com.mingshi.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
+<mapper namespace="com.aiit.skyflying.anomaly_detection.dao.CoarseSegmentDetailOnTimeMapper">
+    <resultMap id="CountOnTimeIntervalMap" type="com.aiit.skyflying.anomaly_detection.domain.VisitCountOnTimeInterval">
         <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="counts" jdbcType="INTEGER" property="counts"/>
         <result column="morning_count" jdbcType="INTEGER" property="morningCount"/>
         <result column="afternoon_count" jdbcType="INTEGER" property="afternoonCount"/>
         <result column="night_count" jdbcType="INTEGER" property="nightCount"/>
     </resultMap>
-    <resultMap id="CountOnHourIntervalMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+    <resultMap id="CountOnHourIntervalMap" type="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="counts" jdbcType="INTEGER" property="counts"/>
         <result column="time_interval_count_0_1" jdbcType="INTEGER" property="timeIntervalCount01"/>
@@ -36,7 +36,7 @@
         <result column="time_interval_count_22_23" jdbcType="INTEGER" property="timeIntervalCount2223"/>
         <result column="time_interval_count_23_24" jdbcType="INTEGER" property="timeIntervalCount2324"/>
     </resultMap>
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="counts" jdbcType="INTEGER" property="counts"/>
@@ -84,7 +84,7 @@
         where id = #{id,jdbcType=INTEGER}
     </select>
 
-    <insert id="insert" parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+    <insert id="insert" parameterType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         insert into coarse_segment_detail_on_time (id, username, counts,
                                                    time_interval_count_0_1, time_interval_count_1_2,
                                                    time_interval_count_2_3, time_interval_count_3_4,
@@ -115,7 +115,7 @@
                 #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertSelective"
-            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+            parameterType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         insert into coarse_segment_detail_on_time
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -303,7 +303,7 @@
         where id = #{id,jdbcType=INTEGER}
     </delete>
     <update id="updateByPrimaryKeySelective"
-            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+            parameterType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         update coarse_segment_detail_on_time
         <set>
             <if test="username != null">
@@ -394,7 +394,7 @@
         where id = #{id,jdbcType=INTEGER}
     </update>
     <update id="updateByPrimaryKey"
-            parameterType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+            parameterType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         update coarse_segment_detail_on_time
         set username                  = #{username,jdbcType=VARCHAR},
             counts                    = #{counts,jdbcType=INTEGER},
@@ -485,7 +485,7 @@
         group by username
     </select>
     <select id="selectOneByUsername"
-            resultType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo"
+            resultType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo"
             parameterType="string">
         select *
         from coarse_segment_detail_on_time
@@ -493,7 +493,7 @@
     </select>
 
     <select id="selectOneByNameAndTime"
-            resultType="com.mingshi.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
+            resultType="com.aiit.skyflying.anomaly_detection.domain.CoarseSegmentDetailOnTimeDo">
         select *
         from coarse_segment_detail_on_time
         where username = #{username,jdbcType=VARCHAR}

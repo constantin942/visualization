@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.common.dao.RealTimeStatisticsUserPortraitByTableMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
+<mapper namespace="com.aiit.skyflying.common.dao.RealTimeStatisticsUserPortraitByTableMapper">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
         <result column="usual_visited_data" jdbcType="VARCHAR" property="usualVisitedData"/>
@@ -42,7 +42,7 @@
         from real_time_statistics_user_portrait_by_table
         where id = #{id,jdbcType=INTEGER}
     </select>
-    <select id="selectAll" resultType="com.mingshi.skyflying.common.domain.UserCoarseInfo">
+    <select id="selectAll" resultType="com.aiit.skyflying.common.domain.UserCoarseInfo">
         select
         <include refid="Base_Column_List"/>
         from real_time_statistics_user_portrait_by_table
@@ -67,7 +67,7 @@
         </where>
     </select>
     <insert id="insertSelective"
-            parameterType="com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
+            parameterType="com.aiit.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
         insert into real_time_statistics_user_portrait_by_table
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -129,7 +129,7 @@
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective"
-            parameterType="com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
+            parameterType="com.aiit.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
         update real_time_statistics_user_portrait_by_table
         <set>
             <if test="userName != null">
@@ -159,7 +159,7 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
-    <update id="updateByUserNamAndUsualVisitedData" parameterType="com.mingshi.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
+    <update id="updateByUserNamAndUsualVisitedData" parameterType="com.aiit.skyflying.common.domain.RealTimeStatisticsUserPortraitByTable">
         update real_time_statistics_user_portrait_by_table
         <set>
             <if test="visitedCount != null">

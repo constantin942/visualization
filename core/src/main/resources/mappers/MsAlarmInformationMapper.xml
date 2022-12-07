@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.common.dao.MsAlarmInformationMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+<mapper namespace="com.aiit.skyflying.common.dao.MsAlarmInformationMapper">
+  <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.MsAlarmInformationDo">
     <id column="id" jdbcType="INTEGER" property="id" />
     <id column="match_rule_id" jdbcType="INTEGER" property="matchRuleId" />
     <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
@@ -22,7 +22,7 @@
     start_time, db_instance, ms_table_name
   </sql>
   <select id="selectByGlobalTraceId" parameterType="string"
-          resultType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+          resultType="com.aiit.skyflying.common.domain.MsAlarmInformationDo">
     select *
     from ms_alarm_information
     where global_trace_id = #{traceId,jdbcType=INTEGER} limit 1;
@@ -124,7 +124,7 @@
       )
     </foreach>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsAlarmInformationDo">
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.MsAlarmInformationDo">
     update ms_alarm_information
     <set>
       <if test="isDelete != null">

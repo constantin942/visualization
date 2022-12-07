@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mingshi.skyflying.dao.OperateLogMapper">
-    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.OperationLog">
+<mapper namespace="com.aiit.skyflying.dao.OperateLogMapper">
+    <resultMap id="BaseResultMap" type="com.aiit.skyflying.common.domain.OperationLog">
         <id column="id" jdbcType="BIGINT" property="id"/>
         <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
         <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
@@ -91,7 +91,7 @@
             AND order_id=#{orderId}
         </if>
     </select>
-    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.OperationLog">
+    <insert id="insertSelective" parameterType="com.aiit.skyflying.common.domain.OperationLog">
         insert into operate_log
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -164,7 +164,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.OperationLog">
+    <update id="updateByPrimaryKeySelective" parameterType="com.aiit.skyflying.common.domain.OperationLog">
         update operate_log
         <set>
             <if test="gmtCreate != null">
