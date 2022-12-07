@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
  **/
 @Slf4j
 public class IoThread extends Thread {
-
     /**
      * 所有的IoThread线程共享同一个公共有界阻塞队列；2022-06-01 10:22:49
      */
@@ -46,6 +45,11 @@ public class IoThread extends Thread {
     private Integer capacity;
 
     private Map<String, Integer> everydayVisitedTimesMap = null;
+
+    /**
+     * 记录业务系统发送消息的时间，在生成报告中会用到；2022-12-06 14:34:17
+     */
+    private Map<String, Map<String, String>> reportServiceTimeMap = null;
     /**
      * 用户总的访问次数；2022-10-14 13:59:31
      */
@@ -100,6 +104,7 @@ public class IoThread extends Thread {
         this.capacity = queueSize;
 
         this.everydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.reportServiceTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -327,7 +332,8 @@ public class IoThread extends Thread {
                         tableOperationTypeMap,
                         userOperationTypeMap,
                         everyoneEverydayVisitedTimesMap,
-                        everyUserEverydayFromVisitedTimesMap);
+                        everyUserEverydayFromVisitedTimesMap,
+                        reportServiceTimeMap);
 
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
@@ -403,7 +409,8 @@ public class IoThread extends Thread {
                     tableOperationTypeMap,
                     userOperationTypeMap,
                     everyoneEverydayVisitedTimesMap,
-                    everyUserEverydayFromVisitedTimesMap);
+                    everyUserEverydayFromVisitedTimesMap,
+                    reportServiceTimeMap);
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);

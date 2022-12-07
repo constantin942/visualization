@@ -67,6 +67,9 @@ public class MingshiServerUtil {
     private MsUserFromMapper msUserFromMapper;
     @Resource
     private MsCaffeine msCaffeine;
+    @Resource
+    private MsSystemOperationRecordMapper msSystemOperationRecordMapper;
+
 
     public void getZheLingYu(String userName) {
         if (userName.contains("浙JH062S") ||
@@ -175,20 +178,20 @@ public class MingshiServerUtil {
      * <B>方法名称：setUserFrom</B>
      * <B>概要说明：从本地缓存中获取用户来源</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-25 14:21:09
      * @Param [userName]
-     * @return void
      **/
     public String setUserFrom(String userName) {
         String userFrom = null;
         try {
             Map<String/* 用户名 */, Map<String/* 用户访问时间 年月日 */, Map<String/* 用户来源*/, Integer/* 访问次数 */>>> userFromVisitedTimesMap = msCaffeine.getUserFromVisitedTimesMap();
-            if(null != userFromVisitedTimesMap && !userFromVisitedTimesMap.isEmpty()){
+            if (null != userFromVisitedTimesMap && !userFromVisitedTimesMap.isEmpty()) {
                 Map<String, Map<String, Integer>> stringMapMap = userFromVisitedTimesMap.get(userName);
-                if(null != stringMapMap && !stringMapMap.isEmpty()){
+                if (null != stringMapMap && !stringMapMap.isEmpty()) {
                     Set<String> keySet = stringMapMap.keySet();
-                    if(null != keySet && !keySet.isEmpty()){
+                    if (null != keySet && !keySet.isEmpty()) {
                         userFrom = JsonUtil.obj2String(keySet);
                     }
                 }
@@ -227,10 +230,10 @@ public class MingshiServerUtil {
      * <B>方法名称：setUserFromCache</B>
      * <B>概要说明：将从数据库中获取到的数据放入到本地缓存</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-24 17:12:38
      * @Param [msUserFromList, userFromCache]
-     * @return void
      **/
     private void setUserFromCache(List<MsUserFrom> msUserFromList, Cache userFromCache) {
         for (int i = 0; i < msUserFromList.size(); i++) {
@@ -585,7 +588,8 @@ public class MingshiServerUtil {
                                        Map<String, Map<String, Double>> tableOperationTypeMap,
                                        Map<String, Map<String, Double>> userOperationTypeMap,
                                        Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
-                                       Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap
+                                       Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap,
+                                       Map<String/* 服务名 */, Map<String/* 探针名称 */, String/* 时间 */> > reportServiceTimeMap
     ) {
         // 将用户的最后访问时间更新到Redis中
         flushUserAccessBehaviorLatestVisitedTimeToRedis(userAccessBehaviorLatestVisitedTimeMap);
@@ -619,6 +623,9 @@ public class MingshiServerUtil {
 
         // 统计每个用户操作类型次数；
         flushUserOperationType(userOperationTypeMap);
+
+        // 服务的心跳时间更新到MySQL中；2022-12-06 14:41:46
+        flushServiceTimeMap(reportServiceTimeMap);
     }
 
     /**
@@ -641,9 +648,9 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Double>> tableOperationTypeMap,
                              Map<String, Map<String, Double>> userOperationTypeMap,
                              Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
-                             Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap
+                             Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap,
+                             Map<String, Map<String, String>> serviceTimeMap
     ) {
-
         String userName = msSegmentDetailDo.getUserName();
         String userFrom = msSegmentDetailDo.getUserFrom();
         String startTime = msSegmentDetailDo.getStartTime();
@@ -651,10 +658,16 @@ public class MingshiServerUtil {
         String dbInstance = msSegmentDetailDo.getDbInstance();
         String dbType = msSegmentDetailDo.getDbType();
         String peer = msSegmentDetailDo.getPeer();
+        String serviceInstanceName = msSegmentDetailDo.getServiceInstanceName();
         String serviceCode = msSegmentDetailDo.getServiceCode();
 
+        // 记录当前服务发送的消息时间，用户在数据库中计算当前服务已运行多久了，生成报告时会用到；2022-12-06 14:36:55
+        HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put(serviceInstanceName, startTime);
+        serviceTimeMap.put(serviceCode, stringStringHashMap);
+
 //        mingshiServerUtil.getZheLingYu(userName);
-        if(StringUtil.isNotBlank(userName)){
+        if (StringUtil.isNotBlank(userName)) {
             // 将每个人每天来源的访问次数在本地进行累加
             everyUserEverydayFromVisitedTimes(userName, startTime, userFrom, everyUserEverydayFromVisitedTimesMap);
 
@@ -729,6 +742,55 @@ public class MingshiServerUtil {
             userOperationTypeMap.clear();
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushUserOperationType() # 将统计每个用户操作类型次数发送到Redis中，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushServiceTimeMap</B>
+     * <B>概要说明：服务的心跳时间更新到MySQL中</B>
+     *
+     * @Author zm
+     * @Date 2022-12-06 14:41:18
+     * @Param [serviceTimeMap]
+     * @return void
+     **/
+    private void flushServiceTimeMap(Map<String, Map<String, String>> reportServiceTimeMap) {
+        if (null == reportServiceTimeMap || reportServiceTimeMap.isEmpty()) {
+            return;
+        }
+        try {
+            List<MsSystemOperationRecord> list = new LinkedList<>();
+            Iterator<String> iterator1 = reportServiceTimeMap.keySet().iterator();
+            while (iterator1.hasNext()) {
+                String serviceCode = iterator1.next();
+                Map<String, String> operationTypeCountMap = reportServiceTimeMap.get(serviceCode);
+                if (null == operationTypeCountMap || operationTypeCountMap.isEmpty()) {
+                    continue;
+                }
+                Iterator<String> iterator2 = operationTypeCountMap.keySet().iterator();
+                while(iterator2.hasNext()){
+                    String agent = iterator2.next();
+                    String time = operationTypeCountMap.get(agent);
+                    if(StringUtil.isNotBlank(agent) && StringUtil.isNotBlank(time)){
+                        MsSystemOperationRecord msSystemOperationRecord = new MsSystemOperationRecord();
+                        msSystemOperationRecord.setSystemName(Const.REPORT_AGENT_CLIENT_NAME);
+                        msSystemOperationRecord.setServiceCode(serviceCode);
+                        msSystemOperationRecord.setAgentName(agent);
+                        msSystemOperationRecord.setGmtModified(DateTimeUtil.strToDate(time));
+                        Integer update = msSystemOperationRecordMapper.updateBySystemNameAndServiceCode(msSystemOperationRecord);
+                        if(!Const.NUMBER_ONE.equals(update)){
+                            list.add(msSystemOperationRecord);
+                        }
+                    }
+                }
+            }
+            if(!list.isEmpty()){
+                msSystemOperationRecordMapper.insertSelectiveBatch(list);
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushServiceTimeMap() # 将服务的心跳时间更新到MySQL中，出现了异常。", e);
+        }finally {
+            reportServiceTimeMap.clear();
         }
     }
 
@@ -1102,10 +1164,10 @@ public class MingshiServerUtil {
      * <B>方法名称：flushEveryoneEverydayFromVisitedTimes</B>
      * <B>概要说明：对每个用户每天来源进行统计累加</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-11-25 09:23:50
      * @Param [everyoneEverydayVisitedTimesMap]
-     * @return void
      **/
     private void flushEveryoneEverydayFromVisitedTimes(Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap) {
         try {
@@ -1199,7 +1261,7 @@ public class MingshiServerUtil {
         Date date = DateTimeUtil.strToDate(startTime);
         String startTimeNew = DateTimeUtil.dateToStr(date, DateTimeUtil.DATEFORMAT_STR_002);
         String key = startTimeNew + Const.POUND_KEY + userFrom;
-         String table = Const.ZSET_TABLE_BY_EVERYONE_EVERYDAYUSER_FROM_VISITED_TIMES + userName;
+        String table = Const.ZSET_TABLE_BY_EVERYONE_EVERYDAYUSER_FROM_VISITED_TIMES + userName;
         doEveryUserEverydayFromVisitedTimes(table, key, everyUserEverydayFromVisitedTimesMap);
     }
 

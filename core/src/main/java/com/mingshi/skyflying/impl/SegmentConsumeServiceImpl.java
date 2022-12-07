@@ -236,7 +236,7 @@ public class SegmentConsumeServiceImpl implements SegmentConsumerService {
                     String key = iterator.next();
                     if (userFromPath.contains(key) || (StringUtil.isNotBlank(parentEndpoint)  && parentEndpoint.contains(key))) {
                         userFromName = msCaffeine.getUserFromCacheByUserFromPath(key);
-                        log.info("# SegmentConsumeServiceImpl.doGetUserFromByPath() # 根据用户访问路径，获取用户对应的来源，用时【{}】毫秒。", userFromPath, DateTimeUtil.getTimeMillis(now));
+                        log.info("# SegmentConsumeServiceImpl.doGetUserFromByPath() # 根据用户访问路径【{}】，获取用户对应的来源，用时【{}】毫秒。", userFromPath, DateTimeUtil.getTimeMillis(now));
                         return userFromName;
                     }
                 }

@@ -1,111 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mingshi.skyflying.common.dao.MsSystemOperationRecordMapper">
-  <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
-    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
-    <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
-    <result column="system_name" jdbcType="VARCHAR" property="systemName" />
-    <result column="agent_name" jdbcType="VARCHAR" property="agentName" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    id, is_delete, gmt_create, gmt_modified, system_name, agent_name
-  </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from ms_system_operation_record
-    where id = #{id,jdbcType=INTEGER}
-  </select>
-  <select id="selectBySystemName" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from ms_system_operation_record
-    where system_name = #{systemName,jdbcType=VARCHAR}
-  </select>
-  <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
-    insert into ms_system_operation_record
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        id,
-      </if>
-      <if test="isDelete != null">
-        is_delete,
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create,
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified,
-      </if>
-      <if test="systemName != null">
-        system_name,
-      </if>
-      <if test="agentName != null">
-        agent_name,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="isDelete != null">
-        #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="systemName != null">
-        #{systemName,jdbcType=VARCHAR},
-      </if>
-      <if test="agentName != null">
-        #{agentName,jdbcType=VARCHAR},
-      </if>
-    </trim>
-      ON DUPLICATE KEY UPDATE
-      gmt_modified = VALUES(gmt_modified)
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
-    update ms_system_operation_record
-    <set>
-      <if test="isDelete != null">
-        is_delete = #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="systemName != null">
-        system_name = #{systemName,jdbcType=VARCHAR},
-      </if>
-      <if test="agentName != null">
-        agent_name = #{agentName,jdbcType=VARCHAR},
-      </if>
-    </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateBySystemName" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
-    update ms_system_operation_record
-    <set>
-      <if test="isDelete != null">
-        is_delete = #{isDelete,jdbcType=TINYINT},
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModified != null">
-        gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
-      </if>
-      <if test="agentName != null">
-        agent_name = #{agentName,jdbcType=VARCHAR},
-      </if>
-    </set>
-    where system_name = #{systemName,jdbcType=VARCHAR}
-  </update>
+    <resultMap id="BaseResultMap" type="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="is_delete" jdbcType="TINYINT" property="isDelete"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="system_name" jdbcType="VARCHAR" property="systemName"/>
+        <result column="agent_name" jdbcType="VARCHAR" property="agentName"/>
+        <result column="service_code" jdbcType="VARCHAR" property="serviceCode"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , is_delete, gmt_create, gmt_modified, system_name, agent_name, service_code
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ms_system_operation_record
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectBySystemName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ms_system_operation_record
+        where system_name = #{systemName,jdbcType=VARCHAR}
+    </select>
+    <insert id="insertSelective" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
+        insert into ms_system_operation_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="isDelete != null">
+                is_delete,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified,
+            </if>
+            <if test="systemName != null">
+                system_name,
+            </if>
+            <if test="agentName != null">
+                agent_name,
+            </if>
+            <if test="serviceCode != null">
+                service_code,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="isDelete != null">
+                #{isDelete,jdbcType=TINYINT},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="systemName != null">
+                #{systemName,jdbcType=VARCHAR},
+            </if>
+            <if test="agentName != null">
+                #{agentName,jdbcType=VARCHAR},
+            </if>
+            <if test="serviceCode != null">
+                #{serviceCode,jdbcType=VARCHAR},
+            </if>
+        </trim>
+        ON DUPLICATE KEY UPDATE
+        gmt_modified = VALUES(gmt_modified)
+    </insert>
+
+    <insert id="insertSelectiveBatch" parameterType="java.util.List">
+        insert into ms_system_operation_record
+        (gmt_modified, system_name, agent_name, service_code)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.gmtModified,jdbcType=TIMESTAMP},
+            #{item.systemName,jdbcType=VARCHAR},
+            #{item.agentName,jdbcType=VARCHAR},
+            #{item.serviceCode,jdbcType=VARCHAR}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        gmt_modified = VALUES(gmt_modified)
+    </insert>
+
+    <update id="updateByPrimaryKeySelective"
+            parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
+        update ms_system_operation_record
+        <set>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=TINYINT},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="systemName != null">
+                system_name = #{systemName,jdbcType=VARCHAR},
+            </if>
+            <if test="agentName != null">
+                agent_name = #{agentName,jdbcType=VARCHAR},
+            </if>
+            <if test="serviceCode != null">
+                service_code = #{serviceCode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateBySystemName" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
+        update ms_system_operation_record
+        <set>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=TINYINT},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="agentName != null">
+                agent_name = #{agentName,jdbcType=VARCHAR},
+            </if>
+            <if test="serviceCode != null">
+                service_code = #{serviceCode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where system_name = #{systemName,jdbcType=VARCHAR}
+    </update>
+    <update id="updateBySystemNameAndServiceCode" parameterType="com.mingshi.skyflying.common.domain.MsSystemOperationRecord">
+        update ms_system_operation_record
+        <set>
+            <if test="isDelete != null">
+                is_delete = #{isDelete,jdbcType=TINYINT},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="agentName != null">
+                agent_name = #{agentName,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where system_name = #{systemName,jdbcType=VARCHAR} and service_code = #{serviceCode,jdbcType=VARCHAR}
+    </update>
 </mapper>

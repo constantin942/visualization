@@ -17,4 +17,6 @@ public class MsSystemOperationRecord {
     private String systemName;
 
     private String agentName;
+
+    private String serviceCode;
 }

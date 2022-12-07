@@ -1,23 +1,31 @@
 package com.mingshi.skyflying.impl;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.dao.MsAgentInformationMapper;
 import com.mingshi.skyflying.common.dao.MsSystemOperationRecordMapper;
-import com.mingshi.skyflying.common.domain.*;
+import com.mingshi.skyflying.common.dao.MsUserFromMapper;
+import com.mingshi.skyflying.common.domain.MsAgentInformationDo;
+import com.mingshi.skyflying.common.domain.MsReport;
+import com.mingshi.skyflying.common.domain.MsSystemOperationRecord;
+import com.mingshi.skyflying.common.domain.MsUserFrom;
 import com.mingshi.skyflying.common.response.ServerResponse;
+import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
 import com.mingshi.skyflying.common.utils.MingshiServerUtil;
+import com.mingshi.skyflying.common.utils.StringUtil;
 import com.mingshi.skyflying.service.ReportService;
+import com.mingshi.skyflying.service.UserFromService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import scala.App;
 
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * <B>类名称：ReportServiceImpl</B>
@@ -62,10 +70,10 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      * <B>方法名称：getDmsRecord</B>
      * <B>概要说明：DMS（SQL审计）</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-06 10:01:13
      * @Param [returnAllJsonObject]
-     * @return void
      **/
     private void getDmsRecord(ObjectNode returnAllJsonObject) {
         /**
@@ -80,12 +88,13 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      * <B>方法名称：getSingleApplicationRecord</B>
      * <B>概要说明：单个业务应用系统</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-06 10:00:24
      * @Param []
-     * @return void
      **/
     private void getSingleApplicationRecord(ObjectNode returnAllJsonObject) {
+        ObjectNode jsonObject = JsonUtil.createJsonObject();
         /**
          * 2. 单个业务应用系统
          * 1）运行时长；
@@ -97,7 +106,8 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
          * 7）同比上期的结果；
          * 8）历史各次总结的走势；
          */
-        //运行时长
+        // 1）运行时长
+        getSingleReportAgentRunTime(jsonObject);
 
         // 用户数量：总量与新增
 
@@ -112,6 +122,8 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         // 同比上期的结果
 
         // 历史各次总结的走势
+
+        returnAllJsonObject.set(Const.REPORT_SINGLE_APPLICATION_RUN_RECORD, jsonObject);
     }
 
     /**
@@ -285,20 +297,58 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
     private void getReportAgentServerName(ObjectNode jsonObject) {
         try {
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
-            MsSystemOperationRecord msSystemOperationRecord = msSystemOperationRecordMapper.selectBySystemName(Const.REPORT_AGENT_SERVER_NAME);
-            if (null != msSystemOperationRecord && null != msSystemOperationRecord.getGmtCreate() && null != msSystemOperationRecord.getGmtModified()) {
-                Date gmtCreate = msSystemOperationRecord.getGmtCreate();
-                Date gmtModified = msSystemOperationRecord.getGmtModified();
-                Instant gmtCreateInstant = gmtCreate.toInstant();
-                Instant gmtModifiedInstant = gmtModified.toInstant();
+            List<MsSystemOperationRecord> msSystemOperationRecordList = msSystemOperationRecordMapper.selectBySystemName(Const.REPORT_AGENT_SERVER_NAME);
+            for (int i = 0; i < msSystemOperationRecordList.size(); i++) {
+                MsSystemOperationRecord msSystemOperationRecord = msSystemOperationRecordList.get(i);
+                if (null != msSystemOperationRecord && null != msSystemOperationRecord.getGmtCreate() && null != msSystemOperationRecord.getGmtModified()) {
+                    Date gmtCreate = msSystemOperationRecord.getGmtCreate();
+                    Date gmtModified = msSystemOperationRecord.getGmtModified();
+                    Instant gmtCreateInstant = gmtCreate.toInstant();
+                    Instant gmtModifiedInstant = gmtModified.toInstant();
 
                     long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
-                reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_SERVER_NAME_DESC);
-                reportAgentServerNameJson.put(Const.OPERATION_TIME, toHours);
-                jsonObject.set(Const.REPORT_AGENT_SERVER_NAME, reportAgentServerNameJson);
+                    reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_SERVER_NAME_DESC);
+                    reportAgentServerNameJson.put(Const.OPERATION_TIME, toHours);
+                    jsonObject.set(Const.REPORT_AGENT_SERVER_NAME, reportAgentServerNameJson);
+                }
             }
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getReportAgentServerName() # 获取可视化系统运行时长时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：getSingleReportAgentRunTime</B>
+     * <B>概要说明：获取单个业务系统的运行时长</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-06 15:13:11
+     * @Param [jsonObject]
+     **/
+    private void getSingleReportAgentRunTime(ObjectNode jsonObject) {
+        try {
+            ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
+            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_CLIENT_NAME_DESC);
+            ArrayNode jsonArray = JsonUtil.createJsonArray();
+            List<MsSystemOperationRecord> msSystemOperationRecordList = msSystemOperationRecordMapper.selectBySystemName(Const.REPORT_AGENT_CLIENT_NAME);
+            for (MsSystemOperationRecord msSystemOperationRecord : msSystemOperationRecordList) {
+                if (null != msSystemOperationRecord && null != msSystemOperationRecord.getGmtCreate() && null != msSystemOperationRecord.getGmtModified()) {
+                    Date gmtCreate = msSystemOperationRecord.getGmtCreate();
+                    Date gmtModified = msSystemOperationRecord.getGmtModified();
+                    Instant gmtCreateInstant = gmtCreate.toInstant();
+                    Instant gmtModifiedInstant = gmtModified.toInstant();
+                    long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
+                    ObjectNode reportJson = JsonUtil.createJsonObject();
+                    reportJson.put(Const.OPERATION_TIME, toHours);
+                    reportJson.put(Const.SERVICE_CODE, msSystemOperationRecord.getServiceCode());
+                    jsonArray.add(reportJson);
+                }
+            }
+            reportAgentServerNameJson.set(Const.REPORT_SINGLE_APPLICATION_RUN_TIME, jsonArray);
+            jsonObject.set(Const.REPORT_AGENT_CLIENT_NAME, reportAgentServerNameJson);
+        } catch (Exception e) {
+            log.error("# ReportServiceImpl.getSingleReportAgentRunTime() # 获取单个业务系统的运行时长时，出现了异常。", e);
         }
     }
 

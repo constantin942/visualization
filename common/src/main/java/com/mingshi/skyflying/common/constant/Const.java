@@ -48,12 +48,21 @@ public class Const {
     /**
      * 可视化服务端名称，获取报告时会用到；
      */
-    public static final String REPORT_AGENT_SERVER_NAME = "report_agent_server_name";
+    public static final String REPORT_AGENT_SERVER_NAME = "reportAgentServerName";
     /**
      * 定时任务更新可视化服务端存活时长用的分布式锁；
      */
     public static final String REPORT_AGENT_SERVER_NAME_KEY = "redisson:key:reportAgentServerName";
     public static final String REPORT_AGENT_SERVER_NAME_DESC = "可视化系统运行时长";
+
+    /**
+     * 客户端探针对应的业务系统；2022-12-06 15:05:41
+     */
+    public static final String REPORT_AGENT_CLIENT_NAME = "reportAgentClientName";
+
+    public static final String REPORT_SINGLE_APPLICATION_RUN_TIME = "reportSingleApplicationRunTime";
+
+    public static final String REPORT_AGENT_CLIENT_NAME_DESC = "单个业务系统运行时长";
 
     public static final String REPORT_DATA_ACCESS_BEHAVIOR_NAME = "reportDataAccessBehaviorName";
     public static final String REPORT_DATA_ACCESS_BEHAVIOR = "reportDataAccessBehavior";
@@ -87,6 +96,11 @@ public class Const {
      * 可视化系统运行时间
      */
     public static final String OPERATION_TIME = "operationTime";
+
+    /**
+     * 单个系统运行记录
+     */
+    public static String REPORT_SINGLE_APPLICATION_RUN_RECORD = "singleApplicationRunRecord";
 
     static {
         OPERATION_NAME_MAP.put(Const.REDISSON_PING, Const.REDISSON_PING);
