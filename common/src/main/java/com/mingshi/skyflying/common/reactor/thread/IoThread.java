@@ -334,7 +334,6 @@ public class IoThread extends Thread {
                         everyoneEverydayVisitedTimesMap,
                         everyUserEverydayFromVisitedTimesMap,
                         report.getReportRegulatedApplicationHeartbeatMap());
-
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
             }

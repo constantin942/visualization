@@ -104,21 +104,21 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
          * 8）历史各次总结的走势；
          */
         // 1）运行时长
-        getSingleReportAgentRunTime(jsonObject);
+        getSingleRegulatedApplicationRunTime(jsonObject);
 
-        // 用户数量：总量与新增
+        // 2）用户数量：总量与新增
 
-        // 访问行为数
+        // 3）访问行为数
 
-        // 相关数据库表清单和次数
+        // 4）相关数据库表清单和次数
 
-        // 调用数据接口的清单和次数
+        // 5）调用数据接口的清单和次数
 
-        // 告警次数：告警分布和遗留问题记录
+        // 6）告警次数：告警分布和遗留问题记录
 
-        // 同比上期的结果
+        // 7）同比上期的结果
 
-        // 历史各次总结的走势
+        // 8）历史各次总结的走势
 
         returnAllJsonObject.set(Const.REPORT_SINGLE_APPLICATION_RUN_RECORD, jsonObject);
     }
@@ -315,7 +315,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
     }
 
     /**
-     * <B>方法名称：getSingleReportAgentRunTime</B>
+     * <B>方法名称：getSingleRegulatedApplicationRunTime</B>
      * <B>概要说明：获取单个业务系统的运行时长</B>
      *
      * @return void
@@ -323,7 +323,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      * @Date 2022-12-06 15:13:11
      * @Param [jsonObject]
      **/
-    private void getSingleReportAgentRunTime(ObjectNode jsonObject) {
+    private void getSingleRegulatedApplicationRunTime(ObjectNode jsonObject) {
         try {
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
             reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_AGENT_CLIENT_NAME_DESC);
@@ -345,7 +345,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
             reportAgentServerNameJson.set(Const.REPORT_SINGLE_APPLICATION_RUN_TIME, jsonArray);
             jsonObject.set(Const.REPORT_AGENT_CLIENT_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
-            log.error("# ReportServiceImpl.getSingleReportAgentRunTime() # 获取单个业务系统的运行时长时，出现了异常。", e);
+            log.error("# ReportServiceImpl.getSingleRegulatedApplicationRunTime() # 获取单个业务系统的运行时长时，出现了异常。", e);
         }
     }
 
