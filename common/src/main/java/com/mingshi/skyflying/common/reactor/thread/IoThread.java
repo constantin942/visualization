@@ -8,6 +8,7 @@ import com.mingshi.skyflying.common.constant.Const;
 import com.mingshi.skyflying.common.domain.MsSegmentDetailDo;
 import com.mingshi.skyflying.common.reactor.queue.InitProcessorByLinkedBlockingQueue;
 import com.mingshi.skyflying.common.reactor.queue.IoThreadLinkedBlockingQueue;
+import com.mingshi.skyflying.common.report.Report;
 import com.mingshi.skyflying.common.statistics.InformationOverviewSingleton;
 import com.mingshi.skyflying.common.utils.DateTimeUtil;
 import com.mingshi.skyflying.common.utils.JsonUtil;
@@ -43,13 +44,13 @@ public class IoThread extends Thread {
     private HashSet<String> userHashSet = null;
     private MingshiServerUtil mingshiServerUtil;
     private Integer capacity;
-
     private Map<String, Integer> everydayVisitedTimesMap = null;
 
     /**
-     * 记录业务系统发送消息的时间，在生成报告中会用到；2022-12-06 14:34:17
+     * 生成报告模块用的类；2022-12-07 09:21:50
      */
-    private Map<String, Map<String, String>> reportServiceTimeMap = null;
+    private Report report;
+
     /**
      * 用户总的访问次数；2022-10-14 13:59:31
      */
@@ -92,6 +93,7 @@ public class IoThread extends Thread {
     private Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap = null;
 
     public IoThread(Integer queueSize, MingshiServerUtil mingshiServerUtil) {
+        this.report = new Report();
         currentTime = Instant.now().minusSeconds(new Random().nextInt(Const.CURRENT_TIME_RANDOM));
         // 懒汉模式：只有用到的时候，才创建list实例。2022-06-01 10:22:16
         skywalkingAgentHeartBeatMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -102,9 +104,7 @@ public class IoThread extends Thread {
         this.ioThreadLinkedBlockingQueue = new LinkedBlockingQueue<>(queueSize);
         this.mingshiServerUtil = mingshiServerUtil;
         this.capacity = queueSize;
-
         this.everydayVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
-        this.reportServiceTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userAccessBehaviorAllVisitedTimesMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.userAccessBehaviorLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.tableLatestVisitedTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
@@ -333,7 +333,7 @@ public class IoThread extends Thread {
                         userOperationTypeMap,
                         everyoneEverydayVisitedTimesMap,
                         everyUserEverydayFromVisitedTimesMap,
-                        reportServiceTimeMap);
+                        report.getReportServiceTimeMap());
 
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
@@ -410,7 +410,7 @@ public class IoThread extends Thread {
                     userOperationTypeMap,
                     everyoneEverydayVisitedTimesMap,
                     everyUserEverydayFromVisitedTimesMap,
-                    reportServiceTimeMap);
+                    report.getReportServiceTimeMap());
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);
