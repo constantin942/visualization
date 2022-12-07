@@ -589,7 +589,7 @@ public class MingshiServerUtil {
                                        Map<String, Map<String, Double>> userOperationTypeMap,
                                        Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
                                        Map<String/* 用户名 */, Map<String/* 来源 */, Long/* 操作次数 */>> everyUserEverydayFromVisitedTimesMap,
-                                       Map<String/* 服务名 */, Map<String/* 探针名称 */, String/* 时间 */> > reportServiceTimeMap
+                                       Map<String/* 服务名 */, Map<String/* 探针名称 */, String/* 时间 */>> reportServiceTimeMap
     ) {
         // 将用户的最后访问时间更新到Redis中
         flushUserAccessBehaviorLatestVisitedTimeToRedis(userAccessBehaviorLatestVisitedTimeMap);
@@ -649,7 +649,7 @@ public class MingshiServerUtil {
                              Map<String, Map<String, Double>> userOperationTypeMap,
                              Map<String, Map<String, Long>> everyoneEverydayVisitedTimesMap,
                              Map<String, Map<String, Long>> everyUserEverydayFromVisitedTimesMap,
-                             Map<String, Map<String, String>> serviceTimeMap
+                             Map<String, Map<String, String>> reportRegulatedApplicationHeartbeatMap
     ) {
         String userName = msSegmentDetailDo.getUserName();
         String userFrom = msSegmentDetailDo.getUserFrom();
@@ -664,10 +664,12 @@ public class MingshiServerUtil {
         // 记录当前服务发送的消息时间，用户在数据库中计算当前服务已运行多久了，生成报告时会用到；2022-12-06 14:36:55
         HashMap<String, String> stringStringHashMap = new HashMap<>();
         stringStringHashMap.put(serviceInstanceName, startTime);
-        serviceTimeMap.put(serviceCode, stringStringHashMap);
+        reportRegulatedApplicationHeartbeatMap.put(serviceCode, stringStringHashMap);
 
-//        mingshiServerUtil.getZheLingYu(userName);
         if (StringUtil.isNotBlank(userName)) {
+            // 对用户总的访问次数进行本地累加
+            userAccessBehaviorAllVisitedTimes(userName, userAccessBehaviorAllVisitedTimesMap);
+
             // 将每个人每天来源的访问次数在本地进行累加
             everyUserEverydayFromVisitedTimes(userName, startTime, userFrom, everyUserEverydayFromVisitedTimesMap);
 
@@ -749,10 +751,10 @@ public class MingshiServerUtil {
      * <B>方法名称：flushServiceTimeMap</B>
      * <B>概要说明：服务的心跳时间更新到MySQL中</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-06 14:41:18
      * @Param [serviceTimeMap]
-     * @return void
      **/
     private void flushServiceTimeMap(Map<String, Map<String, String>> reportServiceTimeMap) {
         if (null == reportServiceTimeMap || reportServiceTimeMap.isEmpty()) {
@@ -768,28 +770,28 @@ public class MingshiServerUtil {
                     continue;
                 }
                 Iterator<String> iterator2 = operationTypeCountMap.keySet().iterator();
-                while(iterator2.hasNext()){
+                while (iterator2.hasNext()) {
                     String agent = iterator2.next();
                     String time = operationTypeCountMap.get(agent);
-                    if(StringUtil.isNotBlank(agent) && StringUtil.isNotBlank(time)){
+                    if (StringUtil.isNotBlank(agent) && StringUtil.isNotBlank(time)) {
                         MsSystemOperationRecord msSystemOperationRecord = new MsSystemOperationRecord();
                         msSystemOperationRecord.setSystemName(Const.REPORT_AGENT_CLIENT_NAME);
                         msSystemOperationRecord.setServiceCode(serviceCode);
                         msSystemOperationRecord.setAgentName(agent);
                         msSystemOperationRecord.setGmtModified(DateTimeUtil.strToDate(time));
                         Integer update = msSystemOperationRecordMapper.updateBySystemNameAndServiceCode(msSystemOperationRecord);
-                        if(!Const.NUMBER_ONE.equals(update)){
+                        if (!Const.NUMBER_ONE.equals(update)) {
                             list.add(msSystemOperationRecord);
                         }
                     }
                 }
             }
-            if(!list.isEmpty()){
+            if (!list.isEmpty()) {
                 msSystemOperationRecordMapper.insertSelectiveBatch(list);
             }
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushServiceTimeMap() # 将服务的心跳时间更新到MySQL中，出现了异常。", e);
-        }finally {
+        } finally {
             reportServiceTimeMap.clear();
         }
     }

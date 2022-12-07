@@ -333,7 +333,7 @@ public class IoThread extends Thread {
                         userOperationTypeMap,
                         everyoneEverydayVisitedTimesMap,
                         everyUserEverydayFromVisitedTimesMap,
-                        report.getReportServiceTimeMap());
+                        report.getReportRegulatedApplicationHeartbeatMap());
 
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
@@ -410,7 +410,7 @@ public class IoThread extends Thread {
                     userOperationTypeMap,
                     everyoneEverydayVisitedTimesMap,
                     everyUserEverydayFromVisitedTimesMap,
-                    report.getReportServiceTimeMap());
+                    report.getReportRegulatedApplicationHeartbeatMap());
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);

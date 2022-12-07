@@ -18,10 +18,10 @@ public class Report {
     /**
      * 记录业务系统发送消息的时间，在生成报告中有一项统计是：统计业务系统运行的时长；2022-12-06 14:34:17
      */
-    private Map<String, Map<String, String>> reportServiceTimeMap = null;
+    private Map<String, Map<String, String>> reportRegulatedApplicationHeartbeatMap = null;
 
     public Report() {
-        this.reportServiceTimeMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.reportRegulatedApplicationHeartbeatMap = new HashMap<>(Const.NUMBER_EIGHT);
     }
 
 
