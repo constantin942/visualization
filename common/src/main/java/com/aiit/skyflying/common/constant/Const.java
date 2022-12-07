@@ -96,6 +96,35 @@ public class Const {
      * 可视化系统运行时间
      */
     public static final String OPERATION_TIME = "operationTime";
+    /**
+     * 有多少业务系统
+     */
+    public static final String REPORT_REGULATED_ALL_OF_APPLICATION = "reportRegulatedAllOfApplication";
+
+    /**
+     * 每个业务系统中，用户的访问次数
+     */
+    public static final String REPORT_REGULATED_EVERY_APPLICATION_ACCESS_TIME = "reportRegulatedEveryApplicationAccessTimes";
+    /**
+     * 在单个系统中，用户访问类型的次数
+     */
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES = "reportRegulatedApplicationUserAccessTypeTimes";
+    /**
+     * 每一个用户访问类型次数
+     */
+    public static final String EVERY_USER_ACCESS_TYPE_TIMES = "everyUserAccessTypeTimes";
+
+    public static final String USER_ACCESS_TYPE_TIMES = "userAccessTypeTimes";
+
+    /**
+     * 访问类型
+     */
+    public static final String ACCESS_TYPE = "accessType";
+
+    /**
+     * 访问类型次数
+     */
+    public static final String ACCESS_TYPE_TIMES = "accessTypeTimes";
 
     /**
      * 单个系统运行记录

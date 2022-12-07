@@ -25,9 +25,21 @@ public class Report {
      */
     private Map<String/* 系统名称 */, Map<String/* 用户名 */, Integer/* 用户访问次数 */>> singleRegulatedApplicationNumberOfUsersMap = null;
 
+    /**
+     * 在单个系统中，用户访问类型的次数；2022-12-07 16:37:58
+     */
+    private Map<String/* 系统名称 */, Map<String/* 用户名 */, Map<String/* SQL类型 */, Integer/* 用户访问次数 */>>> singleRegulatedApplicationUserAccessTypeMap = null;
+
+    /**
+     * 在单个系统中，被访问的总数；2022-12-07 16:02:52
+     */
+    private Map<String/* 系统名称 */, Integer/* 用户访问次数 */> regulatedAllOfApplicationMap = null;
+
     public Report() {
         this.reportRegulatedApplicationHeartbeatMap = new HashMap<>(Const.NUMBER_EIGHT);
         this.singleRegulatedApplicationNumberOfUsersMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.regulatedAllOfApplicationMap = new HashMap<>(Const.NUMBER_EIGHT);
+        this.singleRegulatedApplicationUserAccessTypeMap = new HashMap<>(Const.NUMBER_EIGHT);
     }
 
 

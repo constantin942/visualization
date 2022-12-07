@@ -628,17 +628,95 @@ public class MingshiServerUtil {
      * <B>方法名称：flushReportStatisticsToRedis</B>
      * <B>概要说明：将报告模块的统计信息发送到Redis中进行累加</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-07 14:00:12
      * @Param [reportServiceTimeMap]
-     * @return void
      **/
-    public void flushReportStatisticsToRedis(Map<String/* 服务名 */, Map<String/* 探针名称 */, String/* 时间 */>> reportServiceTimeMap) {
+    public void flushReportStatisticsToRedis(Map<String/* 服务名 */, Map<String/* 探针名称 */, String/* 时间 */>> reportServiceTimeMap,
+                                             Map<String/* 系统名称 */, Map<String/* 用户名 */, Integer/* 用户访问次数 */>> singleRegulatedApplicationNumberOfUsersMap,
+                                             Map<String/* 用户名 */, Integer/* 用户访问次数 */> regulatedAllOfApplicationMap,
+                                             Map<String/* 系统名称 */, Map<String/* 用户名 */, Map<String/* SQL类型 */, Integer/* 用户访问次数 */>>> singleRegulatedApplicationUserAccessTypeMap
+    ) {
         try {
             // 服务的心跳时间更新到MySQL中；2022-12-06 14:41:46
             flushServiceTimeMap(reportServiceTimeMap);
+
+            // 在单个系统中，被访问的总数；2022-12-07 16:08:37
+            flushSingleRegulatedNumberOfApplicationMap(regulatedAllOfApplicationMap);
+
+            // 在单个系统中，用户总数在Redis中累加；2022-12-07 15:53:14
+            flushSingleRegulatedApplicationNumberOfUsersMap(singleRegulatedApplicationNumberOfUsersMap);
+
+            // 在单个系统中，用户访问类型的次数在Redis中进行累加；2022-12-07 16:55:08
+            flushSingleRegulatedApplicationUserAccessTypeMap(singleRegulatedApplicationUserAccessTypeMap);
         } catch (Exception e) {
             log.error("# MingshiServerUtil.flushReportStatisticsToRedis() # 将报告模块的统计信息发送到Redis中进行累加时，出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：flushSingleRegulatedApplicationUserAccessTypeMap</B>
+     * <B>概要说明：在单个系统中，用户访问类型的次数在Redis中进行累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 16:58:30
+     * @Param [singleRegulatedApplicationUserAccessTypeMap]
+     **/
+    private void flushSingleRegulatedApplicationUserAccessTypeMap(Map<String/* 系统名称 */, Map<String/* 用户名 */, Map<String/* SQL类型 */, Integer/* 用户访问次数 */>>> singleRegulatedApplicationUserAccessTypeMap) {
+        try {
+            if (null == singleRegulatedApplicationUserAccessTypeMap || singleRegulatedApplicationUserAccessTypeMap.isEmpty()) {
+                return;
+            }
+            Iterator<String> userNameTypeTimesIterator = singleRegulatedApplicationUserAccessTypeMap.keySet().iterator();
+            while (userNameTypeTimesIterator.hasNext()) {
+                String serviceCode = userNameTypeTimesIterator.next();
+                Map<String, Map<String, Integer>> typeTimesMap = singleRegulatedApplicationUserAccessTypeMap.get(serviceCode);
+                Iterator<String> typeTimesIterator = typeTimesMap.keySet().iterator();
+                while (typeTimesIterator.hasNext()) {
+                    String userName = typeTimesIterator.next();
+                    Map<String, Integer> timesMap = typeTimesMap.get(userName);
+                    Iterator<String> timesIterator = timesMap.keySet().iterator();
+                    while (timesIterator.hasNext()) {
+                        String type = timesIterator.next();
+                        Integer times = timesMap.get(type);
+                        redisPoolUtil.zSetIncrementScore(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES + Const.POUND_KEY +serviceCode + Const.POUND_KEY + userName, type, times);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushSingleRegulatedApplicationUserAccessTypeMap() # 功能【在单个系统中，用户访问类型的次数在Redis中进行累加】出现了异常。",e);
+        }finally {
+            singleRegulatedApplicationUserAccessTypeMap.clear();
+        }
+
+    }
+
+    /**
+     * <B>方法名称：flushSingleRegulatedNumberOfApplicationMap</B>
+     * <B>概要说明：在单个系统中，被访问的总数在Redis中累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 16:08:46
+     * @Param [singleRegulatedNumberOfApplicationMap]
+     **/
+    private void flushSingleRegulatedNumberOfApplicationMap(Map<String, Integer> regulatedAllOfApplicationMap) {
+        if (null == regulatedAllOfApplicationMap || regulatedAllOfApplicationMap.isEmpty()) {
+            return;
+        }
+        try {
+            Iterator<String> iterator = regulatedAllOfApplicationMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String serviceCode = iterator.next();
+                Integer times = regulatedAllOfApplicationMap.get(serviceCode);
+                redisPoolUtil.zSetIncrementScore(Const.REPORT_REGULATED_ALL_OF_APPLICATION, serviceCode, times);
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushSingleRegulatedNumberOfApplicationMap() # 功能【在单个系统中，被访问的总数在Redis中累加】出现了异常。",e);
+        } finally {
+            regulatedAllOfApplicationMap.clear();
         }
     }
 
@@ -726,26 +804,134 @@ public class MingshiServerUtil {
      * @Date 2022-12-07 13:52:33
      * @Param [msSegmentDetailDo, reportRegulatedApplicationHeartbeatMap]
      **/
-    public void doReportStatistics(MsSegmentDetailDo msSegmentDetailDo, Map<String, Map<String, String>> reportRegulatedApplicationHeartbeatMap) {
+    public void doReportStatistics(MsSegmentDetailDo msSegmentDetailDo,
+                                   Map<String, Map<String/* 运维人员给系统起的名字 */, String/* 用户链路信息产生时的时间戳 */>> reportRegulatedApplicationHeartbeatMap,
+                                   Map<String/* 系统名称 */, Map<String/* 用户名 */, Integer/* 用户访问次数 */>> singleRegulatedApplicationNumberOfUsersMap,
+                                   Map<String/* 系统名称 */, Integer/* 用户访问次数 */> regulatedAllOfApplicationMap,
+                                   Map<String/* 系统名称 */, Map<String/* 用户名 */, Map<String/* SQL类型 */, Integer/* 用户访问次数 */>>> singleRegulatedApplicationUserAccessTypeMap
+    ) {
         try {
             String userName = msSegmentDetailDo.getUserName();
             String userFrom = msSegmentDetailDo.getUserFrom();
-            String startTime = msSegmentDetailDo.getStartTime();
             String tableName = msSegmentDetailDo.getMsTableName();
             String dbInstance = msSegmentDetailDo.getDbInstance();
             String dbType = msSegmentDetailDo.getDbType();
             String peer = msSegmentDetailDo.getPeer();
-            String serviceInstanceName = msSegmentDetailDo.getServiceInstanceName();
-            String serviceCode = msSegmentDetailDo.getServiceCode();
 
             // 记录当前服务发送的消息时间，用户在数据库中计算当前服务已运行多久了，生成报告时会用到；2022-12-06 14:36:55
-            HashMap<String, String> stringStringHashMap = new HashMap<>();
-            stringStringHashMap.put(serviceInstanceName, startTime);
-            reportRegulatedApplicationHeartbeatMap.put(serviceCode, stringStringHashMap);
+            doStatisticsReportRegulatedApplicationHeartbeat(msSegmentDetailDo, reportRegulatedApplicationHeartbeatMap);
+
+            // 统计当前应用的访问次数；2022-12-07 16:05:14
+            doStatisticsReportSingleRegulatedNumberOfApplicationMap(msSegmentDetailDo, regulatedAllOfApplicationMap);
+
+            // 统计当前应用用户访问的次数；2022-12-07 15:46:19
+            doStatisticsReportSingleRegulatedApplicationNumberOfUsers(msSegmentDetailDo, singleRegulatedApplicationNumberOfUsersMap);
+
+            // 在单个系统中，用户访问类型的次数；2022-12-07 16:48:19
+            doStatisticsReportSingleRegulatedApplicationUserAccessTypeMap(msSegmentDetailDo, singleRegulatedApplicationUserAccessTypeMap);
+
         } catch (Exception e) {
             log.error("# MingshiServerUtil.doReportStatistics() # 对报告模块需要的数据进行统计时，出现了异常。", e);
         }
 
+    }
+
+    /**
+     * <B>方法名称：doStatisticsReportSingleRegulatedApplicationUserAccessTypeMap</B>
+     * <B>概要说明：在单个系统中，用户访问类型的次数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 16:49:04
+     * @Param [msSegmentDetailDo, singleRegulatedApplicationUserAccessTypeMap]
+     **/
+    private void doStatisticsReportSingleRegulatedApplicationUserAccessTypeMap(MsSegmentDetailDo msSegmentDetailDo,
+                                                                               Map<String/* 系统名称 */, Map<String/* 用户名 */, Map<String/* SQL类型 */, Integer/* 用户访问次数 */>>> singleRegulatedApplicationUserAccessTypeMap) {
+        try {
+            String serviceCode = msSegmentDetailDo.getServiceCode();
+            String userName = msSegmentDetailDo.getUserName();
+            String dbType = msSegmentDetailDo.getDbType();
+            Map<String, Map<String, Integer>> userNameTypeTimesMap = singleRegulatedApplicationUserAccessTypeMap.get(serviceCode);
+            if (null == userNameTypeTimesMap) {
+                userNameTypeTimesMap = new HashMap<>();
+                singleRegulatedApplicationUserAccessTypeMap.put(serviceCode, userNameTypeTimesMap);
+            }
+            Map<String, Integer> typeTimesMap = userNameTypeTimesMap.get(userName);
+            if (null == typeTimesMap) {
+                typeTimesMap = new HashMap<>();
+                userNameTypeTimesMap.put(userName, typeTimesMap);
+            }
+            Integer times = typeTimesMap.get(dbType);
+            typeTimesMap.put(dbType, null == times ? Const.NUMBER_ONE : ++times);
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.doStatisticsReportSingleRegulatedApplicationUserAccessTypeMap() # 功能【在单个系统中，用户访问类型的次数】出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doStatisticsReportSingleRegulatedNumberOfApplicationMap</B>
+     * <B>概要说明：统计当前应用的访问次数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 16:05:56
+     * @Param [msSegmentDetailDo, singleRegulatedNumberOfApplicationMap]
+     **/
+    private void doStatisticsReportSingleRegulatedNumberOfApplicationMap(MsSegmentDetailDo msSegmentDetailDo, Map<String, Integer> regulatedAllOfApplicationMap) {
+        try {
+            String serviceCode = msSegmentDetailDo.getServiceCode();
+            Integer times = regulatedAllOfApplicationMap.get(serviceCode);
+            regulatedAllOfApplicationMap.put(serviceCode, null == times ? Const.NUMBER_ONE : ++times);
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.doStatisticsReportSingleRegulatedNumberOfApplicationMap() # 功能【统计当前应用的访问次数】出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doStatisticsReportSingleRegulatedApplicationNumberOfUsers</B>
+     * <B>概要说明：统计当前应用用户访问的次数</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 15:46:49
+     * @Param [msSegmentDetailDo, reportRegulatedApplicationHeartbeatMap]
+     **/
+    private void doStatisticsReportSingleRegulatedApplicationNumberOfUsers(MsSegmentDetailDo msSegmentDetailDo, Map<String/* 系统名称 */, Map<String/* 用户名 */, Integer/* 用户访问次数 */>> reportRegulatedApplicationHeartbeatMap) {
+        try {
+            String serviceCode = msSegmentDetailDo.getServiceCode();
+            String userName = msSegmentDetailDo.getUserName();
+            Map<String, Integer> userTimesMap = reportRegulatedApplicationHeartbeatMap.get(serviceCode);
+            if (null == userTimesMap) {
+                userTimesMap = new HashMap<>();
+                reportRegulatedApplicationHeartbeatMap.put(serviceCode, userTimesMap);
+            }
+            Integer times = userTimesMap.get(userName);
+            userTimesMap.put(userName, null == times ? Const.NUMBER_ONE : ++times);
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.doStatisticsReportSingleRegulatedApplicationNumberOfUsers() # 功能【统计当前应用用户访问的次数】出现了异常。", e);
+        }
+    }
+
+    /**
+     * <B>方法名称：doStatisticsReportRegulatedApplicationHeartbeat</B>
+     * <B>概要说明：记录当前服务发送的消息时间，用户在数据库中计算当前服务已运行多久了，生成报告时会用到</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 15:42:04
+     * @Param [msSegmentDetailDo, reportRegulatedApplicationHeartbeatMap]
+     **/
+    private void doStatisticsReportRegulatedApplicationHeartbeat(MsSegmentDetailDo msSegmentDetailDo, Map<String, Map<String, String>> reportRegulatedApplicationHeartbeatMap) {
+        try {
+            String serviceInstanceName = msSegmentDetailDo.getServiceInstanceName();
+            String serviceCode = msSegmentDetailDo.getServiceCode();
+            String startTime = msSegmentDetailDo.getStartTime();
+            HashMap<String, String> stringStringHashMap = new HashMap<>();
+            stringStringHashMap.put(serviceInstanceName, startTime);
+            reportRegulatedApplicationHeartbeatMap.put(serviceCode, stringStringHashMap);
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.doStatisticsReportRegulatedApplicationHeartbeat() # 功能【记录当前服务发送的消息时间，用户在数据库中计算当前服务已运行多久了，生成报告时会用到】出现了异常。", e);
+        }
     }
 
     /**
@@ -832,6 +1018,43 @@ public class MingshiServerUtil {
             log.error("# MingshiServerUtil.flushServiceTimeMap() # 将服务的心跳时间更新到MySQL中，出现了异常。", e);
         } finally {
             reportServiceTimeMap.clear();
+        }
+    }
+
+    /**
+     * <B>方法名称：flushSingleRegulatedApplicationNumberOfUsersMap</B>
+     * <B>概要说明：在单个系统中，用户总数在Redis中累加</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-07 15:53:56
+     * @Param [reportServiceTimeMap]
+     **/
+    private void flushSingleRegulatedApplicationNumberOfUsersMap(Map<String/* 系统名称 */, Map<String/* 用户名 */, Integer/* 用户访问次数 */>> singleRegulatedApplicationNumberOfUsersMap) {
+        if (null == singleRegulatedApplicationNumberOfUsersMap || singleRegulatedApplicationNumberOfUsersMap.isEmpty()) {
+            return;
+        }
+        try {
+            Iterator<String> iterator1 = singleRegulatedApplicationNumberOfUsersMap.keySet().iterator();
+            while (iterator1.hasNext()) {
+                String serviceCode = iterator1.next();
+                Map<String, Integer> operationTypeCountMap = singleRegulatedApplicationNumberOfUsersMap.get(serviceCode);
+                if (null == operationTypeCountMap || operationTypeCountMap.isEmpty()) {
+                    continue;
+                }
+                Iterator<String> iterator2 = operationTypeCountMap.keySet().iterator();
+                while (iterator2.hasNext()) {
+                    String userName = iterator2.next();
+                    Integer times = operationTypeCountMap.get(userName);
+                    if (null != times) {
+                        redisPoolUtil.zSetIncrementScore(Const.REPORT_REGULATED_ALL_OF_APPLICATION + Const.POUND_KEY + serviceCode, userName, times);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("# MingshiServerUtil.flushSingleRegulatedApplicationNumberOfUsersMap() # 功能【在单个系统中，用户总数在Redis中累加】，出现了异常。", e);
+        } finally {
+            singleRegulatedApplicationNumberOfUsersMap.clear();
         }
     }
 

@@ -335,7 +335,12 @@ public class IoThread extends Thread {
                         everyUserEverydayFromVisitedTimesMap);
 
                     // 对报告模块用到的数据进行统计；2022-12-07 13:55:09
-                    mingshiServerUtil.doReportStatistics(msSegmentDetailDo, report.getReportRegulatedApplicationHeartbeatMap());
+                    mingshiServerUtil.doReportStatistics(msSegmentDetailDo,
+                        report.getReportRegulatedApplicationHeartbeatMap(),
+                        report.getSingleRegulatedApplicationNumberOfUsersMap(),
+                        report.getRegulatedAllOfApplicationMap(),
+                        report.getSingleRegulatedApplicationUserAccessTypeMap()
+                    );
                 }
                 segmentDetailDoList.addAll(segmentDetailList);
             }
@@ -412,7 +417,12 @@ public class IoThread extends Thread {
                     everyoneEverydayVisitedTimesMap,
                     everyUserEverydayFromVisitedTimesMap);
 
-                mingshiServerUtil.flushReportStatisticsToRedis(report.getReportRegulatedApplicationHeartbeatMap());
+                // 将报告用的统计数据发送到Redis中进行累加；2022-12-07 17:33:14
+                mingshiServerUtil.flushReportStatisticsToRedis(report.getReportRegulatedApplicationHeartbeatMap(),
+                    report.getSingleRegulatedApplicationNumberOfUsersMap(),
+                    report.getRegulatedAllOfApplicationMap(),
+                    report.getSingleRegulatedApplicationUserAccessTypeMap()
+                );
             }
         } catch (Exception e) {
             log.error("# IoThread.insertSegmentAndIndexAndAuditLog() # 将来自skywalking的segment信息和SQL审计信息插入到表中出现了异常。", e);

@@ -1,5 +1,7 @@
 package com.aiit.skyflying.impl;
 
+import com.aiit.skyflying.common.utils.*;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.aiit.skyflying.common.constant.Const;
@@ -8,14 +10,11 @@ import com.aiit.skyflying.common.dao.MsSystemOperationRecordMapper;
 import com.aiit.skyflying.common.dao.MsUserFromMapper;
 import com.aiit.skyflying.common.domain.*;
 import com.aiit.skyflying.common.response.ServerResponse;
-import com.aiit.skyflying.common.utils.DateTimeUtil;
-import com.aiit.skyflying.common.utils.JsonUtil;
-import com.aiit.skyflying.common.utils.MingshiServerUtil;
-import com.aiit.skyflying.common.utils.StringUtil;
 import com.aiit.skyflying.service.ReportService;
 import com.aiit.skyflying.service.UserFromService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import scala.App;
 
@@ -38,6 +37,8 @@ import java.util.*;
 public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> implements ReportService {
     @Resource
     private MingshiServerUtil mingshiServerUtil;
+    @Resource
+    private RedisPoolUtil redisPoolUtil;
     @Resource
     private MsAgentInformationMapper msAgentInformationMapper;
     @Resource
@@ -96,7 +97,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
          * 2. 单个业务应用系统
          * 1）运行时长；
          * 2）用户数量：总量与新增；
-         * 3）访问行为数；
+         * 3）访问行为数：即SQL的类型，比如insert、select、update、delete等；
          * 4）相关数据库表清单和次数；
          * 5）调用数据接口的清单和次数；
          * 6）告警次数：告警分布和遗留问题记录；
@@ -110,7 +111,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         getSingleRegulatedApplicationNumberOfUsers(jsonObject);
 
         // 3）访问行为数
-        getSingleRegulatedApplicationNumberOfAccessBehaviors(jsonObject);
+        getSingleRegulatedApplicationNumberOfAccessTypeTimes(jsonObject);
 
         // 4）相关数据库表清单和访问次数
         getSingleRegulatedApplicationTableListAndAccessTimes(jsonObject);
@@ -131,10 +132,10 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      * <B>方法名称：getSingleRegulatedApplicationInterfaceListAndAccessTimes</B>
      * <B>概要说明：单个应用系统访问接口的清单和次数</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-07 09:54:35
      * @Param [jsonObject]
-     * @return void
      **/
     private void getSingleRegulatedApplicationInterfaceListAndAccessTimes(ObjectNode jsonObject) {
     }
@@ -143,36 +144,93 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      * <B>方法名称：getSingleRegulatedApplicationTableListAndAccessTimes</B>
      * <B>概要说明：单个应用系统表清单和访问次数</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-07 09:53:51
      * @Param [jsonObject]
-     * @return void
      **/
     private void getSingleRegulatedApplicationTableListAndAccessTimes(ObjectNode jsonObject) {
     }
 
     /**
-     * <B>方法名称：getSingleRegulatedApplicationNumberOfAccessBehaviors</B>
+     * <B>方法名称：getSingleRegulatedApplicationNumberOfAccessTypeTimes</B>
      * <B>概要说明：当个应用系统洪湖访问行为数</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-07 09:53:20
      * @Param [jsonObject]
-     * @return void
      **/
-    private void getSingleRegulatedApplicationNumberOfAccessBehaviors(ObjectNode jsonObject) {
+    private void getSingleRegulatedApplicationNumberOfAccessTypeTimes(ObjectNode jsonObject) {
+        try {
+            // 1. 获取有多少个业务系统
+            Set<String> serviceCodeSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION, 0L, 0L);
+
+            ObjectNode accessTypeTimesJsonObject = JsonUtil.createJsonObject();
+
+            // 2. 获取每个业务系统中有多少用户；
+            for (String serviceCode : serviceCodeSet) {
+                LinkedList<ObjectNode> list = new LinkedList<>();
+                Set<String> userSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION + Const.POUND_KEY + serviceCode, 0L, 0L);
+                for (String userName : userSet) {
+                    String key = Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES + Const.POUND_KEY + serviceCode + Const.POUND_KEY + userName;
+                    // 从有序集合zset中获取对每个表操作类型统计；2022-12-07 17:30:17
+                    Set<ZSetOperations.TypedTuple<String>> set = redisPoolUtil.reverseRangeWithScores(key, 0L, 100000 * 10000L);
+                    if (null != set && !set.isEmpty()) {
+                        Iterator<ZSetOperations.TypedTuple<String>> iterator = set.iterator();
+                        while (iterator.hasNext()) {
+                            ZSetOperations.TypedTuple<String> next = iterator.next();
+                            Double score = next.getScore();
+                            String dbType = next.getValue();
+
+                            ObjectNode userSizeJsonObject = JsonUtil.createJsonObject();
+                            userSizeJsonObject.put(Const.USER_NAME, userName);
+                            userSizeJsonObject.put(Const.ACCESS_TYPE, dbType);
+                            userSizeJsonObject.put(Const.ACCESS_TYPE_TIMES, score);
+                            list.add(userSizeJsonObject);
+                            // todo：将当前系统中每个用户的访问次数插入到数据库中，以便下次统计新增；2022-12-07 16:29:16
+
+                        }
+                    }
+                }
+                accessTypeTimesJsonObject.put(Const.SERVICE_CODE,serviceCode);
+                accessTypeTimesJsonObject.put(Const.USER_ACCESS_TYPE_TIMES, JsonUtil.obj2String(list));
+            }
+            jsonObject.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES, accessTypeTimesJsonObject.toString());
+        } catch (Exception e) {
+            log.error("# ReportServiceImpl.getSingleRegulatedApplicationNumberOfAccessTypeTimes() # 功能【在单个系统中，获取用户总量与新增】出现了异常。", e);
+        }
+
     }
 
     /**
      * <B>方法名称：getSingleRegulatedApplicationNumberOfUsers</B>
-     * <B>概要说明：在单个系统中，用户总量与新增</B>
+     * <B>概要说明：在单个系统中，获取用户总量与新增</B>
      *
+     * @return void
      * @Author zm
      * @Date 2022-12-07 09:48:24
      * @Param [jsonObject]
-     * @return void
      **/
     private void getSingleRegulatedApplicationNumberOfUsers(ObjectNode jsonObject) {
+        try {
+            // 1. 获取有多少个业务系统
+            Set<String> applicationSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION, 0L, 0L);
+            LinkedList<ObjectNode> list = new LinkedList<>();
+            // 2. 获取每个业务系统中用户的访问次数；
+            for (String application : applicationSet) {
+                Long userSize = redisPoolUtil.sizeFromZset(Const.REPORT_REGULATED_ALL_OF_APPLICATION + Const.POUND_KEY + application);
+                ObjectNode userSizeJsonObject = JsonUtil.createJsonObject();
+                userSizeJsonObject.put(Const.SERVICE_CODE, application);
+                userSizeJsonObject.put(Const.EVERY_USER_ACCESS_TYPE_TIMES, userSize);
+                list.add(userSizeJsonObject);
+                // todo：将当前系统中每个用户的访问次数插入到数据库中，以便下次统计新增；2022-12-07 16:29:16
+
+            }
+            jsonObject.put(Const.REPORT_REGULATED_EVERY_APPLICATION_ACCESS_TIME, JsonUtil.obj2String(list));
+        } catch (Exception e) {
+            log.error("# ReportServiceImpl.getSingleRegulatedApplicationNumberOfUsers() # 功能【在单个系统中，获取用户总量与新增】出现了异常。", e);
+        }
     }
 
     /**
