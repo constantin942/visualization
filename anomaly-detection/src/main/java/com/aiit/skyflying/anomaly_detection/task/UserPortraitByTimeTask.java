@@ -77,7 +77,7 @@ public class UserPortraitByTimeTask {
             //3. 放入Redis
             updatePortrait();
         } catch (Exception e) {
-            log.error("生成用户画像异常 # 异常信息:{}", e.getMessage());
+            log.error("生成用户画像异常 # 异常信息:{}", e);
         } finally {
             if (Boolean.TRUE.equals(tryLock)) {
                 lock.unlock();
@@ -104,6 +104,7 @@ public class UserPortraitByTimeTask {
             map.put(buildKey(username, AnomalyConst.AFTERNOON), afternoonRate);
             map.put(buildKey(username, AnomalyConst.NIGHT), nightRate);
         }
+        // todo：至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
         redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX, map);
     }
 
@@ -146,6 +147,7 @@ public class UserPortraitByTimeTask {
                 map.put(buildKey(username, AnomalyConst.INTERVALS[i]), intervals.get(i));
             }
         }
+        // todo：至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
         redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX, map);
     }
 
@@ -161,12 +163,15 @@ public class UserPortraitByTimeTask {
      * 昨日全量信息表插入粗粒度表
      */
     public void insertYesterdayInfo2Coarse() {
+        // todo：这里的问题还是把符合条件的数据全部一次性拿出来；
         List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
         if (segmentDetails == null) {
             return;
         }
         List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
         if (!list.isEmpty()) {
+            // todo：这里是否应该加个批量插入到数据库中是否都成功的标识？比如，这里要批量插入10条数据，应该根据返回值判断这10条数据插入是否都成功。2022-12-08 13:59:00
+            // 并且这里还应该捕获异常，然后输出错误日志。2022-12-08 13:59:43
             coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
         }
     }
@@ -192,7 +197,9 @@ public class UserPortraitByTimeTask {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
         if (!userPortraitByTimeDoList.isEmpty()) {
+            // todo：应该对数据操作加个操作是否成功的判断，当操作失败的时候，至少输出错误日志。当操作失败时，可以尝试5次，每次间隔2秒钟。5次后，依然失败，记录错误日志。2022-12-08 14:03:00
             userPortraitByTimeMapper.deleteAll();
+            // todo：这里应该加捕获异常，并输出错误日志。
             userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
         }
         return userPortraitByTimeDoList;
@@ -425,6 +432,7 @@ public class UserPortraitByTimeTask {
      * 更新用户画像
      */
     public void updatePortrait() {
+        // todo：这里还是selectOne的问题，强依赖数据库表中的id；2022-12-08 14:00:27
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         //2. 粗粒度表生成用户画像
         List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());

@@ -75,7 +75,7 @@ public class UserPortraitTask {
             configCache.setEnableTableRule(anomalyDetectionBusiness.getEnableRule(AnomalyConst.TABLE_SUF));
             initFirstVisitTime(MsCaffeineCache.getUserFirstVisitLocalCache());
         } catch (Exception e) {
-            log.error("定时拉取画像配置信息以及用户首次访问时间失败");
+            log.error("定时拉取画像配置信息以及用户首次访问时间出现了异常。", e);
         }
     }
 
@@ -90,9 +90,9 @@ public class UserPortraitTask {
         for (Map<String, String> map : maps) {
             try {
                 userFirstVisitLocalCache.put(map.get(AnomalyConst.USER_NAME)
-                        , new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT).parse(String.valueOf(map.get(AnomalyConst.TIME_SUF))));
+                    , new SimpleDateFormat(DateTimeUtil.STANDARD_FORMAT).parse(String.valueOf(map.get(AnomalyConst.TIME_SUF))));
             } catch (Exception e) {
-                log.error("时间格式转换失败");
+                log.error("时间格式转换出现了异常。", e);
             }
         }
     }

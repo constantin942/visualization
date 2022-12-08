@@ -45,15 +45,12 @@
     <select id="getInfoForCoarseDetail" resultType="com.aiit.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time, global_trace_id
         from ms_segment_detail mss
-        where 1
-            > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
+        where 1 > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
           and user_name is not null
           and start_time is not null
           and ms_table_name is not null
           and db_instance is not null
-          and NOT EXISTS(select null
-                            from ms_alarm_information msa
-                            where mss.global_trace_id = msa.global_trace_id);
+          and NOT EXISTS(select null from ms_alarm_information msa where mss.global_trace_id = msa.global_trace_id);
     </select>
     <select id="getInfoForCoarseDetailByStartTime" parameterType="java.lang.String" resultType="com.aiit.skyflying.common.domain.MsSegmentDetailDo">
         select id, user_name, db_instance, ms_table_name, hour (`start_time`) as start_time
