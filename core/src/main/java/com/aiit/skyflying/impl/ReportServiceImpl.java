@@ -165,12 +165,10 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         try {
             // 1. 获取有多少个业务系统
             Set<String> serviceCodeSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION, 0L, 0L);
-
             ObjectNode accessTypeTimesJsonObject = JsonUtil.createJsonObject();
-
             // 2. 获取每个业务系统中有多少用户；
             for (String serviceCode : serviceCodeSet) {
-                LinkedList<ObjectNode> list = new LinkedList<>();
+                ArrayNode jsonArray = JsonUtil.createJsonArray();
                 Set<String> userSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION + Const.POUND_KEY + serviceCode, 0L, 0L);
                 for (String userName : userSet) {
                     String key = Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES + Const.POUND_KEY + serviceCode + Const.POUND_KEY + userName;
@@ -182,21 +180,24 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                             ZSetOperations.TypedTuple<String> next = iterator.next();
                             Double score = next.getScore();
                             String dbType = next.getValue();
-
                             ObjectNode userSizeJsonObject = JsonUtil.createJsonObject();
                             userSizeJsonObject.put(Const.USER_NAME, userName);
                             userSizeJsonObject.put(Const.ACCESS_TYPE, dbType);
                             userSizeJsonObject.put(Const.ACCESS_TYPE_TIMES, score);
-                            list.add(userSizeJsonObject);
+                            jsonArray.add(userSizeJsonObject);
                             // todo：将当前系统中每个用户的访问次数插入到数据库中，以便下次统计新增；2022-12-07 16:29:16
 
                         }
                     }
                 }
-                accessTypeTimesJsonObject.put(Const.SERVICE_CODE,serviceCode);
-                accessTypeTimesJsonObject.put(Const.USER_ACCESS_TYPE_TIMES, JsonUtil.obj2String(list));
+                accessTypeTimesJsonObject.put(Const.SERVICE_CODE, serviceCode);
+                accessTypeTimesJsonObject.set(Const.USER_ACCESS_TYPE_TIMES, jsonArray);
             }
-            jsonObject.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES, accessTypeTimesJsonObject.toString());
+            ObjectNode returnJson = JsonUtil.createJsonObject();
+            returnJson.put(Const.REPORT_DESC,Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_DESC);
+            returnJson.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES,accessTypeTimesJsonObject);
+
+            jsonObject.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_NAME, returnJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getSingleRegulatedApplicationNumberOfAccessTypeTimes() # 功能【在单个系统中，获取用户总量与新增】出现了异常。", e);
         }
@@ -227,7 +228,10 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                 // todo：将当前系统中每个用户的访问次数插入到数据库中，以便下次统计新增；2022-12-07 16:29:16
 
             }
-            jsonObject.put(Const.REPORT_REGULATED_EVERY_APPLICATION_ACCESS_TIME, JsonUtil.obj2String(list));
+            ObjectNode returnJson = JsonUtil.createJsonObject();
+            returnJson.put(Const.REPORT_DESC, Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_DESC);
+            returnJson.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS, JsonUtil.obj2String(list));
+            jsonObject.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_NAME, returnJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getSingleRegulatedApplicationNumberOfUsers() # 功能【在单个系统中，获取用户总量与新增】出现了异常。", e);
         }
@@ -269,7 +273,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         // 3）受监管的数据库表个数：总数与新增
         getRegulatedDatabaseTablesSize(jsonObject);
 
-        // 产生告警次数：告警分布与告警处置的记录
+        // 4）产生告警次数：告警分布与告警处置的记录
         getAlarmRelatedData(jsonObject);
 
         // 5）受监管的应用清单：总量与新增
@@ -317,10 +321,10 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         try {
             Long userCountFromRedis = mingshiServerUtil.getUserCount();
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
-            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_REGULATED_USER_SIZE_DESC);
-            reportAgentServerNameJson.put(Const.REPORT_REGULATED_USER_SIZE, userCountFromRedis);
+            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_REGULATED_NUMBER_OF_USER_DESC);
+            reportAgentServerNameJson.put(Const.REPORT_REGULATED_NUMBER_OF_USER, userCountFromRedis);
             // todo：需要与上次出报告数据进行对比，找到新增的受监管的应用清单；
-            jsonObject.set(Const.REPORT_REGULATED_USER_SIZE_NAME, reportAgentServerNameJson);
+            jsonObject.set(Const.REPORT_REGULATED_NUMBER_OF_USER_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getRegulatedUserSize() # 获取受监管的用户数量（获取用户人数）：总量与新增时，出现了异常。", e);
         }
@@ -341,6 +345,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
             reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_REGULATED_APPLICATION_LIST_DESC);
             reportAgentServerNameJson.put(Const.REPORT_REGULATED_APPLICATION_LIST, JsonUtil.obj2String(userPortraitRulesDoList));
+            reportAgentServerNameJson.put(Const.REPORT_REGULATED_APPLICATION_SIZE, userPortraitRulesDoList.size());
             // todo：需要与上次出报告数据进行对比，找到新增的受监管的应用清单；
             jsonObject.set(Const.REPORT_REGULATED_APPLICATION_LIST_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
@@ -436,7 +441,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
     private void getSingleRegulatedApplicationRunTime(ObjectNode jsonObject) {
         try {
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
-            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_SINGLE_APPLICATION_RUN_TIME_DESC);
+            reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_SINGLE_APPLICATION_RUN_TIME_LIST_DESC);
             ArrayNode jsonArray = JsonUtil.createJsonArray();
             List<MsSystemOperationRecord> msSystemOperationRecordList = msSystemOperationRecordMapper.selectBySystemName(Const.REPORT_SINGLE_REGULATED_APPLICATION_NAME);
             for (MsSystemOperationRecord msSystemOperationRecord : msSystemOperationRecordList) {
@@ -447,12 +452,12 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                     Instant gmtModifiedInstant = gmtModified.toInstant();
                     long toHours = Duration.between(gmtCreateInstant, gmtModifiedInstant).toHours();
                     ObjectNode reportJson = JsonUtil.createJsonObject();
-                    reportJson.put(Const.OPERATION_TIME, toHours);
+                    reportJson.put(Const.OPERATION_TIME, toHours + Const.REPORT_HOURS);
                     reportJson.put(Const.SERVICE_CODE, msSystemOperationRecord.getServiceCode());
                     jsonArray.add(reportJson);
                 }
             }
-            reportAgentServerNameJson.set(Const.REPORT_SINGLE_APPLICATION_RUN_TIME, jsonArray);
+            reportAgentServerNameJson.set(Const.REPORT_SINGLE_APPLICATION_RUN_TIME_LIST, jsonArray);
             jsonObject.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getSingleRegulatedApplicationRunTime() # 获取单个业务系统的运行时长时，出现了异常。", e);

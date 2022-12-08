@@ -60,9 +60,8 @@ public class Const {
      */
     public static final String REPORT_SINGLE_REGULATED_APPLICATION_NAME = "reportSingleRegulatedApplicationName";
 
-    public static final String REPORT_SINGLE_APPLICATION_RUN_TIME = "reportSingleApplicationRunTime";
-
-    public static final String REPORT_SINGLE_APPLICATION_RUN_TIME_DESC = "单个业务系统运行时长";
+    public static final String REPORT_SINGLE_APPLICATION_RUN_TIME_LIST = "reportSingleApplicationRunTimeList";
+    public static final String REPORT_SINGLE_APPLICATION_RUN_TIME_LIST_DESC = "单个业务系统运行时长";
 
     public static final String REPORT_DATA_ACCESS_BEHAVIOR_NAME = "reportDataAccessBehaviorName";
     public static final String REPORT_DATA_ACCESS_BEHAVIOR = "reportDataAccessBehavior";
@@ -70,11 +69,12 @@ public class Const {
 
     public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE_NAME = "reportRegulatedDatabaseTablesSizeName";
     public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE = "reportRegulatedDatabaseTablesSize";
-    public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE_DESC = "数据访问行为数量";
+    public static final String REPORT_REGULATED_DATABASE_TABLES_SIZE_DESC = "受监管的数据库表的数量";
 
 
     public static final String REPORT_REGULATED_APPLICATION_LIST_NAME = "reportRegulatedApplicationListName";
     public static final String REPORT_REGULATED_APPLICATION_LIST = "reportRegulatedApplicationList";
+    public static final String REPORT_REGULATED_APPLICATION_SIZE = "reportRegulatedApplicationSize";
     public static final String REPORT_REGULATED_APPLICATION_LIST_DESC = "受监管的应用清单";
 
     public static final String REPORT_ALARM_DISTRIBUTION_DATA = "reportAlarmDistributionData";
@@ -82,9 +82,9 @@ public class Const {
     public static final String REPORT_ALARM_RELATED_DATA_NAME = "reportAlarmRelatedDataName";
     public static final String REPORT_ALARM_RELATED_DATA_DESC = "告警相关数据";
 
-    public static final String REPORT_REGULATED_USER_SIZE_NAME = "reportRegulatedUserSizeName";
-    public static final String REPORT_REGULATED_USER_SIZE = "reportRegulatedUserSizeList";
-    public static final String REPORT_REGULATED_USER_SIZE_DESC = "受监管的用户数量";
+    public static final String REPORT_REGULATED_NUMBER_OF_USER_NAME = "reportRegulatedNumberOfUserName";
+    public static final String REPORT_REGULATED_NUMBER_OF_USER = "reportRegulatedNumberOfUser";
+    public static final String REPORT_REGULATED_NUMBER_OF_USER_DESC = "受监管的用户数量";
 
     public static final String REPORT_AGENT_SERVER_OPERATION_RECORD_NAME = "reportAgentServerOperationRecordName";
     public static final String REPORT_AGENT_SERVER_OPERATION_RECORD_DESC = "可视化系统运行记录";
@@ -104,11 +104,15 @@ public class Const {
     /**
      * 每个业务系统中，用户的访问次数
      */
-    public static final String REPORT_REGULATED_EVERY_APPLICATION_ACCESS_TIME = "reportRegulatedEveryApplicationAccessTimes";
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS = "singleRegulatedApplicationNumberOfUsers";
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_NAME = "singleRegulatedApplicationNumberOfUsersName";
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_DESC = "单个系统中用户的数量";
     /**
      * 在单个系统中，用户访问类型的次数
      */
     public static final String REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES = "reportRegulatedApplicationUserAccessTypeTimes";
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_NAME = "reportRegulatedApplicationUserAccessTypeTimesName";
+    public static final String REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_DESC = "在单个系统中，用户访问类型的次数";
     /**
      * 每一个用户访问类型次数
      */
@@ -125,6 +129,7 @@ public class Const {
      * 访问类型次数
      */
     public static final String ACCESS_TYPE_TIMES = "accessTypeTimes";
+    public static final String REPORT_HOURS = "hours";
 
     /**
      * 单个系统运行记录
