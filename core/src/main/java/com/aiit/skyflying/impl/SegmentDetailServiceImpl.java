@@ -679,22 +679,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
     @Override
     public ServerResponse<List<UserAlarmData>> getUserAlarmData() {
         log.info("开始执行 # SegmentDetailServiceImpl.getUserAlarmData # 获取用户告警信息。");
-
         List<UserAlarmData> list = msSegmentDetailDao.selectUserAlarmData();
-
-        // todo：这里在可视化管理后台的本地内存进行排序，这个做法不太好。比较好的做法是，在数据库中查询时，就已经排序好了。加个order by。2022-12-08 14:35:02
-        Collections.sort(list, new Comparator<UserAlarmData>() {
-            @Override
-            public int compare(UserAlarmData t1, UserAlarmData t2) {
-                if (t1.getAlarmCount() < t2.getAlarmCount()) {
-                    return 1;
-                } else if (t1.getAlarmCount().equals(t2.getAlarmCount())) {
-                    return 0;
-                } else {
-                    return -1;
-                }
-            }
-        });
         log.info("执行完毕 SegmentDetailServiceImpl # getAlarmData # 获取用户告警信息。");
         return ServerResponse.createBySuccess(Const.SUCCESS_MSG, Const.SUCCESS, list);
     }

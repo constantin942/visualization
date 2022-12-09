@@ -333,6 +333,7 @@
         where update_user_portrait = 0
           and is_delete = 0
         GROUP BY user_name
+        ORDER BY alarm_count
     </select>
 
 
