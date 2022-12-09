@@ -682,6 +682,7 @@ public class SegmentDetailServiceImpl implements SegmentDetailService {
 
         List<UserAlarmData> list = msSegmentDetailDao.selectUserAlarmData();
 
+        // todo：这里在可视化管理后台的本地内存进行排序，这个做法不太好。比较好的做法是，在数据库中查询时，就已经排序好了。加个order by。2022-12-08 14:35:02
         Collections.sort(list, new Comparator<UserAlarmData>() {
             @Override
             public int compare(UserAlarmData t1, UserAlarmData t2) {
