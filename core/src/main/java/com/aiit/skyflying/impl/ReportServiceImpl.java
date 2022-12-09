@@ -217,7 +217,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         try {
             // 1. 获取有多少个业务系统
             Set<String> applicationSet = redisPoolUtil.reverseRange(Const.REPORT_REGULATED_ALL_OF_APPLICATION, 0L, 0L);
-            LinkedList<ObjectNode> list = new LinkedList<>();
+            ArrayNode list = JsonUtil.createJsonArray();
             // 2. 获取每个业务系统中用户的访问次数；
             for (String application : applicationSet) {
                 Long userSize = redisPoolUtil.sizeFromZset(Const.REPORT_REGULATED_ALL_OF_APPLICATION + Const.POUND_KEY + application);
@@ -230,7 +230,7 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
             }
             ObjectNode returnJson = JsonUtil.createJsonObject();
             returnJson.put(Const.REPORT_DESC, Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_DESC);
-            returnJson.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS, JsonUtil.obj2String(list));
+            returnJson.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS, list);
             jsonObject.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_NUMBER_OF_USERS_NAME, returnJson);
         } catch (Exception e) {
             log.error("# ReportServiceImpl.getSingleRegulatedApplicationNumberOfUsers() # 功能【在单个系统中，获取用户总量与新增】出现了异常。", e);
