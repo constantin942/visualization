@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 public interface CoarseSegmentDetailOnTimeMapper {
-    void insertSelectiveBatch(List<CoarseSegmentDetailOnTimeDo> list);
+    int insertSelectiveBatch(List<CoarseSegmentDetailOnTimeDo> list);
 
     List<VisitCountOnTimeInterval> selectInfoInPeriod(Integer portraitByTimePeriod);
 

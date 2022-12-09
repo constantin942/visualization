@@ -1089,13 +1089,8 @@ public class RedisPoolUtil {
                     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
             }, fallbackMethod = "hmsetFallback")
     public boolean hmset(String key, Map<String, Object> map) {
-        try {
-            stringRedisTemplate.opsForHash().putAll(key, map);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        stringRedisTemplate.opsForHash().putAll(key, map);
+        return true;
     }
 
     public boolean hmsetFallback(String key, Map<String, Object> map, Throwable throwable) {

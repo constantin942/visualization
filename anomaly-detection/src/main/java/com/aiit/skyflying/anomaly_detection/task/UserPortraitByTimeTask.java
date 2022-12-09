@@ -77,7 +77,7 @@ public class UserPortraitByTimeTask {
             //3. 放入Redis
             updatePortrait();
         } catch (Exception e) {
-            log.error("生成用户画像异常 # 异常信息:{}", e);
+            log.error("生成用户画像异常 # 异常信息:", e);
         } finally {
             if (Boolean.TRUE.equals(tryLock)) {
                 lock.unlock();
@@ -104,8 +104,21 @@ public class UserPortraitByTimeTask {
             map.put(buildKey(username, AnomalyConst.AFTERNOON), afternoonRate);
             map.put(buildKey(username, AnomalyConst.NIGHT), nightRate);
         }
-        // todo：至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
-        redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX, map);
+        // 至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
+        int count = Const.NUMBER_ZERO;
+        while(count < Const.NUMBER_THIRTY) {
+            try {
+                Thread.sleep(1000);
+                if (redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PARTITION_PORTRAIT_PREFIX, map)) {
+                    break;
+                }
+            } catch (Exception e) {
+                count++;
+                if (count == 30) {
+                    log.error("用户时间画像存入Redis失败，出现了异常", e);
+                }
+            }
+        }
     }
 
     /**
@@ -147,8 +160,21 @@ public class UserPortraitByTimeTask {
                 map.put(buildKey(username, AnomalyConst.INTERVALS[i]), intervals.get(i));
             }
         }
-        // todo：至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
-        redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX, map);
+        // 至少判断下操作Redis是否成功吧。当操作失败时，至少输出错误日志。便于后续排查错误。还应该捕获异常，然后输出错误日志。2022-12-08 14:12:11
+        int count = Const.NUMBER_ZERO;
+        while(count < Const.NUMBER_THIRTY) {
+            try {
+                Thread.sleep(1000);
+                if (redisPoolUtil.hmset(AnomalyConst.REDIS_TIME_PORTRAIT_PREFIX, map)) {
+                    break;
+                }
+            } catch (Exception e) {
+                count++;
+                if (count == 30) {
+                    log.error("用户小时时段画像存入Redis失败，出现了异常", e);
+                }
+            }
+        }
     }
 
     /**
@@ -163,16 +189,27 @@ public class UserPortraitByTimeTask {
      * 昨日全量信息表插入粗粒度表
      */
     public void insertYesterdayInfo2Coarse() {
-        // todo：这里的问题还是把符合条件的数据全部一次性拿出来；
-        List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
-        if (segmentDetails == null) {
-            return;
-        }
-        List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
-        if (!list.isEmpty()) {
-            // todo：这里是否应该加个批量插入到数据库中是否都成功的标识？比如，这里要批量插入10条数据，应该根据返回值判断这10条数据插入是否都成功。2022-12-08 13:59:00
-            // 并且这里还应该捕获异常，然后输出错误日志。2022-12-08 13:59:43
-            coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list);
+        // 这里的问题还是把符合条件的数据全部一次性拿出来；
+        int counts = Math.toIntExact(segmentDetailMapper.selectCountAll());
+        int pageNo = 0;
+        int pageSize = 500;
+        while (pageNo*pageSize <= counts) {
+            pageNo++;
+            Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+            queryMap.put(Const.PAGE_SIZE, pageSize);
+            queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+            List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetailByPage(queryMap);
+            if (segmentDetails == null) {return;}
+            List<CoarseSegmentDetailOnTimeDo> list = getCoarseSegmentDetailOnTime(segmentDetails);
+            if (!list.isEmpty()) {
+                // 这里是否应该加个批量插入到数据库中是否都成功的标识？比如，这里要批量插入10条数据，应该根据返回值判断这10条数据插入是否都成功。2022-12-08 13:59:00
+                // 并且这里还应该捕获异常，然后输出错误日志。2022-12-08 13:59:43
+                try {
+                    log.info("昨日全量信息表插入用户时间粗粒度表成功，成功插入{}条", coarseSegmentDetailOnTimeMapper.insertSelectiveBatch(list));
+                } catch (Exception e) {
+                    log.error("昨日全量信息表插入用户时间粗粒度表失败，异常：", e);
+                }
+            }
         }
     }
 
@@ -197,10 +234,34 @@ public class UserPortraitByTimeTask {
         List<VisitCountOnTimeInterval> countOnTimeIntervalList = coarseSegmentDetailOnTimeMapper.selectInfoInPeriod(portraitByTimePeriod);
         List<UserPortraitByTimeDo> userPortraitByTimeDoList = getPortraitByCountOnTimeInterval(countOnTimeIntervalList);
         if (!userPortraitByTimeDoList.isEmpty()) {
-            // todo：应该对数据操作加个操作是否成功的判断，当操作失败的时候，至少输出错误日志。当操作失败时，可以尝试5次，每次间隔2秒钟。5次后，依然失败，记录错误日志。2022-12-08 14:03:00
-            userPortraitByTimeMapper.deleteAll();
-            // todo：这里应该加捕获异常，并输出错误日志。
-            userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList);
+            // 应该对数据操作加个操作是否成功的判断，当操作失败的时候，至少输出错误日志。当操作失败时，可以尝试5次，每次间隔2秒钟。5次后，依然失败，记录错误日志。2022-12-08 14:03:00
+            int count = Const.NUMBER_ZERO;
+            while(count < Const.NUM_FIVE) {
+                try {
+                    Thread.sleep(2000);
+                    log.info("原有用户时间画像删除完毕，删除数量{}条", userPortraitByTimeMapper.deleteAll());
+                    break;
+                } catch (Exception e) {
+                    count++;
+                    if (count == 5) {
+                        log.error("原有用户时间画像删除失败，出现了异常", e);
+                    }
+                }
+            }
+            // 这里应该加捕获异常，并输出错误日志。
+            count = Const.NUMBER_ZERO;
+            while(count < Const.NUM_FIVE) {
+                try {
+                    Thread.sleep(2000);
+                    log.info("用户时间画像插入成功，插入数量{}条", userPortraitByTimeMapper.insertBatch(userPortraitByTimeDoList));
+                    break;
+                } catch (Exception e) {
+                    count++;
+                    if (count == 5) {
+                        log.error("用户时间画像插入失败，出现了异常", e);
+                    }
+                }
+            }
         }
         return userPortraitByTimeDoList;
     }
@@ -432,7 +493,7 @@ public class UserPortraitByTimeTask {
      * 更新用户画像
      */
     public void updatePortrait() {
-        // todo：这里还是selectOne的问题，强依赖数据库表中的id；2022-12-08 14:00:27
+        // 这里还是selectOne的问题，强依赖数据库表中的id；2022-12-08 14:00:27
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
         //2. 粗粒度表生成用户画像
         List<UserPortraitByTimeDo> userPortraitByTimeDos = createUserPortraitByTime(portraitConfig.getRuleTimePeriod());

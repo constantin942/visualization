@@ -96,9 +96,14 @@
     </delete>
     <update id="deleteOld">
         update portrait_config
-        set is_deleted=1
+        set is_deleted = 1
         where is_deleted = 0;
     </update>
+    <delete id="deleteReal">
+        delete
+        from portrait_config
+        where is_deleted = 1;
+    </delete>
 
     <insert id="insert" parameterType="com.aiit.skyflying.anomaly_detection.domain.PortraitConfig">
         insert into portrait_config (id, rule_table_period, rule_table_count,

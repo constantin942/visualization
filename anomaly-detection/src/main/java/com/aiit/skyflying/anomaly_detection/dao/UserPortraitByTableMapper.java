@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface UserPortraitByTableMapper {
-    void insertBatch(List<UserPortraitByTableDo> userPortraitByTableDoList);
+    int insertBatch(List<UserPortraitByTableDo> userPortraitByTableDoList);
 
     void insertOne(UserPortraitByTableDo userPortraitByTableDoList);
 

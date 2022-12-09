@@ -10,6 +10,8 @@ public interface MsSegmentDetailMapper {
 
     List<MsSegmentDetailDo> getInfoForCoarseDetail();
 
+    List<MsSegmentDetailDo> getInfoForCoarseDetailByPage(Map<String, Object> queryMap);
+
     List<MsSegmentDetailDo> getInfoForCoarseDetailByStartTime(String startTime);
 
     List<String> getAllStartTime();
@@ -19,4 +21,6 @@ public interface MsSegmentDetailMapper {
     Date selectTimeGap(String username);
 
     List<Map<String, String>> selectFirstVisitTime();
+
+    Long selectCountAll();
 }

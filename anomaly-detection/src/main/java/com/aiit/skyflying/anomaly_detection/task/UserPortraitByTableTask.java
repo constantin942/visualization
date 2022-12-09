@@ -204,12 +204,16 @@ public class UserPortraitByTableTask {
      * value : 对应表的访问次数
      */
     public void cachePortraitByTable() {
-        // todo：这里使用selectOne()方法，不好，因为强依赖数据库表中的id，一旦数据库表中的数据前后发生变化，这里的代码在逻辑上就会出现错误。
+        // 这里使用selectOne()方法，不好，因为强依赖数据库表中的id，一旦数据库表中的数据前后发生变化，这里的代码在逻辑上就会出现错误。
         // 比较好的做法：在字段中找一个唯一的标识，按照这个标识来搜索。这样就将对数据库表id的依赖，转为依赖某一条记录自身唯一标识。从而消除了表中记录前后顺序不一致带来的潜在风险。2022-12-08 13:48:36
         PortraitConfig portraitConfig = portraitConfigMapper.selectOne();
 
         // 这里应该增加一个判空处理 null != portraitConfig.getRuleTablePeriod()，如果这个字段为空，那至少要输出错误日志；2022-12-08 13:49:34
         List<UserPortraitByTableDo> userPortraitByTableDos = userPortraitByTableMapper.selectPeriodInfo(portraitConfig.getRuleTablePeriod());
+        if (userPortraitByTableDos == null) {
+            log.error("获取统计时间内用户库表画像信息失败");
+            return;
+        }
         HashMap<String/*用户名*/, HashMap<String/*库表名*/, Integer/*访问次数*/>> outerMap = new HashMap<>(Const.NUMBER_EIGHT);
         portraitByTableList2Map(userPortraitByTableDos, outerMap);
         HashMap<String, Object> map = new HashMap<>(Const.NUMBER_EIGHT);
@@ -221,7 +225,20 @@ public class UserPortraitByTableTask {
         }
         // 这里应该判断操作Redis是否成功，如果不成功，应该至少打印错误日志。比较好的做法是：把这行代码redisPoolUtil.hmset(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX, map);放到一个while循环中，
         // 当发现操作Redis不成功时，间隔1秒钟再次尝试。当尝试了30次后，依然失败，那么就不再尝试了。输出错误日志。2022-12-08 13:53:42
-        redisPoolUtil.hmset(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX, map);
+        int count = Const.NUMBER_ZERO;
+        while(count < Const.NUMBER_THIRTY) {
+            try {
+                Thread.sleep(1000);
+                if (redisPoolUtil.hmset(AnomalyConst.REDIS_TABLE_PORTRAIT_PREFIX, map)) {
+                    break;
+                }
+            } catch (Exception e) {
+                count++;
+                if (count == 30) {
+                    log.error("用户库表画像存入Redis失败，出现了异常", e);
+                }
+            }
+        }
     }
 
     public String buildKey(String username, String key) {
@@ -246,13 +263,27 @@ public class UserPortraitByTableTask {
      * 昨日全量数据插入画像表(粗粒度表)
      */
     public void insertYesterdayInfo2Portrait() {
-        // todo：这一步应该是把今天一天中所有的消息都查询出来。这一做法不好的地方在于：如果今天一天的数据量不大，比如几十万条消息，那程序没啥问题。如果今天有接近百万行消息或者上百万行消息，
+        // 这一步应该是把今天一天中所有的消息都查询出来。这一做法不好的地方在于：如果今天一天的数据量不大，比如几十万条消息，那程序没啥问题。如果今天有接近百万行消息或者上百万行消息，
         // 那么这一次性从数据库中加载到应用程序的本地内存中，有可能会造成OOM。比较好的做法是：分批从MySQL中获取消息。比如在一个while循环中，使用分页，每次获取500消息。
-        List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetail();
-        segmentDetails = splitTable(segmentDetails);
-        List<UserPortraitByTableDo> list = getUserPortraitByTable(segmentDetails);
-        if (!list.isEmpty()) {
-            userPortraitByTableMapper.insertBatch(list);
+        int counts = Math.toIntExact(segmentDetailMapper.selectCountAll());
+        int pageNo = 0;
+        int pageSize = 500;
+        while (pageNo*pageSize <= counts) {
+            pageNo++;
+            Map<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+            queryMap.put(Const.PAGE_NO, (pageNo - 1) * pageSize);
+            queryMap.put(Const.PAGE_SIZE, pageSize);
+            List<MsSegmentDetailDo> segmentDetails = segmentDetailMapper.getInfoForCoarseDetailByPage(queryMap);
+            if (segmentDetails == null) {return;}
+            segmentDetails = splitTable(segmentDetails);
+            List<UserPortraitByTableDo> list = getUserPortraitByTable(segmentDetails);
+            if (!list.isEmpty()) {
+                try {
+                    log.info("昨日全量信息表插入用户库表粗粒度表成功，插入数量{}条", userPortraitByTableMapper.insertBatch(list));
+                } catch (Exception e) {
+                    log.error("昨日全量信息表插入用户库表粗粒度表失败，异常：", e);
+                }
+            }
         }
     }
 

@@ -22,6 +22,8 @@ public interface PortraitConfigMapper {
 
     void deleteOld();
 
+    void deleteReal();
+
     ArrayList<String> selectByName(String typeName);
 
     String selectOneByName(String demoMode);

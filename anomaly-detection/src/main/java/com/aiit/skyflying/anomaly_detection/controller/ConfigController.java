@@ -66,6 +66,7 @@ public class ConfigController {
         anomalyDetectionBusiness.updatePortraitOnConfig(portraitConfigOld, portraitConfig);
         portraitConfigMapper.deleteOld();
         portraitConfigMapper.insertSelective(portraitConfig);
+        portraitConfigMapper.deleteReal();
         return ServerResponse.createBySuccess();
     }
 
