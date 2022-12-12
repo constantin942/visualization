@@ -102,6 +102,7 @@
     <select id="selectCountAll" resultType="java.lang.Long">
         select count(*)
         from coarse_segment_detail_on_time
+        where 1 > TO_DAYS(NOW()) - TO_DAYS(`start_time`)
     </select>
 
 </mapper>
