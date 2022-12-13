@@ -4,7 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Const {
-
+    // 暂时用的路径
+    public static final String urlAddress = "/Users/apple/Desktop/oom/test.pdf";
     public static final Map<String, String> OPERATION_NAME_MAP = new ConcurrentHashMap<>();
     public static final String TOTAL = "total";
     public static final String ROWS = "rows";
@@ -130,6 +131,22 @@ public class Const {
      */
     public static final String ACCESS_TYPE_TIMES = "accessTypeTimes";
     public static final String REPORT_HOURS = "hours";
+
+    /**
+     * 设置文字靠左：0
+     */
+    public static final Integer POSITION_ZERO = 0;
+    /**
+     * 设置文字居中:1
+     */
+    public static final Integer POSITION_ONE = 1;
+    /**
+     * 设置文字靠右：2
+     */
+    public static final Integer POSITION_TWO = 2;
+    public static final String REPORT_THE_NUMBER_OF_REGULATED_APPLICATIONS_DESC = "受监管的应用数量";
+    public static final String SERVICE_NAME = "serviceName";
+
 
     /**
      * 单个系统运行记录

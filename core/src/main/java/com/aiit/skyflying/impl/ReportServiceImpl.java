@@ -1,22 +1,22 @@
 package com.aiit.skyflying.impl;
 
-import com.aiit.skyflying.common.utils.*;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.aiit.skyflying.common.constant.Const;
 import com.aiit.skyflying.common.dao.MsAgentInformationMapper;
 import com.aiit.skyflying.common.dao.MsSystemOperationRecordMapper;
-import com.aiit.skyflying.common.dao.MsUserFromMapper;
 import com.aiit.skyflying.common.domain.*;
 import com.aiit.skyflying.common.response.ServerResponse;
+import com.aiit.skyflying.common.utils.JsonUtil;
+import com.aiit.skyflying.common.utils.MingshiServerUtil;
+import com.aiit.skyflying.common.utils.PdfUtil;
+import com.aiit.skyflying.common.utils.RedisPoolUtil;
 import com.aiit.skyflying.service.ReportService;
-import com.aiit.skyflying.service.UserFromService;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfWriter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import scala.App;
 
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -59,9 +59,46 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
         // 3. DMS（SQL审计）
         getDmsRecord(returnAllJsonObject);
 
+        // 后端生成报告；2022-12-13 16:44:01
+        createReport(returnAllJsonObject);
+
         ServerResponse<String> bySuccess = ServerResponse.createBySuccess();
         bySuccess.setData(returnAllJsonObject.toString());
         return bySuccess;
+    }
+
+    /**
+     * <B>方法名称：createReport</B>
+     * <B>概要说明：后端生成报告</B>
+     *
+     * @return void
+     * @Author zm
+     * @Date 2022-12-13 16:44:24
+     * @Param []
+     **/
+    private void createReport(ObjectNode jsonObject) {
+        Document document = null;
+        PdfWriter writer = null;
+        try {
+            // 生成一个Document实例；2022-12-13 17:39:01
+            try {
+                document = PdfUtil.createDocument(writer);
+            } catch (Exception e) {
+                log.error("# PdfUtil.createPdf() # 获取Document实例时，出现异常。生成报告终止。", e);
+                return;
+            }
+
+            PdfUtil.createPdf(jsonObject, document);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if(null != document){
+                document.close();
+            }
+            if(null != writer){
+                writer.close();
+            }
+        }
     }
 
     /**
@@ -194,8 +231,8 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                 accessTypeTimesJsonObject.set(Const.USER_ACCESS_TYPE_TIMES, jsonArray);
             }
             ObjectNode returnJson = JsonUtil.createJsonObject();
-            returnJson.put(Const.REPORT_DESC,Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_DESC);
-            returnJson.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES,accessTypeTimesJsonObject);
+            returnJson.put(Const.REPORT_DESC, Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_DESC);
+            returnJson.set(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES, accessTypeTimesJsonObject);
 
             jsonObject.put(Const.REPORT_SINGLE_REGULATED_APPLICATION_USER_ACCESS_TYPE_TIMES_NAME, returnJson);
         } catch (Exception e) {
@@ -224,6 +261,14 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                 ObjectNode userSizeJsonObject = JsonUtil.createJsonObject();
                 userSizeJsonObject.put(Const.SERVICE_CODE, application);
                 userSizeJsonObject.put(Const.EVERY_USER_ACCESS_TYPE_TIMES, userSize);
+                HashMap<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+                queryMap.put("agentCode",application);
+                List<MsAgentInformationDo> userPortraitRulesDoList = msAgentInformationMapper.selectAllAgents(queryMap);
+                if(null != userPortraitRulesDoList && !userPortraitRulesDoList.isEmpty()){
+                    MsAgentInformationDo msAgentInformationDo = userPortraitRulesDoList.get(Const.NUMBER_ZERO);
+                    userSizeJsonObject.put(Const.SERVICE_NAME, msAgentInformationDo.getAgentName());
+                }
+
                 list.add(userSizeJsonObject);
                 // todo：将当前系统中每个用户的访问次数插入到数据库中，以便下次统计新增；2022-12-07 16:29:16
 
@@ -341,11 +386,15 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
      **/
     private void getRegulatedApplicationList(ObjectNode jsonObject) {
         try {
+            ArrayNode jsonArray = JsonUtil.createJsonArray();
             List<MsAgentInformationDo> userPortraitRulesDoList = msAgentInformationMapper.selectAllAgents(new HashMap<>(Const.NUMBER_EIGHT));
+            for (MsAgentInformationDo msAgentInformationDo : userPortraitRulesDoList) {
+                jsonArray.add(JsonUtil.obj2String(msAgentInformationDo));
+            }
             ObjectNode reportAgentServerNameJson = JsonUtil.createJsonObject();
             reportAgentServerNameJson.put(Const.REPORT_DESC, Const.REPORT_REGULATED_APPLICATION_LIST_DESC);
-            reportAgentServerNameJson.put(Const.REPORT_REGULATED_APPLICATION_LIST, JsonUtil.obj2String(userPortraitRulesDoList));
-            reportAgentServerNameJson.put(Const.REPORT_REGULATED_APPLICATION_SIZE, userPortraitRulesDoList.size());
+            reportAgentServerNameJson.set(Const.REPORT_REGULATED_APPLICATION_LIST, jsonArray);
+            reportAgentServerNameJson.put(Const.REPORT_REGULATED_APPLICATION_SIZE, jsonArray.size());
             // todo：需要与上次出报告数据进行对比，找到新增的受监管的应用清单；
             jsonObject.set(Const.REPORT_REGULATED_APPLICATION_LIST_NAME, reportAgentServerNameJson);
         } catch (Exception e) {
@@ -454,6 +503,14 @@ public class ReportServiceImpl extends BaseParentServiceImpl<MsReport, Long> imp
                     ObjectNode reportJson = JsonUtil.createJsonObject();
                     reportJson.put(Const.OPERATION_TIME, toHours + Const.REPORT_HOURS);
                     reportJson.put(Const.SERVICE_CODE, msSystemOperationRecord.getServiceCode());
+                    HashMap<String, Object> queryMap = new HashMap<>(Const.NUMBER_EIGHT);
+                    queryMap.put("agentCode",msSystemOperationRecord.getServiceCode());
+                    List<MsAgentInformationDo> userPortraitRulesDoList = msAgentInformationMapper.selectAllAgents(queryMap);
+                    if(null != userPortraitRulesDoList && !userPortraitRulesDoList.isEmpty()){
+                        MsAgentInformationDo msAgentInformationDo = userPortraitRulesDoList.get(Const.NUMBER_ZERO);
+                        reportJson.put(Const.SERVICE_NAME, msAgentInformationDo.getAgentName());
+                    }
+
                     jsonArray.add(reportJson);
                 }
             }
